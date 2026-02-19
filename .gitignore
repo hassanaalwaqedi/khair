@@ -1,0 +1,45 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+backend/bin/
+backend/tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Flutter
+frontend/khair_app/.dart_tool/
+frontend/khair_app/.packages
+frontend/khair_app/build/
+frontend/khair_app/.flutter-plugins
+frontend/khair_app/.flutter-plugins-dependencies
+frontend/khair_app/*.iml
+frontend/khair_app/.metadata
+
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml

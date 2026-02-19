@@ -1,0 +1,165 @@
+# Khair Platform - Production Docker Compose
+# ===========================================
+# For closed beta / soft launch deployment
+
+version: '3.8'
+
+services:
+  # ===================
+  # Backend API
+  # ===================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: khair-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      # Server
+      - SERVER_PORT=8080
+      - GIN_MODE=release
+      - ENV=production
+
+      # Database
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-khair}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-khair}
+      - DB_SSLMODE=disable
+
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DB=0
+
+      # JWT
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRY_HOURS=24
+
+      # Soft Launch
+      - LAUNCH_COUNTRY_CODE=${LAUNCH_COUNTRY:-SA}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - khair-network
+
+  # ===================
+  # PostgreSQL Database
+  # ===================
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: khair-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-khair}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:-khair}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-khair}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - khair-network
+
+  # ===================
+  # Redis Cache
+  # ===================
+  redis:
+    image: redis:7-alpine
+    container_name: khair-redis
+    restart: unless-stopped
+    command: >
+      redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+    networks:
+      - khair-network
+
+  # ===================
+  # Database Migrations
+  # ===================
+  migrate:
+    image: migrate/migrate:v4.16.2
+    container_name: khair-migrate
+    command: >
+      -path=/migrations -database "postgres://${DB_USER:-khair}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-khair}?sslmode=disable" up
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - khair-network
+    profiles:
+      - migrate
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  khair-network:
+    driver: bridge
