@@ -19,11 +19,11 @@ type Service struct {
 
 // Config holds cache configuration
 type Config struct {
-	EventListTTL    time.Duration
-	EventDetailTTL  time.Duration
-	GeoSearchTTL    time.Duration
-	OrganizerTTL    time.Duration
-	DefaultTTL      time.Duration
+	EventListTTL   time.Duration
+	EventDetailTTL time.Duration
+	GeoSearchTTL   time.Duration
+	OrganizerTTL   time.Duration
+	DefaultTTL     time.Duration
 }
 
 // DefaultConfig returns default cache configuration

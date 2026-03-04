@@ -10,11 +10,11 @@ import (
 
 // ProductionConfig holds production security settings
 type ProductionConfig struct {
-	Environment     string
-	AllowedOrigins  []string
-	TrustedProxies  []string
-	EnableHSTS      bool
-	HSTSMaxAge      int
+	Environment    string
+	AllowedOrigins []string
+	TrustedProxies []string
+	EnableHSTS     bool
+	HSTSMaxAge     int
 }
 
 // DefaultProductionConfig returns production-ready security config
@@ -117,7 +117,7 @@ func NewLogSanitizer() *LogSanitizer {
 			regexp.MustCompile(`(?i)"secret"\s*:\s*"[^"]*"`),
 			regexp.MustCompile(`(?i)"api_key"\s*:\s*"[^"]*"`),
 			regexp.MustCompile(`(?i)"credit_card"\s*:\s*"[^"]*"`),
-			regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`), // Email
+			regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`),  // Email
 			regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),           // Credit card
 			regexp.MustCompile(`eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*`), // JWT
 		},
@@ -127,11 +127,11 @@ func NewLogSanitizer() *LogSanitizer {
 // Sanitize removes sensitive data from a string
 func (s *LogSanitizer) Sanitize(input string) string {
 	result := input
-	
+
 	for _, pattern := range s.patterns {
 		result = pattern.ReplaceAllString(result, "[REDACTED]")
 	}
-	
+
 	return result
 }
 
@@ -178,7 +178,7 @@ func RequestBodySanitizer() gin.HandlerFunc {
 // DisableDebugEndpoints removes debug endpoints in production
 func DisableDebugEndpoints(isProduction bool) gin.HandlerFunc {
 	debugPaths := []string{"/debug/", "/pprof/", "/__debug"}
-	
+
 	return func(c *gin.Context) {
 		if isProduction {
 			for _, path := range debugPaths {

@@ -15,10 +15,10 @@ type Metrics struct {
 	errorCount      map[string]int64
 
 	// Database metrics
-	dbConnections     int64
-	dbConnectionsMax  int64
-	dbQueryDuration   *HistogramData
-	slowQueryCount    int64
+	dbConnections      int64
+	dbConnectionsMax   int64
+	dbQueryDuration    *HistogramData
+	slowQueryCount     int64
 	slowQueryThreshold time.Duration
 
 	// Cache metrics
@@ -161,15 +161,15 @@ func (m *Metrics) GetSnapshot() MetricsSnapshot {
 	defer m.mu.RUnlock()
 
 	snapshot := MetricsSnapshot{
-		Timestamp:       time.Now().UTC(),
-		RequestCount:    make(map[string]int64),
-		ErrorCount:      make(map[string]int64),
-		Gauges:          make(map[string]float64),
-		DBConnections:   m.dbConnections,
+		Timestamp:        time.Now().UTC(),
+		RequestCount:     make(map[string]int64),
+		ErrorCount:       make(map[string]int64),
+		Gauges:           make(map[string]float64),
+		DBConnections:    m.dbConnections,
 		DBMaxConnections: m.dbConnectionsMax,
-		SlowQueryCount:  m.slowQueryCount,
-		CacheHits:       m.cacheHits,
-		CacheMisses:     m.cacheMisses,
+		SlowQueryCount:   m.slowQueryCount,
+		CacheHits:        m.cacheHits,
+		CacheMisses:      m.cacheMisses,
 	}
 
 	for k, v := range m.requestCount {

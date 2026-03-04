@@ -105,8 +105,8 @@ func PanicRecoveryMiddleware() gin.HandlerFunc {
 
 				// Return 500 error
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"success": false,
-					"error":   "Internal server error",
+					"success":    false,
+					"error":      "Internal server error",
 					"request_id": requestID,
 				})
 			}

@@ -23,19 +23,19 @@ type Switch struct {
 
 // Standard switch names
 const (
-	SwitchEventPublishing      = "event_publishing"
+	SwitchEventPublishing       = "event_publishing"
 	SwitchOrganizerRegistration = "organizer_registration"
-	SwitchGuestAccess          = "guest_access"
-	SwitchReportingSystem      = "reporting_system"
-	SwitchFullLockdown         = "full_lockdown"
+	SwitchGuestAccess           = "guest_access"
+	SwitchReportingSystem       = "reporting_system"
+	SwitchFullLockdown          = "full_lockdown"
 )
 
 // Service manages emergency switches
 type Service struct {
-	db    *sql.DB
-	cache map[string]*Switch
-	mu    sync.RWMutex
-	ttl   time.Duration
+	db       *sql.DB
+	cache    map[string]*Switch
+	mu       sync.RWMutex
+	ttl      time.Duration
 	lastLoad time.Time
 }
 
@@ -46,42 +46,42 @@ func NewService(db *sql.DB) *Service {
 		cache: make(map[string]*Switch),
 		ttl:   30 * time.Second,
 	}
-	
+
 	// Preload switches
 	s.loadAll(context.Background())
-	
+
 	return s
 }
 
 // IsEnabled checks if a switch is enabled
 func (s *Service) IsEnabled(ctx context.Context, name string) bool {
 	s.mu.RLock()
-	
+
 	// Check cache freshness
 	if time.Since(s.lastLoad) < s.ttl {
 		if sw, ok := s.cache[name]; ok {
 			s.mu.RUnlock()
-			
+
 			// Check expiration
 			if sw.ExpiresAt != nil && time.Now().After(*sw.ExpiresAt) {
 				return true // Expired switches revert to enabled
 			}
-			
+
 			return sw.IsEnabled
 		}
 	}
 	s.mu.RUnlock()
-	
+
 	// Reload from DB
 	s.loadAll(ctx)
-	
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	if sw, ok := s.cache[name]; ok {
 		return sw.IsEnabled
 	}
-	
+
 	return true // Default to enabled if not found
 }
 
@@ -103,22 +103,22 @@ func (s *Service) Set(ctx context.Context, name string, enabled bool, reason str
 		SET is_enabled = $1, reason = $2, changed_by = $3, changed_at = NOW(), expires_at = $4
 		WHERE switch_name = $5
 	`
-	
+
 	result, err := s.db.ExecContext(ctx, query, enabled, reason, changedBy, expiresAt, name)
 	if err != nil {
 		return err
 	}
-	
+
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
 		return errors.New("switch not found")
 	}
-	
+
 	// Invalidate cache
 	s.mu.Lock()
 	s.lastLoad = time.Time{}
 	s.mu.Unlock()
-	
+
 	return nil
 }
 
@@ -135,15 +135,15 @@ func (s *Service) Disable(ctx context.Context, name string, reason string, chang
 // GetAll returns all switches
 func (s *Service) GetAll(ctx context.Context) ([]Switch, error) {
 	s.loadAll(ctx)
-	
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	switches := make([]Switch, 0, len(s.cache))
 	for _, sw := range s.cache {
 		switches = append(switches, *sw)
 	}
-	
+
 	return switches, nil
 }
 
@@ -155,16 +155,16 @@ func (s *Service) Get(ctx context.Context, name string) (*Switch, error) {
 		return sw, nil
 	}
 	s.mu.RUnlock()
-	
+
 	s.loadAll(ctx)
-	
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	if sw, ok := s.cache[name]; ok {
 		return sw, nil
 	}
-	
+
 	return nil, errors.New("switch not found")
 }
 
@@ -173,15 +173,15 @@ func (s *Service) loadAll(ctx context.Context) {
 		SELECT id, switch_name, is_enabled, reason, changed_by, changed_at, expires_at
 		FROM system_switches
 	`
-	
+
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
-	
+
 	newCache := make(map[string]*Switch)
-	
+
 	for rows.Next() {
 		var sw Switch
 		err := rows.Scan(&sw.ID, &sw.Name, &sw.IsEnabled, &sw.Reason, &sw.ChangedBy, &sw.ChangedAt, &sw.ExpiresAt)
@@ -190,7 +190,7 @@ func (s *Service) loadAll(ctx context.Context) {
 		}
 		newCache[sw.Name] = &sw
 	}
-	
+
 	s.mu.Lock()
 	s.cache = newCache
 	s.lastLoad = time.Now()
@@ -203,7 +203,7 @@ func (s *Service) EmergencyLockdown(ctx context.Context, reason string, changedB
 	s.Disable(ctx, SwitchEventPublishing, "Emergency lockdown: "+reason, changedBy, nil)
 	s.Disable(ctx, SwitchOrganizerRegistration, "Emergency lockdown: "+reason, changedBy, nil)
 	s.Disable(ctx, SwitchReportingSystem, "Emergency lockdown: "+reason, changedBy, nil)
-	
+
 	// Enable lockdown flag
 	return s.Enable(ctx, SwitchFullLockdown, reason, changedBy)
 }
@@ -214,7 +214,7 @@ func (s *Service) LiftLockdown(ctx context.Context, reason string, changedBy uui
 	s.Enable(ctx, SwitchEventPublishing, "Lockdown lifted: "+reason, changedBy)
 	s.Enable(ctx, SwitchOrganizerRegistration, "Lockdown lifted: "+reason, changedBy)
 	s.Enable(ctx, SwitchReportingSystem, "Lockdown lifted: "+reason, changedBy)
-	
+
 	// Disable lockdown flag
 	return s.Disable(ctx, SwitchFullLockdown, reason, changedBy, nil)
 }

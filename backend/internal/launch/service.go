@@ -32,14 +32,14 @@ type Config struct {
 
 // InvitationCode represents an invitation code for organizers
 type InvitationCode struct {
-	Code        string     `json:"code"`
-	Email       string     `json:"email,omitempty"`
-	CreatedBy   uuid.UUID  `json:"created_by"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UsedAt      *time.Time `json:"used_at,omitempty"`
-	UsedBy      *uuid.UUID `json:"used_by,omitempty"`
-	IsUsed      bool       `json:"is_used"`
-	ExpiresAt   time.Time  `json:"expires_at"`
+	Code      string     `json:"code"`
+	Email     string     `json:"email,omitempty"`
+	CreatedBy uuid.UUID  `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	UsedAt    *time.Time `json:"used_at,omitempty"`
+	UsedBy    *uuid.UUID `json:"used_by,omitempty"`
+	IsUsed    bool       `json:"is_used"`
+	ExpiresAt time.Time  `json:"expires_at"`
 }
 
 // Service provides soft launch control functionality

@@ -43,22 +43,22 @@ func (l LogLevel) String() string {
 
 // LogEntry represents a structured log entry
 type LogEntry struct {
-	Timestamp   string                 `json:"timestamp"`
-	Level       string                 `json:"level"`
-	Message     string                 `json:"message"`
-	RequestID   string                 `json:"request_id,omitempty"`
-	TraceID     string                 `json:"trace_id,omitempty"`
-	Service     string                 `json:"service"`
-	Component   string                 `json:"component,omitempty"`
-	Error       string                 `json:"error,omitempty"`
-	Stack       string                 `json:"stack,omitempty"`
-	Duration    float64                `json:"duration_ms,omitempty"`
-	StatusCode  int                    `json:"status_code,omitempty"`
-	Method      string                 `json:"method,omitempty"`
-	Path        string                 `json:"path,omitempty"`
-	UserID      string                 `json:"user_id,omitempty"`
-	IP          string                 `json:"ip,omitempty"`
-	Fields      map[string]interface{} `json:"fields,omitempty"`
+	Timestamp  string                 `json:"timestamp"`
+	Level      string                 `json:"level"`
+	Message    string                 `json:"message"`
+	RequestID  string                 `json:"request_id,omitempty"`
+	TraceID    string                 `json:"trace_id,omitempty"`
+	Service    string                 `json:"service"`
+	Component  string                 `json:"component,omitempty"`
+	Error      string                 `json:"error,omitempty"`
+	Stack      string                 `json:"stack,omitempty"`
+	Duration   float64                `json:"duration_ms,omitempty"`
+	StatusCode int                    `json:"status_code,omitempty"`
+	Method     string                 `json:"method,omitempty"`
+	Path       string                 `json:"path,omitempty"`
+	UserID     string                 `json:"user_id,omitempty"`
+	IP         string                 `json:"ip,omitempty"`
+	Fields     map[string]interface{} `json:"fields,omitempty"`
 }
 
 // Logger provides structured logging
@@ -260,7 +260,7 @@ type ContextLogger struct {
 // getContextFields extracts fields from context
 func (cl *ContextLogger) getContextFields() map[string]interface{} {
 	fields := map[string]interface{}{}
-	
+
 	if requestID := cl.ctx.Value(RequestIDKey); requestID != nil {
 		fields["request_id"] = requestID.(string)
 	}
@@ -270,7 +270,7 @@ func (cl *ContextLogger) getContextFields() map[string]interface{} {
 	if userID := cl.ctx.Value(UserIDKey); userID != nil {
 		fields["user_id"] = userID.(string)
 	}
-	
+
 	return fields
 }
 

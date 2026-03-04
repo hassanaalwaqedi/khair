@@ -19,13 +19,13 @@ const (
 
 // Alert represents an alert
 type Alert struct {
-	Name      string      `json:"name"`
-	Level     AlertLevel  `json:"level"`
-	Message   string      `json:"message"`
-	Value     float64     `json:"value"`
-	Threshold float64     `json:"threshold"`
-	Timestamp time.Time   `json:"timestamp"`
-	Resolved  bool        `json:"resolved"`
+	Name      string     `json:"name"`
+	Level     AlertLevel `json:"level"`
+	Message   string     `json:"message"`
+	Value     float64    `json:"value"`
+	Threshold float64    `json:"threshold"`
+	Timestamp time.Time  `json:"timestamp"`
+	Resolved  bool       `json:"resolved"`
 }
 
 // AlertConfig defines alert thresholds
@@ -91,7 +91,7 @@ type AlertManager struct {
 	alerts  map[string]*Alert
 	mu      sync.RWMutex
 	logger  *observability.Logger
-	
+
 	// Alert handlers
 	handlers []AlertHandler
 }

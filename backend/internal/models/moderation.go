@@ -64,10 +64,10 @@ type BannedKeyword struct {
 
 // ModerationResult from content check
 type ModerationResult struct {
-	Passed   bool              `json:"passed"`
-	Flags    []ModerationFlag  `json:"flags,omitempty"`
-	Severity Severity          `json:"severity"`
-	Reason   string            `json:"reason,omitempty"`
+	Passed   bool             `json:"passed"`
+	Flags    []ModerationFlag `json:"flags,omitempty"`
+	Severity Severity         `json:"severity"`
+	Reason   string           `json:"reason,omitempty"`
 }
 
 // ContentToModerate represents content to be checked
