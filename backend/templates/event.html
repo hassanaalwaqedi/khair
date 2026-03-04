@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .MetaTitle }}</title>
+  <meta name="description" content="{{ .MetaDescription }}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="{{ .CanonicalURL }}">
+
+  <meta property="og:title" content="{{ .OGTitle }}">
+  <meta property="og:description" content="{{ .OGDescription }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ .OGURL }}">
+  <meta property="og:image" content="{{ .OGImage }}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ .OGTitle }}">
+  <meta name="twitter:description" content="{{ .OGDescription }}">
+  <meta name="twitter:image" content="{{ .OGImage }}">
+
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+    body {
+      margin: 0;
+      background: #f6f7f9;
+      color: #111827;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    article {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    .event-image {
+      width: 100%;
+      max-height: 460px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin: 14px 0 18px;
+    }
+    .meta p {
+      margin: 6px 0;
+    }
+    .join-button {
+      display: inline-block;
+      margin-top: 14px;
+      background: #006341;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <article>
+      <h1>{{ .Title }}</h1>
+      {{ if .ImageURL }}
+      <img class="event-image" src="{{ .ImageURL }}" alt="{{ .Title }}">
+      {{ end }}
+
+      <div class="meta">
+        <p><strong>Organizer:</strong> {{ .OrganizerName }}</p>
+        <p><strong>Date:</strong> <time datetime="{{ .StartDateISO }}">{{ .StartDateText }}</time></p>
+        <p><strong>Location:</strong> {{ .Location }}</p>
+      </div>
+
+      <p>{{ .Description }}</p>
+
+      <a class="join-button" href="{{ .JoinURL }}">Join Event</a>
+    </article>
+  </main>
+</body>
+</html>

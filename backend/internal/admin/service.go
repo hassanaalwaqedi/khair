@@ -7,16 +7,16 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/rbac"
 )
 
-// Service handles admin business logic
 type Service struct {
 	db            *sql.DB
 	organizerRepo OrganizerRepository
 	eventRepo     EventRepository
+	rbacService   *rbac.Service
 }
 
-// OrganizerRepository interface for organizer operations
 type OrganizerRepository interface {
 	GetByID(id uuid.UUID) (*models.Organizer, error)
 	UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error
@@ -24,44 +24,39 @@ type OrganizerRepository interface {
 	ListAll() ([]models.Organizer, error)
 }
 
-// EventRepository interface for event operations
 type EventRepository interface {
 	GetByID(id uuid.UUID) (*models.EventWithOrganizer, error)
 	UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error
+	UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error
 	ListPending() ([]models.EventWithOrganizer, error)
 }
 
-// NewService creates a new admin service
-func NewService(db *sql.DB, organizerRepo OrganizerRepository, eventRepo EventRepository) *Service {
+type StatusUpdateRequest struct {
+	Status          string  `json:"status" binding:"required,oneof=approved rejected needs_revision published"`
+	RejectionReason *string `json:"rejection_reason"`
+}
+
+func NewService(db *sql.DB, organizerRepo OrganizerRepository, eventRepo EventRepository, rbacService *rbac.Service) *Service {
 	return &Service{
 		db:            db,
 		organizerRepo: organizerRepo,
 		eventRepo:     eventRepo,
+		rbacService:   rbacService,
 	}
 }
 
-// StatusUpdateRequest represents a status update request
-type StatusUpdateRequest struct {
-	Status          string  `json:"status" binding:"required,oneof=approved rejected"`
-	RejectionReason *string `json:"rejection_reason"`
-}
-
-// ListPendingOrganizers lists organizers pending approval
 func (s *Service) ListPendingOrganizers() ([]models.Organizer, error) {
 	return s.organizerRepo.ListPending()
 }
 
-// ListAllOrganizers lists all organizers
 func (s *Service) ListAllOrganizers() ([]models.Organizer, error) {
 	return s.organizerRepo.ListAll()
 }
 
-// GetOrganizer retrieves an organizer by ID
 func (s *Service) GetOrganizer(id uuid.UUID) (*models.Organizer, error) {
 	return s.organizerRepo.GetByID(id)
 }
 
-// UpdateOrganizerStatus updates the status of an organizer
 func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) (*models.Organizer, error) {
 	org, err := s.organizerRepo.GetByID(id)
 	if err != nil {
@@ -81,18 +76,15 @@ func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) 
 	return org, nil
 }
 
-// ListPendingEvents lists events pending approval
 func (s *Service) ListPendingEvents() ([]models.EventWithOrganizer, error) {
 	return s.eventRepo.ListPending()
 }
 
-// GetEvent retrieves an event by ID
 func (s *Service) GetEvent(id uuid.UUID) (*models.EventWithOrganizer, error) {
 	return s.eventRepo.GetByID(id)
 }
 
-// UpdateEventStatus updates the status of an event
-func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest) (*models.EventWithOrganizer, error) {
+func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, reviewerID uuid.UUID) (*models.EventWithOrganizer, error) {
 	event, err := s.eventRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.New("event not found")
@@ -102,11 +94,45 @@ func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest) (*mo
 		return nil, errors.New("rejection reason is required when rejecting")
 	}
 
-	if err := s.eventRepo.UpdateStatus(id, req.Status, req.RejectionReason); err != nil {
+	if req.Status == "needs_revision" && (req.RejectionReason == nil || *req.RejectionReason == "") {
+		return nil, errors.New("revision notes are required")
+	}
+
+	if err := s.eventRepo.UpdateStatusWithReviewer(id, req.Status, req.RejectionReason, reviewerID); err != nil {
 		return nil, errors.New("failed to update event status")
 	}
 
 	event.Status = req.Status
 	event.RejectionReason = req.RejectionReason
 	return event, nil
+}
+
+// SuspendUser suspends a user account and revokes all their refresh tokens
+func (s *Service) SuspendUser(userID uuid.UUID, reason string, adminID uuid.UUID) error {
+	_, err := s.db.Exec(`
+		UPDATE users SET status = 'suspended', suspended_at = NOW(),
+		suspended_reason = $1, suspended_by = $2, updated_at = NOW()
+		WHERE id = $3
+	`, reason, adminID, userID)
+	if err != nil {
+		return errors.New("failed to suspend user")
+	}
+
+	// Revoke all refresh tokens
+	_, _ = s.db.Exec(`UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL`, userID)
+
+	return nil
+}
+
+// UnsuspendUser removes a user's suspension
+func (s *Service) UnsuspendUser(userID uuid.UUID) error {
+	_, err := s.db.Exec(`
+		UPDATE users SET status = 'active', suspended_at = NULL,
+		suspended_reason = NULL, suspended_by = NULL, updated_at = NOW()
+		WHERE id = $1
+	`, userID)
+	if err != nil {
+		return errors.New("failed to unsuspend user")
+	}
+	return nil
 }

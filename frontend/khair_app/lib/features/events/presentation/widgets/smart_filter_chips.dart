@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/khair_theme.dart';
-import '../../../../core/utils/emoji_mapper.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+
+import '../../../../tokens/tokens.dart';
 import '../../../location/presentation/bloc/location_bloc.dart';
 import '../../domain/entities/event.dart';
 import '../bloc/events_bloc.dart';
+import 'islamic_category_chip.dart';
 
 class SmartFilterChips extends StatelessWidget {
   const SmartFilterChips({super.key});
@@ -16,25 +18,27 @@ class SmartFilterChips extends StatelessWidget {
       buildWhen: (previous, current) => previous.filter != current.filter,
       builder: (context, state) {
         return SizedBox(
-          height: 48,
+          height: 50,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x1),
             children: [
-              // Location chip (auto from LocationBloc)
-              _buildLocationChip(context),
-              const SizedBox(width: 8),
-              // Category chips
-              ..._buildCategoryChips(context, state.filter),
-              // Date filter chip
-              _buildDateChip(context, state.filter),
-              const SizedBox(width: 8),
-              // Trending chip
-              _buildTrendingChip(context, state.filter),
-              // Clear all (only if filters active)
+              _locationChip(context),
+              const SizedBox(width: AppSpacing.x1),
+              ..._categoryChips(context, state.filter),
+              const SizedBox(width: AppSpacing.x1),
+              _dateChip(context, state.filter),
+              const SizedBox(width: AppSpacing.x1),
+              IslamicCategoryChip(
+                label: AppLocalizations.of(context)?.trending ?? 'Trending',
+                emoji: '🔥',
+                isSelected: state.filter.trending,
+                onTap: () => context.read<EventsBloc>().add(ToggleTrending()),
+              ),
               if (state.filter.hasActiveFilters) ...[
-                const SizedBox(width: 8),
-                _buildClearChip(context),
+                const SizedBox(width: AppSpacing.x1),
+                _clearChip(context),
               ],
             ],
           ),
@@ -43,239 +47,264 @@ class SmartFilterChips extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationChip(BuildContext context) {
+  Widget _locationChip(BuildContext context) {
     return BlocBuilder<LocationBloc, LocationState>(
       builder: (context, locationState) {
         if (locationState is LocationLoaded) {
-          return Chip(
-            avatar: Text(locationEmoji, style: const TextStyle(fontSize: 14)),
-            label: Text(
-              '${locationState.location.city}',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          return Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              color: Colors.white.withValues(alpha: 0.14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
             ),
-            backgroundColor: KhairColors.primary.withAlpha(25),
-            side: BorderSide(color: KhairColors.primary.withAlpha(60)),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: Text(
+              '📍 ${locationState.location.city}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
           );
         }
-        if (locationState is LocationLoading) {
-          return Chip(
-            avatar: SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: Colors.grey[400],
-              ),
-            ),
-            label: Text(
-              'Locating...',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-            ),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          );
-        }
-        return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            color: Colors.white.withValues(alpha: 0.12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+          ),
+          child: Text(
+            '📍 ${AppLocalizations.of(context)?.locating ?? 'Locating...'}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        );
       },
     );
   }
 
-  List<Widget> _buildCategoryChips(BuildContext context, EventFilter filter) {
+  List<Widget> _categoryChips(BuildContext context, EventFilter filter) {
+    final l10n = AppLocalizations.of(context);
     final categories = [
-      ('conference', '${getCategoryEmoji('conference')} Conference'),
-      ('workshop', '${getCategoryEmoji('workshop')} Workshop'),
-      ('seminar', '${getCategoryEmoji('seminar')} Seminar'),
-      ('festival', '${getCategoryEmoji('festival')} Festival'),
-      ('meetup', '${getCategoryEmoji('meetup')} Meetup'),
+      (key: 'knowledge', label: l10n?.catKnowledge ?? 'Knowledge', emoji: '📚'),
+      (key: 'quran', label: l10n?.catQuran ?? 'Quran', emoji: '🕌'),
+      (key: 'lectures', label: l10n?.catLectures ?? 'Lectures', emoji: '🎤'),
+      (key: 'community', label: l10n?.catCommunity ?? 'Community', emoji: '👥'),
+      (key: 'youth', label: l10n?.catYouth ?? 'Youth', emoji: '🌱'),
+      (key: 'charity', label: l10n?.catCharity ?? 'Charity', emoji: '🤲'),
+      (key: 'family', label: l10n?.catFamily ?? 'Family', emoji: '👨‍👩‍👧'),
     ];
 
-    return categories.map((cat) {
-      final isSelected = filter.eventType == cat.$1;
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(
-            cat.$2,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected ? Colors.white : null,
+    return categories
+        .map(
+          (category) => Padding(
+            padding: const EdgeInsetsDirectional.only(end: AppSpacing.x1),
+            child: IslamicCategoryChip(
+              label: category.label,
+              emoji: category.emoji,
+              isSelected: filter.eventType == category.key,
+              onTap: () {
+                context.read<EventsBloc>().add(
+                      UpdateCategoryFilter(
+                        filter.eventType == category.key ? null : category.key,
+                      ),
+                    );
+              },
             ),
           ),
-          selected: isSelected,
-          onSelected: (selected) {
-            context.read<EventsBloc>().add(
-                  UpdateCategoryFilter(selected ? cat.$1 : null),
-                );
-          },
-          selectedColor: KhairColors.primary,
-          backgroundColor: Colors.grey[100],
-          side: BorderSide.none,
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          showCheckmark: false,
-        ),
-      );
-    }).toList();
+        )
+        .toList();
   }
 
-  Widget _buildDateChip(BuildContext context, EventFilter filter) {
-    final isActive = filter.dateFilter != null;
+  Widget _dateChip(BuildContext context, EventFilter filter) {
+    final l10n = AppLocalizations.of(context);
     final label = switch (filter.dateFilter) {
-      DateFilter.today => 'Today',
-      DateFilter.thisWeek => 'This Week',
-      DateFilter.thisWeekend => 'Weekend',
-      DateFilter.thisMonth => 'This Month',
-      null => '📅 Date',
+      DateFilter.today => '📅 ${l10n?.today ?? 'Today'}',
+      DateFilter.thisWeek => '📅 ${l10n?.thisWeek ?? 'This Week'}',
+      DateFilter.thisWeekend => '📅 ${l10n?.weekend ?? 'Weekend'}',
+      DateFilter.thisMonth => '📅 ${l10n?.thisMonth ?? 'This Month'}',
+      null => '📅 ${l10n?.dateLabel ?? 'Date'}',
     };
 
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-          color: isActive ? Colors.white : null,
+    return GestureDetector(
+      onTap: () => _showDatePicker(context, filter.dateFilter),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          color: filter.dateFilter != null
+              ? Colors.white.withValues(alpha: 0.96)
+              : Colors.white.withValues(alpha: 0.12),
+          border: Border.all(
+            color: filter.dateFilter != null
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.25),
+          ),
+          boxShadow: filter.dateFilter != null
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: filter.dateFilter != null
+                    ? AppColors.primary
+                    : Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ),
-      selected: isActive,
-      onSelected: (_) => _showDateFilterSheet(context, filter.dateFilter),
-      selectedColor: KhairColors.primary,
-      backgroundColor: Colors.grey[100],
-      side: BorderSide.none,
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      showCheckmark: false,
     );
   }
 
-  Widget _buildTrendingChip(BuildContext context, EventFilter filter) {
-    return ChoiceChip(
-      label: Text(
-        '$trendingEmoji Trending',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: filter.trending ? FontWeight.w600 : FontWeight.w400,
-          color: filter.trending ? Colors.white : null,
+  Widget _clearChip(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.read<EventsBloc>().add(ClearAllFilters()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          color: const Color(0xFFFDE7E4),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+        ),
+        child: Text(
+          '✖ ${AppLocalizations.of(context)?.clear ?? 'Clear'}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ),
-      selected: filter.trending,
-      onSelected: (_) {
-        context.read<EventsBloc>().add(ToggleTrending());
-      },
-      selectedColor: Colors.deepOrange,
-      backgroundColor: Colors.grey[100],
-      side: BorderSide.none,
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      showCheckmark: false,
     );
   }
 
-  Widget _buildClearChip(BuildContext context) {
-    return ActionChip(
-      label: const Text(
-        '✕ Clear',
-        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-      ),
-      onPressed: () {
-        context.read<EventsBloc>().add(ClearAllFilters());
-      },
-      backgroundColor: Colors.red[50],
-      side: BorderSide(color: Colors.red.withAlpha(60)),
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-
-  void _showDateFilterSheet(BuildContext context, DateFilter? current) {
-    showModalBottomSheet(
+  void _showDatePicker(BuildContext context, DateFilter? current) {
+    showModalBottomSheet<void>(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _DateFilterSheet(
-        current: current,
-        onSelected: (dateFilter) {
-          context.read<EventsBloc>().add(UpdateDateFilter(dateFilter));
-          Navigator.pop(context);
-        },
-      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.x3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context)?.filterByDate ?? 'Filter by Date',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.x2),
+              _DateOption(
+                selected: current == DateFilter.today,
+                label: '📅 ${AppLocalizations.of(context)?.today ?? 'Today'}',
+                onTap: () {
+                  context
+                      .read<EventsBloc>()
+                      .add(UpdateDateFilter(DateFilter.today));
+                  Navigator.pop(context);
+                },
+              ),
+              _DateOption(
+                selected: current == DateFilter.thisWeek,
+                label: '📅 ${AppLocalizations.of(context)?.thisWeek ?? 'This Week'}',
+                onTap: () {
+                  context
+                      .read<EventsBloc>()
+                      .add(UpdateDateFilter(DateFilter.thisWeek));
+                  Navigator.pop(context);
+                },
+              ),
+              _DateOption(
+                selected: current == DateFilter.thisWeekend,
+                label: '📅 ${AppLocalizations.of(context)?.weekend ?? 'Weekend'}',
+                onTap: () {
+                  context
+                      .read<EventsBloc>()
+                      .add(UpdateDateFilter(DateFilter.thisWeekend));
+                  Navigator.pop(context);
+                },
+              ),
+              _DateOption(
+                selected: current == DateFilter.thisMonth,
+                label: '📅 ${AppLocalizations.of(context)?.thisMonth ?? 'This Month'}',
+                onTap: () {
+                  context
+                      .read<EventsBloc>()
+                      .add(UpdateDateFilter(DateFilter.thisMonth));
+                  Navigator.pop(context);
+                },
+              ),
+              if (current != null) ...[
+                const SizedBox(height: AppSpacing.x1),
+                TextButton(
+                  onPressed: () {
+                    context.read<EventsBloc>().add(UpdateDateFilter(null));
+                    Navigator.pop(context);
+                  },
+                  child: Text(AppLocalizations.of(context)?.clearDateFilter ?? 'Clear Date Filter'),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-class _DateFilterSheet extends StatelessWidget {
-  final DateFilter? current;
-  final ValueChanged<DateFilter?> onSelected;
+class _DateOption extends StatelessWidget {
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
 
-  const _DateFilterSheet({required this.current, required this.onSelected});
+  const _DateOption({
+    required this.selected,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Filter by Date',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          _buildOption(context, DateFilter.today, '📅 Today'),
-          _buildOption(context, DateFilter.thisWeek, '📆 This Week'),
-          _buildOption(context, DateFilter.thisWeekend, '🎉 This Weekend'),
-          _buildOption(context, DateFilter.thisMonth, '🗓️ This Month'),
-          if (current != null) ...[
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.clear, color: Colors.red),
-              title: const Text('Clear Date Filter'),
-              onTap: () => onSelected(null),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOption(BuildContext context, DateFilter filter, String label) {
-    final isSelected = current == filter;
     return ListTile(
+      onTap: onTap,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      tileColor: selected ? AppColors.primary.withValues(alpha: 0.08) : null,
       title: Text(
         label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? KhairColors.primary : null,
-        ),
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: selected ? AppColors.primary : AppColors.textPrimary,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
       ),
-      trailing: isSelected
-          ? Icon(Icons.check_circle, color: KhairColors.primary)
+      trailing: selected
+          ? const Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.primary,
+            )
           : null,
-      onTap: () => onSelected(filter),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      tileColor: isSelected ? KhairColors.primary.withAlpha(15) : null,
     );
   }
 }

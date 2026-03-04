@@ -1,13 +1,11 @@
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 import 'platform_connectivity.dart';
 
 /// Web implementation using browser's navigator.onLine API.
 class PlatformConnectivityImpl extends PlatformConnectivity {
   final _controller = StreamController<bool>.broadcast();
-  StreamSubscription? _onlineSub;
-  StreamSubscription? _offlineSub;
   bool _isOnline = true;
 
   @override
@@ -18,23 +16,27 @@ class PlatformConnectivityImpl extends PlatformConnectivity {
 
   @override
   void initialize() {
-    _isOnline = html.window.navigator.onLine ?? true;
+    _isOnline = web.window.navigator.onLine;
 
-    _onlineSub = html.window.onOnline.listen((_) {
-      _isOnline = true;
-      _controller.add(true);
-    });
+    web.window.addEventListener(
+      'online',
+      ((web.Event e) {
+        _isOnline = true;
+        _controller.add(true);
+      }).toJS,
+    );
 
-    _offlineSub = html.window.onOffline.listen((_) {
-      _isOnline = false;
-      _controller.add(false);
-    });
+    web.window.addEventListener(
+      'offline',
+      ((web.Event e) {
+        _isOnline = false;
+        _controller.add(false);
+      }).toJS,
+    );
   }
 
   @override
   void dispose() {
-    _onlineSub?.cancel();
-    _offlineSub?.cancel();
     _controller.close();
   }
 }

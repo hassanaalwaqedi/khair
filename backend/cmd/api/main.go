@@ -12,25 +12,40 @@ import (
 
 	"github.com/khair/backend/internal/admin"
 	"github.com/khair/backend/internal/ai"
+	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
+	"github.com/khair/backend/internal/countries"
 	"github.com/khair/backend/internal/event"
+	"github.com/khair/backend/internal/joinreg"
+	"github.com/khair/backend/internal/launch"
 	"github.com/khair/backend/internal/location"
 	"github.com/khair/backend/internal/mapservice"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/organizer"
+	"github.com/khair/backend/internal/orgdash"
+	"github.com/khair/backend/internal/ownerposts"
+	"github.com/khair/backend/internal/payment"
+	"github.com/khair/backend/internal/rbac"
+	"github.com/khair/backend/internal/registration"
+	"github.com/khair/backend/internal/reservation"
+	"github.com/khair/backend/internal/spiritualquote"
 	"github.com/khair/backend/internal/trust"
 	"github.com/khair/backend/internal/trust/audit"
 	"github.com/khair/backend/internal/trust/moderation"
 	"github.com/khair/backend/internal/trust/reporting"
 	"github.com/khair/backend/internal/trust/score"
+	"github.com/khair/backend/internal/upload"
+	"github.com/khair/backend/internal/verification"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/database"
 	"github.com/khair/backend/pkg/lifecycle"
 	"github.com/khair/backend/pkg/logger"
 	"github.com/khair/backend/pkg/middleware"
 
-	// "github.com/khair/backend/pkg/ratelimit"
+	"github.com/khair/backend/pkg/email"
+	"github.com/khair/backend/pkg/ratelimit"
 	"github.com/khair/backend/pkg/response"
+	"github.com/khair/backend/pkg/security"
 )
 
 func main() {
@@ -89,7 +104,10 @@ func main() {
 	}
 
 	// Initialize rate limiter
-	// rateLimiter := ratelimit.NewLimiter(redisClient)
+	rateLimiter := ratelimit.NewLimiter(redisClient)
+
+	// Production security config
+	secConfig := security.DefaultProductionConfig()
 
 	// Initialize router
 	router := gin.Default()
@@ -97,6 +115,9 @@ func main() {
 	// Apply global middleware
 	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.SecurityHeaders())
+	router.Use(security.ProductionHeadersMiddleware(secConfig))
+	router.Use(security.DisableDebugEndpoints(secConfig.Environment == "production"))
+	router.Use(security.SecureErrorMiddleware(secConfig.Environment == "production"))
 
 	// Health check endpoints (production-ready with DB/Redis checks)
 	healthChecker := lifecycle.NewHealthChecker(db, redisClient)
@@ -111,18 +132,27 @@ func main() {
 
 	// Auth middleware
 	authMiddleware := middleware.AuthMiddleware(cfg)
-	adminMiddleware := middleware.AdminMiddleware()
+	adminMiddleware := middleware.AdminOnly()
 
 	// Initialize repositories
 	organizerRepo := organizer.NewRepository(db)
 	eventRepo := event.NewRepository(db)
 
+	// Initialize email service
+	emailSvc := email.NewService(cfg.SMTP)
+
+	// Initialize RBAC
+	rbacRepo := rbac.NewRepository(db)
+	rbacService := rbac.NewService(rbacRepo)
+
 	// Initialize core services
-	authService := auth.NewService(db, cfg)
+	authService := auth.NewService(db, cfg, emailSvc, rbacRepo)
 	organizerService := organizer.NewService(db)
 	eventService := event.NewService(db, &organizerRepoAdapter{repo: organizerRepo})
 	mapService := mapservice.NewService(db)
-	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo})
+	registrationService := registration.NewService(db, cfg, emailSvc)
+
+	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService)
 
 	// Wrap *sql.DB with sqlx for trust services that require it
 	sqlxDB := sqlx.NewDb(db, "postgres")
@@ -139,11 +169,13 @@ func main() {
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService)
 	organizerHandler := organizer.NewHandler(organizerService)
-	eventHandler := event.NewHandler(eventService, cfg)
-	adminHandler := admin.NewHandler(adminService)
-	mapHandler := mapservice.NewHandler(mapService)
+	mapHandler := mapservice.NewHandler(mapService, cfg)
+	eventHandler := event.NewHandler(eventService, mapHandler, cfg)
+	adminHandler := admin.NewHandler(adminService, db)
 	locationHandler := location.NewHandler(locationService)
 	trustHandler := trust.NewHandler(auditService, moderationService, reportingService, scoreService)
+	registrationHandler := registration.NewHandler(registrationService)
+	uploadHandler := upload.NewHandler(upload.DefaultConfig())
 
 	// Initialize AI services
 	geminiClient := ai.NewClient(cfg.Gemini)
@@ -158,21 +190,116 @@ func main() {
 		appLogger.Warn("AI Personalization disabled (no GEMINI_API_KEY)")
 	}
 
-	// Register routes
-	authHandler.RegisterRoutes(v1)
+	// Rate limiters for sensitive endpoints
+	registerRL := rateLimiter.Middleware("event_create") // 5 req/hr per IP
+	verifyRL := rateLimiter.Middleware("report_submit")  // 10 req/hr per IP
+	resendRL := rateLimiter.Middleware("report_submit")  // 10 req/hr per IP
+	loginRL := rateLimiter.Middleware("default")         // 100 req/hr per IP
+
+	// Register routes (with rate limiting on auth/registration)
+	authHandler.RegisterRoutes(v1, loginRL, registerRL, verifyRL, resendRL)
+	authHandler.RegisterProtectedRoutes(v1, authMiddleware) // /me/* GDPR + logout
 	organizerHandler.RegisterRoutes(v1, authMiddleware)
 	eventHandler.RegisterRoutes(v1, authMiddleware)
 	adminHandler.RegisterRoutes(v1, authMiddleware)
-	mapHandler.RegisterRoutes(v1)
+	mapHandler.RegisterRoutes(v1, nil)
 	locationHandler.RegisterRoutes(v1)
 	trustHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 	aiHandler.RegisterRoutes(v1, authMiddleware)
+	registrationHandler.RegisterRoutes(v1, registerRL, verifyRL, resendRL)
+	uploadHandler.RegisterRoutes(v1, authMiddleware)
 
-	// Apply rate limiting to sensitive endpoints
-	// TODO: Apply rate limiting to sensitive endpoints within the handlers or via middleware injection
-	// v1.POST("/events", rateLimiter.Middleware("event_create"))
-	// v1.PUT("/events/:id", rateLimiter.Middleware("event_edit"))
-	// v1.POST("/reports", rateLimiter.Middleware("report_submit"))
+	// Countries API (public, no auth)
+	countriesRepo := countries.NewRepository(db)
+	countriesHandler := countries.NewHandler(countriesRepo)
+	countriesHandler.RegisterRoutes(v1)
+
+	// Verification API (auth + admin)
+	verificationRepo := verification.NewRepository(db)
+	verificationHandler := verification.NewHandler(verificationRepo)
+	verificationHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
+
+	// Payment API
+	paymentRepo := payment.NewRepository(db)
+	paymentService := payment.NewService(paymentRepo, payment.Config{
+		CommissionRate: 0.10, // 10% platform fee
+	})
+	paymentHandler := payment.NewHandler(paymentService)
+	paymentHandler.RegisterRoutes(v1, authMiddleware)
+
+	// ── Previously Unregistered Modules ──
+
+	// Reservation API (join/cancel events, availability)
+	reservationService := reservation.NewService(db, cfg)
+	reservationHandler := reservation.NewHandler(reservationService)
+	reservationHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Join Registration API (2-step attendee sign-up)
+	joinRegService := joinreg.NewService(db, cfg)
+	joinRegHandler := joinreg.NewHandler(joinRegService)
+	joinRegHandler.RegisterRoutes(v1, rateLimiter.Middleware("default"))
+
+	// Spiritual Quotes API (public)
+	quoteRepo := spiritualquote.NewRepository(db)
+	quoteService := spiritualquote.NewService(quoteRepo)
+	quoteHandler := spiritualquote.NewHandler(quoteService)
+	quoteHandler.RegisterRoutes(v1)
+
+	// Launch Control API (admin)
+	launchService := launch.NewService(redisClient)
+	launchHandler := launch.NewHandler(launchService)
+	launchHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
+
+	// Organization Dashboard API
+	orgdashService := orgdash.NewService(db)
+	orgdashHandler := orgdash.NewHandler(orgdashService)
+
+	orgRoutes := v1.Group("/org/:orgId")
+	orgRoutes.Use(authMiddleware)
+	orgRoutes.Use(func(c *gin.Context) {
+		orgID, err := uuid.Parse(c.Param("orgId"))
+		if err != nil {
+			response.BadRequest(c, "Invalid organization ID")
+			c.Abort()
+			return
+		}
+		c.Set("org_id", orgID)
+		c.Next()
+	})
+	{
+		orgRoutes.GET("/dashboard", orgdashHandler.GetDashboard)
+		orgRoutes.GET("/analytics", orgdashHandler.GetAnalytics)
+		orgRoutes.GET("/activity", orgdashHandler.GetActivity)
+
+		orgRoutes.GET("/events", orgdashHandler.ListEvents)
+		orgRoutes.POST("/events", orgdashHandler.CreateEvent)
+		orgRoutes.PUT("/events/:event_id", orgdashHandler.UpdateEvent)
+		orgRoutes.DELETE("/events/:event_id", orgdashHandler.CancelEvent)
+		orgRoutes.POST("/events/:event_id/duplicate", orgdashHandler.DuplicateEvent)
+
+		orgRoutes.GET("/members", orgdashHandler.ListMembers)
+		orgRoutes.POST("/members", orgdashHandler.AddMember)
+		orgRoutes.PUT("/members/:member_id", orgdashHandler.UpdateMemberRole)
+		orgRoutes.DELETE("/members/:member_id", orgdashHandler.RemoveMember)
+
+		orgRoutes.GET("/profile", orgdashHandler.GetProfile)
+		orgRoutes.PUT("/profile", orgdashHandler.UpdateProfile)
+	}
+
+	// Attendee Management API (under org routes)
+	attendeeService := attendee.NewService(db)
+	attendeeHandler := attendee.NewHandler(attendeeService)
+	{
+		orgRoutes.GET("/events/:event_id/attendees", attendeeHandler.ListAttendees)
+		orgRoutes.PUT("/events/:event_id/attendees/:reg_id/attendance", attendeeHandler.MarkAttendance)
+		orgRoutes.DELETE("/events/:event_id/attendees/:reg_id", attendeeHandler.RemoveAttendee)
+		orgRoutes.GET("/events/:event_id/attendees/export", attendeeHandler.ExportCSV)
+	}
+
+	// Owner Posts API (public read + admin CRUD)
+	ownerPostsService := ownerposts.NewService(db)
+	ownerPostsHandler := ownerposts.NewHandler(ownerPostsService)
+	ownerPostsHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 
 	// 404 handler
 	router.NoRoute(func(c *gin.Context) {
@@ -238,6 +365,10 @@ func (a *eventRepoAdapter) GetByID(id uuid.UUID) (*models.EventWithOrganizer, er
 
 func (a *eventRepoAdapter) UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error {
 	return a.repo.UpdateStatus(id, status, rejectionReason)
+}
+
+func (a *eventRepoAdapter) UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error {
+	return a.repo.UpdateStatusWithReviewer(id, status, rejectionReason, reviewedBy)
 }
 
 func (a *eventRepoAdapter) ListPending() ([]models.EventWithOrganizer, error) {

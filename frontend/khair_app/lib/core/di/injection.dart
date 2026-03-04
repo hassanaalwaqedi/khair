@@ -8,6 +8,8 @@ import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/data/datasources/registration_datasource.dart';
+import '../../features/auth/presentation/bloc/registration_bloc.dart';
 import '../../features/events/data/datasources/events_remote_datasource.dart';
 import '../../features/events/data/repositories/events_repository_impl.dart';
 import '../../features/events/domain/repositories/events_repository.dart';
@@ -16,6 +18,7 @@ import '../../features/organizer/data/datasources/organizer_remote_datasource.da
 import '../../features/organizer/data/repositories/organizer_repository_impl.dart';
 import '../../features/organizer/domain/repositories/organizer_repository.dart';
 import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
+import '../../features/organizer/presentation/cubit/create_event_cubit.dart';
 import '../../features/admin/data/datasources/admin_remote_datasource.dart';
 import '../../features/admin/data/repositories/admin_repository_impl.dart';
 import '../../features/admin/domain/repositories/admin_repository.dart';
@@ -27,6 +30,16 @@ import '../../features/location/domain/usecases/resolve_location_usecase.dart';
 import '../../features/location/presentation/bloc/location_bloc.dart';
 import '../../features/ai/data/ai_remote_datasource.dart';
 import '../../features/ai/presentation/bloc/ai_bloc.dart';
+import '../../features/map/data/services/geo_service.dart';
+import '../../features/map/presentation/managers/map_state_manager.dart';
+import '../../features/map/presentation/managers/marker_cluster_manager.dart';
+import '../../features/spiritual_quotes/data/datasources/spiritual_quotes_remote_datasource.dart';
+import '../../features/spiritual_quotes/data/repositories/spiritual_quotes_repository_impl.dart';
+import '../../features/spiritual_quotes/domain/repositories/spiritual_quotes_repository.dart';
+import '../../features/owner_posts/data/datasources/owner_post_remote_datasource.dart';
+import '../../features/owner_posts/data/repositories/owner_post_repository_impl.dart';
+import '../../features/owner_posts/domain/repositories/owner_post_repository.dart';
+import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -37,21 +50,24 @@ Future<void> configureDependencies() async {
 
   // Dio
   final dio = Dio(BaseOptions(
-    baseUrl: const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8080/api/v1'),
+    baseUrl: const String.fromEnvironment('API_URL',
+        defaultValue: 'http://localhost:8080/api/v1'),
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
+    responseType: ResponseType.json,
     headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept': 'application/json; charset=utf-8',
+      'Accept-Charset': 'utf-8',
     },
   ));
-  
+
   dio.interceptors.add(AuthInterceptor(secureStorage));
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
     responseBody: true,
   ));
-  
+
   getIt.registerSingleton<Dio>(dio);
   getIt.registerSingleton<ApiClient>(ApiClient(dio));
 
@@ -67,6 +83,14 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(getIt<AuthRepository>()),
+  );
+
+  // Registration Feature
+  getIt.registerLazySingleton<RegistrationRemoteDataSource>(
+    () => RegistrationRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<RegistrationBloc>(
+    () => RegistrationBloc(getIt<RegistrationRemoteDataSource>()),
   );
 
   // Events Feature
@@ -123,5 +147,44 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<AiBloc>(
     () => AiBloc(getIt<AiRemoteDataSource>()),
   );
-}
 
+  // Smart Map Feature
+  getIt.registerLazySingleton<GeoService>(
+    () => GeoService(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<MarkerClusterManager>(
+    MarkerClusterManager.new,
+  );
+  getIt.registerFactory<MapStateManager>(
+    () => MapStateManager(
+      getIt<GeoService>(),
+      getIt<MarkerClusterManager>(),
+    ),
+  );
+
+  // Spiritual Quotes Feature
+  getIt.registerLazySingleton<SpiritualQuotesRemoteDataSource>(
+    () => SpiritualQuotesRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<SpiritualQuotesRepository>(
+    () => SpiritualQuotesRepositoryImpl(
+      getIt<SpiritualQuotesRemoteDataSource>(),
+    ),
+  );
+
+  // Create Event Feature
+  getIt.registerFactory<CreateEventCubit>(
+    () => CreateEventCubit(getIt<EventsRepository>()),
+  );
+
+  // Owner Posts Feature
+  getIt.registerLazySingleton<OwnerPostRemoteDataSource>(
+    () => OwnerPostRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<OwnerPostRepository>(
+    () => OwnerPostRepositoryImpl(getIt<OwnerPostRemoteDataSource>()),
+  );
+  getIt.registerFactory<OwnerPostsBloc>(
+    () => OwnerPostsBloc(getIt<OwnerPostRepository>()),
+  );
+}

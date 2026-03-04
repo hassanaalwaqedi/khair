@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .MetaTitle }}</title>
+  <meta name="description" content="{{ .MetaDescription }}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="{{ .CanonicalURL }}">
+  <meta property="og:title" content="{{ .MetaTitle }}">
+  <meta property="og:description" content="{{ .MetaDescription }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ .CanonicalURL }}">
+  <style>
+    :root {
+      --navy-950: #071226;
+      --navy-900: #0d1e3d;
+      --navy-700: #1a3768;
+      --emerald-600: #0f8f6a;
+      --emerald-500: #12a074;
+      --emerald-100: #d8f3e8;
+      --text: #132033;
+      --muted: #50617e;
+      --surface: #ffffff;
+      --surface-soft: #f4f8fb;
+      --border: #d7dfec;
+      --shadow: 0 14px 36px rgba(10, 28, 55, 0.12);
+      --radius: 16px;
+      --max-width: 1140px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: linear-gradient(180deg, #f4f8fb 0%, #eef5f1 48%, #f8fbfd 100%);
+      font-family: "Trebuchet MS", "Gill Sans MT", "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      font-family: "Palatino Linotype", "Book Antiqua", Garamond, serif;
+      letter-spacing: 0.2px;
+      margin: 0 0 12px;
+      color: var(--navy-900);
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(var(--max-width), 92vw);
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(7, 18, 38, 0.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 74px;
+      gap: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #f2f6ff;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1dbd8c, #118965);
+      color: #ffffff;
+      font-family: "Palatino Linotype", "Book Antiqua", Garamond, serif;
+      font-size: 1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #d8e3fa;
+      font-size: 0.95rem;
+      position: relative;
+      transition: color 0.24s ease;
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -5px;
+      width: 0;
+      height: 2px;
+      background: #2cc79a;
+      transition: width 0.24s ease;
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: transform 0.24s ease, box-shadow 0.24s ease, background 0.24s ease, color 0.24s ease, border-color 0.24s ease;
+      will-change: transform;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(10, 30, 58, 0.18);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--emerald-600), var(--emerald-500));
+      color: #ffffff;
+    }
+
+    .btn-outline {
+      border-color: rgba(9, 35, 70, 0.18);
+      background: #ffffff;
+      color: var(--navy-900);
+    }
+
+    .btn-nav {
+      border-color: rgba(255, 255, 255, 0.32);
+      color: #ffffff;
+      background: transparent;
+      padding: 10px 16px;
+    }
+
+    .auth-actions {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 88px 0 78px;
+      background: linear-gradient(130deg, var(--navy-950) 0%, #0d2f5f 46%, #0b2144 100%);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(27, 196, 142, 0.19), transparent 30%),
+        radial-gradient(circle at 88% 22%, rgba(110, 157, 240, 0.15), transparent 28%),
+        repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.06) 0 1.5px, transparent 1.5px 36px),
+        repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.06) 0 1.5px, transparent 1.5px 36px);
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .kicker {
+      display: inline-block;
+      margin-bottom: 14px;
+      border-radius: 999px;
+      padding: 7px 14px;
+      background: rgba(22, 184, 134, 0.16);
+      color: #9ae8cb;
+      border: 1px solid rgba(167, 239, 214, 0.3);
+      font-size: 0.82rem;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      color: #f4f8ff;
+      font-size: clamp(2rem, 4.7vw, 3.35rem);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      color: #d4def2;
+      max-width: 670px;
+      font-size: clamp(1.01rem, 1.6vw, 1.18rem);
+    }
+
+    .hero-actions {
+      margin-top: 28px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-panel {
+      border-radius: 18px;
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      box-shadow: 0 24px 48px rgba(4, 11, 22, 0.28);
+      backdrop-filter: blur(8px);
+      color: #f2f6ff;
+    }
+
+    .hero-panel h3 {
+      color: #ffffff;
+      margin-bottom: 14px;
+      font-size: 1.25rem;
+    }
+
+    .hero-points {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .hero-points li {
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e5ecfb;
+      font-size: 0.95rem;
+    }
+
+    .section {
+      padding: 82px 0;
+    }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--emerald-600);
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3vw, 2.45rem);
+      margin-bottom: 12px;
+    }
+
+    .section-lead {
+      max-width: 760px;
+      font-size: 1.05rem;
+      margin-bottom: 30px;
+    }
+
+    .organizer-highlight {
+      background: linear-gradient(145deg, #f6fbff 0%, #ecf9f2 100%);
+    }
+
+    .organizer-shell {
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 3.8vw, 40px);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .organizer-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .organizer-list li {
+      position: relative;
+      border: 1px solid #d8e8e3;
+      border-radius: 11px;
+      padding: 11px 12px 11px 42px;
+      background: #f8fdf9;
+      color: #1d314d;
+      font-weight: 600;
+    }
+
+    .organizer-list li::before {
+      content: "";
+      position: absolute;
+      left: 13px;
+      top: 12px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 32%, #2ecb9c, #0f8f6a);
+      box-shadow: 0 0 0 4px rgba(46, 203, 156, 0.16);
+    }
+
+    .cards-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 26px rgba(13, 33, 64, 0.08);
+      padding: 22px;
+      transition: transform 0.24s ease, box-shadow 0.24s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 30px rgba(13, 33, 64, 0.15);
+    }
+
+    .icon-badge {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      background: linear-gradient(140deg, #e6f8f0, #e3ecff);
+      color: var(--navy-700);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+    }
+
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 24px rgba(12, 29, 57, 0.09);
+      padding: 22px;
+      text-align: center;
+    }
+
+    .step-no {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--navy-900);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .spotlight {
+      background: var(--surface-soft);
+    }
+
+    .event-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(12, 29, 57, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .event-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #d7e5f8;
+    }
+
+    .event-content {
+      padding: 16px;
+      display: grid;
+      gap: 9px;
+      flex: 1;
+    }
+
+    .event-content h3 {
+      margin: 0;
+      font-size: 1.12rem;
+    }
+
+    .event-meta {
+      font-size: 0.9rem;
+      color: #5a6d89;
+      font-weight: 600;
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .event-actions .btn {
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+    }
+
+    .inspiration-box {
+      border: 1px solid #cfe3de;
+      border-radius: 18px;
+      background: linear-gradient(140deg, #f8fffb, #eef9f6);
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 4vw, 36px);
+      text-align: center;
+    }
+
+    .inspiration-box h3 {
+      font-size: clamp(1.35rem, 2.6vw, 2rem);
+      margin-bottom: 10px;
+    }
+
+    .inspiration-box p {
+      max-width: 700px;
+      margin: 0 auto 18px;
+      font-size: 1rem;
+    }
+
+    .quote-shell {
+      display: grid;
+      place-items: center;
+    }
+
+    .quote-card {
+      width: min(760px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      text-align: center;
+      padding: clamp(22px, 4vw, 38px);
+    }
+
+    .quote-mark {
+      font-family: "Palatino Linotype", "Book Antiqua", Garamond, serif;
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--emerald-600);
+      margin-bottom: 10px;
+    }
+
+    blockquote {
+      margin: 0;
+      color: var(--navy-900);
+      font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+      line-height: 1.5;
+      font-family: "Palatino Linotype", "Book Antiqua", Garamond, serif;
+    }
+
+    .quote-ref {
+      margin-top: 14px;
+      color: #60708a;
+      font-size: 0.9rem;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .final-cta {
+      background: linear-gradient(130deg, #071226 0%, #103562 44%, #0b2447 100%);
+      color: #ecf3ff;
+      padding: 84px 0;
+    }
+
+    .final-cta h2 {
+      color: #ffffff;
+      font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .final-cta p {
+      color: #d2ddf3;
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .final-actions {
+      margin-top: 26px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-light {
+      background: #ffffff;
+      color: var(--navy-900);
+    }
+
+    .btn-contrast {
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #f8fcff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    @supports (animation-timeline: view()) {
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        animation: reveal-up both;
+        animation-timeline: view();
+        animation-range: entry 8% cover 30%;
+      }
+    }
+
+    @supports not (animation-timeline: view()) {
+      .reveal {
+        animation: reveal-fallback 0.8s ease both;
+      }
+    }
+
+    @keyframes reveal-up {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes reveal-fallback {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .event-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .organizer-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links {
+        display: none;
+      }
+
+      .cards-grid,
+      .event-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 68px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a href="/" class="brand">
+        <span class="brand-mark">K</span>
+        <span>Khair</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#organize">Organizers</a>
+        <a href="#why-khair">Why Khair</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="/app/#/register">Join</a>
+      </nav>
+      <div class="auth-actions">
+        <a href="/app/#/register" class="btn btn-nav">Sign Up</a>
+        <a href="/app/#/login" class="btn btn-nav">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="reveal">
+          <p class="kicker">Built for Community Scale</p>
+          <h1>Empowering Islamic Communities Through Technology</h1>
+          <p>Discover events, connect with organizations, or become a leader in your community.</p>
+          <div class="hero-actions">
+            <a href="/app/#/events" class="btn btn-primary">Explore Events</a>
+            <a href="/app/#/organizer/apply" class="btn btn-outline">Become an Organizer</a>
+          </div>
+        </div>
+        <aside class="hero-panel reveal">
+          <h3>Platform Vision</h3>
+          <ul class="hero-points">
+            <li>One unified digital home for Islamic events and initiatives.</li>
+            <li>Infrastructure built for masjids, organizations, and local leaders.</li>
+            <li>Designed to scale from neighborhood circles to global impact.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section organizer-highlight reveal" id="organize">
+      <div class="container organizer-shell">
+        <div>
+          <p class="section-kicker">Organizer Growth</p>
+          <h2 class="section-title">Have an Idea for an Islamic Event?</h2>
+          <p class="section-lead">Launch lectures, workshops, youth meetups, or charity initiatives with professional tools designed for Islamic communities.</p>
+          <a href="/app/#/organizer/apply" class="btn btn-primary">Start Organizing Today</a>
+        </div>
+        <ul class="organizer-list">
+          <li>Simple event creation dashboard</li>
+          <li>Registration management</li>
+          <li>Automated notifications</li>
+          <li>Public event exposure</li>
+          <li>Build your reputation as a community leader</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section reveal" id="why-khair">
+      <div class="container">
+        <p class="section-kicker">Why Khair</p>
+        <h2 class="section-title">A Clear Solution to a Fragmented Ecosystem</h2>
+        <p class="section-lead">Islamic events are scattered, communities are disconnected, and organizations often lack modern digital infrastructure. Khair provides one platform to discover opportunities, manage operations, and sustain long-term community growth.</p>
+        <div class="cards-grid">
+          <article class="card">
+            <div class="icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3>Centralized Event Hub</h3>
+            <p>Find lectures, classes, volunteering, youth sessions, and community events in one place.</p>
+          </article>
+          <article class="card">
+            <div class="icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 19V8l7-3 7 3v11l-7 3-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M12 11v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3>Professional Management Tools</h3>
+            <p>Manage registrations, updates, communication, and attendee flow with confidence.</p>
+          </article>
+          <article class="card">
+            <div class="icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 14c2.5-2 4.5-3 7-3s4.5 1 7 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M6 18h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+            </div>
+            <h3>Community Connectivity</h3>
+            <p>Bridge organizations and attendees through trusted visibility and shared purpose.</p>
+          </article>
+          <article class="card">
+            <div class="icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 16l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 5v14h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3>Long-Term Growth Platform</h3>
+            <p>Build sustained programs, stronger participation, and measurable impact over time.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="how-it-works">
+      <div class="container">
+        <p class="section-kicker">How It Works</p>
+        <h2 class="section-title">From Idea to Impact in Three Steps</h2>
+        <div class="steps-row">
+          <article class="step-card">
+            <div class="step-no">01</div>
+            <h3>Create Account</h3>
+            <p>Join Khair in minutes and set up your profile as an individual or organization.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-no">02</div>
+            <h3>Publish Event</h3>
+            <p>Launch your event with clear details, registration controls, and structured visibility.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-no">03</div>
+            <h3>Grow Your Community</h3>
+            <p>Reach committed attendees, build trust, and increase positive community engagement.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section spotlight reveal">
+      <div class="container">
+        <p class="section-kicker">Community Momentum</p>
+        <h2 class="section-title">Featured Opportunities Across the Ummah</h2>
+        {{ if .Events }}
+          <div class="event-grid">
+            {{ range .Events }}
+            <article class="event-card">
+              {{ if .ImageURL }}
+              <img class="event-image" src="{{ .ImageURL }}" alt="{{ .Title }}">
+              {{ end }}
+              <div class="event-content">
+                <h3>{{ .Title }}</h3>
+                <p>{{ .Description }}</p>
+                <p class="event-meta"><time datetime="{{ .StartDateISO }}">{{ .StartDateText }}</time> • {{ .Location }}</p>
+                <div class="event-actions">
+                  <a href="{{ .EventURL }}" class="btn btn-outline">View Details</a>
+                  <a href="{{ .JoinURL }}" class="btn btn-primary">Join Event</a>
+                </div>
+              </div>
+            </article>
+            {{ end }}
+          </div>
+        {{ else }}
+          <div class="inspiration-box">
+            <h3>Your next meaningful initiative can start now.</h3>
+            <p>From a small halaqah to a city-wide charity drive, every sincere effort can transform lives. Khair gives you the foundation to launch and grow with excellence.</p>
+            <a href="/app/#/organizer/apply" class="btn btn-primary">Start Organizing Today</a>
+          </div>
+        {{ end }}
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container quote-shell">
+        <article class="quote-card">
+          <p class="quote-mark">“</p>
+          <blockquote>Whoever guides someone to goodness will have a reward like one who did it.</blockquote>
+          <p class="quote-ref">Sahih Muslim</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="final-cta reveal" id="join">
+      <div class="container">
+        <h2>Be Part of the Digital Future of the Ummah</h2>
+        <p>Join a platform designed for scale, trust, and meaningful community outcomes.</p>
+        <div class="final-actions">
+          <a href="/app/#/register" class="btn btn-light">Join Khair</a>
+          <a href="/app/#/organizer/apply" class="btn btn-contrast">Register Your Organization</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

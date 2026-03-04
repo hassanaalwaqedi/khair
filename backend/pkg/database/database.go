@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -31,6 +32,19 @@ func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
 	// Test the connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Enforce UTF-8 for client communication and validate server encoding.
+	if _, err := db.Exec(`SET client_encoding = 'UTF8'`); err != nil {
+		return nil, fmt.Errorf("failed to set client encoding to UTF8: %w", err)
+	}
+
+	var serverEncoding string
+	if err := db.QueryRow(`SHOW SERVER_ENCODING`).Scan(&serverEncoding); err != nil {
+		return nil, fmt.Errorf("failed to read server encoding: %w", err)
+	}
+	if strings.ToUpper(serverEncoding) != "UTF8" {
+		return nil, fmt.Errorf("database server encoding must be UTF8, got %s", serverEncoding)
 	}
 
 	// Configure connection pool

@@ -104,6 +104,66 @@ abstract class AppLocalizations {
   /// **'Khair'**
   String get appTitle;
 
+  /// No description provided for @discoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover Meaningful Gatherings'**
+  String get discoverTitle;
+
+  /// No description provided for @discoverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with knowledge, community, and purposeful events'**
+  String get discoverSubtitle;
+
+  /// No description provided for @searchGatherings.
+  ///
+  /// In en, this message translates to:
+  /// **'Search gatherings...'**
+  String get searchGatherings;
+
+  /// No description provided for @khairCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair Community'**
+  String get khairCommunity;
+
+  /// No description provided for @searchEventsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events, topics, cities...'**
+  String get searchEventsHint;
+
+  /// No description provided for @happeningInCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening in Your Community'**
+  String get happeningInCommunity;
+
+  /// No description provided for @motivationalLine1.
+  ///
+  /// In en, this message translates to:
+  /// **'Indeed, with hardship comes ease 🌿'**
+  String get motivationalLine1;
+
+  /// No description provided for @motivationalLine2.
+  ///
+  /// In en, this message translates to:
+  /// **'And We made you peoples and tribes so that you may know one another 🤍'**
+  String get motivationalLine2;
+
+  /// No description provided for @motivationalLine3.
+  ///
+  /// In en, this message translates to:
+  /// **'Allah is Gentle with His servants 🌙'**
+  String get motivationalLine3;
+
+  /// No description provided for @dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get dateLabel;
+
   /// No description provided for @heroTagline.
   ///
   /// In en, this message translates to:
@@ -151,6 +211,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cities'**
   String get cities;
+
+  /// No description provided for @catKnowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge'**
+  String get catKnowledge;
+
+  /// No description provided for @catQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get catQuran;
+
+  /// No description provided for @catLectures.
+  ///
+  /// In en, this message translates to:
+  /// **'Lectures'**
+  String get catLectures;
+
+  /// No description provided for @catCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get catCommunity;
+
+  /// No description provided for @catYouth.
+  ///
+  /// In en, this message translates to:
+  /// **'Youth'**
+  String get catYouth;
+
+  /// No description provided for @catCharity.
+  ///
+  /// In en, this message translates to:
+  /// **'Charity'**
+  String get catCharity;
+
+  /// No description provided for @catFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get catFamily;
 
   /// No description provided for @whyChooseKhair.
   ///
@@ -650,6 +752,66 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @reserveSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve Seat'**
+  String get reserveSeat;
+
+  /// No description provided for @attendGathering.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend Gathering'**
+  String get attendGathering;
+
+  /// No description provided for @emptyGatheringsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No gatherings available at the moment'**
+  String get emptyGatheringsTitle;
+
+  /// No description provided for @emptyGatheringsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check back soon for beneficial events'**
+  String get emptyGatheringsSubtitle;
+
+  /// No description provided for @verifiedOrg.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verifiedOrg;
+
+  /// No description provided for @seatsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} seats remaining'**
+  String seatsRemaining(int count);
+
+  /// No description provided for @reservationSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'May this gathering bring benefit to you'**
+  String get reservationSuccess;
+
+  /// No description provided for @refreshEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refreshEvents;
+
+  /// No description provided for @filterByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Date'**
+  String get filterByDate;
+
+  /// No description provided for @clearDateFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Date Filter'**
+  String get clearDateFilter;
+
   /// No description provided for @noInternetConnection.
   ///
   /// In en, this message translates to:
@@ -715,6 +877,840 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch Language'**
   String get switchLanguage;
+
+  /// No description provided for @pageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get pageNotFound;
+
+  /// No description provided for @goHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Home'**
+  String get goHome;
+
+  /// No description provided for @toggleTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle theme'**
+  String get toggleTheme;
+
+  /// No description provided for @locating.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating...'**
+  String get locating;
+
+  /// No description provided for @trending.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending'**
+  String get trending;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get thisMonth;
+
+  /// No description provided for @mapDiscoverNearbyEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover nearby Islamic events'**
+  String get mapDiscoverNearbyEvents;
+
+  /// No description provided for @mapLoadingEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading events...'**
+  String get mapLoadingEvents;
+
+  /// No description provided for @mapLoadingCachedResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading cached map results...'**
+  String get mapLoadingCachedResults;
+
+  /// No description provided for @mapFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map Filters'**
+  String get mapFiltersTitle;
+
+  /// No description provided for @mapRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius'**
+  String get mapRadius;
+
+  /// No description provided for @mapDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get mapDate;
+
+  /// No description provided for @weekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend'**
+  String get weekend;
+
+  /// No description provided for @mapAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get mapAny;
+
+  /// No description provided for @mapWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend'**
+  String get mapWeekend;
+
+  /// No description provided for @mapCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get mapCustom;
+
+  /// No description provided for @mapChooseDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose date range'**
+  String get mapChooseDateRange;
+
+  /// No description provided for @mapGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get mapGender;
+
+  /// No description provided for @mapAgePreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Age Preference'**
+  String get mapAgePreference;
+
+  /// No description provided for @mapCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get mapCategories;
+
+  /// No description provided for @mapFreeEventsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Free events only'**
+  String get mapFreeEventsOnly;
+
+  /// No description provided for @mapAlmostFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost full'**
+  String get mapAlmostFull;
+
+  /// No description provided for @mapPersonalizedRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized recommendations'**
+  String get mapPersonalizedRecommendations;
+
+  /// No description provided for @mapRequiresSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires signed-in account'**
+  String get mapRequiresSignIn;
+
+  /// No description provided for @mapContextLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Context Layers'**
+  String get mapContextLayers;
+
+  /// No description provided for @mapApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get mapApply;
+
+  /// No description provided for @mapVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get mapVerifiedBadge;
+
+  /// No description provided for @mapRemainingSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining seats: {count}'**
+  String mapRemainingSeats(int count);
+
+  /// No description provided for @mapReserveSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve Seat'**
+  String get mapReserveSeat;
+
+  /// No description provided for @mapGetDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Directions'**
+  String get mapGetDirections;
+
+  /// No description provided for @mapDirectionsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions link copied to clipboard'**
+  String get mapDirectionsCopied;
+
+  /// No description provided for @mapKmAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km away'**
+  String mapKmAway(String distance);
+
+  /// No description provided for @mapRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get mapRecommended;
+
+  /// No description provided for @mapEndingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending Soon'**
+  String get mapEndingSoon;
+
+  /// No description provided for @mapContextMosques.
+  ///
+  /// In en, this message translates to:
+  /// **'Mosques'**
+  String get mapContextMosques;
+
+  /// No description provided for @mapContextIslamicCenters.
+  ///
+  /// In en, this message translates to:
+  /// **'Islamic Centers'**
+  String get mapContextIslamicCenters;
+
+  /// No description provided for @mapContextHalalRestaurants.
+  ///
+  /// In en, this message translates to:
+  /// **'Halal Restaurants'**
+  String get mapContextHalalRestaurants;
+
+  /// No description provided for @mapDistanceOrg.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km • {organization}'**
+  String mapDistanceOrg(String distance, String organization);
+
+  /// No description provided for @registrationBismillahArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'**
+  String get registrationBismillahArabic;
+
+  /// No description provided for @registrationBismillahTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'In the name of God, the Most Gracious, the Most Merciful'**
+  String get registrationBismillahTranslation;
+
+  /// No description provided for @registrationJoinUmmah.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the Ummah'**
+  String get registrationJoinUmmah;
+
+  /// No description provided for @registrationChooseContribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you\'d like to contribute to the community'**
+  String get registrationChooseContribution;
+
+  /// No description provided for @registrationContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get registrationContinue;
+
+  /// No description provided for @registrationCreateAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your Account'**
+  String get registrationCreateAccountTitle;
+
+  /// No description provided for @registrationCredentialsSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Your credentials are securely encrypted'**
+  String get registrationCredentialsSecure;
+
+  /// No description provided for @registrationFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get registrationFullName;
+
+  /// No description provided for @registrationEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name'**
+  String get registrationEnterFullName;
+
+  /// No description provided for @registrationAboutYouTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell Us About You'**
+  String get registrationAboutYouTitle;
+
+  /// No description provided for @registrationAboutYouSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help us personalize your experience'**
+  String get registrationAboutYouSubtitle;
+
+  /// No description provided for @registrationDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get registrationDisplayName;
+
+  /// No description provided for @registrationEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get registrationEnterName;
+
+  /// No description provided for @registrationBriefBioOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief bio (optional)'**
+  String get registrationBriefBioOptional;
+
+  /// No description provided for @registrationOrganizationType.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization Type'**
+  String get registrationOrganizationType;
+
+  /// No description provided for @registrationOrgTypeMosque.
+  ///
+  /// In en, this message translates to:
+  /// **'Mosque'**
+  String get registrationOrgTypeMosque;
+
+  /// No description provided for @registrationOrgTypeQuranCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran Center'**
+  String get registrationOrgTypeQuranCenter;
+
+  /// No description provided for @registrationOrgTypeCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Center'**
+  String get registrationOrgTypeCommunity;
+
+  /// No description provided for @registrationOrgTypeCharity.
+  ///
+  /// In en, this message translates to:
+  /// **'Charity'**
+  String get registrationOrgTypeCharity;
+
+  /// No description provided for @registrationOrgTypeEducational.
+  ///
+  /// In en, this message translates to:
+  /// **'Educational Institute'**
+  String get registrationOrgTypeEducational;
+
+  /// No description provided for @registrationOrgTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get registrationOrgTypeOther;
+
+  /// No description provided for @registrationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get registrationRequired;
+
+  /// No description provided for @registrationSpecialization.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialization'**
+  String get registrationSpecialization;
+
+  /// No description provided for @registrationSpecializationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Fiqh, Tafseer, Hadith'**
+  String get registrationSpecializationHint;
+
+  /// No description provided for @registrationIjazahCertifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Ijazah & Certifications'**
+  String get registrationIjazahCertifications;
+
+  /// No description provided for @registrationDescribeCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your credentials and qualifications'**
+  String get registrationDescribeCredentials;
+
+  /// No description provided for @registrationSubmitVerificationDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'You can submit verification documents after registration'**
+  String get registrationSubmitVerificationDocs;
+
+  /// No description provided for @registrationWelcomeIslam.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Islam!'**
+  String get registrationWelcomeIslam;
+
+  /// No description provided for @registrationWelcomeIslamSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re here to support you on your journey. You\'ll be connected with mentors and resources.'**
+  String get registrationWelcomeIslamSubtitle;
+
+  /// No description provided for @registrationPreferredLearningLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Learning Language'**
+  String get registrationPreferredLearningLanguage;
+
+  /// No description provided for @registrationLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get registrationLanguageEnglish;
+
+  /// No description provided for @registrationLanguageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get registrationLanguageArabic;
+
+  /// No description provided for @registrationLanguageFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get registrationLanguageFrench;
+
+  /// No description provided for @registrationLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get registrationLanguageSpanish;
+
+  /// No description provided for @registrationLanguageTurkish.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get registrationLanguageTurkish;
+
+  /// No description provided for @registrationLanguageUrdu.
+  ///
+  /// In en, this message translates to:
+  /// **'Urdu'**
+  String get registrationLanguageUrdu;
+
+  /// No description provided for @registrationLearningGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning Goals'**
+  String get registrationLearningGoals;
+
+  /// No description provided for @registrationLearningGoalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Quran memorization, Arabic language, Islamic studies'**
+  String get registrationLearningGoalsHint;
+
+  /// No description provided for @registrationCurrentLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Level'**
+  String get registrationCurrentLevel;
+
+  /// No description provided for @registrationLevelBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get registrationLevelBeginner;
+
+  /// No description provided for @registrationLevelIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get registrationLevelIntermediate;
+
+  /// No description provided for @registrationLevelAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get registrationLevelAdvanced;
+
+  /// No description provided for @registrationCommunityGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Community / Group Name'**
+  String get registrationCommunityGroupName;
+
+  /// No description provided for @registrationCommunityFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Focus Area'**
+  String get registrationCommunityFocus;
+
+  /// No description provided for @registrationCommunityFocusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Youth programs, da\'wah, social services'**
+  String get registrationCommunityFocusHint;
+
+  /// No description provided for @registrationSelectRolePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a role to continue'**
+  String get registrationSelectRolePrompt;
+
+  /// No description provided for @registrationRoleStepTitleOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization Details'**
+  String get registrationRoleStepTitleOrganization;
+
+  /// No description provided for @registrationRoleStepTitleSheikh.
+  ///
+  /// In en, this message translates to:
+  /// **'Scholar Profile'**
+  String get registrationRoleStepTitleSheikh;
+
+  /// No description provided for @registrationRoleStepTitleNewMuslim.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Journey'**
+  String get registrationRoleStepTitleNewMuslim;
+
+  /// No description provided for @registrationRoleStepTitleStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Student Profile'**
+  String get registrationRoleStepTitleStudent;
+
+  /// No description provided for @registrationRoleStepTitleCommunityOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer Details'**
+  String get registrationRoleStepTitleCommunityOrganizer;
+
+  /// No description provided for @registrationRoleStepTitleDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Details'**
+  String get registrationRoleStepTitleDefault;
+
+  /// No description provided for @registrationRoleStepSubtitleOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about your organization'**
+  String get registrationRoleStepSubtitleOrganization;
+
+  /// No description provided for @registrationRoleStepSubtitleSheikh.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your scholarly background'**
+  String get registrationRoleStepSubtitleSheikh;
+
+  /// No description provided for @registrationRoleStepSubtitleNewMuslim.
+  ///
+  /// In en, this message translates to:
+  /// **'Help us personalize your experience'**
+  String get registrationRoleStepSubtitleNewMuslim;
+
+  /// No description provided for @registrationRoleStepSubtitleStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about your learning journey'**
+  String get registrationRoleStepSubtitleStudent;
+
+  /// No description provided for @registrationRoleStepSubtitleCommunityOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about your community work'**
+  String get registrationRoleStepSubtitleCommunityOrganizer;
+
+  /// No description provided for @registrationRoleStepSubtitleDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide additional information'**
+  String get registrationRoleStepSubtitleDefault;
+
+  /// No description provided for @registrationReviewCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review & Complete'**
+  String get registrationReviewCompleteTitle;
+
+  /// No description provided for @registrationReviewCompleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure everything looks good before submitting'**
+  String get registrationReviewCompleteSubtitle;
+
+  /// No description provided for @registrationReviewName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get registrationReviewName;
+
+  /// No description provided for @registrationVerificationEmailWillBeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A verification email will be sent to {email}'**
+  String registrationVerificationEmailWillBeSent(String email);
+
+  /// No description provided for @registrationCompleteRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get registrationCompleteRegistration;
+
+  /// No description provided for @registrationVerifyEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Your Email'**
+  String get registrationVerifyEmailTitle;
+
+  /// No description provided for @registrationSentSixDigitCodeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to'**
+  String get registrationSentSixDigitCodeTo;
+
+  /// No description provided for @registrationCodeExpiresInTenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expires in 10 minutes'**
+  String get registrationCodeExpiresInTenMinutes;
+
+  /// No description provided for @registrationVerifyEmailButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Email'**
+  String get registrationVerifyEmailButton;
+
+  /// No description provided for @registrationDidNotReceiveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the code? '**
+  String get registrationDidNotReceiveCode;
+
+  /// No description provided for @registrationResendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get registrationResendCode;
+
+  /// No description provided for @registrationCheckSpamFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your spam folder if you don\'t see the email'**
+  String get registrationCheckSpamFolder;
+
+  /// No description provided for @registrationWelcomeArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'أهلاً وسهلاً'**
+  String get registrationWelcomeArabic;
+
+  /// No description provided for @registrationCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Complete!'**
+  String get registrationCompleteTitle;
+
+  /// No description provided for @registrationGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get registrationGetStarted;
+
+  /// No description provided for @registrationCompleteYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Profile'**
+  String get registrationCompleteYourProfile;
+
+  /// No description provided for @registrationVerificationCodeResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code has been resent'**
+  String get registrationVerificationCodeResent;
+
+  /// No description provided for @registrationUnexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get registrationUnexpectedError;
+
+  /// No description provided for @registrationRoleOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get registrationRoleOrganization;
+
+  /// No description provided for @registrationRoleSheikh.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheikh / Teacher'**
+  String get registrationRoleSheikh;
+
+  /// No description provided for @registrationRoleNewMuslim.
+  ///
+  /// In en, this message translates to:
+  /// **'New Muslim'**
+  String get registrationRoleNewMuslim;
+
+  /// No description provided for @registrationRoleStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Student'**
+  String get registrationRoleStudent;
+
+  /// No description provided for @registrationRoleCommunityOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Organizer'**
+  String get registrationRoleCommunityOrganizer;
+
+  /// No description provided for @registrationRoleDescOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran center, mosque, or community group'**
+  String get registrationRoleDescOrganization;
+
+  /// No description provided for @registrationRoleDescSheikh.
+  ///
+  /// In en, this message translates to:
+  /// **'Scholar, teacher, or Islamic educator'**
+  String get registrationRoleDescSheikh;
+
+  /// No description provided for @registrationRoleDescNewMuslim.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently embraced Islam, seeking guidance'**
+  String get registrationRoleDescNewMuslim;
+
+  /// No description provided for @registrationRoleDescStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeking knowledge of Quran, Arabic, or Fiqh'**
+  String get registrationRoleDescStudent;
+
+  /// No description provided for @registrationRoleDescCommunityOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Building and leading Muslim community groups'**
+  String get registrationRoleDescCommunityOrganizer;
+
+  /// No description provided for @registrationProgressRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get registrationProgressRole;
+
+  /// No description provided for @registrationProgressAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get registrationProgressAccount;
+
+  /// No description provided for @registrationProgressProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get registrationProgressProfile;
+
+  /// No description provided for @registrationProgressDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get registrationProgressDetails;
+
+  /// No description provided for @registrationProgressReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get registrationProgressReview;
+
+  /// No description provided for @registrationProgressVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get registrationProgressVerify;
+
+  /// No description provided for @registrationProgressDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get registrationProgressDone;
+
+  /// No description provided for @spiritualQuoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Spiritual Reflection'**
+  String get spiritualQuoteTitle;
+
+  /// No description provided for @spiritualQuoteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A spiritual reminder is not available right now.'**
+  String get spiritualQuoteUnavailable;
+
+  /// No description provided for @spiritualQuoteTypeQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get spiritualQuoteTypeQuran;
+
+  /// No description provided for @spiritualQuoteTypeHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith'**
+  String get spiritualQuoteTypeHadith;
+
+  /// No description provided for @spiritualQuoteDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get spiritualQuoteDismiss;
 }
 
 class _AppLocalizationsDelegate

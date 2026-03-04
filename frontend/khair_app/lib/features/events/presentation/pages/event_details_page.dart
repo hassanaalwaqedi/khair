@@ -5,8 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/khair_theme.dart';
 import '../bloc/events_bloc.dart';
+import '../widgets/join_event_modal.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
@@ -26,6 +27,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: BlocBuilder<EventsBloc, EventsState>(
         builder: (context, state) {
@@ -33,14 +36,18 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.detailsStatus == EventsStatus.failure || state.selectedEvent == null) {
+          if (state.detailsStatus == EventsStatus.failure ||
+              state.selectedEvent == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.error_outline,
+                      size: 64, color: KhairColors.textTertiary),
                   const SizedBox(height: 16),
-                  Text('Event not found', style: TextStyle(color: Colors.grey[600])),
+                  Text('Event not found',
+                      style: KhairTypography.bodyMedium
+                          .copyWith(color: KhairColors.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context.go('/'),
@@ -62,7 +69,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 leading: Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -70,6 +77,25 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     onPressed: () => context.go('/'),
                   ),
                 ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.share_outlined,
+                          color: Colors.white),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Share feature coming soon')),
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     fit: StackFit.expand,
@@ -78,7 +104,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           ? Image.network(
                               event.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+                              errorBuilder: (_, __, ___) =>
+                                  _buildImagePlaceholder(),
                             )
                           : _buildImagePlaceholder(),
                       // Gradient overlay
@@ -89,12 +116,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.7),
+                              Colors.black.withValues(alpha: 0.7),
                             ],
                           ),
                         ),
                       ),
-                      // Event info on image
+                      // Event info overlay
                       Positioned(
                         bottom: 16,
                         left: 16,
@@ -102,31 +129,50 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                            // Type badge + attendee count
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    gradient: KhairColors.islamicGradient,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    event.eventType.toUpperCase(),
+                                    style: KhairTypography.labelSmall.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                event.eventType.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    '${event.reservedCount} attending',
+                                    style: KhairTypography.labelSmall.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 10),
                             Text(
                               event.title,
-                              style: const TextStyle(
+                              style: KhairTypography.h1.copyWith(
                                 color: Colors.white,
                                 fontSize: 24,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -139,20 +185,28 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               // Content
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Date and time
                       _buildInfoCard(
+                        context: context,
+                        isDark: isDark,
                         icon: Icons.calendar_today,
                         title: 'Date & Time',
                         content: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              DateFormat('EEEE, MMMM dd, yyyy').format(event.startDate),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              DateFormat('EEEE, MMMM dd, yyyy')
+                                  .format(event.startDate),
+                              style: KhairTypography.labelLarge.copyWith(
+                                color: isDark
+                                    ? KhairColors.darkTextPrimary
+                                    : KhairColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -160,14 +214,16 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                   (event.endDate != null
                                       ? ' - ${DateFormat('hh:mm a').format(event.endDate!)}'
                                       : ''),
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: KhairTypography.bodyMedium,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       // Location
                       _buildInfoCard(
+                        context: context,
+                        isDark: isDark,
                         icon: Icons.location_on,
                         title: 'Location',
                         content: Column(
@@ -176,41 +232,50 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                             if (event.address != null)
                               Text(
                                 event.address!,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                style: KhairTypography.labelLarge.copyWith(
+                                  color: isDark
+                                      ? KhairColors.darkTextPrimary
+                                      : KhairColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             if (event.city != null || event.country != null)
                               Text(
                                 [event.city, event.country]
                                     .where((e) => e != null)
                                     .join(', '),
-                                style: TextStyle(color: Colors.grey[600]),
+                                style: KhairTypography.bodyMedium,
                               ),
                           ],
                         ),
                       ),
                       // Map
-                      if (event.latitude != null && event.longitude != null) ...[
-                        const SizedBox(height: 16),
+                      if (event.latitude != null &&
+                          event.longitude != null) ...[
+                        const SizedBox(height: 14),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(
                             height: 200,
                             child: FlutterMap(
                               options: MapOptions(
-                                initialCenter: LatLng(event.latitude!, event.longitude!),
+                                initialCenter: LatLng(
+                                    event.latitude!, event.longitude!),
                                 initialZoom: 14,
                               ),
                               children: [
                                 TileLayer(
-                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                  urlTemplate:
+                                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                 ),
                                 MarkerLayer(
                                   markers: [
                                     Marker(
-                                      point: LatLng(event.latitude!, event.longitude!),
+                                      point: LatLng(event.latitude!,
+                                          event.longitude!),
                                       child: const Icon(
                                         Icons.location_on,
-                                        color: AppTheme.primaryColor,
+                                        color: KhairColors.primary,
                                         size: 40,
                                       ),
                                     ),
@@ -221,31 +286,65 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       // Organizer
                       if (event.organizerName != null)
                         _buildInfoCard(
+                          context: context,
+                          isDark: isDark,
                           icon: Icons.business,
-                          title: 'Organizer',
-                          content: Text(
-                            event.organizerName!,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          title: 'Organized by',
+                          content: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: KhairColors.primarySurface,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    event.organizerName![0].toUpperCase(),
+                                    style: KhairTypography.labelLarge.copyWith(
+                                      color: KhairColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                event.organizerName!,
+                                style: KhairTypography.labelLarge.copyWith(
+                                  color: isDark
+                                      ? KhairColors.darkTextPrimary
+                                      : KhairColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       // Description
                       if (event.description != null) ...[
-                        const Text(
+                        Text(
                           'About This Event',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: KhairTypography.headlineSmall.copyWith(
+                            color: isDark
+                                ? KhairColors.darkTextPrimary
+                                : KhairColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           event.description!,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 15,
-                            height: 1.6,
+                          style: KhairTypography.bodyLarge.copyWith(
+                            color: isDark
+                                ? KhairColors.darkTextSecondary
+                                : KhairColors.textSecondary,
+                            height: 1.7,
                           ),
                         ),
                       ],
@@ -258,6 +357,76 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           );
         },
       ),
+      floatingActionButton: BlocBuilder<EventsBloc, EventsState>(
+        builder: (context, state) {
+          if (state.selectedEvent == null) return const SizedBox.shrink();
+          final event = state.selectedEvent!;
+          final isFull = event.capacity != null &&
+              event.reservedCount >= event.capacity!;
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Seat counter chip
+              if (event.capacity != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isFull
+                        ? KhairColors.errorLight
+                        : KhairColors.successLight,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isFull
+                          ? KhairColors.error.withValues(alpha: 0.3)
+                          : KhairColors.success.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    isFull
+                        ? 'Sold Out'
+                        : '${event.capacity! - event.reservedCount} seats left',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          isFull ? KhairColors.error : KhairColors.success,
+                    ),
+                  ),
+                ),
+              // Join button
+              FloatingActionButton.extended(
+                onPressed: isFull
+                    ? null
+                    : () => showJoinEventModal(
+                        context, event.id, event.title),
+                backgroundColor: isFull
+                    ? (isDark
+                        ? KhairColors.darkSurfaceVariant
+                        : KhairColors.neutral400)
+                    : KhairColors.primary,
+                icon: Icon(
+                  isFull
+                      ? Icons.event_busy_rounded
+                      : Icons.event_available_rounded,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  isFull ? 'Sold Out' : 'Join Event',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -267,16 +436,23 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+          colors: [
+            Color(0xFF0D5B4D),
+            Color(0xFF2C8D73),
+            Color(0xFF74BBA3),
+          ],
         ),
       ),
-      child: const Center(
-        child: Icon(Icons.event, size: 80, color: Colors.white54),
+      child: Center(
+        child: Icon(Icons.event,
+            size: 80, color: Colors.white.withValues(alpha: 0.54)),
       ),
     );
   }
 
   Widget _buildInfoCard({
+    required BuildContext context,
+    required bool isDark,
     required IconData icon,
     required String title,
     required Widget content,
@@ -284,15 +460,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
+        color: isDark ? KhairColors.darkCard : KhairColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: isDark ? KhairColors.darkBorder : KhairColors.border,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,10 +472,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: KhairColors.primarySurface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppTheme.primaryColor),
+            child: Icon(icon, color: KhairColors.primary),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -312,10 +484,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: KhairTypography.labelSmall.copyWith(
+                    color: KhairColors.textTertiary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),

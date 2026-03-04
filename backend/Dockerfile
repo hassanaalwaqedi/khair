@@ -31,6 +31,7 @@ RUN apk --no-cache add ca-certificates tzdata curl
 # Copy binary from builder
 COPY --from=builder /app/khair-api .
 COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/templates ./templates
 
 # Set ownership
 RUN chown -R khair:khair /app

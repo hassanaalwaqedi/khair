@@ -18,7 +18,8 @@ class LanguageSwitcher extends StatelessWidget {
         final isArabic = state.locale.languageCode == 'ar';
         return InkWell(
           onTap: () {
-            final newLocale = isArabic ? const Locale('en') : const Locale('ar');
+            final newLocale =
+                isArabic ? const Locale('en') : const Locale('ar');
             context.read<LocaleBloc>().add(ChangeLocale(newLocale));
           },
           borderRadius: BorderRadius.circular(12),
@@ -31,10 +32,7 @@ class LanguageSwitcher extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  isArabic ? '🇬🇧' : '🇸🇦',
-                  style: const TextStyle(fontSize: 18),
-                ),
+                const Icon(Icons.language, size: 18),
                 if (showLabel) ...[
                   const SizedBox(width: 6),
                   Text(

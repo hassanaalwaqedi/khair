@@ -79,3 +79,40 @@ func (s *Service) UpdateProfile(userID uuid.UUID, req *UpdateProfileRequest) (*m
 
 	return org, nil
 }
+
+// RegisterAsOrganizer creates a new organizer entry for an existing user
+func (s *Service) RegisterAsOrganizer(userID uuid.UUID, name, description, country, city, contactEmail, website string) (*models.Organizer, error) {
+	// Check if user already has an organizer profile
+	existing, err := s.repo.GetByUserID(userID)
+	if err == nil && existing != nil {
+		return nil, errors.New("you already have an organizer profile")
+	}
+
+	org := &models.Organizer{
+		ID:     uuid.New(),
+		UserID: userID,
+		Name:   name,
+		Status: "pending",
+	}
+	if description != "" {
+		org.Description = &description
+	}
+	if country != "" {
+		org.Country = &country
+	}
+	if city != "" {
+		org.City = &city
+	}
+	if contactEmail != "" {
+		org.ContactEmail = &contactEmail
+	}
+	if website != "" {
+		org.Website = &website
+	}
+
+	if err := s.repo.Create(org); err != nil {
+		return nil, errors.New("failed to create organizer profile")
+	}
+
+	return org, nil
+}

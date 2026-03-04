@@ -71,9 +71,9 @@ func (h *Handler) GetSwitch(c *gin.Context) {
 
 // UpdateSwitchRequest is the request body for updating a switch
 type UpdateSwitchRequest struct {
-	Enabled      bool    `json:"enabled"`
-	Reason       string  `json:"reason" binding:"required"`
-	ExpiresInMin *int    `json:"expires_in_minutes,omitempty"`
+	Enabled      bool   `json:"enabled"`
+	Reason       string `json:"reason" binding:"required"`
+	ExpiresInMin *int   `json:"expires_in_minutes,omitempty"`
 }
 
 // UpdateSwitch updates a switch
@@ -90,7 +90,7 @@ func (h *Handler) UpdateSwitch(c *gin.Context) {
 		return
 	}
 
-	adminID := c.MustGet("userID").(uuid.UUID)
+	adminID := c.MustGet("user_id").(uuid.UUID)
 
 	var expiresIn *time.Duration
 	if req.ExpiresInMin != nil {
@@ -133,7 +133,7 @@ func (h *Handler) ActivateLockdown(c *gin.Context) {
 		return
 	}
 
-	adminID := c.MustGet("userID").(uuid.UUID)
+	adminID := c.MustGet("user_id").(uuid.UUID)
 
 	err := h.service.EmergencyLockdown(c.Request.Context(), req.Reason, adminID)
 	if err != nil {
@@ -162,7 +162,7 @@ func (h *Handler) LiftLockdown(c *gin.Context) {
 		return
 	}
 
-	adminID := c.MustGet("userID").(uuid.UUID)
+	adminID := c.MustGet("user_id").(uuid.UUID)
 
 	err := h.service.LiftLockdown(c.Request.Context(), req.Reason, adminID)
 	if err != nil {

@@ -1,343 +1,378 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/theme/app_design_system.dart';
+import '../../../../shared/widgets/app_components.dart';
+import '../../../events/domain/repositories/events_repository.dart';
+import '../cubit/create_event_cubit.dart';
+import '../cubit/create_event_state.dart';
+import '../widgets/steps/basic_info_step.dart';
+import '../widgets/steps/location_step.dart';
+import '../widgets/steps/compliance_step.dart';
+import '../widgets/steps/media_step.dart';
+import '../widgets/steps/review_step.dart';
 
-class CreateEventPage extends StatefulWidget {
+/// Create Event page — 5-step wizard with BLoC state management.
+/// No business logic here. Cubit drives state, BlocListener handles side effects.
+class CreateEventPage extends StatelessWidget {
   const CreateEventPage({super.key});
 
   @override
-  State<CreateEventPage> createState() => _CreateEventPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => CreateEventCubit(getIt<EventsRepository>()),
+      child: const _CreateEventView(),
+    );
+  }
 }
 
-class _CreateEventPageState extends State<CreateEventPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _countryController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _addressController = TextEditingController();
-  
-  String _selectedEventType = 'conference';
-  String _selectedLanguage = 'en';
-  DateTime _startDate = DateTime.now().add(const Duration(days: 7));
-  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
+class _CreateEventView extends StatefulWidget {
+  const _CreateEventView();
+
+  @override
+  State<_CreateEventView> createState() => _CreateEventViewState();
+}
+
+class _CreateEventViewState extends State<_CreateEventView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _slideController;
+  late final Animation<Offset> _slideAnimation;
+
+  static const _stepLabels = [
+    'Basic Info', 'Location', 'Compliance', 'Media', 'Review'
+  ];
+  static const _stepIcons = [
+    Icons.edit_rounded,
+    Icons.location_on_rounded,
+    Icons.shield_rounded,
+    Icons.image_rounded,
+    Icons.check_circle_rounded,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      vsync: this,
+      duration: AppAnimations.slow,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.03, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+        parent: _slideController, curve: AppAnimations.defaultCurve));
+    _slideController.forward();
+  }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _countryController.dispose();
-    _cityController.dispose();
-    _addressController.dispose();
+    _slideController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Event'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.go('/organizer'),
-        ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              const _SectionTitle(title: 'Event Details'),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Event Title',
-                  hintText: 'Enter event title',
+    return BlocListener<CreateEventCubit, CreateEventState>(
+      listenWhen: (p, c) => p.status != c.status,
+      listener: (context, state) {
+        switch (state.status) {
+          case CreateEventStatus.success:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text('Event submitted for review successfully!'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.inputRadius),
+            ));
+            context.go('/organizer');
+          case CreateEventStatus.failure:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content:
+                  Text(state.errorMessage ?? 'Something went wrong'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.inputRadius),
+            ));
+          case CreateEventStatus.draftSaved:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text('Event saved as draft'),
+              backgroundColor: AppColors.surfaceHigh,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.inputRadius),
+            ));
+            context.go('/organizer');
+          default:
+            break;
+        }
+      },
+      child: Scaffold(
+        body: AppScaffoldBackground(
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(context),
+                // Unified step indicator
+                BlocBuilder<CreateEventCubit, CreateEventState>(
+                  buildWhen: (p, c) => p.currentStep != c.currentStep,
+                  builder: (context, state) {
+                    final cubit = context.read<CreateEventCubit>();
+                    return AppStepper(
+                      currentStep: state.currentStep,
+                      totalSteps: 5,
+                      labels: _stepLabels,
+                      icons: _stepIcons,
+                      onStepTap: (i) {
+                        if (i < state.currentStep ||
+                            cubit.validateStep(state.currentStep)) {
+                          cubit.goToStep(i);
+                        }
+                      },
+                    );
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter event title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Describe your event',
-                  alignLabelWithHint: true,
+                // Step content
+                Expanded(
+                  child:
+                      BlocBuilder<CreateEventCubit, CreateEventState>(
+                    buildWhen: (p, c) =>
+                        p.currentStep != c.currentStep,
+                    builder: (context, state) {
+                      _slideController.reset();
+                      _slideController.forward();
+                      return SlideTransition(
+                        position: _slideAnimation,
+                        child: SingleChildScrollView(
+                          padding: AppSpacing.pagePadding,
+                          physics: const BouncingScrollPhysics(),
+                          child:
+                              _buildCurrentStep(state.currentStep),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                maxLines: 4,
-              ),
-              const SizedBox(height: 24),
-              // Event Type
-              const _SectionTitle(title: 'Event Type'),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildTypeChip('conference', 'Conference'),
-                  _buildTypeChip('workshop', 'Workshop'),
-                  _buildTypeChip('seminar', 'Seminar'),
-                  _buildTypeChip('festival', 'Festival'),
-                  _buildTypeChip('meetup', 'Meetup'),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Language
-              const _SectionTitle(title: 'Language'),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildLanguageChip('en', 'English'),
-                  _buildLanguageChip('ar', 'Arabic'),
-                  _buildLanguageChip('fr', 'French'),
-                  _buildLanguageChip('es', 'Spanish'),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Date & Time
-              const _SectionTitle(title: 'Date & Time'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDatePicker(),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTimePicker(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Location
-              const _SectionTitle(title: 'Location'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'Country',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(
-                        labelText: 'City',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Full venue address',
-                ),
-              ),
-              const SizedBox(height: 32),
-              // Submit buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _saveAsDraft(),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Save Draft'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _submitForReview(),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Submit for Review'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-            ],
+                // Bottom nav
+                const _CreateEventBottomBar(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTypeChip(String value, String label) {
-    final isSelected = _selectedEventType == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() => _selectedEventType = value);
-        }
-      },
-      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : null,
-        fontWeight: isSelected ? FontWeight.bold : null,
-      ),
-    );
-  }
-
-  Widget _buildLanguageChip(String value, String label) {
-    final isSelected = _selectedLanguage == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() => _selectedLanguage = value);
-        }
-      },
-      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : null,
-        fontWeight: isSelected ? FontWeight.bold : null,
-      ),
-    );
-  }
-
-  Widget _buildDatePicker() {
-    return GestureDetector(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: _startDate,
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
+  Widget _buildTopBar(BuildContext context) {
+    return BlocBuilder<CreateEventCubit, CreateEventState>(
+      buildWhen: (p, c) => p.currentStep != c.currentStep,
+      builder: (context, state) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            border: Border(
+                bottom:
+                    BorderSide(color: AppColors.whiteAlpha(0.06))),
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.go('/organizer'),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.whiteAlpha(0.06),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(Icons.close_rounded,
+                      color: AppColors.whiteAlpha(0.6), size: 20),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text('Create Event',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700)),
+              ),
+              Text(
+                'Step ${state.currentStep + 1} of 5',
+                style: TextStyle(
+                    color: AppColors.whiteAlpha(0.4), fontSize: 13),
+              ),
+            ],
+          ),
         );
-        if (date != null) {
-          setState(() => _startDate = date);
-        }
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, color: AppTheme.primaryColor),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Date',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                Text(
-                  '${_startDate.day}/${_startDate.month}/${_startDate.year}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTimePicker() {
-    return GestureDetector(
-      onTap: () async {
-        final time = await showTimePicker(
-          context: context,
-          initialTime: _startTime,
-        );
-        if (time != null) {
-          setState(() => _startTime = time);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.access_time, color: AppTheme.primaryColor),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Time',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                Text(
-                  _startTime.format(context),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _saveAsDraft() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement save draft
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event saved as draft')),
-      );
-      context.go('/organizer');
-    }
-  }
-
-  void _submitForReview() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement submit for review
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event submitted for review')),
-      );
-      context.go('/organizer');
+  Widget _buildCurrentStep(int step) {
+    switch (step) {
+      case 0:
+        return const BasicInfoStep();
+      case 1:
+        return const LocationStep();
+      case 2:
+        return const ComplianceStep();
+      case 3:
+        return const MediaStep();
+      case 4:
+        return const ReviewStep();
+      default:
+        return const SizedBox.shrink();
     }
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
+/// Bottom navigation bar — uses design system.
+class _CreateEventBottomBar extends StatelessWidget {
+  const _CreateEventBottomBar();
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
+    return BlocBuilder<CreateEventCubit, CreateEventState>(
+      buildWhen: (p, c) =>
+          p.currentStep != c.currentStep ||
+          p.status != c.status ||
+          p.formData.finalConfirmed != c.formData.finalConfirmed,
+      builder: (context, state) {
+        final cubit = context.read<CreateEventCubit>();
+        final isSubmitting =
+            state.status == CreateEventStatus.submitting;
+        final isValid = cubit.isCurrentStepValid;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            border: Border(
+                top: BorderSide(
+                    color: AppColors.whiteAlpha(0.06))),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (!state.isFirstStep)
+                GestureDetector(
+                  onTap: () => cubit.previousStep(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: AppRadius.buttonRadius,
+                      border: Border.all(
+                          color: AppColors.whiteAlpha(0.12)),
+                    ),
+                    child: Text('Back',
+                        style: TextStyle(
+                          color: AppColors.whiteAlpha(0.6),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        )),
+                  ),
+                ),
+              const Spacer(),
+              if (state.isLastStep) ...[
+                GestureDetector(
+                  onTap: () => cubit.saveDraft(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: AppRadius.buttonRadius,
+                      border: Border.all(
+                          color: AppColors.whiteAlpha(0.12)),
+                    ),
+                    child: Text('Save Draft',
+                        style: TextStyle(
+                          color: AppColors.whiteAlpha(0.6),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        )),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap:
+                      isSubmitting ? null : () => cubit.submitEvent(),
+                  child: AnimatedContainer(
+                    duration: AppAnimations.fast,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 28, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: !isSubmitting
+                          ? AppGradients.emeraldGlow
+                          : null,
+                      color: isSubmitting
+                          ? AppColors.whiteAlpha(0.06)
+                          : null,
+                      borderRadius: AppRadius.buttonRadius,
+                      boxShadow: !isSubmitting
+                          ? AppShadows.emeraldGlow(0.3)
+                          : null,
+                    ),
+                    child: Text(
+                      isSubmitting
+                          ? 'Submitting...'
+                          : 'Submit for Review',
+                      style: TextStyle(
+                        color: isSubmitting
+                            ? AppColors.whiteAlpha(0.3)
+                            : Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ] else
+                GestureDetector(
+                  onTap: isValid ? () => cubit.nextStep() : null,
+                  child: AnimatedContainer(
+                    duration: AppAnimations.fast,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 28, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: isValid
+                          ? AppGradients.emeraldGlow
+                          : null,
+                      color: !isValid
+                          ? AppColors.whiteAlpha(0.06)
+                          : null,
+                      borderRadius: AppRadius.buttonRadius,
+                      boxShadow: isValid
+                          ? AppShadows.emeraldGlow(0.3)
+                          : null,
+                    ),
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                        color: isValid
+                            ? Colors.white
+                            : AppColors.whiteAlpha(0.3),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

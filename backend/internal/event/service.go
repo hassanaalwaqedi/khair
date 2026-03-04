@@ -10,10 +10,14 @@ import (
 	"github.com/khair/backend/internal/models"
 )
 
-// Service handles event business logic
+type ModerationScanner interface {
+	ScanAndModerate(req *models.ScanRequest) (*models.ScanResult, error)
+}
+
 type Service struct {
 	repo          *Repository
 	organizerRepo OrganizerRepository
+	moderation    ModerationScanner
 }
 
 // OrganizerRepository interface for organizer operations
@@ -22,12 +26,15 @@ type OrganizerRepository interface {
 	GetByUserID(userID uuid.UUID) (*models.Organizer, error)
 }
 
-// NewService creates a new event service
 func NewService(db *sql.DB, organizerRepo OrganizerRepository) *Service {
 	return &Service{
 		repo:          NewRepository(db),
 		organizerRepo: organizerRepo,
 	}
+}
+
+func (s *Service) SetModeration(m ModerationScanner) {
+	s.moderation = m
 }
 
 // CreateEventRequest represents a request to create an event
@@ -112,6 +119,23 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 
 	if err := s.repo.Create(event); err != nil {
 		return nil, errors.New("failed to create event")
+	}
+
+	if s.moderation != nil {
+		desc := ""
+		if req.Description != nil {
+			desc = *req.Description
+		}
+		scanReq := &models.ScanRequest{
+			EventID:     event.ID,
+			Title:       event.Title,
+			Description: desc,
+			OrganizerID: organizer.ID,
+			UserID:      userID,
+		}
+		if result, err := s.moderation.ScanAndModerate(scanReq); err == nil {
+			event.Status = result.EventStatus
+		}
 	}
 
 	return event, nil
@@ -202,6 +226,23 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 
 	if err := s.repo.Update(event); err != nil {
 		return nil, errors.New("failed to update event")
+	}
+
+	if s.moderation != nil {
+		desc := ""
+		if event.Description != nil {
+			desc = *event.Description
+		}
+		scanReq := &models.ScanRequest{
+			EventID:     event.ID,
+			Title:       event.Title,
+			Description: desc,
+			OrganizerID: existingEvent.OrganizerID,
+			UserID:      userID,
+		}
+		if result, err := s.moderation.ScanAndModerate(scanReq); err == nil {
+			event.Status = result.EventStatus
+		}
 	}
 
 	return event, nil

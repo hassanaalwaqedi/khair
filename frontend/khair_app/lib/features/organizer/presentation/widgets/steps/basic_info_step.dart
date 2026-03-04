@@ -1,0 +1,343 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../../core/theme/app_design_system.dart';
+import '../../../../../shared/widgets/app_components.dart';
+import '../../cubit/create_event_cubit.dart';
+import '../../cubit/create_event_state.dart';
+
+/// Step 1: Title, description, category, tags, event type, language, date/time
+class BasicInfoStep extends StatefulWidget {
+  const BasicInfoStep({super.key});
+
+  @override
+  State<BasicInfoStep> createState() => _BasicInfoStepState();
+}
+
+class _BasicInfoStepState extends State<BasicInfoStep> {
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _descCtrl;
+
+  static const _categories = [
+    'conference', 'workshop', 'seminar', 'lecture', 'meetup',
+    'festival', 'webinar', 'retreat', 'community', 'charity',
+  ];
+
+  static const _tags = [
+    'Islamic', 'Education', 'Youth', 'Women', 'Family', 'Charity',
+    'Community', 'Quran', 'Seerah', 'Fiqh', 'Dawah', 'Volunteer',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final fd = context.read<CreateEventCubit>().state.formData;
+    _titleCtrl = TextEditingController(text: fd.title);
+    _descCtrl = TextEditingController(text: fd.description);
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CreateEventCubit, CreateEventState>(
+      buildWhen: (p, c) => p.formData != c.formData,
+      builder: (context, state) {
+        final cubit = context.read<CreateEventCubit>();
+        final fd = state.formData;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Basic Info Card ──
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Basic Information', style: AppTypography.sectionTitle),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Title
+                  AppInputField(
+                    controller: _titleCtrl,
+                    label: 'Event Title',
+                    hint: 'Enter a compelling event title',
+                    icon: Icons.title_rounded,
+                    maxLength: 100,
+                    onChanged: (v) => cubit.updateTitle(v),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Category
+                  Text('Category', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: _categories.map((cat) {
+                      return AppChip(
+                        label: cat[0].toUpperCase() + cat.substring(1),
+                        isSelected: fd.category == cat,
+                        onTap: () => cubit.updateCategory(cat),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Description
+                  AppInputField(
+                    controller: _descCtrl,
+                    label: 'Description (min 50 characters)',
+                    hint: 'Describe your event in detail...',
+                    icon: Icons.description_rounded,
+                    maxLines: 5,
+                    maxLength: 5000,
+                    onChanged: (v) => cubit.updateDescription(v),
+                  ),
+                  if (_descCtrl.text.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${_descCtrl.text.length} / 5000',
+                        style: TextStyle(
+                          color: _descCtrl.text.length < 50
+                              ? AppColors.error
+                              : AppColors.whiteAlpha(0.3),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Tags Card ──
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Tags', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: _tags.map((tag) {
+                      return AppChip(
+                        label: tag,
+                        isSelected: fd.tags.contains(tag),
+                        onTap: () => cubit.toggleTag(tag),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Event Type Card ──
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Event Type', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _typeOption('offline', 'In-Person',
+                              Icons.location_on_rounded, fd.eventType, cubit)),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                          child: _typeOption('online', 'Online',
+                              Icons.videocam_rounded, fd.eventType, cubit)),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Language
+                  Text('Language', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    children: [
+                      AppChip(label: 'English', isSelected: fd.language == 'en',
+                          onTap: () => cubit.updateLanguage('en')),
+                      AppChip(label: 'Arabic', isSelected: fd.language == 'ar',
+                          onTap: () => cubit.updateLanguage('ar')),
+                      AppChip(label: 'French', isSelected: fd.language == 'fr',
+                          onTap: () => cubit.updateLanguage('fr')),
+                      AppChip(label: 'Turkish', isSelected: fd.language == 'tr',
+                          onTap: () => cubit.updateLanguage('tr')),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Date & Time Card ──
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Start Date & Time', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    children: [
+                      Expanded(child: _datePicker(
+                          context, 'Start', fd.startDate, (d) {
+                        cubit.updateFormData(fd.copyWith(startDate: d));
+                      })),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: _timePicker(context, fd.startTime, (t) {
+                        cubit.updateFormData(fd.copyWith(startTime: t));
+                      })),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('End Date & Time (Optional)', style: AppTypography.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    children: [
+                      Expanded(child: _datePicker(
+                          context, 'End', fd.endDate ?? fd.startDate, (d) {
+                        cubit.updateFormData(fd.copyWith(endDate: d));
+                      })),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: _timePicker(
+                          context,
+                          fd.endTime ??
+                              const TimeOfDay(hour: 17, minute: 0), (t) {
+                        cubit.updateFormData(fd.copyWith(endTime: t));
+                      })),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _typeOption(String value, String label, IconData icon,
+      String current, CreateEventCubit cubit) {
+    final isSelected = current == value;
+    return GestureDetector(
+      onTap: () => cubit.updateEventType(value),
+      child: AnimatedContainer(
+        duration: AppAnimations.normal,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : AppColors.whiteAlpha(0.04),
+          borderRadius: AppRadius.inputRadius,
+          border: Border.all(
+            color: isSelected
+                ? AppColors.goldAccent
+                : AppColors.whiteAlpha(0.08),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected ? AppShadows.goldGlow(0.1) : null,
+        ),
+        child: Column(
+          children: [
+            Icon(icon,
+                color: isSelected
+                    ? AppColors.goldAccent
+                    : AppColors.whiteAlpha(0.4),
+                size: 28),
+            const SizedBox(height: 8),
+            Text(label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.whiteAlpha(0.5),
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontSize: 13,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _datePicker(BuildContext context, String label, DateTime date,
+      ValueChanged<DateTime> onChanged) {
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.whiteAlpha(0.05),
+          borderRadius: AppRadius.inputRadius,
+          border: Border.all(color: AppColors.whiteAlpha(0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today_rounded,
+                color: AppColors.whiteAlpha(0.3), size: 18),
+            const SizedBox(width: 8),
+            Text(
+              DateFormat('MMM d, yyyy').format(date),
+              style:
+                  TextStyle(color: AppColors.whiteAlpha(0.7), fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _timePicker(BuildContext context, TimeOfDay time,
+      ValueChanged<TimeOfDay> onChanged) {
+    return GestureDetector(
+      onTap: () async {
+        final picked =
+            await showTimePicker(context: context, initialTime: time);
+        if (picked != null) onChanged(picked);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.whiteAlpha(0.05),
+          borderRadius: AppRadius.inputRadius,
+          border: Border.all(color: AppColors.whiteAlpha(0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.access_time_rounded,
+                color: AppColors.whiteAlpha(0.3), size: 18),
+            const SizedBox(width: 8),
+            Text(
+              time.format(context),
+              style:
+                  TextStyle(color: AppColors.whiteAlpha(0.7), fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

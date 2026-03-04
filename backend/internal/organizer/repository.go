@@ -63,6 +63,16 @@ func (r *Repository) Update(org *models.Organizer) error {
 	return err
 }
 
+// Create inserts a new organizer into the database
+func (r *Repository) Create(org *models.Organizer) error {
+	query := `
+		INSERT INTO organizers (id, user_id, name, description, website, phone, logo_url, status, country, city, contact_email)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	`
+	_, err := r.db.Exec(query, org.ID, org.UserID, org.Name, org.Description, org.Website, org.Phone, org.LogoURL, org.Status, org.Country, org.City, org.ContactEmail)
+	return err
+}
+
 // UpdateStatus updates the status of an organizer
 func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error {
 	query := `UPDATE organizers SET status = $2, rejection_reason = $3 WHERE id = $1`

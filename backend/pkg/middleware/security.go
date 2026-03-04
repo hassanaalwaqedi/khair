@@ -1,25 +1,29 @@
 package middleware
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 )
 
 // SecurityHeaders returns a middleware that sets security-related HTTP headers
 func SecurityHeaders() gin.HandlerFunc {
+	isProduction := os.Getenv("GIN_MODE") == "release"
+
 	return func(c *gin.Context) {
 		// Content Security Policy - restrict resource loading to prevent XSS
-		// Adjust directives based on your actual resource needs
 		c.Header("Content-Security-Policy",
 			"default-src 'self'; "+
-				"script-src 'self' 'unsafe-inline'; "+
+				"script-src 'self'; "+
 				"style-src 'self' 'unsafe-inline'; "+
 				"img-src 'self' data: https:; "+
 				"font-src 'self' data:; "+
 				"connect-src 'self'")
 
-		// Strict-Transport-Security - force HTTPS (only add if running over HTTPS)
-		// Uncomment in production with HTTPS:
-		// c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		// Strict-Transport-Security - force HTTPS in production
+		if isProduction {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		}
 
 		// X-Frame-Options - prevent clickjacking
 		c.Header("X-Frame-Options", "DENY")

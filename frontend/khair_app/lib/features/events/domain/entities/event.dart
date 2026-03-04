@@ -15,6 +15,8 @@ class Event extends Equatable {
   final DateTime startDate;
   final DateTime? endDate;
   final String? imageUrl;
+  final int? capacity;
+  final int reservedCount;
   final String status;
   final String? rejectionReason;
   final String? organizerName;
@@ -36,6 +38,8 @@ class Event extends Equatable {
     required this.startDate,
     this.endDate,
     this.imageUrl,
+    this.capacity,
+    this.reservedCount = 0,
     required this.status,
     this.rejectionReason,
     this.organizerName,
@@ -59,6 +63,8 @@ class Event extends Equatable {
         startDate,
         endDate,
         imageUrl,
+        capacity,
+        reservedCount,
         status,
         rejectionReason,
         organizerName,

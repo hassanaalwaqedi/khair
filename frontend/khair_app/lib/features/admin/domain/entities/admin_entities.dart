@@ -1,8 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../organizer/domain/entities/organizer.dart';
-import '../../../events/domain/entities/event.dart';
-
 /// Report entity for content reports
 class Report extends Equatable {
   final String id;

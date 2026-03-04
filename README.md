@@ -323,3 +323,36 @@ Migrations run automatically on backend startup.
 ## 📄 License
 
 MIT
+
+---
+
+## Localization Implementation Notes
+
+### Frontend (Flutter)
+- Localization source files:
+  - `frontend/khair_app/lib/l10n/app_en.arb`
+  - `frontend/khair_app/lib/l10n/app_ar.arb`
+- Generated localization output:
+  - `frontend/khair_app/lib/l10n/generated/app_localizations.dart`
+- Regenerate localization classes after updating ARB:
+  - `cd frontend/khair_app`
+  - `flutter gen-l10n`
+- Locale is persisted through `LocaleBloc` + `SharedPreferences`.
+- RTL is applied at app root via `Directionality` in `frontend/khair_app/lib/main.dart`.
+
+### Backend (Go)
+- API locale is resolved from `Accept-Language` using:
+  - `backend/pkg/middleware/locale.go`
+- Localized message catalog:
+  - `backend/pkg/i18n/catalog.go`
+- Shared API responses are localized automatically in:
+  - `backend/pkg/response/response.go`
+- To request Arabic responses from API clients, send:
+  - `Accept-Language: ar`
+
+### Adding a New Language
+1. Add a new ARB file in `frontend/khair_app/lib/l10n/` (for example `app_fr.arb`).
+2. Add translated keys matching `app_en.arb`.
+3. Run `flutter gen-l10n`.
+4. Add server-side translations to `backend/pkg/i18n/catalog.go`.
+5. Send the new language via `Accept-Language` from clients.

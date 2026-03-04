@@ -1,0 +1,166 @@
+name: Khair CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  GO_VERSION: '1.22'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  # ─── Lint & Vet ────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Go Vet
+        working-directory: ./backend
+        run: go vet ./...
+
+      - name: Go Format Check
+        working-directory: ./backend
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "The following files are not formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+  # ─── Build & Test ──────────────────────────────
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: khair_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: backend/go.sum
+
+      - name: Download dependencies
+        working-directory: ./backend
+        run: go mod download
+
+      - name: Build
+        working-directory: ./backend
+        run: CGO_ENABLED=0 go build -ldflags="-w -s" -o khair-api ./cmd/api
+
+      - name: Run Tests
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: test
+          DB_PASSWORD: test
+          DB_NAME: khair_test
+          DB_SSLMODE: disable
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: ci-test-secret-do-not-use
+          JWT_EXPIRY_HOURS: 24
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: backend/coverage.out
+
+  # ─── Docker Build & Push ───────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ─── Deploy to Staging ─────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/khair
+            docker compose -f docker-compose.prod.yml pull api
+            docker compose -f docker-compose.prod.yml up -d api
+            docker compose -f docker-compose.prod.yml exec api curl -sf http://localhost:8080/health || exit 1
+            echo "✅ Staging deployment successful"

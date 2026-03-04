@@ -57,7 +57,8 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.EventWithOrganizer, error) {
 	query := `
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
-		       e.image_url, e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
+		       e.status, e.rejection_reason, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
@@ -67,8 +68,9 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.EventWithOrganizer, error) {
 	err := r.db.QueryRow(query, id).Scan(
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 		&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
-		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL, &event.Status,
-		&event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
+		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+		&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 	)
 	if err != nil {
 		return nil, err
@@ -82,7 +84,8 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 	query := `
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
-		       e.image_url, e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
+		       e.status, e.rejection_reason, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
@@ -190,8 +193,9 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		err := rows.Scan(
 			&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
-			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL, &event.Status,
-			&event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
+			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -231,7 +235,8 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 	query := `
 		SELECT id, organizer_id, title, description, event_type, language,
 		       country, city, address, latitude, longitude, start_date, end_date,
-		       image_url, status, rejection_reason, created_at, updated_at
+		       image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
+		       status, rejection_reason, created_at, updated_at
 		FROM events
 		WHERE organizer_id = $1
 		ORDER BY created_at DESC
@@ -248,8 +253,9 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 		err := rows.Scan(
 			&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
-			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL, &event.Status,
-			&event.RejectionReason, &event.CreatedAt, &event.UpdatedAt,
+			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
+			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -267,12 +273,20 @@ func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *
 	return err
 }
 
+// UpdateStatusWithReviewer updates the status of an event and records who reviewed it
+func (r *Repository) UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error {
+	query := `UPDATE events SET status = $2, rejection_reason = $3, reviewed_by = $4, reviewed_at = NOW() WHERE id = $1`
+	_, err := r.db.Exec(query, id, status, rejectionReason, reviewedBy)
+	return err
+}
+
 // ListPending retrieves pending events for admin review
 func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 	query := `
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
-		       e.image_url, e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
+		       e.status, e.rejection_reason, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
@@ -291,8 +305,9 @@ func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 		err := rows.Scan(
 			&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
-			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL, &event.Status,
-			&event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
+			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 		)
 		if err != nil {
 			return nil, err

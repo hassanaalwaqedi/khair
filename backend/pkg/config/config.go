@@ -1,8 +1,10 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config holds all configuration for the application
@@ -13,6 +15,7 @@ type Config struct {
 	JWT      JWTConfig
 	Logger   LoggerConfig
 	Gemini   GeminiConfig
+	SMTP     SMTPConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -60,6 +63,17 @@ type GeminiConfig struct {
 	Enabled   bool
 }
 
+// SMTPConfig holds SMTP email configuration
+type SMTPConfig struct {
+	Host         string
+	Port         int
+	User         string
+	Pass         string
+	From         string
+	SendGridKey  string
+	SendGridFrom string
+}
+
 // Load loads configuration from environment variables
 func Load() *Config {
 	return &Config{
@@ -71,7 +85,7 @@ func Load() *Config {
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "khair"),
-			Password: getEnv("DB_PASSWORD", "khair_secret"),
+			Password: requireEnv("DB_PASSWORD"),
 			DBName:   getEnv("DB_NAME", "khair"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
@@ -83,7 +97,7 @@ func Load() *Config {
 			Addr:     getEnv("REDIS_HOST", "localhost") + ":" + getEnv("REDIS_PORT", "6379"),
 		},
 		JWT: JWTConfig{
-			Secret:      getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production"),
+			Secret:      requireEnv("JWT_SECRET"),
 			ExpiryHours: getEnvAsInt("JWT_EXPIRY_HOURS", 24),
 		},
 		Logger: LoggerConfig{
@@ -95,6 +109,15 @@ func Load() *Config {
 			Model:     getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
 			MaxTokens: getEnvAsInt("GEMINI_MAX_TOKENS", 1024),
 			Enabled:   getEnv("GEMINI_API_KEY", "") != "",
+		},
+		SMTP: SMTPConfig{
+			Host:         strings.TrimSpace(getEnv("SMTP_HOST", "")),
+			Port:         getEnvAsInt("SMTP_PORT", 587),
+			User:         strings.TrimSpace(getEnv("SMTP_USER", "")),
+			Pass:         strings.TrimSpace(getEnv("SMTP_PASS", "")),
+			From:         strings.TrimSpace(getEnv("SMTP_FROM", "")),
+			SendGridKey:  strings.TrimSpace(getEnv("SENDGRID_API_KEY", "")),
+			SendGridFrom: strings.TrimSpace(getEnv("SENDGRID_FROM", getEnv("SMTP_FROM", ""))),
 		},
 	}
 }
@@ -115,4 +138,13 @@ func getEnvAsInt(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// requireEnv gets a required environment variable or fatally exits
+func requireEnv(key string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists || value == "" {
+		log.Fatalf("FATAL: required environment variable %s is not set", key)
+	}
+	return value
 }

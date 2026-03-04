@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/khair_theme.dart';
-import '../../../../core/utils/emoji_mapper.dart';
 import '../bloc/ai_bloc.dart';
 
 /// "🎯 Recommended for You" horizontal section

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/khair_theme.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -28,9 +28,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text(
+          'Admin Dashboard',
+          style: KhairTypography.headlineSmall.copyWith(
+            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -44,6 +51,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          indicatorColor: KhairColors.primary,
+          labelColor: KhairColors.primary,
+          unselectedLabelColor: KhairColors.textTertiary,
+          labelStyle: KhairTypography.labelLarge.copyWith(fontWeight: FontWeight.w600),
+          unselectedLabelStyle: KhairTypography.labelLarge,
           tabs: const [
             Tab(text: 'Organizers'),
             Tab(text: 'Events'),
@@ -55,25 +67,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildOrganizersTab(),
-          _buildEventsTab(),
-          _buildReportsTab(),
-          _buildAuditLogsTab(),
+          _buildOrganizersTab(isDark),
+          _buildEventsTab(isDark),
+          _buildReportsTab(isDark),
+          _buildAuditLogsTab(isDark),
         ],
       ),
     );
   }
 
-  Widget _buildReportsTab() {
+  Widget _buildReportsTab(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.flag, size: 64, color: Colors.grey[400]),
+          Icon(Icons.flag, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('Reports Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Reports Management', style: KhairTypography.headlineSmall.copyWith(
+            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+          )),
           const SizedBox(height: 8),
-          Text('Review and resolve user reports', style: TextStyle(color: Colors.grey[600])),
+          Text('Review and resolve user reports',
+              style: KhairTypography.bodyMedium),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.go('/admin/reports'),
@@ -85,16 +100,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  Widget _buildAuditLogsTab() {
+  Widget _buildAuditLogsTab(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history, size: 64, color: Colors.grey[400]),
+          Icon(Icons.history, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('Audit Logs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Audit Logs', style: KhairTypography.headlineSmall.copyWith(
+            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+          )),
           const SizedBox(height: 8),
-          Text('View all admin and system actions', style: TextStyle(color: Colors.grey[600])),
+          Text('View all admin and system actions',
+              style: KhairTypography.bodyMedium),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.go('/admin/audit-logs'),
@@ -106,51 +124,59 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  Widget _buildOrganizersTab() {
+  Widget _buildOrganizersTab(bool isDark) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
-        const Text(
+        Text(
           'Pending Approval',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: KhairTypography.headlineSmall.copyWith(
+            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 16),
         _buildOrganizerCard(
           name: 'Tech Events Co.',
           email: 'info@techevents.com',
           status: 'pending',
+          isDark: isDark,
         ),
         const SizedBox(height: 12),
         _buildOrganizerCard(
           name: 'Community Hub',
           email: 'contact@communityhub.org',
           status: 'pending',
+          isDark: isDark,
         ),
       ],
     );
   }
 
-  Widget _buildEventsTab() {
+  Widget _buildEventsTab(bool isDark) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
-        const Text(
+        Text(
           'Pending Review',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: KhairTypography.headlineSmall.copyWith(
+            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 16),
         _buildEventCard(
-          title: 'Tech Conference 2026',
-          organizer: 'Tech Events Co.',
+          title: 'Quran Study Circle',
+          organizer: 'Al-Khair Community',
           date: 'March 15, 2026',
           status: 'pending',
+          isDark: isDark,
         ),
         const SizedBox(height: 12),
         _buildEventCard(
-          title: 'Flutter Workshop',
+          title: 'Islamic Youth Workshop',
           organizer: 'Community Hub',
           date: 'April 20, 2026',
           status: 'pending',
+          isDark: isDark,
         ),
       ],
     );
@@ -160,18 +186,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     required String name,
     required String email,
     required String status,
+    required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
+        color: isDark ? KhairColors.darkCard : KhairColors.surface,
+        borderRadius: KhairRadius.medium,
+        border: Border.all(
+          color: isDark ? KhairColors.darkBorder : KhairColors.border,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,39 +206,36 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: KhairColors.primarySurface,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.business, color: AppTheme.primaryColor),
+                child: const Icon(Icons.business, color: KhairColors.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      email,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
+                    Text(name, style: KhairTypography.labelLarge.copyWith(
+                      color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    )),
+                    const SizedBox(height: 2),
+                    Text(email, style: KhairTypography.bodySmall),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.warningColor.withOpacity(0.1),
+                  color: KhairColors.warningLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   status.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppTheme.warningColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                  style: KhairTypography.labelSmall.copyWith(
+                    color: KhairColors.warningDark,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -227,8 +248,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: OutlinedButton(
                   onPressed: () => _showRejectDialog('organizer', name),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.errorColor,
-                    side: const BorderSide(color: AppTheme.errorColor),
+                    foregroundColor: KhairColors.error,
+                    side: const BorderSide(color: KhairColors.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: KhairRadius.medium,
+                    ),
                   ),
                   child: const Text('Reject'),
                 ),
@@ -238,7 +262,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: ElevatedButton(
                   onPressed: () => _approveOrganizer(name),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.successColor,
+                    backgroundColor: KhairColors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: KhairRadius.medium,
+                    ),
                   ),
                   child: const Text('Approve'),
                 ),
@@ -255,18 +283,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     required String organizer,
     required String date,
     required String status,
+    required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
+        color: isDark ? KhairColors.darkCard : KhairColors.surface,
+        borderRadius: KhairRadius.medium,
+        border: Border.all(
+          color: isDark ? KhairColors.darkBorder : KhairColors.border,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,24 +303,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.secondaryColor.withOpacity(0.1),
+                  color: KhairColors.secondaryLight.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.event, color: AppTheme.secondaryColor),
+                child: Icon(Icons.event, color: KhairColors.secondary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'by $organizer',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
+                    Text(title, style: KhairTypography.labelLarge.copyWith(
+                      color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    )),
+                    const SizedBox(height: 2),
+                    Text('by $organizer', style: KhairTypography.bodySmall),
                   ],
                 ),
               ),
@@ -303,12 +327,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 16, color: Colors.grey[500]),
-              const SizedBox(width: 4),
-              Text(
-                date,
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
-              ),
+              Icon(Icons.calendar_today,
+                  size: 14, color: KhairColors.textTertiary),
+              const SizedBox(width: 6),
+              Text(date, style: KhairTypography.bodySmall),
             ],
           ),
           const SizedBox(height: 16),
@@ -318,8 +340,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: OutlinedButton(
                   onPressed: () => _showRejectDialog('event', title),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.errorColor,
-                    side: const BorderSide(color: AppTheme.errorColor),
+                    foregroundColor: KhairColors.error,
+                    side: const BorderSide(color: KhairColors.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: KhairRadius.medium,
+                    ),
                   ),
                   child: const Text('Reject'),
                 ),
@@ -329,7 +354,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: ElevatedButton(
                   onPressed: () => _approveEvent(title),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.successColor,
+                    backgroundColor: KhairColors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: KhairRadius.medium,
+                    ),
                   ),
                   child: const Text('Approve'),
                 ),
@@ -358,6 +387,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Reject $type'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -385,7 +417,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
+              backgroundColor: KhairColors.error,
+              foregroundColor: Colors.white,
             ),
             child: const Text('Reject'),
           ),

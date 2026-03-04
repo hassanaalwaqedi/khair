@@ -13,9 +13,9 @@ import (
 // Config holds rate limit configuration
 type Config struct {
 	// Per-IP limits (for guests)
-	IPLimit    int           `json:"ip_limit"`
-	IPWindow   time.Duration `json:"ip_window"`
-	
+	IPLimit  int           `json:"ip_limit"`
+	IPWindow time.Duration `json:"ip_window"`
+
 	// Per-account limits (for authenticated users)
 	AccountLimit  int           `json:"account_limit"`
 	AccountWindow time.Duration `json:"account_window"`
@@ -85,11 +85,11 @@ func (l *Limiter) GetConfig(action string) Config {
 // CheckLimit checks if the request is within rate limits
 func (l *Limiter) CheckLimit(ctx context.Context, action string, identifier string, isAccount bool) (bool, int, error) {
 	config := l.GetConfig(action)
-	
+
 	var limit int
 	var window time.Duration
 	var keyPrefix string
-	
+
 	if isAccount {
 		limit = config.AccountLimit
 		window = config.AccountWindow
@@ -99,24 +99,24 @@ func (l *Limiter) CheckLimit(ctx context.Context, action string, identifier stri
 		window = config.IPWindow
 		keyPrefix = "rl:ip"
 	}
-	
+
 	key := fmt.Sprintf("%s:%s:%s", keyPrefix, action, identifier)
-	
+
 	// Get current count
 	count, err := l.redis.Get(ctx, key).Int()
 	if err != nil && err != redis.Nil {
 		return false, 0, err
 	}
-	
+
 	remaining := limit - count
 	if remaining < 0 {
 		remaining = 0
 	}
-	
+
 	if count >= limit {
 		return false, remaining, nil
 	}
-	
+
 	// Increment counter
 	pipe := l.redis.Pipeline()
 	pipe.Incr(ctx, key)
@@ -125,7 +125,7 @@ func (l *Limiter) CheckLimit(ctx context.Context, action string, identifier stri
 	if err != nil {
 		return false, remaining, err
 	}
-	
+
 	return true, remaining - 1, nil
 }
 
@@ -133,26 +133,26 @@ func (l *Limiter) CheckLimit(ctx context.Context, action string, identifier stri
 func (l *Limiter) Middleware(action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
-		
+
 		// Get identifier - prefer account ID if available
 		var identifier string
 		var isAccount bool
-		
-		if userID, exists := c.Get("userID"); exists && userID != nil {
+
+		if userID, exists := c.Get("user_id"); exists && userID != nil {
 			identifier = fmt.Sprintf("%v", userID)
 			isAccount = true
 		} else {
 			identifier = c.ClientIP()
 			isAccount = false
 		}
-		
+
 		allowed, remaining, err := l.CheckLimit(ctx, action, identifier, isAccount)
 		if err != nil {
 			// On Redis error, allow the request but log
 			c.Next()
 			return
 		}
-		
+
 		// Set rate limit headers
 		config := l.GetConfig(action)
 		var limit int
@@ -161,10 +161,10 @@ func (l *Limiter) Middleware(action string) gin.HandlerFunc {
 		} else {
 			limit = config.IPLimit
 		}
-		
+
 		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", limit))
 		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
-		
+
 		if !allowed {
 			c.Header("Retry-After", "3600")
 			c.JSON(http.StatusTooManyRequests, gin.H{
@@ -175,27 +175,27 @@ func (l *Limiter) Middleware(action string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
 
 // RateLimitInfo holds current rate limit status
 type RateLimitInfo struct {
-	Action     string `json:"action"`
-	Limit      int    `json:"limit"`
-	Remaining  int    `json:"remaining"`
-	ResetTime  int64  `json:"reset_time"`
-	IsBlocked  bool   `json:"is_blocked"`
+	Action    string `json:"action"`
+	Limit     int    `json:"limit"`
+	Remaining int    `json:"remaining"`
+	ResetTime int64  `json:"reset_time"`
+	IsBlocked bool   `json:"is_blocked"`
 }
 
 // GetStatus retrieves current rate limit status for an identifier
 func (l *Limiter) GetStatus(ctx context.Context, action string, identifier string, isAccount bool) (*RateLimitInfo, error) {
 	config := l.GetConfig(action)
-	
+
 	var limit int
 	var keyPrefix string
-	
+
 	if isAccount {
 		limit = config.AccountLimit
 		keyPrefix = "rl:acc"
@@ -203,24 +203,24 @@ func (l *Limiter) GetStatus(ctx context.Context, action string, identifier strin
 		limit = config.IPLimit
 		keyPrefix = "rl:ip"
 	}
-	
+
 	key := fmt.Sprintf("%s:%s:%s", keyPrefix, action, identifier)
-	
+
 	count, err := l.redis.Get(ctx, key).Int()
 	if err != nil && err != redis.Nil {
 		return nil, err
 	}
-	
+
 	ttl, err := l.redis.TTL(ctx, key).Result()
 	if err != nil {
 		ttl = 0
 	}
-	
+
 	remaining := limit - count
 	if remaining < 0 {
 		remaining = 0
 	}
-	
+
 	return &RateLimitInfo{
 		Action:    action,
 		Limit:     limit,
@@ -238,7 +238,7 @@ func (l *Limiter) Reset(ctx context.Context, action string, identifier string, i
 	} else {
 		keyPrefix = "rl:ip"
 	}
-	
+
 	key := fmt.Sprintf("%s:%s:%s", keyPrefix, action, identifier)
 	return l.redis.Del(ctx, key).Err()
 }

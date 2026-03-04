@@ -1,0 +1,38 @@
+# Build artifacts
+api
+api.exe
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test files
+*_test.go
+
+# Uploads (built at runtime)
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db

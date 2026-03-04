@@ -1,6 +1,7 @@
 package event
 
 import (
+	"net/http"
 	"strconv"
 	"time"
 
@@ -14,13 +15,24 @@ import (
 
 // Handler handles event HTTP requests
 type Handler struct {
-	service *Service
-	cfg     *config.Config
+	service  *Service
+	mapAlias MapAliasHandler
+	cfg      *config.Config
 }
 
-// NewHandler creates a new event handler
-func NewHandler(service *Service, cfg *config.Config) *Handler {
-	return &Handler{service: service, cfg: cfg}
+// MapAliasHandler delegates special map aliases under /events/:id.
+type MapAliasHandler interface {
+	FindNearby(c *gin.Context)
+	GetFilterOptions(c *gin.Context)
+}
+
+// NewHandler creates a new event handler.
+func NewHandler(service *Service, mapAlias MapAliasHandler, cfg *config.Config) *Handler {
+	return &Handler{
+		service:  service,
+		mapAlias: mapAlias,
+		cfg:      cfg,
+	}
 }
 
 // RegisterRoutes registers event routes
@@ -91,9 +103,21 @@ func (h *Handler) ListPublic(c *gin.Context) {
 // @Failure 404 {object} response.Response
 // @Router /events/{id} [get]
 func (h *Handler) GetByID(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	idParam := c.Param("id")
+	if h.mapAlias != nil {
+		switch idParam {
+		case "nearby":
+			h.mapAlias.FindNearby(c)
+			return
+		case "filter-options":
+			h.mapAlias.GetFilterOptions(c)
+			return
+		}
+	}
+
+	id, err := uuid.Parse(idParam)
 	if err != nil {
-		response.BadRequest(c, "Invalid event ID")
+		response.Error(c, http.StatusBadRequest, "Invalid event ID")
 		return
 	}
 
@@ -131,8 +155,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID := c.MustGet("user_id").(uuid.UUID)
 
 	event, err := h.service.Create(userID, &req)
 	if err != nil {
@@ -170,8 +193,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID := c.MustGet("user_id").(uuid.UUID)
 
 	event, err := h.service.Update(userID, id, &req)
 	if err != nil {
@@ -202,8 +224,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID := c.MustGet("user_id").(uuid.UUID)
 
 	if err := h.service.Delete(userID, id); err != nil {
 		response.BadRequest(c, err.Error())
@@ -232,8 +253,7 @@ func (h *Handler) SubmitForReview(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID := c.MustGet("user_id").(uuid.UUID)
 
 	event, err := h.service.SubmitForReview(userID, id)
 	if err != nil {
@@ -255,8 +275,7 @@ func (h *Handler) SubmitForReview(c *gin.Context) {
 // @Failure 401 {object} response.Response
 // @Router /my/events [get]
 func (h *Handler) GetMyEvents(c *gin.Context) {
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID := c.MustGet("user_id").(uuid.UUID)
 
 	events, err := h.service.GetMyEvents(userID)
 	if err != nil {

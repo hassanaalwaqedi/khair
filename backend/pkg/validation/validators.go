@@ -1,6 +1,9 @@
 package validation
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/mail"
 	"regexp"
@@ -246,11 +249,81 @@ func SanitizeString(s string) string {
 	return s
 }
 
-// SanitizeRequestMiddleware sanitizes common input fields
+// SanitizeRequestMiddleware sanitizes common input fields in JSON request bodies
 func SanitizeRequestMiddleware() gin.HandlerFunc {
+	htmlPattern := regexp.MustCompile(`<[^>]*>`)
+
 	return func(c *gin.Context) {
-		// This would sanitize common fields
-		// Implementation depends on specific needs
+		// Only sanitize JSON bodies
+		contentType := c.GetHeader("Content-Type")
+		if !strings.Contains(contentType, "application/json") {
+			c.Next()
+			return
+		}
+
+		// Read body
+		body, err := c.GetRawData()
+		if err != nil || len(body) == 0 {
+			c.Next()
+			return
+		}
+
+		// Parse as generic JSON
+		var data map[string]interface{}
+		if json.Unmarshal(body, &data) != nil {
+			// Not a JSON object — restore and continue
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+			c.Next()
+			return
+		}
+
+		// Sanitize string values recursively
+		sanitized := sanitizeMap(data, htmlPattern)
+
+		// Re-encode
+		newBody, err := json.Marshal(sanitized)
+		if err != nil {
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+			c.Next()
+			return
+		}
+
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(newBody))
+		c.Request.ContentLength = int64(len(newBody))
 		c.Next()
 	}
+}
+
+func sanitizeMap(m map[string]interface{}, htmlPattern *regexp.Regexp) map[string]interface{} {
+	result := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		switch val := v.(type) {
+		case string:
+			// Remove null bytes, trim whitespace, strip HTML
+			s := strings.ReplaceAll(val, "\x00", "")
+			s = strings.TrimSpace(s)
+			s = htmlPattern.ReplaceAllString(s, "")
+			result[k] = s
+		case map[string]interface{}:
+			result[k] = sanitizeMap(val, htmlPattern)
+		case []interface{}:
+			arr := make([]interface{}, len(val))
+			for i, item := range val {
+				if m2, ok := item.(map[string]interface{}); ok {
+					arr[i] = sanitizeMap(m2, htmlPattern)
+				} else if s, ok := item.(string); ok {
+					s = strings.ReplaceAll(s, "\x00", "")
+					s = strings.TrimSpace(s)
+					s = htmlPattern.ReplaceAllString(s, "")
+					arr[i] = s
+				} else {
+					arr[i] = item
+				}
+			}
+			result[k] = arr
+		default:
+			result[k] = v
+		}
+	}
+	return result
 }

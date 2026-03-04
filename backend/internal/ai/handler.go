@@ -2,6 +2,7 @@ package ai
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -193,6 +194,11 @@ func (h *Handler) SmartSearch(c *gin.Context) {
 		return
 	}
 
+	if len(req.Query) > 500 {
+		response.BadRequest(c, "Search query too long (max 500 characters)")
+		return
+	}
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "Not authenticated")
@@ -256,9 +262,19 @@ func (h *Handler) EnhanceDescription(c *gin.Context) {
 		return
 	}
 
+	if len(req.Title) > 200 || len(req.Description) > 5000 {
+		response.BadRequest(c, "Input too long (title max 200, description max 5000 characters)")
+		return
+	}
+	if len(req.Tags) > 20 {
+		response.BadRequest(c, "Too many tags (max 20)")
+		return
+	}
+
 	result, err := h.description.EnhanceDescription(c.Request.Context(), req.Title, req.Description, req.Tags)
 	if err != nil {
-		response.Error(c, http.StatusServiceUnavailable, "AI description enhancement unavailable: "+err.Error())
+		log.Printf("AI enhance-description error: %v", err)
+		response.Error(c, http.StatusServiceUnavailable, "AI description enhancement temporarily unavailable")
 		return
 	}
 
@@ -281,9 +297,15 @@ func (h *Handler) DetectCategory(c *gin.Context) {
 		return
 	}
 
+	if len(req.Title) > 200 || len(req.Description) > 5000 {
+		response.BadRequest(c, "Input too long (title max 200, description max 5000 characters)")
+		return
+	}
+
 	result, err := h.description.DetectCategory(c.Request.Context(), req.Title, req.Description)
 	if err != nil {
-		response.Error(c, http.StatusServiceUnavailable, "AI category detection unavailable: "+err.Error())
+		log.Printf("AI detect-category error: %v", err)
+		response.Error(c, http.StatusServiceUnavailable, "AI category detection temporarily unavailable")
 		return
 	}
 

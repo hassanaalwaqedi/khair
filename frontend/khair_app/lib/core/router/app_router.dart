@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../di/injection.dart';
 import '../widgets/main_scaffold.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
@@ -11,7 +12,6 @@ import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/events/presentation/pages/event_details_page.dart';
 import '../../features/landing/presentation/pages/landing_page.dart';
 import '../../features/map/presentation/pages/map_page.dart';
-import '../../features/organizer/presentation/pages/organizer_application_page.dart';
 import '../../features/organizer/presentation/pages/organizer_dashboard_page.dart';
 import '../../features/organizer/presentation/pages/create_event_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -19,10 +19,16 @@ import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/reports_page.dart';
 import '../../features/admin/presentation/pages/audit_logs_page.dart';
 import '../../features/admin/presentation/pages/organizer_trust_page.dart';
+import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
 import '../../features/static/presentation/pages/static_page.dart';
+import '../../features/verification/presentation/pages/verification_page.dart';
+import '../../features/home/presentation/pages/discover_page.dart';
+import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
+import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart' as owner;
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _shellNavigatorKey =
+    GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -37,14 +43,28 @@ final GoRouter appRouter = GoRouter(
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
-        return BlocProvider(
-          create: (_) => getIt<EventsBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<EventsBloc>()),
+            BlocProvider(
+              create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus()),
+            ),
+            BlocProvider(
+              create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts()),
+            ),
+          ],
           child: MainScaffold(child: child),
         );
       },
       routes: [
         GoRoute(
           path: '/',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: DiscoverPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/events',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: EventsPage(),
           ),
@@ -53,6 +73,12 @@ final GoRouter appRouter = GoRouter(
           path: '/map',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: MapPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/profile',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: ProfilePage(),
           ),
         ),
       ],
@@ -77,25 +103,31 @@ final GoRouter appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterPage(),
     ),
+    GoRoute(
+      path: '/verification',
+      builder: (context, state) => const VerificationPage(),
+    ),
     // Organizer routes
     GoRoute(
       path: '/organizer',
-      builder: (context, state) => const OrganizerDashboardPage(),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<OrganizerBloc>(),
+        child: const OrganizerDashboardPage(),
+      ),
       routes: [
         GoRoute(
           path: 'events/create',
-          builder: (context, state) => const CreateEventPage(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<EventsBloc>(),
+            child: const CreateEventPage(),
+          ),
         ),
       ],
     ),
+    // /organizer/apply redirects to /register (organizer onboarding handled by registration wizard)
     GoRoute(
       path: '/organizer/apply',
-      builder: (context, state) => const OrganizerApplicationPage(),
-    ),
-    // Profile route
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfilePage(),
+      redirect: (context, state) => '/register',
     ),
     // Admin routes
     GoRoute(
@@ -138,7 +170,16 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/verification-policy',
-      builder: (context, state) => const StaticPage(pageType: 'verification'),
+      builder: (context, state) =>
+          const StaticPage(pageType: 'verification'),
+    ),
+    // Owner Dashboard (admin-only)
+    GoRoute(
+      path: '/owner-dashboard',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<OwnerPostsBloc>(),
+        child: const owner.OwnerDashboardPage(),
+      ),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

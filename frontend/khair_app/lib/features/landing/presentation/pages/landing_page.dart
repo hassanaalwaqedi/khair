@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:khair_app/core/di/injection.dart';
 import 'package:khair_app/core/theme/khair_theme.dart';
@@ -8,6 +7,7 @@ import 'package:khair_app/core/widgets/language_switcher.dart';
 import 'package:khair_app/features/events/domain/entities/event.dart';
 import 'package:khair_app/features/events/presentation/bloc/events_bloc.dart';
 import 'package:khair_app/l10n/generated/app_localizations.dart';
+import 'package:video_player/video_player.dart';
 
 /// Landing Page - First impression & trust building
 /// Fetches real stats and featured events from API
@@ -20,6 +20,8 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   late EventsBloc _eventsBloc;
+  late VideoPlayerController _videoController;
+  bool _videoReady = false;
   
   // Stats loaded from API (with fallback defaults)
   int _eventCount = 0;
@@ -35,10 +37,24 @@ class _LandingPageState extends State<LandingPage> {
     super.initState();
     _eventsBloc = getIt<EventsBloc>();
     _loadStats();
+    _initVideo();
+  }
+
+  void _initVideo() {
+    _videoController = VideoPlayerController.asset('video_khair.mp4')
+      ..setLooping(true)
+      ..setVolume(0)
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _videoReady = true);
+          _videoController.play();
+        }
+      });
   }
 
   @override
   void dispose() {
+    _videoController.dispose();
     _eventsBloc.close();
     super.dispose();
   }
@@ -114,7 +130,7 @@ class _LandingPageState extends State<LandingPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => context.go('/events'),
+                onPressed: () => context.go('/'),
                 child: Text(AppLocalizations.of(context)!.events),
               ),
               TextButton(
@@ -138,12 +154,120 @@ class _LandingPageState extends State<LandingPage> {
           SliverToBoxAdapter(
             child: Column(
               children: [
+                _buildVideoBanner(context),
                 _buildHeroSection(context),
                 _buildFeaturesSection(context),
                 _buildHowItWorksSection(context),
                 _buildCTASection(context),
                 _buildFooter(context),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoBanner(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 360,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Video background
+          if (_videoReady)
+            ClipRect(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
+                ),
+              ),
+            )
+          else
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0A2E1C), Color(0xFF14553A)],
+                ),
+              ),
+            ),
+
+          // Dark gradient overlay for readability
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.3),
+                  Colors.black.withValues(alpha: 0.6),
+                ],
+              ),
+            ),
+          ),
+
+          // Text overlay
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 32,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Khair',
+                  style: KhairTypography.displayLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 44,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Discover Meaningful Islamic Gatherings',
+                  style: KhairTypography.bodyLarge.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Play/pause toggle
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _videoController.value.isPlaying
+                      ? _videoController.pause()
+                      : _videoController.play();
+                });
+              },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  _videoReady && _videoController.value.isPlaying
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
             ),
           ),
         ],
@@ -225,7 +349,7 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             KhairButton(
               label: AppLocalizations.of(context)!.browseEvents,
-              onPressed: () => context.go('/events'),
+              onPressed: () => context.go('/'),
               icon: Icons.explore,
             ),
             KhairButton(

@@ -75,6 +75,15 @@ class KhairColors {
   // Verification badge
   static const Color verified = Color(0xFF0EA5E9);
   static const Color verifiedLight = Color(0xFFE0F2FE);
+
+  // Islamic design constants
+  static const LinearGradient islamicGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1B5E3C), Color(0xFF2E7D5A), Color(0xFF3A9D6E)],
+  );
+
+  static const double islamicPatternOpacity = 0.05;
 }
 
 /// Khair Design System - Typography
@@ -233,9 +242,11 @@ class KhairSpacing {
   static const double xxxl = 64;
 
   // Responsive padding
-  static EdgeInsets get pagePadding => const EdgeInsets.symmetric(horizontal: 24);
+  static EdgeInsets get pagePadding =>
+      const EdgeInsets.symmetric(horizontal: 24);
   static EdgeInsets get cardPadding => const EdgeInsets.all(16);
-  static EdgeInsets get sectionPadding => const EdgeInsets.symmetric(vertical: 48);
+  static EdgeInsets get sectionPadding =>
+      const EdgeInsets.symmetric(vertical: 48);
 }
 
 /// Khair Design System - Border Radius
@@ -243,9 +254,9 @@ class KhairRadius {
   KhairRadius._();
 
   static const double xs = 4;
-  static const double sm = 6;    // sm: 6px as per spec
-  static const double md = 12;   // md: 12px as per spec
-  static const double lg = 20;   // lg: 20px as per spec
+  static const double sm = 6; // sm: 6px as per spec
+  static const double md = 12; // md: 12px as per spec
+  static const double lg = 20; // lg: 20px as per spec
   static const double xl = 24;
   static const double full = 999;
 
@@ -260,37 +271,37 @@ class KhairShadows {
   KhairShadows._();
 
   static List<BoxShadow> get sm => [
-    BoxShadow(
-      color: Colors.black.withAlpha(8),
-      blurRadius: 4,
-      offset: const Offset(0, 1),
-    ),
-  ];
+        BoxShadow(
+          color: Colors.black.withAlpha(8),
+          blurRadius: 4,
+          offset: const Offset(0, 1),
+        ),
+      ];
 
   static List<BoxShadow> get md => [
-    BoxShadow(
-      color: Colors.black.withAlpha(10),
-      blurRadius: 10,
-      offset: const Offset(0, 4),
-    ),
-  ];
+        BoxShadow(
+          color: Colors.black.withAlpha(10),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ];
 
   static List<BoxShadow> get lg => [
-    BoxShadow(
-      color: Colors.black.withAlpha(12),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
-    ),
-  ];
+        BoxShadow(
+          color: Colors.black.withAlpha(12),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ];
 
   // Elevated hover state
   static List<BoxShadow> get hover => [
-    BoxShadow(
-      color: Colors.black.withAlpha(16),
-      blurRadius: 24,
-      offset: const Offset(0, 12),
-    ),
-  ];
+        BoxShadow(
+          color: Colors.black.withAlpha(16),
+          blurRadius: 24,
+          offset: const Offset(0, 12),
+        ),
+      ];
 }
 
 /// Khair Design System - Animation Durations
@@ -311,239 +322,339 @@ class KhairAnimations {
 class KhairTheme {
   KhairTheme._();
 
+  static ThemeData lightThemeForLocale(Locale locale) {
+    return _applyLocaleTypography(lightTheme, locale);
+  }
+
+  static ThemeData darkThemeForLocale(Locale locale) {
+    return _applyLocaleTypography(darkTheme, locale);
+  }
+
   // ───────────── LIGHT THEME ─────────────
   static ThemeData get lightTheme => ThemeData(
-    useMaterial3: true,
-    fontFamily: KhairTypography.fontFamily,
-    brightness: Brightness.light,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: KhairColors.primary,
-      brightness: Brightness.light,
-      primary: KhairColors.primary,
-      secondary: KhairColors.secondary,
-      tertiary: KhairColors.accent,
-      surface: KhairColors.surface,
-      error: KhairColors.error,
-    ),
-    scaffoldBackgroundColor: KhairColors.background,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: KhairColors.surface,
-      foregroundColor: KhairColors.textPrimary,
-      elevation: 0,
-      scrolledUnderElevation: 1,
-      centerTitle: false,
-      titleTextStyle: KhairTypography.headlineSmall,
-    ),
-    cardTheme: CardThemeData(
-      color: KhairColors.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: KhairRadius.medium,
-        side: const BorderSide(color: KhairColors.border),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: KhairColors.primary,
-        foregroundColor: KhairColors.textOnPrimary,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: KhairRadius.medium,
+        useMaterial3: true,
+        fontFamily: KhairTypography.fontFamily,
+        brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: KhairColors.primary,
+          brightness: Brightness.light,
+          primary: KhairColors.primary,
+          secondary: KhairColors.secondary,
+          tertiary: KhairColors.accent,
+          surface: KhairColors.surface,
+          error: KhairColors.error,
         ),
-        textStyle: KhairTypography.button,
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: KhairColors.primary,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        side: const BorderSide(color: KhairColors.primary),
-        shape: RoundedRectangleBorder(
-          borderRadius: KhairRadius.medium,
+        scaffoldBackgroundColor: KhairColors.background,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: KhairColors.surface,
+          foregroundColor: KhairColors.textPrimary,
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          centerTitle: false,
+          titleTextStyle: KhairTypography.headlineSmall,
         ),
-        textStyle: KhairTypography.button,
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: KhairColors.primary,
-        textStyle: KhairTypography.button,
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: KhairColors.surfaceVariant,
-      border: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: const BorderSide(color: KhairColors.primary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: const BorderSide(color: KhairColors.error),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: KhairTypography.bodyMedium.copyWith(
-        color: KhairColors.textTertiary,
-      ),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: KhairColors.surfaceVariant,
-      selectedColor: KhairColors.primarySurface,
-      labelStyle: KhairTypography.labelMedium,
-      shape: RoundedRectangleBorder(
-        borderRadius: KhairRadius.small,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    ),
-    dividerTheme: const DividerThemeData(
-      color: KhairColors.divider,
-      thickness: 1,
-      space: 1,
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: KhairColors.neutral800,
-      contentTextStyle: KhairTypography.bodyMedium.copyWith(color: Colors.white),
-      shape: RoundedRectangleBorder(borderRadius: KhairRadius.medium),
-      elevation: 4,
-    ),
-    pageTransitionsTheme: const PageTransitionsTheme(
-      builders: {
-        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-      },
-    ),
-  );
+        cardTheme: CardThemeData(
+          color: KhairColors.surface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: KhairRadius.medium,
+            side: const BorderSide(color: KhairColors.border),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: KhairColors.primary,
+            foregroundColor: KhairColors.textOnPrimary,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: KhairRadius.medium,
+            ),
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: KhairColors.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            side: const BorderSide(color: KhairColors.primary),
+            shape: RoundedRectangleBorder(
+              borderRadius: KhairRadius.medium,
+            ),
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: KhairColors.primary,
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: KhairColors.surfaceVariant,
+          border: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: const BorderSide(color: KhairColors.primary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: const BorderSide(color: KhairColors.error),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          hintStyle: KhairTypography.bodyMedium.copyWith(
+            color: KhairColors.textTertiary,
+          ),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: KhairColors.surfaceVariant,
+          selectedColor: KhairColors.primarySurface,
+          labelStyle: KhairTypography.labelMedium,
+          shape: RoundedRectangleBorder(
+            borderRadius: KhairRadius.small,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: KhairColors.divider,
+          thickness: 1,
+          space: 1,
+        ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: KhairColors.neutral800,
+          contentTextStyle:
+              KhairTypography.bodyMedium.copyWith(color: Colors.white),
+          shape: RoundedRectangleBorder(borderRadius: KhairRadius.medium),
+          elevation: 4,
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
+      );
 
   // ───────────── DARK THEME ─────────────
   static ThemeData get darkTheme => ThemeData(
-    useMaterial3: true,
-    fontFamily: KhairTypography.fontFamily,
-    brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: KhairColors.primary,
-      brightness: Brightness.dark,
-      primary: KhairColors.primaryLight,
-      secondary: KhairColors.secondaryLight,
-      tertiary: KhairColors.accent,
-      surface: KhairColors.darkSurface,
-      error: KhairColors.error,
-    ),
-    scaffoldBackgroundColor: KhairColors.darkBackground,
-    appBarTheme: AppBarTheme(
-      backgroundColor: KhairColors.darkSurface,
-      foregroundColor: KhairColors.darkTextPrimary,
-      elevation: 0,
-      scrolledUnderElevation: 1,
-      centerTitle: false,
-      titleTextStyle: KhairTypography.headlineSmall.copyWith(
-        color: KhairColors.darkTextPrimary,
-      ),
-    ),
-    cardTheme: CardThemeData(
-      color: KhairColors.darkCard,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: KhairRadius.medium,
-        side: const BorderSide(color: KhairColors.darkBorder),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: KhairColors.primaryLight,
-        foregroundColor: KhairColors.neutral900,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: KhairRadius.medium,
+        useMaterial3: true,
+        fontFamily: KhairTypography.fontFamily,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: KhairColors.primary,
+          brightness: Brightness.dark,
+          primary: KhairColors.primaryLight,
+          secondary: KhairColors.secondaryLight,
+          tertiary: KhairColors.accent,
+          surface: KhairColors.darkSurface,
+          error: KhairColors.error,
         ),
-        textStyle: KhairTypography.button,
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: KhairColors.primaryLight,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        side: const BorderSide(color: KhairColors.primaryLight),
-        shape: RoundedRectangleBorder(
-          borderRadius: KhairRadius.medium,
+        scaffoldBackgroundColor: KhairColors.darkBackground,
+        appBarTheme: AppBarTheme(
+          backgroundColor: KhairColors.darkSurface,
+          foregroundColor: KhairColors.darkTextPrimary,
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          centerTitle: false,
+          titleTextStyle: KhairTypography.headlineSmall.copyWith(
+            color: KhairColors.darkTextPrimary,
+          ),
         ),
-        textStyle: KhairTypography.button,
+        cardTheme: CardThemeData(
+          color: KhairColors.darkCard,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: KhairRadius.medium,
+            side: const BorderSide(color: KhairColors.darkBorder),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: KhairColors.primaryLight,
+            foregroundColor: KhairColors.neutral900,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: KhairRadius.medium,
+            ),
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: KhairColors.primaryLight,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            side: const BorderSide(color: KhairColors.primaryLight),
+            shape: RoundedRectangleBorder(
+              borderRadius: KhairRadius.medium,
+            ),
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: KhairColors.primaryLight,
+            textStyle: KhairTypography.button,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: KhairColors.darkSurfaceVariant,
+          border: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide:
+                const BorderSide(color: KhairColors.primaryLight, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: KhairRadius.medium,
+            borderSide: const BorderSide(color: KhairColors.error),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          hintStyle: KhairTypography.bodyMedium.copyWith(
+            color: KhairColors.darkTextTertiary,
+          ),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: KhairColors.darkSurfaceVariant,
+          selectedColor: KhairColors.primaryDark.withAlpha(100),
+          labelStyle: KhairTypography.labelMedium.copyWith(
+            color: KhairColors.darkTextSecondary,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: KhairRadius.small,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: KhairColors.darkDivider,
+          thickness: 1,
+          space: 1,
+        ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: KhairColors.neutral300,
+          contentTextStyle: KhairTypography.bodyMedium
+              .copyWith(color: KhairColors.neutral900),
+          shape: RoundedRectangleBorder(borderRadius: KhairRadius.medium),
+          elevation: 4,
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
+      );
+
+  static ThemeData _applyLocaleTypography(ThemeData base, Locale locale) {
+    if (locale.languageCode != 'ar') {
+      return base;
+    }
+
+    final textTheme = base.textTheme.copyWith(
+      displayLarge: base.textTheme.displayLarge?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.45,
       ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: KhairColors.primaryLight,
-        textStyle: KhairTypography.button,
+      displayMedium: base.textTheme.displayMedium?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.45,
       ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: KhairColors.darkSurfaceVariant,
-      border: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: BorderSide.none,
+      displaySmall: base.textTheme.displaySmall?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.4,
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: BorderSide.none,
+      headlineLarge: base.textTheme.headlineLarge?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.4,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: const BorderSide(color: KhairColors.primaryLight, width: 2),
+      headlineMedium: base.textTheme.headlineMedium?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.4,
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: KhairRadius.medium,
-        borderSide: const BorderSide(color: KhairColors.error),
+      headlineSmall: base.textTheme.headlineSmall?.copyWith(
+        fontFamily: KhairTypography.arabicFontFamily,
+        height: 1.4,
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: KhairTypography.bodyMedium.copyWith(
-        color: KhairColors.darkTextTertiary,
+      titleLarge: base.textTheme.titleLarge?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.4,
       ),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: KhairColors.darkSurfaceVariant,
-      selectedColor: KhairColors.primaryDark.withAlpha(100),
-      labelStyle: KhairTypography.labelMedium.copyWith(
-        color: KhairColors.darkTextSecondary,
+      titleMedium: base.textTheme.titleMedium?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.4,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: KhairRadius.small,
+      titleSmall: base.textTheme.titleSmall?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.4,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    ),
-    dividerTheme: const DividerThemeData(
-      color: KhairColors.darkDivider,
-      thickness: 1,
-      space: 1,
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: KhairColors.neutral300,
-      contentTextStyle: KhairTypography.bodyMedium.copyWith(color: KhairColors.neutral900),
-      shape: RoundedRectangleBorder(borderRadius: KhairRadius.medium),
-      elevation: 4,
-    ),
-    pageTransitionsTheme: const PageTransitionsTheme(
-      builders: {
-        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-      },
-    ),
-  );
+      bodyLarge: base.textTheme.bodyLarge?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.8,
+      ),
+      bodyMedium: base.textTheme.bodyMedium?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.8,
+      ),
+      bodySmall: base.textTheme.bodySmall?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.7,
+      ),
+      labelLarge: base.textTheme.labelLarge?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.6,
+      ),
+      labelMedium: base.textTheme.labelMedium?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.6,
+      ),
+      labelSmall: base.textTheme.labelSmall?.copyWith(
+        fontFamily: KhairTypography.arabicBodyFontFamily,
+        height: 1.6,
+      ),
+    );
+
+    final appBarTitleStyle =
+        (base.appBarTheme.titleTextStyle ?? base.textTheme.titleLarge)
+            ?.copyWith(
+      fontFamily: KhairTypography.arabicFontFamily,
+      height: 1.4,
+    );
+
+    return base.copyWith(
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      appBarTheme: base.appBarTheme.copyWith(
+        titleTextStyle: appBarTitleStyle,
+      ),
+      inputDecorationTheme: base.inputDecorationTheme.copyWith(
+        alignLabelWithHint: true,
+      ),
+    );
+  }
 }

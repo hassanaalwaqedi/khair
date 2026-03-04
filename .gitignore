@@ -1,7 +1,11 @@
-# Environment files
+# Environment & Secrets
 .env
 .env.local
 .env.*.local
+.env.production
+*.pem
+*.key
+*.p12
 
 # IDE
 .idea/

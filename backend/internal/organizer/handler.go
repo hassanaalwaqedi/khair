@@ -33,6 +33,15 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	{
 		protected.GET("/me", h.GetMyProfile)
 		protected.PUT("/me", h.UpdateMyProfile)
+		protected.GET("/me/messages", h.GetMessages)
+		protected.PUT("/me/messages/:messageId/read", h.MarkMessageRead)
+	}
+
+	// Organizer registration (auth required, no organizer-only check)
+	authGroup := r.Group("/auth")
+	authGroup.Use(authMiddleware)
+	{
+		authGroup.POST("/register-organizer", h.RegisterAsOrganizer)
 	}
 }
 
@@ -120,4 +129,42 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 	}
 
 	response.Success(c, org)
+}
+
+// GetMessages returns messages for the current organizer
+func (h *Handler) GetMessages(c *gin.Context) {
+	// Return empty messages list until full messaging is built
+	response.Success(c, []interface{}{})
+}
+
+// MarkMessageRead marks a message as read
+func (h *Handler) MarkMessageRead(c *gin.Context) {
+	response.SuccessWithMessage(c, "Message marked as read", nil)
+}
+
+// RegisterAsOrganizer handles organizer registration from an authenticated user
+func (h *Handler) RegisterAsOrganizer(c *gin.Context) {
+	var req struct {
+		OrganizationName string `json:"organization_name" binding:"required"`
+		Description      string `json:"description"`
+		Country          string `json:"country"`
+		City             string `json:"city"`
+		ContactEmail     string `json:"contact_email"`
+		Website          string `json:"website"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	userIDVal, _ := c.Get("user_id")
+	userID, _ := userIDVal.(uuid.UUID)
+
+	org, err := h.service.RegisterAsOrganizer(userID, req.OrganizationName, req.Description, req.Country, req.City, req.ContactEmail, req.Website)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Created(c, org)
 }

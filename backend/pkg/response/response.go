@@ -4,7 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/khair/backend/pkg/i18n"
 )
+
+const jsonContentTypeUTF8 = "application/json; charset=utf-8"
 
 // Response represents a standard API response
 type Response struct {
@@ -26,6 +30,7 @@ type PaginatedResponse struct {
 
 // Success sends a successful response
 func Success(c *gin.Context, data interface{}) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
 	c.JSON(http.StatusOK, Response{
 		Success: true,
 		Data:    data,
@@ -34,15 +39,17 @@ func Success(c *gin.Context, data interface{}) {
 
 // SuccessWithMessage sends a successful response with a message
 func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
 	c.JSON(http.StatusOK, Response{
 		Success: true,
-		Message: message,
+		Message: i18n.TranslateForContext(c, message),
 		Data:    data,
 	})
 }
 
 // Created sends a 201 response for resource creation
 func Created(c *gin.Context, data interface{}) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
 	c.JSON(http.StatusCreated, Response{
 		Success: true,
 		Data:    data,
@@ -51,6 +58,7 @@ func Created(c *gin.Context, data interface{}) {
 
 // Paginated sends a paginated response
 func Paginated(c *gin.Context, data interface{}, page, pageSize int, totalCount int64) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
 	totalPages := int(totalCount) / pageSize
 	if int(totalCount)%pageSize > 0 {
 		totalPages++
@@ -68,9 +76,10 @@ func Paginated(c *gin.Context, data interface{}, page, pageSize int, totalCount 
 
 // Error sends an error response
 func Error(c *gin.Context, statusCode int, message string) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
 	c.JSON(statusCode, Response{
 		Success: false,
-		Error:   message,
+		Error:   i18n.TranslateForContext(c, message),
 	})
 }
 
