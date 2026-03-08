@@ -15,6 +15,7 @@ import '../widgets/recommended_section.dart';
 import '../widgets/glass_fab.dart';
 import '../../../owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../../owner_posts/presentation/widgets/khair_recommends_section.dart';
+import '../../../spiritual_quotes/presentation/widgets/quote_rotator.dart';
 
 /// Discover/Home page — the main entry point.
 /// Uses EventsBloc and AuthBloc for real data, no mocks.
@@ -51,10 +52,18 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       final email = authState.user?.email ?? '';
                       final name = email.contains('@')
                           ? email.split('@').first
-                          : (email.isNotEmpty ? email : 'Explorer');
+                          : '';
                       return HeroSection(userName: name);
                     },
                   ),
+                ),
+
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: AppSpacing.lg)),
+
+                // 1.5) Quote Rotator — inspirational Quran/Hadith
+                const SliverToBoxAdapter(
+                  child: QuoteRotator(),
                 ),
 
                 const SliverToBoxAdapter(
@@ -66,10 +75,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 const SliverToBoxAdapter(
                     child: SizedBox(height: AppSpacing.xl)),
 
-                // 3–6) Event-driven sections
                 SliverToBoxAdapter(
                   child: BlocBuilder<EventsBloc, EventsState>(
                     builder: (context, state) {
+                      // Loading state
                       if (state.status == EventsStatus.loading &&
                           state.events.isEmpty) {
                         return const Padding(
@@ -84,6 +93,127 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         );
                       }
 
+                      // Error state with retry
+                      if (state.status == EventsStatus.failure &&
+                          state.events.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 60, horizontal: 32),
+                          child: Column(
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_off_rounded,
+                                  size: 48,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.3)),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Something went wrong',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.7),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                state.errorMessage ??
+                                    'Could not load events.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.4),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed: () => context
+                                    .read<EventsBloc>()
+                                    .add(LoadEvents()),
+                                icon: const Icon(
+                                    Icons.refresh_rounded,
+                                    size: 18),
+                                label: const Text('Retry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      AppColors.goldAccent,
+                                  foregroundColor:
+                                      const Color(0xFF0A2E1F),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // Empty state
+                      if (state.events.isEmpty &&
+                          state.status == EventsStatus.success) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 60, horizontal: 32),
+                          child: Column(
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.event_busy_rounded,
+                                  size: 48,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.3)),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No events found',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.7),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Explore events happening in other cities.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white
+                                      .withValues(alpha: 0.4),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed: () => context
+                                    .read<EventsBloc>()
+                                    .add(LoadEvents()),
+                                icon: const Icon(
+                                    Icons.refresh_rounded,
+                                    size: 18),
+                                label:
+                                    const Text('Refresh'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      AppColors.goldAccent,
+                                  foregroundColor:
+                                      const Color(0xFF0A2E1F),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // Success — render event sections
                       final events = state.events;
                       final totalReserved = events.fold<int>(
                           0, (sum, e) => sum + e.reservedCount);

@@ -22,17 +22,18 @@ func NewRepository(db *sql.DB) *Repository {
 
 // EventFilter represents filters for listing events
 type EventFilter struct {
-	Country   *string
-	City      *string
-	EventType *string
-	Language  *string
-	StartDate *time.Time
-	EndDate   *time.Time
-	Status    *string
-	Search    *string
-	Trending  bool
-	Page      int
-	PageSize  int
+	Country     *string
+	City        *string
+	EventType   *string
+	Language    *string
+	StartDate   *time.Time
+	EndDate     *time.Time
+	Status      *string
+	IsPublished *bool
+	Search      *string
+	Trending    bool
+	Page        int
+	PageSize    int
 }
 
 // Create creates a new event
@@ -58,7 +59,7 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.EventWithOrganizer, error) {
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
 		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
-		       e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.status, e.is_published, e.rejection_reason, e.approved_at, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
@@ -70,7 +71,7 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.EventWithOrganizer, error) {
 		&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-		&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+		&event.Status, &event.IsPublished, &event.RejectionReason, &event.ApprovedAt, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 	)
 	if err != nil {
 		return nil, err
@@ -85,7 +86,7 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
 		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
-		       e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.status, e.is_published, e.rejection_reason, e.approved_at, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
@@ -103,6 +104,14 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		countQuery += ` AND e.status = $` + strconv.Itoa(argIndex)
 		args = append(args, *filter.Status)
 		countArgs = append(countArgs, *filter.Status)
+		argIndex++
+	}
+
+	if filter.IsPublished != nil {
+		query += ` AND e.is_published = $` + strconv.Itoa(argIndex)
+		countQuery += ` AND e.is_published = $` + strconv.Itoa(argIndex)
+		args = append(args, *filter.IsPublished)
+		countArgs = append(countArgs, *filter.IsPublished)
 		argIndex++
 	}
 
@@ -155,11 +164,12 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
-		searchClause := ` AND (e.title ILIKE $` + strconv.Itoa(argIndex) + ` OR COALESCE(e.description, '') ILIKE $` + strconv.Itoa(argIndex) + `)`
+		// Use PostgreSQL full-text search with ranking (requires migration 024)
+		searchClause := ` AND search_vector @@ plainto_tsquery('simple', $` + strconv.Itoa(argIndex) + `)`
 		query += searchClause
 		countQuery += searchClause
-		args = append(args, "%"+*filter.Search+"%")
-		countArgs = append(countArgs, "%"+*filter.Search+"%")
+		args = append(args, *filter.Search)
+		countArgs = append(countArgs, *filter.Search)
 		argIndex++
 	}
 
@@ -195,7 +205,7 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+			&event.Status, &event.IsPublished, &event.RejectionReason, &event.ApprovedAt, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -236,7 +246,7 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 		SELECT id, organizer_id, title, description, event_type, language,
 		       country, city, address, latitude, longitude, start_date, end_date,
 		       image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
-		       status, rejection_reason, created_at, updated_at
+		       status, is_published, rejection_reason, approved_at, created_at, updated_at
 		FROM events
 		WHERE organizer_id = $1
 		ORDER BY created_at DESC
@@ -255,7 +265,7 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt,
+			&event.Status, &event.IsPublished, &event.RejectionReason, &event.ApprovedAt, &event.CreatedAt, &event.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -268,6 +278,11 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 
 // UpdateStatus updates the status of an event
 func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error {
+	if status == "approved" || status == "published" {
+		query := `UPDATE events SET status = $2, rejection_reason = $3, is_published = true, approved_at = NOW() WHERE id = $1`
+		_, err := r.db.Exec(query, id, status, rejectionReason)
+		return err
+	}
 	query := `UPDATE events SET status = $2, rejection_reason = $3 WHERE id = $1`
 	_, err := r.db.Exec(query, id, status, rejectionReason)
 	return err
@@ -275,6 +290,11 @@ func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *
 
 // UpdateStatusWithReviewer updates the status of an event and records who reviewed it
 func (r *Repository) UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error {
+	if status == "approved" || status == "published" {
+		query := `UPDATE events SET status = $2, rejection_reason = $3, reviewed_by = $4, reviewed_at = NOW(), is_published = true, approved_at = NOW() WHERE id = $1`
+		_, err := r.db.Exec(query, id, status, rejectionReason, reviewedBy)
+		return err
+	}
 	query := `UPDATE events SET status = $2, rejection_reason = $3, reviewed_by = $4, reviewed_at = NOW() WHERE id = $1`
 	_, err := r.db.Exec(query, id, status, rejectionReason, reviewedBy)
 	return err
@@ -286,11 +306,11 @@ func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 		       e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
 		       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
-		       e.status, e.rejection_reason, e.created_at, e.updated_at,
+		       e.status, e.is_published, e.rejection_reason, e.approved_at, e.created_at, e.updated_at,
 		       o.name as organizer_name
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
-		WHERE e.status = 'pending'
+		WHERE e.status IN ('pending', 'draft')
 		ORDER BY e.created_at ASC
 	`
 	rows, err := r.db.Query(query)
@@ -307,7 +327,7 @@ func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 			&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 			&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 			&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-			&event.Status, &event.RejectionReason, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+			&event.Status, &event.IsPublished, &event.RejectionReason, &event.ApprovedAt, &event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
 		)
 		if err != nil {
 			return nil, err

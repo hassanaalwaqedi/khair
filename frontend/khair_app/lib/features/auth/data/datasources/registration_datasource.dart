@@ -71,7 +71,6 @@ class RegistrationRemoteDataSource {
     return response.data['data'] as Map<String, dynamic>;
   }
 
-  /// Verify email with 6-digit code
   Future<Map<String, dynamic>> verifyCode({
     required String email,
     required String code,
@@ -80,17 +79,20 @@ class RegistrationRemoteDataSource {
       'email': email,
       'code': code,
     });
-    return response.data['data'] as Map<String, dynamic>;
+    final data = response.data['data'];
+    if (data is Map<String, dynamic>) return data;
+    return {'message': data?.toString() ?? 'Verified'};
   }
 
-  /// Resend verification code
   Future<Map<String, dynamic>> resendCode({
     required String email,
   }) async {
     final response = await _apiClient.post('/register/resend-code', data: {
       'email': email,
     });
-    return response.data['data'] as Map<String, dynamic>;
+    final data = response.data['data'];
+    if (data is Map<String, dynamic>) return data;
+    return {'message': data?.toString() ?? 'Code sent'};
   }
 
   /// Load saved draft

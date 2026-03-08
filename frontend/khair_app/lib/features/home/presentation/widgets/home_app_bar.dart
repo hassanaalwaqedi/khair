@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../notifications/presentation/bloc/notification_bloc.dart';
+import '../../../notifications/presentation/widgets/notification_dropdown.dart';
 
 /// Compact top app bar: Khair logo · location selector · notification + profile icons
 class HomeAppBar extends StatelessWidget {
   final String? locationName;
   final VoidCallback? onLocationTap;
-  final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final String? profileImageUrl;
 
@@ -14,7 +16,6 @@ class HomeAppBar extends StatelessWidget {
     super.key,
     this.locationName,
     this.onLocationTap,
-    this.onNotificationTap,
     this.onProfileTap,
     this.profileImageUrl,
   });
@@ -82,11 +83,8 @@ class HomeAppBar extends StatelessWidget {
 
           const Spacer(),
 
-          // ── Notification bell ──
-          _IconBtn(
-            icon: Icons.notifications_none_rounded,
-            onTap: onNotificationTap,
-          ),
+          // ── Notification bell with badge ──
+          _NotificationBell(),
 
           const SizedBox(width: 8),
 
@@ -114,25 +112,68 @@ class HomeAppBar extends StatelessWidget {
   }
 }
 
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _IconBtn({required this.icon, this.onTap});
-
+class _NotificationBell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 22),
-      ),
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
+      builder: (context, state) {
+        return GestureDetector(
+          onTap: () => NotificationDropdown.show(context),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    size: 22,
+                  ),
+                ),
+                if (state.unreadCount > 0)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: KhairColors.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF0A1E14),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          state.unreadCount > 9
+                              ? '9+'
+                              : state.unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

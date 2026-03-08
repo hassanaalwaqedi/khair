@@ -1,9 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../tokens/tokens.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// Meetup-style main scaffold with a floating glassmorphic bottom nav.
 /// 4 tabs: Discover · Map · Create · Profile
@@ -67,8 +69,12 @@ class MainScaffold extends StatelessWidget {
                     isSelected: _selectedIndex(context) == 1,
                     onTap: () => context.go('/map'),
                   ),
-                  _CreateButton(
-                    onTap: () => context.go('/organizer/events/create'),
+                  _NavItem(
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
+                    label: 'Dashboard',
+                    isSelected: _selectedIndex(context) == 2,
+                    onTap: () => _handleDashboardTap(context),
                   ),
                   _NavItem(
                     icon: Icons.person_outline_rounded,
@@ -89,8 +95,79 @@ class MainScaffold extends StatelessWidget {
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/map')) return 1;
+    if (location.startsWith('/organizer')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
+  }
+
+  void _handleDashboardTap(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+
+    // Not logged in → go to login
+    if (authState.status != AuthStatus.authenticated || authState.user == null) {
+      context.go('/login');
+      return;
+    }
+
+    // Admin → go to admin dashboard
+    if (authState.isAdmin) {
+      context.go('/admin');
+      return;
+    }
+
+    // Organizer → go to organizer dashboard
+    if (authState.isOrganizer) {
+      context.go('/organizer');
+      return;
+    }
+
+    // Regular user → show become organizer dialog
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.business_rounded,
+                  color: AppColors.primary, size: 22),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Become an Organizer',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Only organizers can access the dashboard.\n\nRegister as an organizer to start creating and managing Islamic events!',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go('/organizer/apply');
+            },
+            icon: const Icon(Icons.add_business_rounded, size: 18),
+            label: const Text('Register'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

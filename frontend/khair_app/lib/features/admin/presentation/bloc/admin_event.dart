@@ -81,3 +81,46 @@ class ResolveReport extends AdminEvent {
   @override
   List<Object?> get props => [reportId, resolution, action];
 }
+
+/// Load all users
+class LoadUsers extends AdminEvent {
+  const LoadUsers();
+}
+
+/// Load dashboard stats
+class LoadStats extends AdminEvent {
+  const LoadStats();
+}
+
+/// Update user role
+class UpdateUserRole extends AdminEvent {
+  final String userId;
+  final String role;
+
+  const UpdateUserRole(this.userId, this.role);
+
+  @override
+  List<Object?> get props => [userId, role];
+}
+
+/// Update user status (suspend/ban/activate)
+class UpdateUserStatus extends AdminEvent {
+  final String userId;
+  final String status;
+  final String? reason;
+
+  const UpdateUserStatus(this.userId, this.status, {this.reason});
+
+  @override
+  List<Object?> get props => [userId, status, reason];
+}
+
+/// Delete user
+class DeleteUserEvent extends AdminEvent {
+  final String userId;
+
+  const DeleteUserEvent(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}

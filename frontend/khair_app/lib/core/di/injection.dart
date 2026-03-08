@@ -40,6 +40,9 @@ import '../../features/owner_posts/data/datasources/owner_post_remote_datasource
 import '../../features/owner_posts/data/repositories/owner_post_repository_impl.dart';
 import '../../features/owner_posts/domain/repositories/owner_post_repository.dart';
 import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -51,14 +54,13 @@ Future<void> configureDependencies() async {
   // Dio
   final dio = Dio(BaseOptions(
     baseUrl: const String.fromEnvironment('API_URL',
-        defaultValue: 'http://localhost:8080/api/v1'),
+        defaultValue: 'https://khair-evdzcxfucuh4g2c9.swedencentral-01.azurewebsites.net/api/v1'),
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     responseType: ResponseType.json,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Accept': 'application/json; charset=utf-8',
-      'Accept-Charset': 'utf-8',
     },
   ));
 
@@ -186,5 +188,16 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<OwnerPostsBloc>(
     () => OwnerPostsBloc(getIt<OwnerPostRepository>()),
+  );
+
+  // Notification Feature
+  getIt.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(getIt<NotificationRemoteDataSource>()),
+  );
+  getIt.registerFactory<NotificationBloc>(
+    () => NotificationBloc(getIt<NotificationRepository>()),
   );
 }

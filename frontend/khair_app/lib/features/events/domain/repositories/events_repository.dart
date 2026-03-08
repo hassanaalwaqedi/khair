@@ -61,8 +61,8 @@ class CreateEventParams {
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate?.toIso8601String(),
+      'start_date': startDate.toUtc().toIso8601String(),
+      'end_date': endDate?.toUtc().toIso8601String(),
       'image_url': imageUrl,
     };
   }
@@ -108,8 +108,8 @@ class UpdateEventParams {
     if (address != null) json['address'] = address;
     if (latitude != null) json['latitude'] = latitude;
     if (longitude != null) json['longitude'] = longitude;
-    if (startDate != null) json['start_date'] = startDate!.toIso8601String();
-    if (endDate != null) json['end_date'] = endDate!.toIso8601String();
+    if (startDate != null) json['start_date'] = startDate!.toUtc().toIso8601String();
+    if (endDate != null) json['end_date'] = endDate!.toUtc().toIso8601String();
     if (imageUrl != null) json['image_url'] = imageUrl;
     return json;
   }

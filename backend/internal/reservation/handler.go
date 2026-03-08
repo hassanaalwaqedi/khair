@@ -46,12 +46,16 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 // @Failure 401 {object} response.Response
 // @Router /events/{id}/join [post]
 func (h *Handler) JoinEvent(c *gin.Context) {
-	userID, ok := c.Get("user_id")
+	userIDRaw, ok := c.Get("user_id")
 	if !ok {
 		response.Unauthorized(c, "Authentication required to join events")
 		return
 	}
-	uid := userID.(uuid.UUID)
+	uid, ok := userIDRaw.(uuid.UUID)
+	if !ok {
+		response.Unauthorized(c, "Invalid user session")
+		return
+	}
 
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

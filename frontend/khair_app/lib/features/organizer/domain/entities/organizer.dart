@@ -44,10 +44,10 @@ class Organizer extends Equatable {
 
   factory Organizer.fromJson(Map<String, dynamic> json) {
     return Organizer(
-      id: json['id'],
-      userId: json['user_id'],
-      name: json['name'],
-      organizationType: json['organization_type'],
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? '',
+      name: json['name'] ?? '',
+      organizationType: json['organization_type'] ?? '',
       description: json['description'],
       street: json['street'],
       city: json['city'],
@@ -57,11 +57,15 @@ class Organizer extends Equatable {
       phone: json['phone'],
       email: json['email'],
       website: json['website'],
-      status: json['status'],
+      status: json['status'] ?? 'pending',
       rejectionReason: json['rejection_reason'],
       isVerified: json['is_verified'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : DateTime.now(),
     );
   }
 

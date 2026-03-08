@@ -15,6 +15,10 @@ abstract class AdminRemoteDataSource {
   Future<Event> updateEventStatus(String id, Map<String, dynamic> data);
   Future<List<Report>> getPendingReports();
   Future<Report> resolveReport(String id, Map<String, dynamic> data);
+  Future<List<AdminUser>> getAllUsers();
+  Future<void> updateUserRole(String userId, String role);
+  Future<void> updateUserStatus(String userId, String status, {String? reason});
+  Future<void> deleteUser(String userId);
 }
 
 /// Implementation of admin remote data source
@@ -149,5 +153,30 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   Future<Report> resolveReport(String id, Map<String, dynamic> data) async {
     final response = await _apiClient.put('/admin/reports/$id/resolve', data: data);
     return Report.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<List<AdminUser>> getAllUsers() async {
+    final response = await _apiClient.get('/admin/users');
+    final List<dynamic> list = response.data['data'] ?? [];
+    return list.map((json) => AdminUser.fromJson(json)).toList();
+  }
+
+  @override
+  Future<void> updateUserRole(String userId, String role) async {
+    await _apiClient.put('/admin/users/$userId/role', data: {'role': role});
+  }
+
+  @override
+  Future<void> updateUserStatus(String userId, String status, {String? reason}) async {
+    await _apiClient.put('/admin/users/$userId/status', data: {
+      'status': status,
+      if (reason != null) 'reason': reason,
+    });
+  }
+
+  @override
+  Future<void> deleteUser(String userId) async {
+    await _apiClient.delete('/admin/users/$userId');
   }
 }

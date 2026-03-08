@@ -10,10 +10,13 @@ import '../../../location/domain/entities/location_entity.dart';
 part 'events_event.dart';
 part 'events_state.dart';
 
+const _pollInterval = Duration(seconds: 30);
+
 class EventsBloc extends Bloc<EventsEvent, EventsState> {
   final EventsRepository _eventsRepository;
   LocationEntity? _currentLocation;
   Timer? _searchDebounce;
+  Timer? _pollTimer;
 
   EventsBloc(this._eventsRepository) : super(const EventsState()) {
     on<LoadEvents>(_onLoadEvents);
@@ -28,11 +31,18 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
     on<ToggleTrending>(_onToggleTrending);
     on<UpdateSearchQuery>(_onUpdateSearchQuery);
     on<ClearAllFilters>(_onClearAllFilters);
+    on<RefreshEvents>(_onRefreshEvents);
+
+    // Start periodic polling for new approved events
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      if (!isClosed) add(RefreshEvents());
+    });
   }
 
   @override
   Future<void> close() {
     _searchDebounce?.cancel();
+    _pollTimer?.cancel();
     return super.close();
   }
 
@@ -138,7 +148,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
     if (_currentLocation != null) {
       filter = filter.copyWith(
         country: filter.country ?? _currentLocation!.countryCode,
-        city: filter.city ?? _currentLocation!.city,
+        // city is NOT auto-injected to avoid empty pages in small cities
       );
     }
 
@@ -154,6 +164,42 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
         events: events,
         hasReachedMax: events.length < state.filter.pageSize,
       )),
+    );
+  }
+
+  /// Silent refresh — re-fetches page 1 and replaces events only if data changed
+  Future<void> _onRefreshEvents(
+    RefreshEvents event,
+    Emitter<EventsState> emit,
+  ) async {
+    // Only refresh if we've loaded successfully at least once
+    if (state.status != EventsStatus.success &&
+        state.status != EventsStatus.loadingMore) return;
+
+    var filter = state.filter.copyWith(page: 1);
+    if (_currentLocation != null) {
+      filter = filter.copyWith(
+        country: filter.country ?? _currentLocation!.countryCode,
+        city: filter.city ?? _currentLocation!.city,
+      );
+    }
+
+    final result = await _eventsRepository.getEvents(filter);
+
+    result.fold(
+      (_) {}, // silently ignore errors during poll
+      (freshEvents) {
+        // Only update UI if the events actually changed
+        if (freshEvents.length != state.events.length ||
+            (freshEvents.isNotEmpty &&
+             state.events.isNotEmpty &&
+             freshEvents.first.id != state.events.first.id)) {
+          emit(state.copyWith(
+            events: freshEvents,
+            hasReachedMax: freshEvents.length < state.filter.pageSize,
+          ));
+        }
+      },
     );
   }
 

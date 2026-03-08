@@ -103,3 +103,41 @@ class AdminStats extends Equatable {
         totalUsers,
       ];
 }
+
+/// User entity for admin management
+class AdminUser extends Equatable {
+  final String id;
+  final String name;
+  final String email;
+  final String role;
+  final String status;
+  final DateTime createdAt;
+
+  const AdminUser({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.role,
+    this.status = 'active',
+    required this.createdAt,
+  });
+
+  factory AdminUser.fromJson(Map<String, dynamic> json) {
+    return AdminUser(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'user',
+      status: json['status'] ?? 'active',
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
+  bool get isAdmin => role == 'admin';
+  bool get isOrganizer => role == 'organizer';
+  bool get isSuspended => status == 'suspended';
+  bool get isBanned => status == 'banned';
+
+  @override
+  List<Object?> get props => [id, name, email, role, status, createdAt];
+}

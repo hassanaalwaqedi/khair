@@ -20,7 +20,7 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   @override
   Future<List<EventModel>> getEvents(Map<String, dynamic> queryParams) async {
     final response = await _apiClient.get('/events', queryParameters: queryParams);
-    final data = response.data['data'] as List;
+    final data = (response.data['data'] as List?) ?? [];
     return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
@@ -33,14 +33,14 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   @override
   Future<List<EventModel>> getNearbyEvents(Map<String, dynamic> queryParams) async {
     final response = await _apiClient.get('/map/nearby', queryParameters: queryParams);
-    final data = response.data['data'] as List;
+    final data = (response.data['data'] as List?) ?? [];
     return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
   Future<List<EventModel>> getMyEvents() async {
     final response = await _apiClient.get('/my/events');
-    final data = response.data['data'] as List;
+    final data = (response.data['data'] as List?) ?? [];
     return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 

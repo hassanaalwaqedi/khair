@@ -76,7 +76,7 @@ type SMTPConfig struct {
 
 // Load loads configuration from environment variables
 func Load() *Config {
-	return &Config{
+	cfg := &Config{
 		Server: ServerConfig{
 			Port: getEnv("SERVER_PORT", "8080"),
 			Mode: getEnv("GIN_MODE", "debug"),
@@ -120,6 +120,13 @@ func Load() *Config {
 			SendGridFrom: strings.TrimSpace(getEnv("SENDGRID_FROM", getEnv("SMTP_FROM", ""))),
 		},
 	}
+
+	// Validate JWT secret security — refuse to start with a weak secret
+	if len(cfg.JWT.Secret) < 32 {
+		log.Fatalf("FATAL: JWT_SECRET must be at least 32 characters for security (got %d)", len(cfg.JWT.Secret))
+	}
+
+	return cfg
 }
 
 // getEnv gets an environment variable or returns a default value

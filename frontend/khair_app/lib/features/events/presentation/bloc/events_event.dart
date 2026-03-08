@@ -9,6 +9,8 @@ abstract class EventsEvent extends Equatable {
 
 class LoadEvents extends EventsEvent {}
 
+class RefreshEvents extends EventsEvent {}
+
 class LoadMoreEvents extends EventsEvent {}
 
 class UpdateFilter extends EventsEvent {

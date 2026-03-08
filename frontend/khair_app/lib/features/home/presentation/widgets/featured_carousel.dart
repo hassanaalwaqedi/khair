@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../events/domain/entities/event.dart';
@@ -72,11 +73,14 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                 scale: _current == i ? 1.0 : 0.94,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
+                child: GestureDetector(
+                onTap: () => context.push('/events/${widget.events[i].id}'),
                 child: _FeaturedCard(
                   event: widget.events[i],
                   color1: colors[0],
                   color2: colors[1],
                 ),
+              ),
               );
             },
           ),

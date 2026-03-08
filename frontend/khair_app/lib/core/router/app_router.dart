@@ -8,13 +8,16 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
-import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/events/presentation/pages/event_details_page.dart';
 import '../../features/landing/presentation/pages/landing_page.dart';
 import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/organizer/presentation/pages/organizer_dashboard_page.dart';
+import '../../features/organizer/presentation/pages/organizer_events_page.dart';
+import '../../features/organizer/presentation/pages/organizer_profile_edit_page.dart';
+import '../../features/organizer/presentation/pages/organizer_analytics_page.dart';
 import '../../features/organizer/presentation/pages/create_event_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/reports_page.dart';
 import '../../features/admin/presentation/pages/audit_logs_page.dart';
@@ -23,8 +26,11 @@ import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
 import '../../features/static/presentation/pages/static_page.dart';
 import '../../features/verification/presentation/pages/verification_page.dart';
 import '../../features/home/presentation/pages/discover_page.dart';
+
 import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart' as owner;
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../features/location/presentation/bloc/location_bloc.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -52,6 +58,12 @@ final GoRouter appRouter = GoRouter(
             BlocProvider(
               create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts()),
             ),
+            BlocProvider(
+              create: (_) => getIt<NotificationBloc>()..add(const LoadUnreadCount()),
+            ),
+            BlocProvider(
+              create: (_) => getIt<LocationBloc>(),
+            ),
           ],
           child: MainScaffold(child: child),
         );
@@ -61,12 +73,6 @@ final GoRouter appRouter = GoRouter(
           path: '/',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: DiscoverPage(),
-          ),
-        ),
-        GoRoute(
-          path: '/events',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: EventsPage(),
           ),
         ),
         GoRoute(
@@ -88,8 +94,13 @@ final GoRouter appRouter = GoRouter(
       path: '/events/:id',
       builder: (context, state) {
         final eventId = state.pathParameters['id']!;
-        return BlocProvider(
-          create: (_) => getIt<EventsBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<EventsBloc>()),
+            BlocProvider(
+              create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus()),
+            ),
+          ],
           child: EventDetailsPage(eventId: eventId),
         );
       },
@@ -122,6 +133,27 @@ final GoRouter appRouter = GoRouter(
             child: const CreateEventPage(),
           ),
         ),
+        GoRoute(
+          path: 'events',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<OrganizerBloc>(),
+            child: const OrganizerEventsPage(),
+          ),
+        ),
+        GoRoute(
+          path: 'profile',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<OrganizerBloc>()..add(const LoadOrganizerProfile()),
+            child: const OrganizerProfileEditPage(),
+          ),
+        ),
+        GoRoute(
+          path: 'analytics',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
+            child: const OrganizerAnalyticsPage(),
+          ),
+        ),
       ],
     ),
     // /organizer/apply redirects to /register (organizer onboarding handled by registration wizard)
@@ -132,7 +164,10 @@ final GoRouter appRouter = GoRouter(
     // Admin routes
     GoRoute(
       path: '/admin',
-      builder: (context, state) => const AdminDashboardPage(),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AdminBloc>()..add(const LoadAdminData()),
+        child: const AdminDashboardPage(),
+      ),
       routes: [
         GoRoute(
           path: 'reports',

@@ -1,18 +1,20 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../notifications/presentation/bloc/notification_bloc.dart';
+import '../../../notifications/presentation/widgets/notification_dropdown.dart';
+import '../../../../core/theme/theme_bloc.dart';
 
 /// Hero section with personalized greeting, animated gradient background,
 /// Islamic geometric pattern, daily quote, and weekly progress.
 class HeroSection extends StatefulWidget {
   final String userName;
-  final String dailyQuote;
-  final double weeklyProgress; // 0.0 – 1.0
 
   const HeroSection({
     super.key,
     this.userName = '',
-    this.dailyQuote = '',
-    this.weeklyProgress = 0.0,
   });
 
   @override
@@ -46,7 +48,7 @@ class _HeroSectionState extends State<HeroSection>
         final t = _gradientCtrl.value;
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
+          padding: const EdgeInsets.fromLTRB(24, 40, 20, 20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment(-1 + t, -1),
@@ -70,6 +72,155 @@ class _HeroSectionState extends State<HeroSection>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Brand header row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFFD4AF37), Color(0xFFC8A951)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.mosque, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Khair',
+                        style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      // Theme toggle
+                      BlocBuilder<ThemeBloc, ThemeState>(
+                        builder: (context, themeState) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return GestureDetector(
+                            onTap: () => context.read<ThemeBloc>().add(const ToggleTheme()),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                ),
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Icon(
+                                  isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                  key: ValueKey(isDark),
+                                  color: isDark
+                                      ? const Color(0xFFC8A951)
+                                      : Colors.white.withValues(alpha: 0.8),
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      // Notification bell
+                      BlocConsumer<NotificationBloc, NotificationState>(
+                    listenWhen: (prev, curr) =>
+                        curr.unreadCount > prev.unreadCount,
+                    listener: (context, state) {
+                      // Play sound when new notification arrives
+                      SystemSound.play(SystemSoundType.alert);
+                      HapticFeedback.mediumImpact();
+                    },
+                    buildWhen: (prev, curr) =>
+                        prev.unreadCount != curr.unreadCount,
+                    builder: (context, state) {
+                      return GestureDetector(
+                        onTap: () => NotificationDropdown.show(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  size: 22,
+                                ),
+                              ),
+                              if (state.unreadCount > 0)
+                                Positioned(
+                                  right: 4,
+                                  top: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE53935),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFF0A2E1F),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        state.unreadCount > 9
+                                            ? '9+'
+                                            : state.unreadCount.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700,
+                                          height: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               // Greeting
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
@@ -104,59 +255,6 @@ class _HeroSectionState extends State<HeroSection>
                         letterSpacing: -0.5,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Daily quote + weekly progress row
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOut,
-                builder: (context, value, child) => Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 16 * (1 - value)),
-                    child: child,
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Quote
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.07),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.format_quote_rounded,
-                                color: const Color(0xFFC8A951), size: 20),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.dailyQuote,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.85),
-                                fontWeight: FontWeight.w400,
-                                height: 1.5,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Weekly progress
-                    _WeeklyProgressRing(progress: widget.weeklyProgress),
                   ],
                 ),
               ),

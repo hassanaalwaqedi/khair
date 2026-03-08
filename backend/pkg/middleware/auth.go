@@ -123,6 +123,14 @@ func RequirePermission(db *sql.DB, permissionName string) gin.HandlerFunc {
 			return
 		}
 
+		// Admin and super_admin bypass permission checks
+		if role, exists := c.Get("role"); exists {
+			if role == "admin" || role == "super_admin" {
+				c.Next()
+				return
+			}
+		}
+
 		userID, ok := userIDVal.(uuid.UUID)
 		if !ok {
 			response.Unauthorized(c, "Invalid user ID")

@@ -56,14 +56,14 @@ func (l Location) filterColumn() (string, error) {
 
 // Quote is the persistence model for spiritual quotes.
 type Quote struct {
-	ID              uuid.UUID `json:"-"`
+	ID              uuid.UUID `json:"id"`
 	Type            string    `json:"type"`
 	TextAR          string    `json:"text_ar"`
 	Source          string    `json:"source"`
 	Reference       string    `json:"reference"`
-	IsActive        bool      `json:"-"`
-	ShowOnDashboard bool      `json:"-"`
-	ShowOnHome      bool      `json:"-"`
-	ShowOnLogin     bool      `json:"-"`
-	CreatedAt       time.Time `json:"-"`
+	IsActive        bool      `json:"is_active"`
+	ShowOnDashboard bool      `json:"show_on_dashboard"`
+	ShowOnHome      bool      `json:"show_on_home"`
+	ShowOnLogin     bool      `json:"show_on_login"`
+	CreatedAt       time.Time `json:"created_at"`
 }

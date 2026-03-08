@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../events/domain/entities/event.dart';
@@ -65,10 +66,13 @@ class RecommendedSection extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
-              child: _RecommendedCard(
-                event: event,
-                tagColor: _tagColors[event.eventType.toLowerCase()] ??
-                    const Color(0xFF2E7D5A),
+              child: GestureDetector(
+                onTap: () => context.push('/events/${event.id}'),
+                child: _RecommendedCard(
+                  event: event,
+                  tagColor: _tagColors[event.eventType.toLowerCase()] ??
+                      const Color(0xFF2E7D5A),
+                ),
               ),
             ),
           );

@@ -8,6 +8,10 @@ abstract class SpiritualQuotesRemoteDataSource {
   Future<SpiritualQuoteModel?> getRandomQuote({
     required QuoteLocation location,
   });
+
+  Future<List<SpiritualQuoteModel>> getQuotesByLocation({
+    required QuoteLocation location,
+  });
 }
 
 class SpiritualQuotesRemoteDataSourceImpl
@@ -35,6 +39,33 @@ class SpiritualQuotesRemoteDataSourceImpl
     } on DioException catch (error) {
       if (error.response?.statusCode == 404) {
         return null;
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<SpiritualQuoteModel>> getQuotesByLocation({
+    required QuoteLocation location,
+  }) async {
+    try {
+      final response = await _apiClient.get(
+        '/quotes',
+        queryParameters: {'location': location.apiValue},
+      );
+
+      final payload = response.data['data'];
+      if (payload is! List) {
+        return [];
+      }
+
+      return payload
+          .whereType<Map<String, dynamic>>()
+          .map((json) => SpiritualQuoteModel.fromJson(json))
+          .toList();
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return [];
       }
       rethrow;
     }

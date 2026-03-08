@@ -140,9 +140,11 @@ type Event struct {
 	AgeMin            *int       `json:"age_min,omitempty"`
 	AgeMax            *int       `json:"age_max,omitempty"`
 	Status            string     `json:"status"`
+	IsPublished       bool       `json:"is_published"`
 	RejectionReason   *string    `json:"rejection_reason,omitempty"`
 	ReviewedBy        *uuid.UUID `json:"reviewed_by,omitempty"`
 	ReviewedAt        *time.Time `json:"reviewed_at,omitempty"`
+	ApprovedAt        *time.Time `json:"approved_at,omitempty"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         time.Time  `json:"updated_at"`
 }

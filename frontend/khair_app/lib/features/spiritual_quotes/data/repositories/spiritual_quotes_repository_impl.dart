@@ -29,6 +29,13 @@ class SpiritualQuotesRepositoryImpl implements SpiritualQuotesRepository {
   }
 
   @override
+  Future<List<SpiritualQuote>> getQuotesByLocation({
+    required QuoteLocation location,
+  }) async {
+    return await _remoteDataSource.getQuotesByLocation(location: location);
+  }
+
+  @override
   bool get startupShownThisSession => _startupShown;
 
   @override

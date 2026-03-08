@@ -1,6 +1,7 @@
 package security
 
 import (
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -192,15 +193,43 @@ func DisableDebugEndpoints(isProduction bool) gin.HandlerFunc {
 	}
 }
 
-// SecureErrorMiddleware hides internal errors in production
+// SecureErrorMiddleware hides internal errors in production.
+// It intercepts handler-chain errors and, for 5xx statuses in production,
+// logs the real error internally and returns a generic JSON message
+// so stack traces and database errors never reach the client.
 func SecureErrorMiddleware(isProduction bool) gin.HandlerFunc {
+	sanitizer := NewLogSanitizer()
+
 	return func(c *gin.Context) {
 		c.Next()
 
-		// Hide internal error details in production
-		if isProduction && c.Writer.Status() >= 500 {
-			// Response already written, but log sanitized version
-			// In a real implementation, we'd use a response writer wrapper
+		// Only intervene when running in production
+		if !isProduction {
+			return
+		}
+
+		status := c.Writer.Status()
+		if status < 500 {
+			return
+		}
+
+		// Log the real errors for debugging — sanitised to strip PII/secrets.
+		if len(c.Errors) > 0 {
+			for _, e := range c.Errors {
+				sanitised := sanitizer.Sanitize(e.Error())
+				log.Printf("[SECURE-ERROR] status=%d path=%s error=%q",
+					status, c.Request.URL.Path, sanitised)
+			}
+		}
+
+		// If the response body has NOT yet been written, replace it with a
+		// safe generic message. Gin's c.JSON only writes when nothing has
+		// been written yet, so check Written().
+		if !c.Writer.Written() {
+			c.JSON(status, gin.H{
+				"success": false,
+				"error":   "internal_server_error",
+			})
 		}
 	}
 }

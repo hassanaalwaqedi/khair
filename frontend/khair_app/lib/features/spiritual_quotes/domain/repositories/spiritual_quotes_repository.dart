@@ -6,6 +6,10 @@ abstract class SpiritualQuotesRepository {
     bool refresh = false,
   });
 
+  Future<List<SpiritualQuote>> getQuotesByLocation({
+    required QuoteLocation location,
+  });
+
   bool get startupShownThisSession;
 
   void markStartupShown();

@@ -136,13 +136,13 @@ class GeoService {
     }
 
     final response =
-        await _apiClient.get('/events/nearby', queryParameters: query);
+        await _apiClient.get('/map/nearby', queryParameters: query);
     final payload = response.data['data'] as Map<String, dynamic>;
     return NearbyMapResult.fromJson(payload);
   }
 
   Future<MapFilterOptions> fetchFilterOptions() async {
-    final response = await _apiClient.get('/events/filter-options');
+    final response = await _apiClient.get('/map/filter-options');
     return MapFilterOptions.fromJson(
         response.data['data'] as Map<String, dynamic>);
   }

@@ -143,6 +143,54 @@ class AdminRepositoryImpl implements AdminRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, List<AdminUser>>> getAllUsers() async {
+    try {
+      final users = await _remoteDataSource.getAllUsers();
+      return Right(users);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateUserRole(String userId, String role) async {
+    try {
+      await _remoteDataSource.updateUserRole(userId, role);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateUserStatus(String userId, String status, {String? reason}) async {
+    try {
+      await _remoteDataSource.updateUserStatus(userId, status, reason: reason);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteUser(String userId) async {
+    try {
+      await _remoteDataSource.deleteUser(userId);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   String _getErrorMessage(DioException e) {
     if (e.response?.data != null && e.response!.data is Map) {
       return e.response!.data['error'] ?? 'An error occurred';

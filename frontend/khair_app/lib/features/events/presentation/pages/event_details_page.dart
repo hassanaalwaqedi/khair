@@ -5,7 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../data/datasources/join_datasource.dart';
 import '../bloc/events_bloc.dart';
 import '../widgets/join_event_modal.dart';
 
@@ -401,8 +405,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               FloatingActionButton.extended(
                 onPressed: isFull
                     ? null
-                    : () => showJoinEventModal(
-                        context, event.id, event.title),
+                    : () => _handleJoinTap(context, event.id, event.title),
                 backgroundColor: isFull
                     ? (isDark
                         ? KhairColors.darkSurfaceVariant
@@ -428,6 +431,115 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  void _handleJoinTap(BuildContext context, String eventId, String eventTitle) {
+    final authState = context.read<AuthBloc>().state;
+
+    // Not logged in → show join/register modal
+    if (authState.status != AuthStatus.authenticated || authState.user == null) {
+      showJoinEventModal(context, eventId, eventTitle);
+      return;
+    }
+
+    // Logged in → join directly, no confirmation needed
+    _joinEventDirectly(context, eventId, eventTitle);
+  }
+
+  Future<void> _joinEventDirectly(BuildContext context, String eventId, String eventTitle) async {
+    // Show loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+            SizedBox(width: 12),
+            Text('Joining event...'),
+          ],
+        ),
+        duration: Duration(seconds: 10),
+      ),
+    );
+
+    try {
+      final datasource = JoinDataSource(getIt<ApiClient>());
+      await datasource.joinEvent(eventId);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('You\'re in! Seat reserved successfully.'),
+            ],
+          ),
+          backgroundColor: KhairColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // Reload event details to update attendee count
+      context.read<EventsBloc>().add(LoadEventDetails(eventId));
+
+      // Show notification after 5 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.notifications_active_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '🎉 You\'ve joined "$eventTitle"! See you there.',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: KhairColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      
+      String errorMsg = 'Failed to join event';
+      final errStr = e.toString();
+      if (errStr.contains('already')) {
+        errorMsg = 'You have already joined this event';
+      } else if (errStr.contains('full') || errStr.contains('capacity')) {
+        errorMsg = 'This event is full';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(errorMsg)),
+            ],
+          ),
+          backgroundColor: KhairColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   Widget _buildImagePlaceholder() {

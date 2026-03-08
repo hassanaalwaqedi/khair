@@ -1,11 +1,13 @@
 package admin
 
 import (
+	"context"
 	"database/sql"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/khair/backend/internal/rbac"
 	"github.com/khair/backend/pkg/middleware"
@@ -15,10 +17,11 @@ import (
 type Handler struct {
 	service *Service
 	db      *sql.DB
+	redis   *redis.Client
 }
 
-func NewHandler(service *Service, db *sql.DB) *Handler {
-	return &Handler{service: service, db: db}
+func NewHandler(service *Service, db *sql.DB, redisClient *redis.Client) *Handler {
+	return &Handler{service: service, db: db, redis: redisClient}
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerFunc) {
@@ -44,14 +47,19 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		admin.GET("/reports/pending", h.GetPendingReports)
 		admin.PUT("/reports/:id/resolve", h.ResolveReport)
 
-		// RBAC management (requires manage_users permission)
+		// User management (admin-only)
+		admin.GET("/users", h.ListUsers)
+		admin.PUT("/users/:id/role", h.UpdateUserRole)
+		admin.PUT("/users/:id/status", h.UpdateUserStatus)
+		admin.PUT("/users/:id/suspend", h.SuspendUser)
+		admin.PUT("/users/:id/unsuspend", h.UnsuspendUser)
+		admin.DELETE("/users/:id", h.DeleteUser)
+
+		// Advanced RBAC management (requires manage_users permission)
 		rbacGroup := admin.Group("")
 		rbacGroup.Use(middleware.RequirePermission(h.db, "manage_users"))
 		{
-			rbacGroup.GET("/users", h.ListUsers)
 			rbacGroup.PATCH("/users/:id/roles", h.UpdateUserRoles)
-			rbacGroup.PUT("/users/:id/suspend", h.SuspendUser)
-			rbacGroup.PUT("/users/:id/unsuspend", h.UnsuspendUser)
 			rbacGroup.GET("/roles", h.ListRoles)
 			rbacGroup.POST("/roles", h.CreateRole)
 			rbacGroup.POST("/roles/:id/permissions", h.AssignPermissions)
@@ -165,6 +173,17 @@ func (h *Handler) UpdateEventStatus(c *gin.Context) {
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return
+	}
+
+	// Invalidate discovery cache so newly approved events appear immediately
+	if h.redis != nil && req.Status == "approved" {
+		ctx := context.Background()
+		h.redis.Del(ctx, "discover:featured", "discover:trending")
+		// Clear nearby cache keys (pattern-based)
+		iter := h.redis.Scan(ctx, 0, "discover:nearby:*", 100).Iterator()
+		for iter.Next(ctx) {
+			h.redis.Del(ctx, iter.Val())
+		}
 	}
 
 	response.SuccessWithMessage(c, "Event status updated", event)
@@ -308,6 +327,85 @@ func (h *Handler) UnsuspendUser(c *gin.Context) {
 	}
 
 	response.SuccessWithMessage(c, "User unsuspended", nil)
+}
+
+// UpdateUserRole updates a user's role (user/organizer/admin)
+func (h *Handler) UpdateUserRole(c *gin.Context) {
+	targetID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req struct {
+		Role string `json:"role" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "role is required")
+		return
+	}
+
+	_, err = h.db.Exec(`UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2`, req.Role, targetID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to update role")
+		return
+	}
+	response.SuccessWithMessage(c, "User role updated to "+req.Role, nil)
+}
+
+// UpdateUserStatus updates a user's status (active/suspended/banned)
+func (h *Handler) UpdateUserStatus(c *gin.Context) {
+	targetID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req struct {
+		Status string `json:"status" binding:"required"`
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "status is required")
+		return
+	}
+
+	switch req.Status {
+	case "active":
+		h.db.Exec(`UPDATE users SET is_suspended = false, suspension_reason = NULL, updated_at = NOW() WHERE id = $1`, targetID)
+	case "suspended":
+		adminID, _ := c.Get("user_id")
+		uid, _ := adminID.(uuid.UUID)
+		reason := req.Reason
+		if reason == "" {
+			reason = "Suspended by admin"
+		}
+		h.service.SuspendUser(targetID, reason, uid)
+	case "banned":
+		h.db.Exec(`UPDATE users SET is_suspended = true, suspension_reason = $1, updated_at = NOW() WHERE id = $2`,
+			"BANNED: "+req.Reason, targetID)
+	default:
+		response.BadRequest(c, "Invalid status")
+		return
+	}
+
+	response.SuccessWithMessage(c, "User status updated to "+req.Status, nil)
+}
+
+// DeleteUser removes a user account
+func (h *Handler) DeleteUser(c *gin.Context) {
+	targetID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	_, err = h.db.Exec(`DELETE FROM users WHERE id = $1`, targetID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to delete user")
+		return
+	}
+	response.SuccessWithMessage(c, "User deleted", nil)
 }
 
 // ── Stats ──

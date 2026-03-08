@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -12,23 +15,33 @@ import (
 
 	"github.com/khair/backend/internal/admin"
 	"github.com/khair/backend/internal/ai"
+	"github.com/khair/backend/internal/analytics"
 	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
 	"github.com/khair/backend/internal/countries"
+	"github.com/khair/backend/internal/discovery"
 	"github.com/khair/backend/internal/event"
+	"github.com/khair/backend/internal/growthanalytics"
 	"github.com/khair/backend/internal/joinreg"
 	"github.com/khair/backend/internal/launch"
 	"github.com/khair/backend/internal/location"
 	"github.com/khair/backend/internal/mapservice"
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/organizer"
 	"github.com/khair/backend/internal/orgdash"
 	"github.com/khair/backend/internal/ownerposts"
 	"github.com/khair/backend/internal/payment"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/internal/rbac"
+	"github.com/khair/backend/internal/referral"
 	"github.com/khair/backend/internal/registration"
+	"github.com/khair/backend/internal/reputation"
 	"github.com/khair/backend/internal/reservation"
+	"github.com/khair/backend/internal/review"
+	"github.com/khair/backend/internal/sharing"
 	"github.com/khair/backend/internal/spiritualquote"
+	"github.com/khair/backend/internal/sse"
 	"github.com/khair/backend/internal/trust"
 	"github.com/khair/backend/internal/trust/audit"
 	"github.com/khair/backend/internal/trust/moderation"
@@ -36,8 +49,12 @@ import (
 	"github.com/khair/backend/internal/trust/score"
 	"github.com/khair/backend/internal/upload"
 	"github.com/khair/backend/internal/verification"
+	"github.com/khair/backend/internal/waitlist"
+	"github.com/khair/backend/internal/ws"
+	"github.com/khair/backend/pkg/cache"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/database"
+	"github.com/khair/backend/pkg/fcm"
 	"github.com/khair/backend/pkg/lifecycle"
 	"github.com/khair/backend/pkg/logger"
 	"github.com/khair/backend/pkg/middleware"
@@ -46,6 +63,8 @@ import (
 	"github.com/khair/backend/pkg/ratelimit"
 	"github.com/khair/backend/pkg/response"
 	"github.com/khair/backend/pkg/security"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -85,12 +104,18 @@ func main() {
 		appLogger.Info("Database migrations completed")
 	}
 
-	// Connect to Redis
-	redisClient := redis.NewClient(&redis.Options{
+	// Connect to Redis (TLS required for Azure Cache for Redis)
+	redisOpts := &redis.Options{
 		Addr:     cfg.Redis.Addr,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
-	})
+	}
+	if os.Getenv("REDIS_TLS") == "true" {
+		redisOpts.TLSConfig = &tls.Config{
+			InsecureSkipVerify: false,
+		}
+	}
+	redisClient := redis.NewClient(redisOpts)
 	// Note: redisClient.Close() is handled by lifecycle manager
 	// defer redisClient.Close()
 
@@ -112,12 +137,19 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
+	// Set max multipart memory (8 MB)
+	router.MaxMultipartMemory = 8 << 20
+
 	// Apply global middleware
 	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.SecurityHeaders())
 	router.Use(security.ProductionHeadersMiddleware(secConfig))
 	router.Use(security.DisableDebugEndpoints(secConfig.Environment == "production"))
 	router.Use(security.SecureErrorMiddleware(secConfig.Environment == "production"))
+	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	router.Use(middleware.BodySizeLimit(middleware.MaxBodySize))
+	router.Use(middleware.RequestLogger())
+	router.Use(middleware.PrometheusMetrics())
 
 	// Health check endpoints (production-ready with DB/Redis checks)
 	healthChecker := lifecycle.NewHealthChecker(db, redisClient)
@@ -126,6 +158,9 @@ func main() {
 	})
 	router.GET("/healthz", healthChecker.LivenessHandler())
 	router.GET("/readyz", healthChecker.ReadinessHandler())
+
+	// Prometheus metrics endpoint
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -146,13 +181,28 @@ func main() {
 	rbacService := rbac.NewService(rbacRepo)
 
 	// Initialize core services
-	authService := auth.NewService(db, cfg, emailSvc, rbacRepo)
+	authService := auth.NewService(db, cfg, emailSvc, rbacRepo, redisClient)
 	organizerService := organizer.NewService(db)
 	eventService := event.NewService(db, &organizerRepoAdapter{repo: organizerRepo})
 	mapService := mapservice.NewService(db)
 	registrationService := registration.NewService(db, cfg, emailSvc)
 
-	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService)
+	notificationService := notification.NewService(db)
+	cacheService := cache.NewService(redisClient)
+	sseHub := sse.NewHub()
+	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService, notificationService, cacheService, sseHub)
+
+	// WebSocket hub (Redis Pub/Sub for horizontal scaling)
+	wsHub := ws.NewHub(redisClient, cfg.JWT.Secret)
+	go wsHub.Run()
+
+	// FCM push notifications
+	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
+	pushService := push.NewService(db, fcmClient)
+
+	// Analytics + Discovery
+	analyticsService := analytics.NewService(db)
+	discoveryService := discovery.NewService(db, redisClient)
 
 	// Wrap *sql.DB with sqlx for trust services that require it
 	sqlxDB := sqlx.NewDb(db, "postgres")
@@ -171,7 +221,7 @@ func main() {
 	organizerHandler := organizer.NewHandler(organizerService)
 	mapHandler := mapservice.NewHandler(mapService, cfg)
 	eventHandler := event.NewHandler(eventService, mapHandler, cfg)
-	adminHandler := admin.NewHandler(adminService, db)
+	adminHandler := admin.NewHandler(adminService, db, redisClient)
 	locationHandler := location.NewHandler(locationService)
 	trustHandler := trust.NewHandler(auditService, moderationService, reportingService, scoreService)
 	registrationHandler := registration.NewHandler(registrationService)
@@ -202,12 +252,67 @@ func main() {
 	organizerHandler.RegisterRoutes(v1, authMiddleware)
 	eventHandler.RegisterRoutes(v1, authMiddleware)
 	adminHandler.RegisterRoutes(v1, authMiddleware)
+
+	// SSE stream for real-time event updates
+	v1.GET("/events/stream", sseHub.ServeHTTP)
 	mapHandler.RegisterRoutes(v1, nil)
 	locationHandler.RegisterRoutes(v1)
 	trustHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 	aiHandler.RegisterRoutes(v1, authMiddleware)
 	registrationHandler.RegisterRoutes(v1, registerRL, verifyRL, resendRL)
 	uploadHandler.RegisterRoutes(v1, authMiddleware)
+
+	// WebSocket endpoint (JWT via query param)
+	v1.GET("/ws", wsHub.HandleUpgrade)
+
+	// Push notification device registration
+	pushHandler := push.NewHandler(pushService)
+	pushHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Analytics (admin-only)
+	analyticsHandler := analytics.NewHandler(analyticsService)
+	adminRoutes := v1.Group("/admin", authMiddleware, adminMiddleware)
+	analyticsHandler.RegisterRoutes(adminRoutes)
+
+	// Discovery (public)
+	discoveryHandler := discovery.NewHandler(discoveryService)
+	discoveryHandler.RegisterRoutes(v1)
+
+	// ── Phase 4: Growth Engine ──
+
+	// Referral system
+	referralService := referral.NewService(db)
+	referralHandler := referral.NewHandler(referralService)
+	referralHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Event reviews (public read, auth write)
+	reviewService := review.NewService(db)
+	reviewHandler := review.NewHandler(reviewService)
+	reviewHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Waitlist system
+	waitlistService := waitlist.NewService(db)
+	waitlistHandler := waitlist.NewHandler(waitlistService)
+	waitlistHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Organizer reputation (public)
+	reputationService := reputation.NewService(db)
+	reputationHandler := reputation.NewHandler(reputationService)
+	reputationHandler.RegisterRoutes(v1)
+
+	// Social sharing + public event pages
+	sharingService := sharing.NewService(db)
+	sharingHandler := sharing.NewHandler(sharingService)
+	sharingHandler.RegisterRoutes(v1)
+
+	// Growth analytics (admin-only)
+	growthService := growthanalytics.NewService(db)
+	growthHandler := growthanalytics.NewHandler(growthService)
+	growthHandler.RegisterRoutes(adminRoutes)
+
+	// Notification API (auth required)
+	notificationHandler := notification.NewHandler(notificationService)
+	notificationHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Countries API (public, no auth)
 	countriesRepo := countries.NewRepository(db)
@@ -244,6 +349,7 @@ func main() {
 	quoteService := spiritualquote.NewService(quoteRepo)
 	quoteHandler := spiritualquote.NewHandler(quoteService)
 	quoteHandler.RegisterRoutes(v1)
+	quoteHandler.RegisterAdminRoutes(v1, authMiddleware, adminMiddleware)
 
 	// Launch Control API (admin)
 	launchService := launch.NewService(redisClient)
@@ -340,6 +446,10 @@ func (a *organizerRepoAdapter) GetByID(id uuid.UUID) (*models.Organizer, error) 
 
 func (a *organizerRepoAdapter) GetByUserID(userID uuid.UUID) (*models.Organizer, error) {
 	return a.repo.GetByUserID(userID)
+}
+
+func (a *organizerRepoAdapter) Create(org *models.Organizer) error {
+	return a.repo.Create(org)
 }
 
 func (a *organizerRepoAdapter) UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error {

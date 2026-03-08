@@ -30,12 +30,12 @@ func NewService(cfg config.SMTPConfig) *Service {
 	var sender EmailSender
 
 	switch {
-	case cfg.SendGridKey != "":
-		sender = &SendGridSender{apiKey: cfg.SendGridKey, from: cfg.SendGridFrom}
-		log.Println("[INFO] Email provider: SendGrid")
 	case cfg.Host != "" && cfg.User != "":
 		sender = &SMTPSender{cfg: cfg}
 		log.Println("[INFO] Email provider: SMTP")
+	case cfg.SendGridKey != "":
+		sender = &SendGridSender{apiKey: cfg.SendGridKey, from: cfg.SendGridFrom}
+		log.Println("[INFO] Email provider: SendGrid")
 	default:
 		sender = &NoOpSender{}
 		log.Println("[WARN] Email provider: disabled (no SMTP or SendGrid configured)")

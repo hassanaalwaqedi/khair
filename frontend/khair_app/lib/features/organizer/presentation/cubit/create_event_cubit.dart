@@ -98,7 +98,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         return fd.compliance.enabledCount >= 2 &&
             fd.compliance.complianceConfirmed;
       case 3: // Media
-        return true; // Cover image recommended but not blocking
+        return fd.coverImageUrl != null && fd.coverImageUrl!.isNotEmpty;
       case 4: // Review
         return fd.finalConfirmed;
       default:

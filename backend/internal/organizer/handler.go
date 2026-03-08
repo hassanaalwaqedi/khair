@@ -88,8 +88,8 @@ func (h *Handler) GetByID(c *gin.Context) {
 // @Failure 401 {object} response.Response
 // @Router /organizers/me [get]
 func (h *Handler) GetMyProfile(c *gin.Context) {
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userIDVal, _ := c.Get("user_id")
+	userID, _ := userIDVal.(uuid.UUID)
 
 	org, err := h.service.GetMyProfile(userID)
 	if err != nil {
@@ -119,8 +119,8 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get("user_id")
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userIDVal, _ := c.Get("user_id")
+	userID, _ := userIDVal.(uuid.UUID)
 
 	org, err := h.service.UpdateProfile(userID, &req)
 	if err != nil {

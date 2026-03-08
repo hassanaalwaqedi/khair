@@ -23,6 +23,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<ApproveEvent>(_onApproveEvent);
     on<RejectEvent>(_onRejectEvent);
     on<ResolveReport>(_onResolveReport);
+    on<LoadUsers>(_onLoadUsers);
+    on<LoadStats>(_onLoadStats);
+    on<UpdateUserRole>(_onUpdateUserRole);
+    on<UpdateUserStatus>(_onUpdateUserStatus);
+    on<DeleteUserEvent>(_onDeleteUser);
   }
 
   Future<void> _onLoadData(
@@ -276,6 +281,103 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         emit(state.copyWith(
           actionStatus: AdminStatus.success,
           pendingReports: updated,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onLoadUsers(
+    LoadUsers event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(usersStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.getAllUsers();
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        usersStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (users) => emit(state.copyWith(
+        usersStatus: AdminStatus.success,
+        users: users,
+      )),
+    );
+  }
+
+  Future<void> _onLoadStats(
+    LoadStats event,
+    Emitter<AdminState> emit,
+  ) async {
+    final result = await _adminRepository.getStats();
+
+    result.fold(
+      (failure) => null, // stats failure is non-critical
+      (stats) => emit(state.copyWith(stats: stats)),
+    );
+  }
+
+  Future<void> _onUpdateUserRole(
+    UpdateUserRole event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.updateUserRole(event.userId, event.role);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(actionStatus: AdminStatus.success));
+        add(const LoadUsers()); // Refresh users list
+      },
+    );
+  }
+
+  Future<void> _onUpdateUserStatus(
+    UpdateUserStatus event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.updateUserStatus(
+      event.userId, event.status, reason: event.reason,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(actionStatus: AdminStatus.success));
+        add(const LoadUsers());
+      },
+    );
+  }
+
+  Future<void> _onDeleteUser(
+    DeleteUserEvent event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.deleteUser(event.userId);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        final updated = state.users.where((u) => u.id != event.userId).toList();
+        emit(state.copyWith(
+          actionStatus: AdminStatus.success,
+          users: updated,
         ));
       },
     );

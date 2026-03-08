@@ -48,6 +48,47 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           // Error loading profile (first load)
           if (state.profileStatus == OrganizerStatus.failure &&
               state.organizer == null) {
+            // Check if user hasn't registered as organizer yet
+            final msg = state.errorMessage ?? '';
+            if (msg.contains('no rows') || msg.contains('not found') || msg.contains('Profile not found')) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: KhairColors.primarySurface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.business_rounded,
+                            size: 40, color: KhairColors.primary),
+                      ),
+                      const SizedBox(height: 24),
+                      Text('Become an Organizer',
+                          style: KhairTypography.headlineSmall),
+                      const SizedBox(height: 8),
+                      Text(
+                        'You haven\'t registered as an organizer yet.\nRegister to start creating events!',
+                        textAlign: TextAlign.center,
+                        style: KhairTypography.bodyMedium.copyWith(
+                          color: KhairColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      KhairButton(
+                        label: 'Register as Organizer',
+                        onPressed: () => context.go('/organizer/apply'),
+                        icon: Icons.add_business_rounded,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             return KhairErrorState(
               message: state.errorMessage ??
                   'Failed to load dashboard. Please try again.',
@@ -120,7 +161,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {},
+                  onPressed: () => _showNotifications(context),
                   tooltip: 'Notifications',
                 ),
                 if (count > 0)
@@ -146,10 +187,72 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         ),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
-          onPressed: () => context.go('/profile'),
+          onPressed: () => context.push('/profile'),
           tooltip: 'Settings',
         ),
       ],
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1A1A2E)
+              : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Notifications',
+                    style: KhairTypography.headlineSmall.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? KhairColors.darkTextPrimary
+                          : KhairColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.notifications_none,
+                      size: 48, color: KhairColors.textTertiary),
+                  const SizedBox(height: 12),
+                  Text('Check home page for notifications',
+                      style: KhairTypography.bodySmall),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

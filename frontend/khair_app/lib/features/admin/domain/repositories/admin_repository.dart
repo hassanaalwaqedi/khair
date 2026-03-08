@@ -45,6 +45,18 @@ abstract class AdminRepository {
     String id,
     ReportResolutionParams params,
   );
+
+  /// Get all users for admin management
+  Future<Either<Failure, List<AdminUser>>> getAllUsers();
+
+  /// Update user role (promote to organizer/admin)
+  Future<Either<Failure, void>> updateUserRole(String userId, String role);
+
+  /// Update user status (suspend/ban/activate)
+  Future<Either<Failure, void>> updateUserStatus(String userId, String status, {String? reason});
+
+  /// Delete user
+  Future<Either<Failure, void>> deleteUser(String userId);
 }
 
 /// Parameters for status update
@@ -59,7 +71,7 @@ class StatusUpdateParams {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'status': status};
-    if (reason != null) map['reason'] = reason;
+    if (reason != null) map['rejection_reason'] = reason;
     return map;
   }
 }

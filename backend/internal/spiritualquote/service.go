@@ -6,6 +6,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type cachedQuote struct {
@@ -44,6 +46,31 @@ func (s *Service) GetRandom(ctx context.Context, location Location) (*Quote, err
 
 	s.toCache(location, *quote)
 	return quote, nil
+}
+
+// ListByLocation returns all active quotes for a location (for the rotator).
+func (s *Service) ListByLocation(ctx context.Context, location Location) ([]Quote, error) {
+	return s.repo.ListByLocation(ctx, location)
+}
+
+// ListAll returns all quotes (admin).
+func (s *Service) ListAll(ctx context.Context) ([]Quote, error) {
+	return s.repo.ListAll(ctx)
+}
+
+// Create adds a new quote.
+func (s *Service) Create(ctx context.Context, q *Quote) error {
+	return s.repo.Create(ctx, q)
+}
+
+// Update modifies an existing quote.
+func (s *Service) Update(ctx context.Context, q *Quote) error {
+	return s.repo.Update(ctx, q)
+}
+
+// Delete removes a quote.
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *Service) fromCache(location Location) (Quote, bool) {

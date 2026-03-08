@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/khair/backend/internal/models"
@@ -30,6 +32,12 @@ const (
 	resendCooldownSecs = 60
 	refreshTokenBytes  = 32
 	refreshTokenDays   = 7
+
+	// Login lockout settings
+	maxLoginAttempts    = 10
+	lockoutDuration     = 15 * time.Minute
+	loginAttemptsPrefix = "login_attempts:"
+	loginLockoutPrefix  = "login_lockout:"
 )
 
 // Service handles authentication business logic
@@ -38,16 +46,21 @@ type Service struct {
 	cfg      *config.Config
 	emailSvc *email.Service
 	rbacRepo *rbac.Repository
+	redis    *redis.Client
 }
 
 // NewService creates a new auth service
-func NewService(db *sql.DB, cfg *config.Config, emailSvc *email.Service, rbacRepo *rbac.Repository) *Service {
-	return &Service{
+func NewService(db *sql.DB, cfg *config.Config, emailSvc *email.Service, rbacRepo *rbac.Repository, redisClient ...*redis.Client) *Service {
+	svc := &Service{
 		repo:     NewRepository(db),
 		cfg:      cfg,
 		emailSvc: emailSvc,
 		rbacRepo: rbacRepo,
 	}
+	if len(redisClient) > 0 {
+		svc.redis = redisClient[0]
+	}
+	return svc
 }
 
 // ── Request types ──
@@ -110,13 +123,13 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 	// Hash password with bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.New("failed to process registration")
+		return nil, fmt.Errorf("hash password: %w", err)
 	}
 
 	// Generate 6-digit OTP
 	otp, err := generateOTP()
 	if err != nil {
-		return nil, errors.New("failed to process registration")
+		return nil, fmt.Errorf("generate OTP: %w", err)
 	}
 
 	// Hash OTP with SHA256 before storing
@@ -136,13 +149,13 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 	}
 
 	if err := s.repo.CreateUser(user); err != nil {
-		return nil, errors.New("failed to create account")
+		return nil, fmt.Errorf("create user: %w", err)
 	}
 
 	// Store hashed OTP in email_verifications table
 	if err := s.repo.CreateVerification(user.ID, otpHash, expiresAt); err != nil {
 		log.Printf("[ERROR] Failed to create verification record for %s: %v", req.Email, err)
-		return nil, errors.New("failed to process registration")
+		return nil, fmt.Errorf("create verification: %w", err)
 	}
 
 	// Create organizer profile
@@ -156,7 +169,7 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 	}
 
 	if err := s.repo.CreateOrganizer(organizer); err != nil {
-		return nil, errors.New("failed to create organizer profile")
+		return nil, fmt.Errorf("create organizer profile: %w", err)
 	}
 
 	// Send verification email (do NOT return OTP in response)
@@ -176,15 +189,31 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 
 // Login authenticates a user (requires email verification)
 func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
+	// Check login lockout
+	if s.redis != nil {
+		ctx := context.Background()
+		lockKey := loginLockoutPrefix + req.Email
+		if s.redis.Exists(ctx, lockKey).Val() > 0 {
+			ttl := s.redis.TTL(ctx, lockKey).Val()
+			log.Printf("[SECURITY] Login attempt for locked account %s (TTL: %v)", req.Email, ttl)
+			return nil, fmt.Errorf("account temporarily locked due to too many failed login attempts, try again in %d minutes", int(ttl.Minutes())+1)
+		}
+	}
+
 	user, err := s.repo.GetUserByEmail(req.Email)
 	if err != nil {
+		s.recordFailedLogin(req.Email)
 		return nil, errors.New("invalid email or password")
 	}
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		s.recordFailedLogin(req.Email)
 		return nil, errors.New("invalid email or password")
 	}
+
+	// Clear failed attempt counter on successful login
+	s.clearLoginAttempts(req.Email)
 
 	// Check if email is verified
 	if !user.IsVerified {
@@ -200,7 +229,7 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 	// Generate JWT
 	token, expiresAt, err := s.generateToken(user)
 	if err != nil {
-		return nil, errors.New("failed to generate token")
+		return nil, fmt.Errorf("generate token: %w", err)
 	}
 
 	// Generate refresh token
@@ -216,6 +245,46 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 		User:         user,
 		Organizer:    organizer,
 	}, nil
+}
+
+// recordFailedLogin increments the failed login counter and locks the account
+// after maxLoginAttempts.
+func (s *Service) recordFailedLogin(email string) {
+	if s.redis == nil {
+		return
+	}
+	ctx := context.Background()
+	attemptsKey := loginAttemptsPrefix + email
+
+	count, err := s.redis.Incr(ctx, attemptsKey).Result()
+	if err != nil {
+		log.Printf("[WARN] Failed to increment login attempts for %s: %v", email, err)
+		return
+	}
+
+	// Set expiry on the counter so it auto-resets
+	if count == 1 {
+		s.redis.Expire(ctx, attemptsKey, lockoutDuration)
+	}
+
+	if count >= int64(maxLoginAttempts) {
+		// Lock the account
+		lockKey := loginLockoutPrefix + email
+		s.redis.Set(ctx, lockKey, "locked", lockoutDuration)
+		// Clean up the counter
+		s.redis.Del(ctx, attemptsKey)
+		log.Printf("[SECURITY] Account %s locked after %d failed login attempts", email, count)
+	}
+}
+
+// clearLoginAttempts removes the failed login counter on successful login.
+func (s *Service) clearLoginAttempts(email string) {
+	if s.redis == nil {
+		return
+	}
+	ctx := context.Background()
+	s.redis.Del(ctx, loginAttemptsPrefix+email)
+	s.redis.Del(ctx, loginLockoutPrefix+email)
 }
 
 // ── Verify Email OTP ──
@@ -274,7 +343,7 @@ func (s *Service) VerifyEmail(req *VerifyEmailRequest) (*AuthResponse, error) {
 
 	// ✅ OTP is valid — mark email as verified
 	if err := s.repo.MarkEmailVerified(req.Email); err != nil {
-		return nil, errors.New("failed to verify email")
+		return nil, fmt.Errorf("mark email verified: %w", err)
 	}
 
 	log.Printf("[INFO] Email verified successfully for %s", req.Email)
@@ -346,7 +415,7 @@ func (s *Service) ResendOTP(req *ResendOTPRequest) (*MessageResponse, error) {
 
 	// Update verification record (resets attempts + last_sent_at)
 	if err := s.repo.UpdateVerification(user.ID, otpHash, expiresAt); err != nil {
-		return nil, errors.New("failed to update verification code")
+		return nil, fmt.Errorf("update verification: %w", err)
 	}
 
 	// Send email
