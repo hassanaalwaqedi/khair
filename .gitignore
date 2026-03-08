@@ -20,6 +20,8 @@ Thumbs.db
 # Go
 backend/bin/
 backend/tmp/
+backend/*.log
+backend/uploads/
 *.exe
 *.exe~
 *.dll
