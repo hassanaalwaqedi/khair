@@ -1,9 +1,12 @@
 {
-  "installCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable ~/flutter && export PATH=\"$PATH:$HOME/flutter/bin\" && flutter doctor -v",
-  "buildCommand": "export PATH=\"$PATH:$HOME/flutter/bin\" && cd frontend/khair_app && flutter pub get && flutter build web --release --base-href / --dart-define=API_URL=$API_URL",
+  "installCommand": "echo 'skip'",
+  "buildCommand": "chmod +x vercel-build.sh && bash vercel-build.sh",
   "outputDirectory": "frontend/khair_app/build/web",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
