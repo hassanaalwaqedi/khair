@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../events/domain/entities/event.dart';
 
 /// Recommended-for-you section using real Event data.
@@ -30,7 +31,7 @@ class RecommendedSection extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'Recommended For You',
+                context.l10n.recommendedForYou,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -40,7 +41,7 @@ class RecommendedSection extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                'See All',
+                context.l10n.seeAll,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

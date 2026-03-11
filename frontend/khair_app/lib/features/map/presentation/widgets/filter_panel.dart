@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/models/map_models.dart';
 
 class FilterPanel extends StatefulWidget {
@@ -31,7 +32,7 @@ class _FilterPanelState extends State<FilterPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
     final radiusOptions = widget.options.radiusOptionsKm.isEmpty
         ? const [5, 10, 25, 50]
         : widget.options.radiusOptionsKm;
@@ -262,7 +263,7 @@ class _FilterPanelState extends State<FilterPanel> {
   }
 
   String _contextLayerLabel(BuildContext context, ContextLayerType layer) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
     switch (layer) {
       case ContextLayerType.mosque:
         return l10n.mapContextMosques;

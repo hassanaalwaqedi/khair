@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 3: Vision & Goals — "What are you hoping to achieve with Khair?"
 class GoalsStep extends StatelessWidget {
@@ -13,38 +14,41 @@ class GoalsStep extends StatelessWidget {
     required this.onGoalToggled,
   });
 
-  static const _goals = [
-    _GoalOption(
-      id: 'publish_events',
-      label: 'Publish Events',
-      icon: Icons.campaign_rounded,
-    ),
-    _GoalOption(
-      id: 'grow_community',
-      label: 'Grow Community',
-      icon: Icons.trending_up_rounded,
-    ),
-    _GoalOption(
-      id: 'teach_knowledge',
-      label: 'Teach Knowledge',
-      icon: Icons.school_rounded,
-    ),
-    _GoalOption(
-      id: 'discover_events',
-      label: 'Discover Local Gatherings',
-      icon: Icons.explore_rounded,
-    ),
-    _GoalOption(
-      id: 'volunteer',
-      label: 'Volunteer',
-      icon: Icons.volunteer_activism_rounded,
-    ),
-    _GoalOption(
-      id: 'build_network',
-      label: 'Build Islamic Network',
-      icon: Icons.hub_rounded,
-    ),
-  ];
+  List<_GoalOption> _getGoals(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _GoalOption(
+        id: 'publish_events',
+        label: l10n.goalPublishEvents,
+        icon: Icons.campaign_rounded,
+      ),
+      _GoalOption(
+        id: 'grow_community',
+        label: l10n.goalGrowCommunity,
+        icon: Icons.trending_up_rounded,
+      ),
+      _GoalOption(
+        id: 'teach_knowledge',
+        label: l10n.goalTeachKnowledge,
+        icon: Icons.school_rounded,
+      ),
+      _GoalOption(
+        id: 'discover_events',
+        label: l10n.goalDiscoverEvents,
+        icon: Icons.explore_rounded,
+      ),
+      _GoalOption(
+        id: 'volunteer',
+        label: l10n.goalVolunteer,
+        icon: Icons.volunteer_activism_rounded,
+      ),
+      _GoalOption(
+        id: 'build_network',
+        label: l10n.goalBuildNetwork,
+        icon: Icons.hub_rounded,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +56,7 @@ class GoalsStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'What Are You Hoping\nto Achieve?',
+          context.l10n.registrationGoalsTitle,
           style: KhairTypography.h1.copyWith(
             color: Colors.white,
             fontSize: 28,
@@ -60,7 +64,7 @@ class GoalsStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Select all that apply — this helps us personalize your experience',
+          context.l10n.registrationGoalsSubtitle,
           style: KhairTypography.bodyLarge.copyWith(
             color: Colors.white.withValues(alpha: 0.7),
           ),
@@ -73,7 +77,7 @@ class GoalsStep extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'This step is optional — you can skip it',
+            context.l10n.registrationStepOptional,
             style: KhairTypography.labelSmall.copyWith(
               color: Colors.white.withValues(alpha: 0.5),
             ),
@@ -83,7 +87,7 @@ class GoalsStep extends StatelessWidget {
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: _goals.map((goal) {
+          children: _getGoals(context).map((goal) {
             final isSelected = selectedGoals.contains(goal.id);
             return _GoalChip(
               goal: goal,

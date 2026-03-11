@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -46,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
             } else if (state.status == AuthStatus.failure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.errorMessage ?? AppLocalizations.of(context)!.loginFailed),
+                  content: Text(state.errorMessage ?? context.l10n.loginFailed),
                   backgroundColor: AppTheme.errorColor,
                 ),
               );
@@ -82,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.signInToContinue,
+                      context.l10n.signInToContinue,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
@@ -98,15 +99,15 @@ class _LoginPageState extends State<LoginPage> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)!.email,
+                              labelText: context.l10n.email,
                               prefixIcon: Icon(Icons.email_outlined),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return AppLocalizations.of(context)!.enterEmail;
+                                return context.l10n.enterEmail;
                               }
                               if (!value.contains('@')) {
-                                return AppLocalizations.of(context)!.validEmail;
+                                return context.l10n.validEmail;
                               }
                               return null;
                             },
@@ -116,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)!.password,
+                              labelText: context.l10n.password,
                               prefixIcon: const Icon(Icons.lock_outlined),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -133,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return AppLocalizations.of(context)!.enterPassword;
+                                return context.l10n.enterPassword;
                               }
                               return null;
                             },
@@ -162,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               )
                             : Text(
-                                AppLocalizations.of(context)!.signIn,
+                                context.l10n.signIn,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -176,13 +177,13 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.noAccount,
+                          context.l10n.noAccount,
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         GestureDetector(
                           onTap: () => context.go('/register'),
                           child: Text(
-                            AppLocalizations.of(context)!.register,
+                            context.l10n.register,
                             style: TextStyle(
                               color: AppTheme.primaryColor,
                               fontWeight: FontWeight.bold,

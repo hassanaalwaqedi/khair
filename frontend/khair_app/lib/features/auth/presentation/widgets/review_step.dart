@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 4: Review — Summary before final submission
 class ReviewStep extends StatelessWidget {
@@ -31,7 +32,7 @@ class ReviewStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Review Your Profile',
+          context.l10n.registrationReviewTitle,
           style: KhairTypography.h1.copyWith(
             color: Colors.white,
             fontSize: 28,
@@ -39,7 +40,7 @@ class ReviewStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Please confirm everything looks correct',
+          context.l10n.registrationReviewSubtitle,
           style: KhairTypography.bodyLarge.copyWith(
             color: Colors.white.withValues(alpha: 0.7),
           ),
@@ -81,10 +82,10 @@ class ReviewStep extends StatelessWidget {
 
         // Account info card
         _buildSection(
-          title: 'Account Information',
+          title: context.l10n.registrationReviewAccountInfo,
           items: {
-            'Name': name,
-            'Email': email,
+            context.l10n.name: name,
+            context.l10n.email: email,
           },
         ),
 
@@ -92,7 +93,7 @@ class ReviewStep extends StatelessWidget {
         if (roleSpecificData.isNotEmpty) ...[
           const SizedBox(height: 16),
           _buildSection(
-            title: 'Role Details',
+            title: context.l10n.registrationReviewRoleDetails,
             items: roleSpecificData,
           ),
         ],
@@ -100,7 +101,7 @@ class ReviewStep extends StatelessWidget {
         // Goals
         if (goals.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _buildGoalsSection(),
+          _buildGoalsSection(context),
         ],
 
         const SizedBox(height: 32),
@@ -136,7 +137,7 @@ class ReviewStep extends StatelessWidget {
                       const Icon(Icons.rocket_launch_rounded, size: 20),
                       const SizedBox(width: 10),
                       Text(
-                        'Create Account',
+                        context.l10n.registrationReviewSubmit,
                         style: KhairTypography.labelLarge.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
@@ -149,7 +150,7 @@ class ReviewStep extends StatelessWidget {
         const SizedBox(height: 16),
         Center(
           child: Text(
-            'By creating an account, you agree to our Terms & Privacy Policy',
+            context.l10n.registrationReviewTerms,
             style: KhairTypography.labelSmall.copyWith(
               color: Colors.white.withValues(alpha: 0.4),
             ),
@@ -217,14 +218,15 @@ class ReviewStep extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalsSection() {
+  Widget _buildGoalsSection(BuildContext context) {
+    final l10n = context.l10n;
     final goalLabels = {
-      'publish_events': 'Publish Events',
-      'grow_community': 'Grow Community',
-      'teach_knowledge': 'Teach Knowledge',
-      'discover_events': 'Discover Local Gatherings',
-      'volunteer': 'Volunteer',
-      'build_network': 'Build Islamic Network',
+      'publish_events': l10n.goalPublishEvents,
+      'grow_community': l10n.goalGrowCommunity,
+      'teach_knowledge': l10n.goalTeachKnowledge,
+      'discover_events': l10n.goalDiscoverEvents,
+      'volunteer': l10n.goalVolunteer,
+      'build_network': l10n.goalBuildNetwork,
     };
 
     return Container(
@@ -241,7 +243,7 @@ class ReviewStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Goals',
+            context.l10n.registrationReviewGoals,
             style: KhairTypography.labelMedium.copyWith(
               color: Colors.white.withValues(alpha: 0.5),
               fontWeight: FontWeight.w700,

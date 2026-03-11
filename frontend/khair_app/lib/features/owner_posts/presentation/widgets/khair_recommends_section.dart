@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../../core/utils/share_helper.dart';
 
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../shared/widgets/app_components.dart';
@@ -145,8 +148,12 @@ class _RecommendCard extends StatelessWidget {
                       const Spacer(),
                       if (post.externalLink != null)
                         GestureDetector(
-                          onTap: () => debugPrint(
-                              'Open: ${post.externalLink}'),
+                          onTap: () async {
+                            final url = Uri.tryParse(post.externalLink!);
+                            if (url != null) {
+                              await launchUrl(url, mode: LaunchMode.externalApplication);
+                            }
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 5),
@@ -166,6 +173,33 @@ class _RecommendCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          final text = StringBuffer();
+                          text.writeln('🌿 ${post.title}');
+                          if (post.shortDescription.isNotEmpty) {
+                            text.writeln(post.shortDescription);
+                          }
+                          if (post.externalLink != null) {
+                            text.writeln();
+                            text.write('🔗 ${post.externalLink}');
+                          }
+                          ShareHelper.share(context, text.toString());
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: AppColors.whiteAlpha(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.share_outlined,
+                            size: 14,
+                            color: AppColors.whiteAlpha(0.5),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],

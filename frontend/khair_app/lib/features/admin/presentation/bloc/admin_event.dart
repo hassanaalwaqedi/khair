@@ -124,3 +124,13 @@ class DeleteUserEvent extends AdminEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+/// Verify a user (mark as verified)
+class VerifyUserEvent extends AdminEvent {
+  final String userId;
+
+  const VerifyUserEvent(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}

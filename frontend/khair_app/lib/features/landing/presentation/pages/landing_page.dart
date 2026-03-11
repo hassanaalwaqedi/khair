@@ -7,6 +7,7 @@ import 'package:khair_app/core/widgets/language_switcher.dart';
 import 'package:khair_app/features/events/domain/entities/event.dart';
 import 'package:khair_app/features/events/presentation/bloc/events_bloc.dart';
 import 'package:khair_app/l10n/generated/app_localizations.dart';
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:video_player/video_player.dart';
 
 /// Landing Page - First impression & trust building
@@ -131,20 +132,20 @@ class _LandingPageState extends State<LandingPage> {
             actions: [
               TextButton(
                 onPressed: () => context.go('/'),
-                child: Text(AppLocalizations.of(context)!.events),
+                child: Text(context.l10n.events),
               ),
               TextButton(
                 onPressed: () => context.go('/map'),
-                child: const Text('Map'),
+                child: Text(context.l10n.mapTab),
               ),
               const SizedBox(width: 8),
               const LanguageSwitcher(showLabel: false),
               const SizedBox(width: 8),
               Padding(
-                padding: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsetsDirectional.only(end: 16),
                 child: ElevatedButton(
                   onPressed: () => context.go('/login'),
-                  child: Text(AppLocalizations.of(context)!.signIn),
+                  child: Text(context.l10n.signIn),
                 ),
               ),
             ],
@@ -231,7 +232,7 @@ class _LandingPageState extends State<LandingPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Discover Meaningful Islamic Gatherings',
+                  context.l10n.discoverSubtitle,
                   style: KhairTypography.bodyLarge.copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 16,
@@ -322,7 +323,7 @@ class _LandingPageState extends State<LandingPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            AppLocalizations.of(context)!.heroTagline,
+            context.l10n.heroTagline,
             style: KhairTypography.labelMedium.copyWith(
               color: KhairColors.primary,
             ),
@@ -330,14 +331,14 @@ class _LandingPageState extends State<LandingPage> {
         ),
         const SizedBox(height: 24),
         Text(
-          AppLocalizations.of(context)!.heroTitle,
+          context.l10n.heroTitle,
           style: KhairTypography.displayLarge.copyWith(
             color: KhairColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          AppLocalizations.of(context)!.heroSubtitle,
+          context.l10n.heroSubtitle,
           style: KhairTypography.bodyLarge.copyWith(
             color: KhairColors.textSecondary,
           ),
@@ -348,12 +349,12 @@ class _LandingPageState extends State<LandingPage> {
           runSpacing: 12,
           children: [
             KhairButton(
-              label: AppLocalizations.of(context)!.browseEvents,
+              label: context.l10n.browseEvents,
               onPressed: () => context.go('/'),
               icon: Icons.explore,
             ),
             KhairButton(
-              label: AppLocalizations.of(context)!.registerOrganization,
+              label: context.l10n.registerOrganization,
               onPressed: () => context.go('/organizer/apply'),
               isOutlined: true,
               icon: Icons.business,
@@ -366,17 +367,17 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             _buildStatItem(
               _statsLoaded ? '$_eventCount' : '...',
-              AppLocalizations.of(context)!.events,
+              context.l10n.events,
             ),
             const SizedBox(width: 32),
             _buildStatItem(
               _statsLoaded ? '$_organizationCount' : '...',
-              AppLocalizations.of(context)!.organizations,
+              context.l10n.organizations,
             ),
             const SizedBox(width: 32),
             _buildStatItem(
               _statsLoaded ? '$_cityCount' : '...',
-              AppLocalizations.of(context)!.cities,
+              context.l10n.cities,
             ),
           ],
         ),
@@ -569,13 +570,13 @@ class _LandingPageState extends State<LandingPage> {
       child: Column(
         children: [
           Text(
-            AppLocalizations.of(context)!.whyChooseKhair,
+            context.l10n.whyChooseKhair,
             style: KhairTypography.displaySmall,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            AppLocalizations.of(context)!.whyChooseSubtitle,
+            context.l10n.whyChooseSubtitle,
             style: KhairTypography.bodyLarge.copyWith(
               color: KhairColors.textSecondary,
             ),
@@ -589,33 +590,33 @@ class _LandingPageState extends State<LandingPage> {
             children: [
               _buildFeatureCard(
                 Icons.verified,
-                AppLocalizations.of(context)!.featureVerifiedTitle,
-                AppLocalizations.of(context)!.featureVerifiedDesc,
+                context.l10n.featureVerifiedTitle,
+                context.l10n.featureVerifiedDesc,
               ),
               _buildFeatureCard(
                 Icons.map,
-                AppLocalizations.of(context)!.featureMapTitle,
-                AppLocalizations.of(context)!.featureMapDesc,
+                context.l10n.featureMapTitle,
+                context.l10n.featureMapDesc,
               ),
               _buildFeatureCard(
                 Icons.language,
-                AppLocalizations.of(context)!.featureLanguageTitle,
-                AppLocalizations.of(context)!.featureLanguageDesc,
+                context.l10n.featureLanguageTitle,
+                context.l10n.featureLanguageDesc,
               ),
               _buildFeatureCard(
                 Icons.calendar_today,
-                AppLocalizations.of(context)!.featureDiscoveryTitle,
-                AppLocalizations.of(context)!.featureDiscoveryDesc,
+                context.l10n.featureDiscoveryTitle,
+                context.l10n.featureDiscoveryDesc,
               ),
               _buildFeatureCard(
                 Icons.security,
-                AppLocalizations.of(context)!.featureSafeTitle,
-                AppLocalizations.of(context)!.featureSafeDesc,
+                context.l10n.featureSafeTitle,
+                context.l10n.featureSafeDesc,
               ),
               _buildFeatureCard(
                 Icons.groups,
-                AppLocalizations.of(context)!.featureCommunityTitle,
-                AppLocalizations.of(context)!.featureCommunityDesc,
+                context.l10n.featureCommunityTitle,
+                context.l10n.featureCommunityDesc,
               ),
             ],
           ),
@@ -669,7 +670,7 @@ class _LandingPageState extends State<LandingPage> {
       child: Column(
         children: [
           Text(
-            AppLocalizations.of(context)!.howItWorks,
+            context.l10n.howItWorks,
             style: KhairTypography.displaySmall,
             textAlign: TextAlign.center,
           ),
@@ -677,20 +678,20 @@ class _LandingPageState extends State<LandingPage> {
           isWide
               ? Row(
                   children: [
-                    Expanded(child: _buildStep('1', AppLocalizations.of(context)!.step1Title, AppLocalizations.of(context)!.step1Desc)),
+                    Expanded(child: _buildStep('1', context.l10n.step1Title, context.l10n.step1Desc)),
                     _buildStepConnector(),
-                    Expanded(child: _buildStep('2', AppLocalizations.of(context)!.step2Title, AppLocalizations.of(context)!.step2Desc)),
+                    Expanded(child: _buildStep('2', context.l10n.step2Title, context.l10n.step2Desc)),
                     _buildStepConnector(),
-                    Expanded(child: _buildStep('3', AppLocalizations.of(context)!.step3Title, AppLocalizations.of(context)!.step3Desc)),
+                    Expanded(child: _buildStep('3', context.l10n.step3Title, context.l10n.step3Desc)),
                   ],
                 )
               : Column(
                   children: [
-                    _buildStep('1', AppLocalizations.of(context)!.step1Title, AppLocalizations.of(context)!.step1Desc),
+                    _buildStep('1', context.l10n.step1Title, context.l10n.step1Desc),
                     const SizedBox(height: 24),
-                    _buildStep('2', AppLocalizations.of(context)!.step2Title, AppLocalizations.of(context)!.step2Desc),
+                    _buildStep('2', context.l10n.step2Title, context.l10n.step2Desc),
                     const SizedBox(height: 24),
-                    _buildStep('3', AppLocalizations.of(context)!.step3Title, AppLocalizations.of(context)!.step3Desc),
+                    _buildStep('3', context.l10n.step3Title, context.l10n.step3Desc),
                   ],
                 ),
         ],
@@ -752,7 +753,7 @@ class _LandingPageState extends State<LandingPage> {
         child: Column(
           children: [
             Text(
-              AppLocalizations.of(context)!.ctaTitle,
+              context.l10n.ctaTitle,
               style: KhairTypography.displaySmall.copyWith(
                 color: Colors.white,
               ),
@@ -760,7 +761,7 @@ class _LandingPageState extends State<LandingPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              AppLocalizations.of(context)!.ctaSubtitle,
+              context.l10n.ctaSubtitle,
               style: KhairTypography.bodyLarge.copyWith(
                 color: Colors.white.withAlpha(204),
               ),
@@ -774,7 +775,7 @@ class _LandingPageState extends State<LandingPage> {
                 foregroundColor: KhairColors.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
-              child: Text(AppLocalizations.of(context)!.registerOrganization),
+              child: Text(context.l10n.registerOrganization),
             ),
           ],
         ),
@@ -795,29 +796,29 @@ class _LandingPageState extends State<LandingPage> {
             children: [
               TextButton(
                 onPressed: () => context.go('/about'),
-                child: Text(AppLocalizations.of(context)!.footerAbout, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerAbout, style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/privacy'),
-                child: Text(AppLocalizations.of(context)!.footerPrivacy, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerPrivacy, style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/terms'),
-                child: Text(AppLocalizations.of(context)!.footerTerms, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerTerms, style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/content-policy'),
-                child: Text(AppLocalizations.of(context)!.footerContent, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerContent, style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/verification-policy'),
-                child: Text(AppLocalizations.of(context)!.footerVerification, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerVerification, style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
             ],
           ),
           const SizedBox(height: 24),
           Text(
-            AppLocalizations.of(context)!.footerCopyright,
+            context.l10n.footerCopyright,
             style: KhairTypography.bodySmall.copyWith(
               color: Colors.white.withAlpha(128),
             ),

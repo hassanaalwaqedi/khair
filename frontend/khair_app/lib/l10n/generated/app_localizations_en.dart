@@ -277,6 +277,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get status => 'Status';
 
   @override
+  String get welcomeToKhair => 'Welcome to Khair';
+
+  @override
+  String get signInToManage => 'Sign in to manage your profile and events';
+
+  @override
+  String get accountType => 'Account Type';
+
+  @override
+  String get roleOrganizer => 'Organizer';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get statusBasic => 'Basic';
+
+  @override
   String get website => 'Website';
 
   @override
@@ -296,6 +320,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminPanel => 'Admin Panel';
+
+  @override
+  String get mapTab => 'Map';
 
   @override
   String get createEvent => 'Create Event';
@@ -568,7 +595,673 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registrationFullName => 'Full Name';
 
   @override
+  String get registrationContactPersonName => 'Contact Person Name';
+
+  @override
+  String get registrationAccountDetailsTitle => 'Create Your Account';
+
+  @override
+  String get registrationRoleSelectionTitle => 'How Will You Use Khair?';
+
+  @override
+  String get registrationRoleSelectionSubtitle =>
+      'Choose the role that best describes you';
+
+  @override
+  String get roleDescSheikh =>
+      'Share Islamic knowledge and lead educational events';
+
+  @override
+  String get roleDescMosque => 'Manage mosque activities and community prayers';
+
+  @override
+  String get roleDescQuranCenter =>
+      'Organize Quran study circles and hifz programs';
+
+  @override
+  String get roleDescOrganization =>
+      'Run an Islamic charity, school, or institution';
+
+  @override
+  String get roleDescCommunityOrganizer =>
+      'Plan social gatherings and community events';
+
+  @override
+  String get roleDescStudent => 'Discover and attend Islamic learning events';
+
+  @override
+  String get roleDescNewMuslim =>
+      'Find welcoming communities and beginner resources';
+
+  @override
+  String get roleDescVolunteer =>
+      'Help organize events and support the community';
+
+  @override
+  String get roleDescMember => 'Browse and attend events in your area';
+
+  @override
+  String get registrationAccountSubtitleSheikh =>
+      'Tell us about your teaching background';
+
+  @override
+  String get registrationAccountSubtitleOrg =>
+      'Set up your organization\'s account';
+
+  @override
+  String get registrationAccountSubtitleCommunity =>
+      'Tell us about your community work';
+
+  @override
+  String get registrationAccountSubtitleDefault =>
+      'Just the basics to get you started';
+
+  @override
+  String get registrationYearsExperience => 'Years of Experience';
+
+  @override
+  String get registrationSocialMediaOptional => 'Social Media (optional)';
+
+  @override
+  String get registrationOrganizationName => 'Organization Name';
+
+  @override
+  String get registrationMosqueName => 'Mosque Name';
+
+  @override
+  String get registrationCenterName => 'Center Name';
+
+  @override
+  String get registrationCommunityGroupName => 'Community / Group Name';
+
+  @override
+  String get registrationPhoneOptional => 'Phone (optional)';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get name => 'Name';
+
+  @override
   String get registrationEnterFullName => 'Please enter your full name';
+
+  @override
+  String get registrationGoalsTitle => 'What Are You Hoping\nto Achieve?';
+
+  @override
+  String get registrationGoalsSubtitle =>
+      'Select all that apply — this helps us personalize your experience';
+
+  @override
+  String get registrationStepOptional =>
+      'This step is optional — you can skip it';
+
+  @override
+  String get goalPublishEvents => 'Publish Events';
+
+  @override
+  String get goalGrowCommunity => 'Grow Community';
+
+  @override
+  String get goalTeachKnowledge => 'Teach Knowledge';
+
+  @override
+  String get goalDiscoverEvents => 'Discover Local Gatherings';
+
+  @override
+  String get goalVolunteer => 'Volunteer';
+
+  @override
+  String get goalBuildNetwork => 'Build Islamic Network';
+
+  @override
+  String get registrationReviewTitle => 'Review Your Profile';
+
+  @override
+  String get registrationReviewSubtitle =>
+      'Please confirm everything looks correct';
+
+  @override
+  String get registrationReviewAccountInfo => 'Account Information';
+
+  @override
+  String get registrationReviewRoleDetails => 'Role Details';
+
+  @override
+  String get registrationReviewGoals => 'Goals';
+
+  @override
+  String get registrationReviewSubmit => 'Create Account';
+
+  @override
+  String get registrationReviewTerms =>
+      'By creating an account, you agree to our Terms & Privacy Policy';
+
+  @override
+  String get mediaSourceTitle => 'Choose Photo Source';
+
+  @override
+  String get mediaSourceCamera => 'Take Photo';
+
+  @override
+  String get mediaSourceGallery => 'Choose from Gallery';
+
+  @override
+  String get mediaSourceRemove => 'Remove Photo';
+
+  @override
+  String get mediaUploadTitle => 'Upload Your Photo';
+
+  @override
+  String get mediaUploadSubtitleOrg =>
+      'Add a logo or profile photo for your organization. This helps build trust with your community.';
+
+  @override
+  String get mediaUploadTap => 'Tap to upload';
+
+  @override
+  String get mediaUploadChange => 'Change Photo';
+
+  @override
+  String get mediaUploadSuccess => 'Uploaded successfully';
+
+  @override
+  String get eventDetailsBack => 'Back to Events';
+
+  @override
+  String get eventDetailsShareSoon => 'Share feature coming soon';
+
+  @override
+  String eventDetailsAttending(int count) {
+    return '$count attending';
+  }
+
+  @override
+  String get eventDetailsDateTime => 'Date & Time';
+
+  @override
+  String get eventDetailsLocation => 'Location';
+
+  @override
+  String get eventDetailsOrganizedBy => 'Organized by';
+
+  @override
+  String get eventDetailsAbout => 'About This Event';
+
+  @override
+  String get eventDetailsSoldOut => 'Sold Out';
+
+  @override
+  String eventDetailsSeatsLeft(int count) {
+    return '$count seats left';
+  }
+
+  @override
+  String get eventDetailsJoin => 'Join Event';
+
+  @override
+  String get eventDetailsJoining => 'Joining event...';
+
+  @override
+  String get eventDetailsReservedSuccess =>
+      'You\'re in! Seat reserved successfully.';
+
+  @override
+  String eventDetailsJoinedSeeYou(String title) {
+    return '🎉 You\'ve joined \"$title\"! See you there.';
+  }
+
+  @override
+  String get eventDetailsJoinFailed => 'Failed to join event';
+
+  @override
+  String get eventDetailsAlreadyJoined => 'You have already joined this event';
+
+  @override
+  String get eventDetailsEventFull => 'This event is full';
+
+  @override
+  String get joinModalSubtitle =>
+      'Create a simple account to reserve your seat.';
+
+  @override
+  String joinModalSeatsRemaining(int count) {
+    return '$count seats remaining';
+  }
+
+  @override
+  String get joinModalStep1 => 'Identity';
+
+  @override
+  String get joinModalStep2 => 'Security';
+
+  @override
+  String get joinModalNameEmailTitle => 'Your name & email';
+
+  @override
+  String get joinModalNameRequired => 'Name is required';
+
+  @override
+  String get joinModalNameMinLength => 'At least 2 characters';
+
+  @override
+  String get joinModalSignIn => 'Sign In';
+
+  @override
+  String get joinModalAlreadyAccount => 'Already have an account? ';
+
+  @override
+  String get joinModalSecureAccount => 'Secure your account';
+
+  @override
+  String get joinModalPasswordMinLength => 'At least 8 characters';
+
+  @override
+  String get joinModalGender => 'Gender';
+
+  @override
+  String get joinModalMale => 'Male';
+
+  @override
+  String get joinModalFemale => 'Female';
+
+  @override
+  String get joinModalGenderRequired => 'Please select your gender';
+
+  @override
+  String get joinModalAgeOptional => 'Age (optional)';
+
+  @override
+  String get joinModalCreateReserve => 'Create Account & Reserve Seat';
+
+  @override
+  String get joinModalAlmostThere => 'You\'re almost there!';
+
+  @override
+  String get joinModalVerifyEmailMsg =>
+      'Please verify your email to confirm your seat.';
+
+  @override
+  String get joinModalEmailRequired => 'Email is required';
+
+  @override
+  String get joinModalSeatHeld =>
+      'Your seat is held for 15 minutes while you verify your email.';
+
+  @override
+  String get joinModalGotIt => 'Got it!';
+
+  @override
+  String get eventCardJoin => 'Join';
+
+  @override
+  String get eventCardLocationSoon => 'Location announced soon';
+
+  @override
+  String eventCardSeatsRatio(int reserved, int capacity) {
+    return '$reserved / $capacity seats';
+  }
+
+  @override
+  String get categoryKnowledge => 'Knowledge';
+
+  @override
+  String get categoryQuran => 'Quran';
+
+  @override
+  String get categoryLectures => 'Lectures';
+
+  @override
+  String get categoryCommunity => 'Community';
+
+  @override
+  String get categoryYouth => 'Youth';
+
+  @override
+  String get categoryCharity => 'Charity';
+
+  @override
+  String get categoryFamily => 'Family';
+
+  @override
+  String get categoryTrending => 'Trending';
+
+  @override
+  String get filterEventsTitle => 'Filter Events';
+
+  @override
+  String get filterEventsReset => 'Reset';
+
+  @override
+  String get filterEventsCountry => 'Country';
+
+  @override
+  String get filterEventsType => 'Event Type';
+
+  @override
+  String get eventTypeConference => 'Conference';
+
+  @override
+  String get eventTypeWorkshop => 'Workshop';
+
+  @override
+  String get eventTypeSeminar => 'Seminar';
+
+  @override
+  String get eventTypeFestival => 'Festival';
+
+  @override
+  String get eventTypeMeetup => 'Meetup';
+
+  @override
+  String get eventTypeOther => 'Other';
+
+  @override
+  String get filterEventsLanguage => 'Language';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String get langArabic => 'Arabic';
+
+  @override
+  String get langFrench => 'French';
+
+  @override
+  String get langSpanish => 'Spanish';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get filterEventsLocating => 'Locating...';
+
+  @override
+  String get filterEventsToday => 'Today';
+
+  @override
+  String get filterEventsThisWeek => 'This Week';
+
+  @override
+  String get filterEventsWeekend => 'Weekend';
+
+  @override
+  String get filterEventsThisMonth => 'This Month';
+
+  @override
+  String get filterEventsDate => 'Date';
+
+  @override
+  String get filterEventsClear => 'Clear';
+
+  @override
+  String get filterEventsByDate => 'Filter by Date';
+
+  @override
+  String get filterEventsClearDateFilter => 'Clear Date Filter';
+
+  @override
+  String get createEventStepBasicInfo => 'Basic Info';
+
+  @override
+  String get createEventStepLocation => 'Location';
+
+  @override
+  String get createEventStepCompliance => 'Compliance';
+
+  @override
+  String get createEventStepMedia => 'Media';
+
+  @override
+  String get createEventStepReview => 'Review';
+
+  @override
+  String get createEventSuccess => 'Event submitted for review successfully!';
+
+  @override
+  String get createEventError => 'Something went wrong';
+
+  @override
+  String get createEventDraftSaved => 'Event saved as draft';
+
+  @override
+  String get createEventTitle => 'Create Event';
+
+  @override
+  String createEventStepCount(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get createEventBack => 'Back';
+
+  @override
+  String get createEventSaveDraft => 'Save Draft';
+
+  @override
+  String get createEventSubmitting => 'Submitting...';
+
+  @override
+  String get createEventSubmit => 'Submit for Review';
+
+  @override
+  String get createEventContinue => 'Continue';
+
+  @override
+  String get createEventBasicInfoTitle => 'Basic Information';
+
+  @override
+  String get createEventTitleLabel => 'Event Title';
+
+  @override
+  String get createEventTitleHint => 'Enter a compelling event title';
+
+  @override
+  String get createEventCategoryLabel => 'Category';
+
+  @override
+  String get createEventDescLabel => 'Description (min 50 characters)';
+
+  @override
+  String get createEventDescHint => 'Describe your event in detail...';
+
+  @override
+  String get createEventTagsLabel => 'Tags';
+
+  @override
+  String get createEventEventTypeLabel => 'Event Type';
+
+  @override
+  String get createEventInPerson => 'In-Person';
+
+  @override
+  String get createEventOnline => 'Online';
+
+  @override
+  String get createEventLanguageLabel => 'Language';
+
+  @override
+  String get langTurkish => 'Turkish';
+
+  @override
+  String get createEventStartDateTime => 'Start Date & Time';
+
+  @override
+  String get createEventEndDateTime => 'End Date & Time (Optional)';
+
+  @override
+  String get createEventVenueDetails => 'Venue Details';
+
+  @override
+  String get createEventOnlineSetup => 'Online Setup';
+
+  @override
+  String get createEventCountry => 'Country';
+
+  @override
+  String get createEventCityHint => 'e.g. Riyadh';
+
+  @override
+  String get createEventAddress => 'Venue Address';
+
+  @override
+  String get createEventAddressHint => 'Full venue address';
+
+  @override
+  String get createEventPlatform => 'Platform';
+
+  @override
+  String get createEventMeetingLink => 'Meeting Link';
+
+  @override
+  String get createEventMeetingLinkHint => 'https://zoom.us/j/...';
+
+  @override
+  String get createEventPasswordOptional => 'Password (Optional)';
+
+  @override
+  String get createEventPasswordHint => 'Meeting password';
+
+  @override
+  String get createEventLinkVisibility => 'Link Visibility';
+
+  @override
+  String get createEventLinkVisibilityDesc =>
+      'The meeting link will only be visible to registered attendees 30 minutes before the event.';
+
+  @override
+  String get createEventIslamicCompliance => 'Islamic Compliance';
+
+  @override
+  String get createEventComplianceDesc =>
+      'These settings ensure your event aligns with Islamic guidelines.';
+
+  @override
+  String get createEventGenderPolicy => 'Gender Policy';
+
+  @override
+  String get createEventGenderMixed => 'Mixed';
+
+  @override
+  String get createEventGenderMaleOnly => 'Male Only';
+
+  @override
+  String get createEventGenderFemaleOnly => 'Female Only';
+
+  @override
+  String get createEventFamilyFriendly => 'Family Friendly';
+
+  @override
+  String get createEventFamilyFriendlyDesc =>
+      'Suitable for families with children';
+
+  @override
+  String get createEventNoMusic => 'No Music';
+
+  @override
+  String get createEventNoMusicDesc => 'This event does not include music';
+
+  @override
+  String get createEventNoInappropriate => 'No Inappropriate Content';
+
+  @override
+  String get createEventNoInappropriateDesc =>
+      'All content is aligned with Islamic values';
+
+  @override
+  String get createEventPrayerBreak => 'Prayer Break Required';
+
+  @override
+  String get createEventPrayerBreakDesc =>
+      'Include prayer breaks for events > 2 hours';
+
+  @override
+  String get createEventComplianceConfirm =>
+      'I confirm this event fully complies with Islamic guidelines and Khair platform standards.';
+
+  @override
+  String get createEventComplianceWarning =>
+      'You must confirm Islamic compliance before submitting.';
+
+  @override
+  String get createEventMediaDetails => 'Media & Details';
+
+  @override
+  String get createEventUploading => 'Uploading...';
+
+  @override
+  String get createEventUploadPlaceholder => 'Tap to upload cover image';
+
+  @override
+  String get createEventUploadLimits => 'JPG, PNG • Max 5MB';
+
+  @override
+  String get createEventMaxAttendees => 'Max Attendees';
+
+  @override
+  String get createEventTicketPrice => 'Ticket Price';
+
+  @override
+  String get createEventTicketPriceHint => '0 = Free';
+
+  @override
+  String get createEventRegistrationDeadline => 'Registration Deadline';
+
+  @override
+  String get createEventSelectDeadline => 'Select deadline';
+
+  @override
+  String get createEventAutoApproval => 'Auto-Approval';
+
+  @override
+  String get createEventAutoApprovalDesc =>
+      'Automatically approve registrations';
+
+  @override
+  String get createEventReviewSubmit => 'Review & Submit';
+
+  @override
+  String get createEventEventSummary => 'Event Summary';
+
+  @override
+  String get createEventReviewCompliance => 'Compliance';
+
+  @override
+  String get createEventReviewRiskAssessment => 'Risk Assessment';
+
+  @override
+  String get createEventReviewTrustImpact => 'Trust Impact';
+
+  @override
+  String get createEventTrustImpactDesc =>
+      'Successfully hosting this event will increase your trust score. Flagged events may decrease it.';
+
+  @override
+  String get createEventFinalConfirm =>
+      'I confirm all information is accurate. I understand events are reviewed before publishing.';
+
+  @override
+  String get createEventRiskLow => 'Low Risk — Likely auto-approved';
+
+  @override
+  String get createEventRiskMedium => 'Medium Risk — Manual review required';
+
+  @override
+  String get createEventRiskHigh => 'High Risk — Additional review needed';
+
+  @override
+  String get createEventReviewConfirmed => 'Confirmed';
+
+  @override
+  String get createEventReviewIncluded => 'Included';
+
+  @override
+  String get createEventReviewYes => 'Yes';
+
+  @override
+  String get createEventReviewNo => 'No';
 
   @override
   String get registrationAboutYouTitle => 'Tell Us About You';
@@ -674,9 +1367,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registrationLevelAdvanced => 'Advanced';
-
-  @override
-  String get registrationCommunityGroupName => 'Community / Group Name';
 
   @override
   String get registrationCommunityFocus => 'Community Focus Area';
@@ -847,6 +1537,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registrationProgressDone => 'Done';
 
   @override
+  String get stepUpload => 'Upload';
+
+  @override
+  String get stepGoals => 'Goals';
+
+  @override
   String get spiritualQuoteTitle => 'Spiritual Reflection';
 
   @override
@@ -861,4 +1557,359 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spiritualQuoteDismiss => 'Dismiss';
+
+  @override
+  String get adminDashboardTitle => 'Admin Dashboard';
+
+  @override
+  String get adminRefresh => 'Refresh';
+
+  @override
+  String get adminOrganizersTab => 'Organizers';
+
+  @override
+  String get adminEventsTab => 'Events';
+
+  @override
+  String get adminReportsTab => 'Reports';
+
+  @override
+  String get adminAuditLogsTab => 'Audit Logs';
+
+  @override
+  String get adminQuotesTab => 'Quotes';
+
+  @override
+  String get adminUsersTab => 'Users';
+
+  @override
+  String get adminActionSuccess => 'Action completed successfully';
+
+  @override
+  String get adminActionFailed => 'Action failed';
+
+  @override
+  String get adminReportsMgmt => 'Reports Management';
+
+  @override
+  String get adminReviewReportsDesc => 'Review and resolve user reports';
+
+  @override
+  String get adminOpenReports => 'Open Reports';
+
+  @override
+  String get adminAuditLogsDesc => 'View all admin and system actions';
+
+  @override
+  String get adminViewLogs => 'View Logs';
+
+  @override
+  String get adminFailedLoadOrg => 'Failed to load organizers';
+
+  @override
+  String get adminNoPendingOrg => 'No Pending Organizers';
+
+  @override
+  String get adminAllOrgReviewed =>
+      'All organizer applications have been reviewed.';
+
+  @override
+  String adminPendingApproval(int count) {
+    return 'Pending Approval ($count)';
+  }
+
+  @override
+  String get adminType => 'Type';
+
+  @override
+  String get adminLocation => 'Location';
+
+  @override
+  String get adminAbout => 'About';
+
+  @override
+  String get adminSubmitted => 'Submitted';
+
+  @override
+  String get adminReject => 'Reject';
+
+  @override
+  String get adminApprove => 'Approve';
+
+  @override
+  String adminRejectTitle(String name) {
+    return 'Reject $name';
+  }
+
+  @override
+  String adminRejectConfirm(String name) {
+    return 'Are you sure you want to reject \"$name\"?';
+  }
+
+  @override
+  String get adminRejectionReason => 'Rejection reason';
+
+  @override
+  String get adminProvideReason => 'Provide a reason...';
+
+  @override
+  String get adminCancel => 'Cancel';
+
+  @override
+  String get adminProvideReasonMsg => 'Please provide a rejection reason';
+
+  @override
+  String get adminFailedLoadEvents => 'Failed to load events';
+
+  @override
+  String get adminNoPendingEvents => 'No Pending Events';
+
+  @override
+  String get adminAllEventsReviewed => 'All events have been reviewed.';
+
+  @override
+  String adminPendingReview(int count) {
+    return 'Pending Review ($count)';
+  }
+
+  @override
+  String get adminDate => 'Date';
+
+  @override
+  String get orgBecomeOrganizer => 'Become an Organizer';
+
+  @override
+  String get orgRegisterPrompt =>
+      'You haven\'t registered as an organizer yet.\nRegister to start creating events!';
+
+  @override
+  String get orgRegisterBtn => 'Register as Organizer';
+
+  @override
+  String get orgDashboardTitle => 'Dashboard';
+
+  @override
+  String get orgOrganizerDashboard => 'Organizer Dashboard';
+
+  @override
+  String get orgNotifications => 'Notifications';
+
+  @override
+  String get orgSettings => 'Settings';
+
+  @override
+  String get orgCheckHomeNotif => 'Check home page for notifications';
+
+  @override
+  String get orgQuickActions => 'Quick Actions';
+
+  @override
+  String get orgAnalytics => 'Analytics';
+
+  @override
+  String get orgRecentEvents => 'Recent Events';
+
+  @override
+  String orgTotalCount(int count) {
+    return '$count total';
+  }
+
+  @override
+  String get orgViewAll => 'View All';
+
+  @override
+  String get orgWelcomeBack => 'Welcome back,';
+
+  @override
+  String get orgAccountPending => 'Account Pending Approval';
+
+  @override
+  String get orgAccountPendingDesc =>
+      'Your organizer account is awaiting admin approval. Some features are restricted until approved.';
+
+  @override
+  String get orgAccountRejected => 'Account Rejected';
+
+  @override
+  String get orgAccountRejectedDesc =>
+      'Your application was rejected. Please contact support for details.';
+
+  @override
+  String get orgCreateEvent => 'Create Event';
+
+  @override
+  String get orgAddNewEvent => 'Add a new event';
+
+  @override
+  String get orgApprovalRequired => 'Approval required';
+
+  @override
+  String get orgMyEvents => 'My Events';
+
+  @override
+  String get orgViewAllEvents => 'View all events';
+
+  @override
+  String get orgEditProfile => 'Edit Profile';
+
+  @override
+  String get orgUpdateInfo => 'Update info';
+
+  @override
+  String get orgViewStats => 'View stats';
+
+  @override
+  String get orgTotalEvents => 'Total Events';
+
+  @override
+  String get orgApproved => 'Approved';
+
+  @override
+  String get orgPending => 'Pending';
+
+  @override
+  String get orgRejected => 'Rejected';
+
+  @override
+  String get orgNoEventsYet => 'No events yet';
+
+  @override
+  String get orgCreateFirstEvent => 'Create your first event to get started';
+
+  @override
+  String get orgMessages => 'Messages';
+
+  @override
+  String get orgNoMessages => 'No messages';
+
+  @override
+  String get ownerDashboard => 'Owner Dashboard';
+
+  @override
+  String get ownerPostSaved => 'Post saved';
+
+  @override
+  String get ownerNoPosts => 'No posts yet';
+
+  @override
+  String get ownerCreateFirstPost =>
+      'Tap + to create your first community post';
+
+  @override
+  String get ownerNewPost => 'New Post';
+
+  @override
+  String get ownerEditPost => 'Edit Post';
+
+  @override
+  String get ownerTitleLabel => 'Title *';
+
+  @override
+  String get ownerShortDescLabel => 'Short Description *';
+
+  @override
+  String get ownerImageUrlLabel => 'Image URL';
+
+  @override
+  String get ownerExtLinkLabel => 'External Link';
+
+  @override
+  String get ownerLocationLabel => 'Location';
+
+  @override
+  String get ownerPublish => 'Publish';
+
+  @override
+  String get ownerSaveChanges => 'Save Changes';
+
+  @override
+  String get ownerRequired => 'Required';
+
+  @override
+  String get ownerActive => 'Active';
+
+  @override
+  String get ownerInactive => 'Inactive';
+
+  @override
+  String get ownerEdit => 'Edit';
+
+  @override
+  String get ownerDelete => 'Delete';
+
+  @override
+  String get ownerDeletePost => 'Delete Post';
+
+  @override
+  String get ownerDeleteConfirm => 'Are you sure?';
+
+  @override
+  String get greeting => 'Assalamu Alaikum';
+
+  @override
+  String get featuredEvents => 'Featured Events';
+
+  @override
+  String get joinNow => 'Join Now';
+
+  @override
+  String byOrganizer(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get communityActivity => 'Community Activity';
+
+  @override
+  String peopleJoinedEvents(int count) {
+    return '$count people have joined events';
+  }
+
+  @override
+  String get recommendedForYou => 'Recommended For You';
+
+  @override
+  String get seeAll => 'See All';
+
+  @override
+  String get yourKhairLevel => 'Your Khair Level: ';
+
+  @override
+  String moreEventsToGold(int count) {
+    return '$count more events to unlock Gold';
+  }
+
+  @override
+  String get viewProgress => 'View Progress';
+
+  @override
+  String get navDiscover => 'Discover';
+
+  @override
+  String get navMap => 'Map';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get catTrending => 'Trending';
+
+  @override
+  String get catNearYou => 'Near You';
+
+  @override
+  String get catGlobal => 'Global';
+
+  @override
+  String get catMasjid => 'Masjid';
+
+  @override
+  String get becomeOrganizerTitle => 'Become an Organizer';
+
+  @override
+  String get becomeOrganizerDesc =>
+      'Only organizers can access the dashboard.\n\nRegister as an organizer to start creating and managing Islamic events!';
 }

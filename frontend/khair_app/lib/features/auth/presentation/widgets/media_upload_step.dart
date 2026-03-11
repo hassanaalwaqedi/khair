@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Step: Media Upload — Logo / Profile Photo for authority roles
 class MediaUploadStep extends StatefulWidget {
@@ -94,13 +95,13 @@ class _MediaUploadStepState extends State<MediaUploadStep>
               ),
               const SizedBox(height: 20),
               Text(
-                'Choose Photo Source',
+                context.l10n.mediaSourceTitle,
                 style: KhairTypography.h3.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 24),
               _buildPickerOption(
                 icon: Icons.camera_alt_rounded,
-                label: 'Take Photo',
+                label: context.l10n.mediaSourceCamera,
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(ImageSource.camera);
@@ -109,7 +110,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
               const SizedBox(height: 12),
               _buildPickerOption(
                 icon: Icons.photo_library_rounded,
-                label: 'Choose from Gallery',
+                label: context.l10n.mediaSourceGallery,
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(ImageSource.gallery);
@@ -119,7 +120,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                 const SizedBox(height: 12),
                 _buildPickerOption(
                   icon: Icons.delete_outline_rounded,
-                  label: 'Remove Photo',
+                  label: context.l10n.mediaSourceRemove,
                   isDestructive: true,
                   onTap: () {
                     Navigator.pop(ctx);
@@ -189,7 +190,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Upload Your Photo',
+          context.l10n.mediaUploadTitle,
           style: KhairTypography.h1.copyWith(
             color: Colors.white,
             fontSize: 28,
@@ -197,7 +198,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
         ),
         const SizedBox(height: 8),
         Text(
-          'Add a logo or profile photo for your organization. This helps build trust with your community.',
+          context.l10n.mediaUploadSubtitleOrg,
           style: KhairTypography.bodyLarge.copyWith(
             color: Colors.white.withValues(alpha: 0.7),
           ),
@@ -210,7 +211,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'This step is optional — you can skip it',
+            context.l10n.registrationStepOptional,
             style: KhairTypography.labelSmall.copyWith(
               color: Colors.white.withValues(alpha: 0.5),
             ),
@@ -289,7 +290,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Tap to upload',
+                                context.l10n.mediaUploadTap,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 13,
@@ -314,7 +315,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                 size: 18,
               ),
               label: Text(
-                'Change Photo',
+                context.l10n.mediaUploadChange,
                 style: TextStyle(
                   color: KhairColors.secondary,
                   fontWeight: FontWeight.w600,
@@ -339,7 +340,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                   const Icon(Icons.check_circle, color: KhairColors.success, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Uploaded successfully',
+                    context.l10n.mediaUploadSuccess,
                     style: TextStyle(
                       color: KhairColors.success,
                       fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/event.dart';
 import '../bloc/events_bloc.dart';
 
@@ -68,24 +69,24 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Filter Events',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.filterEventsTitle,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       TextButton(
                         onPressed: _resetFilters,
-                        child: const Text('Reset'),
+                        child: Text(context.l10n.filterEventsReset),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
                   // Location
-                  const Text(
-                    'Location',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.eventDetailsLocation,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -93,9 +94,9 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _countryController,
-                    decoration: const InputDecoration(
-                      labelText: 'Country',
-                      prefixIcon: Icon(Icons.public),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.filterEventsCountry,
+                      prefixIcon: const Icon(Icons.public),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -108,9 +109,9 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _cityController,
-                    decoration: const InputDecoration(
-                      labelText: 'City',
-                      prefixIcon: Icon(Icons.location_city),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.city,
+                      prefixIcon: const Icon(Icons.location_city),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -122,9 +123,9 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                   ),
                   const SizedBox(height: 24),
                   // Event Type
-                  const Text(
-                    'Event Type',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.filterEventsType,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -134,19 +135,19 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildTypeChip('conference', 'Conference'),
-                      _buildTypeChip('workshop', 'Workshop'),
-                      _buildTypeChip('seminar', 'Seminar'),
-                      _buildTypeChip('festival', 'Festival'),
-                      _buildTypeChip('meetup', 'Meetup'),
-                      _buildTypeChip('other', 'Other'),
+                      _buildTypeChip('conference', context.l10n.eventTypeConference),
+                      _buildTypeChip('workshop', context.l10n.eventTypeWorkshop),
+                      _buildTypeChip('seminar', context.l10n.eventTypeSeminar),
+                      _buildTypeChip('festival', context.l10n.eventTypeFestival),
+                      _buildTypeChip('meetup', context.l10n.eventTypeMeetup),
+                      _buildTypeChip('other', context.l10n.eventTypeOther),
                     ],
                   ),
                   const SizedBox(height: 24),
                   // Language
-                  const Text(
-                    'Language',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.filterEventsLanguage,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -156,10 +157,10 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildLanguageChip('en', 'English'),
-                      _buildLanguageChip('ar', 'Arabic'),
-                      _buildLanguageChip('fr', 'French'),
-                      _buildLanguageChip('es', 'Spanish'),
+                      _buildLanguageChip('en', context.l10n.langEnglish),
+                      _buildLanguageChip('ar', context.l10n.langArabic),
+                      _buildLanguageChip('fr', context.l10n.langFrench),
+                      _buildLanguageChip('es', context.l10n.langSpanish),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -171,9 +172,9 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text(
-                        'Apply Filters',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.applyFilters,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

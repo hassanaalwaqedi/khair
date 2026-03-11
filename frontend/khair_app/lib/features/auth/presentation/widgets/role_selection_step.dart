@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 1: Role Selection — "How Will You Use Khair?"
 class RoleSelectionStep extends StatelessWidget {
@@ -13,62 +14,65 @@ class RoleSelectionStep extends StatelessWidget {
     required this.onRoleSelected,
   });
 
-  static const _roles = [
-    _RoleOption(
-      id: 'sheikh',
-      label: 'Sheikh / Lecturer',
-      description: 'Share Islamic knowledge and lead educational events',
-      icon: Icons.menu_book_rounded,
-    ),
-    _RoleOption(
-      id: 'organization_mosque',
-      label: 'Mosque',
-      description: 'Manage mosque activities and community prayers',
-      icon: Icons.mosque_rounded,
-    ),
-    _RoleOption(
-      id: 'organization_quran',
-      label: 'Quran Memorization Center',
-      description: 'Organize Quran study circles and hifz programs',
-      icon: Icons.auto_stories_rounded,
-    ),
-    _RoleOption(
-      id: 'organization',
-      label: 'Islamic Organization',
-      description: 'Run an Islamic charity, school, or institution',
-      icon: Icons.account_balance_rounded,
-    ),
-    _RoleOption(
-      id: 'community_organizer',
-      label: 'Community Event Organizer',
-      description: 'Plan social gatherings and community events',
-      icon: Icons.groups_rounded,
-    ),
-    _RoleOption(
-      id: 'student',
-      label: 'Student',
-      description: 'Discover and attend Islamic learning events',
-      icon: Icons.school_rounded,
-    ),
-    _RoleOption(
-      id: 'new_muslim',
-      label: 'New Muslim',
-      description: 'Find welcoming communities and beginner resources',
-      icon: Icons.favorite_rounded,
-    ),
-    _RoleOption(
-      id: 'volunteer',
-      label: 'Volunteer',
-      description: 'Help organize events and support the community',
-      icon: Icons.volunteer_activism_rounded,
-    ),
-    _RoleOption(
-      id: 'member',
-      label: 'Regular Community Member',
-      description: 'Browse and attend events in your area',
-      icon: Icons.person_rounded,
-    ),
-  ];
+  List<_RoleOption> _getRoles(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _RoleOption(
+        id: 'sheikh',
+        label: l10n.registrationRoleSheikh,
+        description: l10n.roleDescSheikh,
+        icon: Icons.menu_book_rounded,
+      ),
+      _RoleOption(
+        id: 'organization_mosque',
+        label: l10n.registrationOrgTypeMosque,
+        description: l10n.roleDescMosque,
+        icon: Icons.mosque_rounded,
+      ),
+      _RoleOption(
+        id: 'organization_quran',
+        label: l10n.registrationOrgTypeQuranCenter,
+        description: l10n.roleDescQuranCenter,
+        icon: Icons.auto_stories_rounded,
+      ),
+      _RoleOption(
+        id: 'organization',
+        label: l10n.registrationRoleOrganization,
+        description: l10n.roleDescOrganization,
+        icon: Icons.account_balance_rounded,
+      ),
+      _RoleOption(
+        id: 'community_organizer',
+        label: l10n.registrationRoleCommunityOrganizer,
+        description: l10n.roleDescCommunityOrganizer,
+        icon: Icons.groups_rounded,
+      ),
+      _RoleOption(
+        id: 'student',
+        label: l10n.registrationRoleStudent,
+        description: l10n.roleDescStudent,
+        icon: Icons.school_rounded,
+      ),
+      _RoleOption(
+        id: 'new_muslim',
+        label: l10n.registrationRoleNewMuslim,
+        description: l10n.roleDescNewMuslim,
+        icon: Icons.favorite_rounded,
+      ),
+      _RoleOption(
+        id: 'volunteer',
+        label: l10n.registrationRoleCommunityOrganizer, // using volunteer
+        description: l10n.roleDescVolunteer,
+        icon: Icons.volunteer_activism_rounded,
+      ),
+      _RoleOption(
+        id: 'member',
+        label: l10n.registrationRoleStudent, // using member
+        description: l10n.roleDescMember,
+        icon: Icons.person_rounded,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +83,7 @@ class RoleSelectionStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'How Will You Use Khair?',
+          context.l10n.registrationRoleSelectionTitle,
           style: KhairTypography.h1.copyWith(
             color: Colors.white,
             fontSize: 28,
@@ -87,7 +91,7 @@ class RoleSelectionStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Choose the role that best describes you',
+          context.l10n.registrationRoleSelectionSubtitle,
           style: KhairTypography.bodyLarge.copyWith(
             color: Colors.white.withValues(alpha: 0.7),
           ),
@@ -102,9 +106,9 @@ class RoleSelectionStep extends StatelessWidget {
             crossAxisSpacing: 12,
             childAspectRatio: crossAxisCount == 1 ? 3.2 : 1.8,
           ),
-          itemCount: _roles.length,
+          itemCount: _getRoles(context).length,
           itemBuilder: (context, index) {
-            final role = _roles[index];
+            final role = _getRoles(context)[index];
             final isSelected = selectedRole == role.id;
             return _RoleCard(
               role: role,

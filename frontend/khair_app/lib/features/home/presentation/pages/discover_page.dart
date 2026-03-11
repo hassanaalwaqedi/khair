@@ -16,6 +16,8 @@ import '../widgets/glass_fab.dart';
 import '../../../owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../../owner_posts/presentation/widgets/khair_recommends_section.dart';
 import '../../../spiritual_quotes/presentation/widgets/quote_rotator.dart';
+import '../../../sheikh/presentation/bloc/sheikh_bloc.dart';
+import '../../../sheikh/presentation/widgets/sheikh_directory_section.dart';
 
 /// Discover/Home page — the main entry point.
 /// Uses EventsBloc and AuthBloc for real data, no mocks.
@@ -252,7 +254,22 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   ),
                 ),
 
-                // 7) Khair Recommends (owner posts)
+                // 7) Find a Sheikh (sheikh directory)
+                SliverToBoxAdapter(
+                  child: BlocBuilder<SheikhBloc, SheikhState>(
+                    builder: (context, sheikhState) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: AppSpacing.xl),
+                        child: SheikhDirectorySection(
+                          sheikhs: sheikhState.sheikhs,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // 8) Khair Recommends (owner posts)
                 SliverToBoxAdapter(
                   child:
                       BlocBuilder<OwnerPostsBloc, OwnerPostsState>(

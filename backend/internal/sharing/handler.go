@@ -44,7 +44,7 @@ type Service struct {
 func NewService(db *sql.DB) *Service {
 	baseURL := os.Getenv("PUBLIC_BASE_URL")
 	if baseURL == "" {
-		baseURL = "https://khair.app"
+		baseURL = "https://khair.it.com"
 	}
 	return &Service{db: db, baseURL: baseURL}
 }

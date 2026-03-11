@@ -53,6 +53,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		admin.PUT("/users/:id/status", h.UpdateUserStatus)
 		admin.PUT("/users/:id/suspend", h.SuspendUser)
 		admin.PUT("/users/:id/unsuspend", h.UnsuspendUser)
+		admin.PUT("/users/:id/verify", h.VerifyUser)
 		admin.DELETE("/users/:id", h.DeleteUser)
 
 		// Advanced RBAC management (requires manage_users permission)
@@ -406,6 +407,22 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 	response.SuccessWithMessage(c, "User deleted", nil)
+}
+
+// VerifyUser sets a user's is_verified flag to true
+func (h *Handler) VerifyUser(c *gin.Context) {
+	targetID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	_, err = h.db.Exec(`UPDATE users SET is_verified = true, verified_at = NOW(), updated_at = NOW() WHERE id = $1`, targetID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to verify user")
+		return
+	}
+	response.SuccessWithMessage(c, "User verified successfully", nil)
 }
 
 // ── Stats ──

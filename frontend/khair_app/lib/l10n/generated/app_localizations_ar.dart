@@ -272,6 +272,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get status => 'الحالة';
 
   @override
+  String get welcomeToKhair => 'مرحباً بك في خير';
+
+  @override
+  String get signInToManage => 'سجّل الدخول لإدارة ملفك الشخصي وفعالياتك';
+
+  @override
+  String get accountType => 'نوع الحساب';
+
+  @override
+  String get roleOrganizer => 'منظم';
+
+  @override
+  String get roleAdmin => 'مسؤول';
+
+  @override
+  String get roleMember => 'عضو';
+
+  @override
+  String get statusActive => 'نشط';
+
+  @override
+  String get statusBasic => 'أساسي';
+
+  @override
   String get website => 'الموقع الإلكتروني';
 
   @override
@@ -291,6 +315,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminPanel => 'لوحة الإدارة';
+
+  @override
+  String get mapTab => 'الخريطة';
 
   @override
   String get createEvent => 'إنشاء فعالية';
@@ -562,7 +589,660 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registrationFullName => 'الاسم الكامل';
 
   @override
+  String get registrationContactPersonName => 'اسم مسؤول التواصل';
+
+  @override
+  String get registrationAccountDetailsTitle => 'أنشئ حسابك';
+
+  @override
+  String get registrationRoleSelectionTitle => 'كيف ستستخدم خير؟';
+
+  @override
+  String get registrationRoleSelectionSubtitle => 'اختر الدور الأنسب لك';
+
+  @override
+  String get roleDescSheikh => 'شارك العلم الشرعي وقد الفعاليات التعليمية';
+
+  @override
+  String get roleDescMosque => 'إدارة أنشطة المسجد والصلوات المجتمعية';
+
+  @override
+  String get roleDescQuranCenter => 'تنظيم حلقات القرآن وبرامج التحفيظ';
+
+  @override
+  String get roleDescOrganization =>
+      'إدارة جمعية خيرية، مدرسة، أو مؤسسة إسلامية';
+
+  @override
+  String get roleDescCommunityOrganizer =>
+      'تخطيط تجمعات اجتماعية وفعاليات مجتمعية';
+
+  @override
+  String get roleDescStudent => 'اكتشاف وحضور الفعاليات التعليمية الإسلامية';
+
+  @override
+  String get roleDescNewMuslim => 'إيجاد مجتمعات مرحبة وموارد للمبتدئين';
+
+  @override
+  String get roleDescVolunteer => 'المساعدة في تنظيم الفعاليات ودعم المجتمع';
+
+  @override
+  String get roleDescMember => 'تصفح وحضور الفعاليات في منطقتك';
+
+  @override
+  String get registrationAccountSubtitleSheikh => 'أخبرنا عن خلفيتك التعليمية';
+
+  @override
+  String get registrationAccountSubtitleOrg => 'قم بإعداد حساب منظمتك';
+
+  @override
+  String get registrationAccountSubtitleCommunity => 'أخبرنا عن عملك المجتمعي';
+
+  @override
+  String get registrationAccountSubtitleDefault => 'فقط الأساسيات للبدء';
+
+  @override
+  String get registrationYearsExperience => 'سنوات الخبرة';
+
+  @override
+  String get registrationSocialMediaOptional =>
+      'وسائل التواصل الاجتماعي (اختياري)';
+
+  @override
+  String get registrationOrganizationName => 'اسم المنظمة';
+
+  @override
+  String get registrationMosqueName => 'اسم المسجد';
+
+  @override
+  String get registrationCenterName => 'اسم المركز';
+
+  @override
+  String get registrationCommunityGroupName => 'اسم المجتمع / المجموعة';
+
+  @override
+  String get registrationPhoneOptional => 'رقم الهاتف (اختياري)';
+
+  @override
+  String get passwordsDoNotMatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get name => 'الاسم';
+
+  @override
   String get registrationEnterFullName => 'يرجى إدخال اسمك الكامل';
+
+  @override
+  String get registrationGoalsTitle => 'ما الذي تأمل\nفي تحقيقه؟';
+
+  @override
+  String get registrationGoalsSubtitle =>
+      'اختر كل ما ينطبق — هذا يساعدنا في تخصيص تجربتك';
+
+  @override
+  String get registrationStepOptional => 'هذه الخطوة اختيارية — يمكنك تخطيها';
+
+  @override
+  String get goalPublishEvents => 'نشر الفعاليات';
+
+  @override
+  String get goalGrowCommunity => 'تنمية المجتمع';
+
+  @override
+  String get goalTeachKnowledge => 'تعليم العلم';
+
+  @override
+  String get goalDiscoverEvents => 'اكتشاف التجمعات المحلية';
+
+  @override
+  String get goalVolunteer => 'تطوع';
+
+  @override
+  String get goalBuildNetwork => 'بناء شبكة إسلامية';
+
+  @override
+  String get registrationReviewTitle => 'مراجعة ملفك الشخصي';
+
+  @override
+  String get registrationReviewSubtitle =>
+      'يرجى التأكد من أن كل شيء يبدو صحيحاً';
+
+  @override
+  String get registrationReviewAccountInfo => 'معلومات الحساب';
+
+  @override
+  String get registrationReviewRoleDetails => 'تفاصيل الدور';
+
+  @override
+  String get registrationReviewGoals => 'الأهداف';
+
+  @override
+  String get registrationReviewSubmit => 'إنشاء الحساب';
+
+  @override
+  String get registrationReviewTerms =>
+      'بإنشاء حساب، فإنك توافق على الشروط وسياسة الخصوصية';
+
+  @override
+  String get mediaSourceTitle => 'اختر مصدر الصورة';
+
+  @override
+  String get mediaSourceCamera => 'التقاط صورة';
+
+  @override
+  String get mediaSourceGallery => 'اختر من المعرض';
+
+  @override
+  String get mediaSourceRemove => 'إزالة الصورة';
+
+  @override
+  String get mediaUploadTitle => 'ارفع صورتك';
+
+  @override
+  String get mediaUploadSubtitleOrg =>
+      'أضف شعاراً أو صورة شخصية لمنظمتك. هذا يساعد في بناء الثقة مع مجتمعك.';
+
+  @override
+  String get mediaUploadTap => 'انقر للرفع';
+
+  @override
+  String get mediaUploadChange => 'تغيير الصورة';
+
+  @override
+  String get mediaUploadSuccess => 'تم الرفع بنجاح';
+
+  @override
+  String get eventDetailsBack => 'العودة للفعاليات';
+
+  @override
+  String get eventDetailsShareSoon => 'ميزة المشاركة قريباً';
+
+  @override
+  String eventDetailsAttending(int count) {
+    return '$count حاضرون';
+  }
+
+  @override
+  String get eventDetailsDateTime => 'التاريخ والوقت';
+
+  @override
+  String get eventDetailsLocation => 'الموقع';
+
+  @override
+  String get eventDetailsOrganizedBy => 'مقدم من';
+
+  @override
+  String get eventDetailsAbout => 'عن هذه الفعالية';
+
+  @override
+  String get eventDetailsSoldOut => 'مكتمل العدد';
+
+  @override
+  String eventDetailsSeatsLeft(int count) {
+    return 'بقي $count مقاعد';
+  }
+
+  @override
+  String get eventDetailsJoin => 'انضم للفعالية';
+
+  @override
+  String get eventDetailsJoining => 'جارٍ الانضمام...';
+
+  @override
+  String get eventDetailsReservedSuccess => 'تم! حُجز مقعدك بنجاح.';
+
+  @override
+  String eventDetailsJoinedSeeYou(String title) {
+    return '🎉 انضممت إلى \"$title\"! نراك هناك.';
+  }
+
+  @override
+  String get eventDetailsJoinFailed => 'فشل الانضمام للفعالية';
+
+  @override
+  String get eventDetailsAlreadyJoined => 'لقد انضممت لهذه الفعالية مسبقاً';
+
+  @override
+  String get eventDetailsEventFull => 'هذه الفعالية ممتلئة';
+
+  @override
+  String get joinModalSubtitle => 'أنشئ حساباً بسيطاً لحجز مقعدك.';
+
+  @override
+  String joinModalSeatsRemaining(int count) {
+    return 'بقي $count مقاعد';
+  }
+
+  @override
+  String get joinModalStep1 => 'الهوية';
+
+  @override
+  String get joinModalStep2 => 'الأمان';
+
+  @override
+  String get joinModalNameEmailTitle => 'الاسم والبريد الإلكتروني';
+
+  @override
+  String get joinModalNameRequired => 'الاسم مطلوب';
+
+  @override
+  String get joinModalNameMinLength => 'حرفين على الأقل';
+
+  @override
+  String get joinModalSignIn => 'تسجيل الدخول';
+
+  @override
+  String get joinModalAlreadyAccount => 'لديك حساب بالفعل؟ ';
+
+  @override
+  String get joinModalSecureAccount => 'حماية حسابك';
+
+  @override
+  String get joinModalPasswordMinLength => '8 أحرف على الأقل';
+
+  @override
+  String get joinModalGender => 'الجنس';
+
+  @override
+  String get joinModalMale => 'ذكر';
+
+  @override
+  String get joinModalFemale => 'أنثى';
+
+  @override
+  String get joinModalGenderRequired => 'يرجى تحديد الجنس';
+
+  @override
+  String get joinModalAgeOptional => 'العمر (اختياري)';
+
+  @override
+  String get joinModalCreateReserve => 'إنشاء الحساب وحجز المقعد';
+
+  @override
+  String get joinModalAlmostThere => 'أوشكت على الانتهاء!';
+
+  @override
+  String get joinModalVerifyEmailMsg =>
+      'يرجى التحقق من بريدك الإلكتروني لتأكيد مقعدك.';
+
+  @override
+  String get joinModalEmailRequired => 'البريد الإلكتروني مطلوب';
+
+  @override
+  String get joinModalSeatHeld =>
+      'مقعدك محجوز لمدة 15 دقيقة أثناء التحقق من بريدك الإلكتروني.';
+
+  @override
+  String get joinModalGotIt => 'حسناً!';
+
+  @override
+  String get eventCardJoin => 'انضمام';
+
+  @override
+  String get eventCardLocationSoon => 'سيعلن الموقع قريباً';
+
+  @override
+  String eventCardSeatsRatio(int reserved, int capacity) {
+    return '$reserved / $capacity مقعد';
+  }
+
+  @override
+  String get categoryKnowledge => 'علم';
+
+  @override
+  String get categoryQuran => 'قرآن';
+
+  @override
+  String get categoryLectures => 'محاضرات';
+
+  @override
+  String get categoryCommunity => 'مجتمع';
+
+  @override
+  String get categoryYouth => 'شباب';
+
+  @override
+  String get categoryCharity => 'عمل خيري';
+
+  @override
+  String get categoryFamily => 'عائلة';
+
+  @override
+  String get categoryTrending => 'شائع';
+
+  @override
+  String get filterEventsTitle => 'تصفية الفعاليات';
+
+  @override
+  String get filterEventsReset => 'إعادة تعيين';
+
+  @override
+  String get filterEventsCountry => 'الدولة';
+
+  @override
+  String get filterEventsType => 'نوع الفعالية';
+
+  @override
+  String get eventTypeConference => 'مؤتمر';
+
+  @override
+  String get eventTypeWorkshop => 'ورشة عمل';
+
+  @override
+  String get eventTypeSeminar => 'ندوة';
+
+  @override
+  String get eventTypeFestival => 'مهرجان';
+
+  @override
+  String get eventTypeMeetup => 'لقاء';
+
+  @override
+  String get eventTypeOther => 'أخرى';
+
+  @override
+  String get filterEventsLanguage => 'اللغة';
+
+  @override
+  String get langEnglish => 'الإنجليزية';
+
+  @override
+  String get langArabic => 'العربية';
+
+  @override
+  String get langFrench => 'الفرنسية';
+
+  @override
+  String get langSpanish => 'الإسبانية';
+
+  @override
+  String get applyFilters => 'تطبيق التصفية';
+
+  @override
+  String get filterEventsLocating => 'جاري تحديد الموقع...';
+
+  @override
+  String get filterEventsToday => 'اليوم';
+
+  @override
+  String get filterEventsThisWeek => 'هذا الأسبوع';
+
+  @override
+  String get filterEventsWeekend => 'عطلة نهاية الأسبوع';
+
+  @override
+  String get filterEventsThisMonth => 'هذا الشهر';
+
+  @override
+  String get filterEventsDate => 'التاريخ';
+
+  @override
+  String get filterEventsClear => 'مسح';
+
+  @override
+  String get filterEventsByDate => 'تصفية حسب التاريخ';
+
+  @override
+  String get filterEventsClearDateFilter => 'مسح تصفية التاريخ';
+
+  @override
+  String get createEventStepBasicInfo => 'المعلومات الأساسية';
+
+  @override
+  String get createEventStepLocation => 'الموقع';
+
+  @override
+  String get createEventStepCompliance => 'الامتثال';
+
+  @override
+  String get createEventStepMedia => 'الوسائط';
+
+  @override
+  String get createEventStepReview => 'المراجعة';
+
+  @override
+  String get createEventSuccess => 'تم إرسال الفعالية للمراجعة بنجاح!';
+
+  @override
+  String get createEventError => 'حدث خطأ ما';
+
+  @override
+  String get createEventDraftSaved => 'تم حفظ الفعالية كمسودة';
+
+  @override
+  String get createEventTitle => 'إنشاء فعالية';
+
+  @override
+  String createEventStepCount(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get createEventBack => 'رجوع';
+
+  @override
+  String get createEventSaveDraft => 'حفظ كمسودة';
+
+  @override
+  String get createEventSubmitting => 'جاري التقديم...';
+
+  @override
+  String get createEventSubmit => 'إرسال للمراجعة';
+
+  @override
+  String get createEventContinue => 'متابعة';
+
+  @override
+  String get createEventBasicInfoTitle => 'المعلومات الأساسية';
+
+  @override
+  String get createEventTitleLabel => 'عنوان الفعالية';
+
+  @override
+  String get createEventTitleHint => 'أدخل عنواناً جذاباً للفعالية';
+
+  @override
+  String get createEventCategoryLabel => 'الفئة';
+
+  @override
+  String get createEventDescLabel => 'الوصف (50 حرف كحد أدنى)';
+
+  @override
+  String get createEventDescHint => 'صف فعاليتك بالتفصيل...';
+
+  @override
+  String get createEventTagsLabel => 'الوسوم';
+
+  @override
+  String get createEventEventTypeLabel => 'نوع الفعالية';
+
+  @override
+  String get createEventInPerson => 'حضوري';
+
+  @override
+  String get createEventOnline => 'عن بُعد';
+
+  @override
+  String get createEventLanguageLabel => 'اللغة';
+
+  @override
+  String get langTurkish => 'التركية';
+
+  @override
+  String get createEventStartDateTime => 'تاريخ ووقت البدء';
+
+  @override
+  String get createEventEndDateTime => 'تاريخ ووقت الانتهاء (اختياري)';
+
+  @override
+  String get createEventVenueDetails => 'تفاصيل المكان';
+
+  @override
+  String get createEventOnlineSetup => 'إعداد البث المباشر';
+
+  @override
+  String get createEventCountry => 'الدولة';
+
+  @override
+  String get createEventCityHint => 'مثال: الرياض';
+
+  @override
+  String get createEventAddress => 'عنوان المكان';
+
+  @override
+  String get createEventAddressHint => 'العنوان الكامل للمكان';
+
+  @override
+  String get createEventPlatform => 'المنصة';
+
+  @override
+  String get createEventMeetingLink => 'رابط الاجتماع';
+
+  @override
+  String get createEventMeetingLinkHint => 'https://zoom.us/j/...';
+
+  @override
+  String get createEventPasswordOptional => 'كلمة المرور (اختياري)';
+
+  @override
+  String get createEventPasswordHint => 'كلمة مرور الاجتماع';
+
+  @override
+  String get createEventLinkVisibility => 'رؤية الرابط';
+
+  @override
+  String get createEventLinkVisibilityDesc =>
+      'سيظهر رابط الاجتماع فقط للحاضرين المسجلين قبل 30 دقيقة من الفعالية.';
+
+  @override
+  String get createEventIslamicCompliance => 'الامتثال الإسلامي';
+
+  @override
+  String get createEventComplianceDesc =>
+      'تضمن هذه الإعدادات توافق فعاليتك مع الإرشادات الإسلامية.';
+
+  @override
+  String get createEventGenderPolicy => 'سياسة الحضور';
+
+  @override
+  String get createEventGenderMixed => 'مختلط';
+
+  @override
+  String get createEventGenderMaleOnly => 'للرجال فقط';
+
+  @override
+  String get createEventGenderFemaleOnly => 'للنساء فقط';
+
+  @override
+  String get createEventFamilyFriendly => 'مناسب للعائلات';
+
+  @override
+  String get createEventFamilyFriendlyDesc => 'مناسب للعائلات التي لديها أطفال';
+
+  @override
+  String get createEventNoMusic => 'خالٍ من الموسيقى';
+
+  @override
+  String get createEventNoMusicDesc => 'هذه الفعالية لا تحتوي على موسيقى';
+
+  @override
+  String get createEventNoInappropriate => 'محتوى لائق';
+
+  @override
+  String get createEventNoInappropriateDesc =>
+      'يتوافق جميع المحتوى مع القيم الإسلامية';
+
+  @override
+  String get createEventPrayerBreak => 'استراحة صلاة';
+
+  @override
+  String get createEventPrayerBreakDesc =>
+      'تتضمن استراحات صلاة للفعاليات التي تزيد عن ساعتين';
+
+  @override
+  String get createEventComplianceConfirm =>
+      'أؤكد أن هذه الفعالية تتوافق تماماً مع التوجيهات الإسلامية ومعايير منصة خير.';
+
+  @override
+  String get createEventComplianceWarning =>
+      'يجب تأكيد الامتثال الإسلامي قبل تقديم الفعالية.';
+
+  @override
+  String get createEventMediaDetails => 'الوسائط والتفاصيل';
+
+  @override
+  String get createEventUploading => 'جاري الرفع...';
+
+  @override
+  String get createEventUploadPlaceholder => 'انقر لرفع صورة الغلاف';
+
+  @override
+  String get createEventUploadLimits => 'JPG, PNG • الحد الأقصى 5 ميغابايت';
+
+  @override
+  String get createEventMaxAttendees => 'الحد الأقصى للحضور';
+
+  @override
+  String get createEventTicketPrice => 'سعر التذكرة';
+
+  @override
+  String get createEventTicketPriceHint => '0 = مجاني';
+
+  @override
+  String get createEventRegistrationDeadline => 'آخر موعد للتسجيل';
+
+  @override
+  String get createEventSelectDeadline => 'اختر الموعد النهائي';
+
+  @override
+  String get createEventAutoApproval => 'موافقة تلقائية';
+
+  @override
+  String get createEventAutoApprovalDesc => 'الموافقة التلقائية على المسجلين';
+
+  @override
+  String get createEventReviewSubmit => 'المراجعة والتقديم';
+
+  @override
+  String get createEventEventSummary => 'ملخص الفعالية';
+
+  @override
+  String get createEventReviewCompliance => 'الامتثال';
+
+  @override
+  String get createEventReviewRiskAssessment => 'تقييم المخاطر';
+
+  @override
+  String get createEventReviewTrustImpact => 'تأثير الثقة';
+
+  @override
+  String get createEventTrustImpactDesc =>
+      'الاستضافة الناجحة لهذه الفعالية ستزيد من نقاط الثقة الخاصة بك. الفعاليات المخالفة قد تقللها.';
+
+  @override
+  String get createEventFinalConfirm =>
+      'أؤكد أن جميع المعلومات دقيقة. وأتفهم أن الفعاليات تخضع للمراجعة قبل النشر.';
+
+  @override
+  String get createEventRiskLow => 'خطر منخفض — يُرجح الموافقة التلقائية';
+
+  @override
+  String get createEventRiskMedium => 'خطر متوسط — يتطلب مراجعة يدوية';
+
+  @override
+  String get createEventRiskHigh => 'خطر مرتفع — يتطلب مراجعة إضافية';
+
+  @override
+  String get createEventReviewConfirmed => 'مؤكد';
+
+  @override
+  String get createEventReviewIncluded => 'مشمول';
+
+  @override
+  String get createEventReviewYes => 'نعم';
+
+  @override
+  String get createEventReviewNo => 'لا';
 
   @override
   String get registrationAboutYouTitle => 'أخبرنا عنك';
@@ -665,9 +1345,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get registrationLevelAdvanced => 'متقدم';
-
-  @override
-  String get registrationCommunityGroupName => 'اسم المجتمع / المجموعة';
 
   @override
   String get registrationCommunityFocus => 'مجال تركيز المجتمع';
@@ -830,6 +1507,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registrationProgressDone => 'تم';
 
   @override
+  String get stepUpload => 'الرفع';
+
+  @override
+  String get stepGoals => 'الأهداف';
+
+  @override
   String get spiritualQuoteTitle => 'لمحة روحية';
 
   @override
@@ -843,4 +1526,357 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get spiritualQuoteDismiss => 'إغلاق';
+
+  @override
+  String get adminDashboardTitle => 'لوحة تحكم المشرف';
+
+  @override
+  String get adminRefresh => 'تحديث';
+
+  @override
+  String get adminOrganizersTab => 'المنظمون';
+
+  @override
+  String get adminEventsTab => 'الفعاليات';
+
+  @override
+  String get adminReportsTab => 'البلاغات';
+
+  @override
+  String get adminAuditLogsTab => 'سجلات التدقيق';
+
+  @override
+  String get adminQuotesTab => 'الاقتباسات';
+
+  @override
+  String get adminUsersTab => 'المستخدمون';
+
+  @override
+  String get adminActionSuccess => 'تم تنفيذ الإجراء بنجاح';
+
+  @override
+  String get adminActionFailed => 'فشل الإجراء';
+
+  @override
+  String get adminReportsMgmt => 'إدارة البلاغات';
+
+  @override
+  String get adminReviewReportsDesc => 'مراجعة وحل بلاغات المستخدمين';
+
+  @override
+  String get adminOpenReports => 'فتح البلاغات';
+
+  @override
+  String get adminAuditLogsDesc => 'عرض جميع إجراءات النظام والمشرفين';
+
+  @override
+  String get adminViewLogs => 'عرض السجلات';
+
+  @override
+  String get adminFailedLoadOrg => 'فشل تحميل المنظمين';
+
+  @override
+  String get adminNoPendingOrg => 'لا يوجد منظمون قيد الانتظار';
+
+  @override
+  String get adminAllOrgReviewed => 'تمت مراجعة جميع طلبات المنظمين.';
+
+  @override
+  String adminPendingApproval(int count) {
+    return 'بانتظار الموافقة ($count)';
+  }
+
+  @override
+  String get adminType => 'النوع';
+
+  @override
+  String get adminLocation => 'الموقع';
+
+  @override
+  String get adminAbout => 'نبذة';
+
+  @override
+  String get adminSubmitted => 'تاريخ التقديم';
+
+  @override
+  String get adminReject => 'رفض';
+
+  @override
+  String get adminApprove => 'قبول';
+
+  @override
+  String adminRejectTitle(String name) {
+    return 'رفض $name';
+  }
+
+  @override
+  String adminRejectConfirm(String name) {
+    return 'هل أنت متأكد أنك تريد رفض \"$name\"؟';
+  }
+
+  @override
+  String get adminRejectionReason => 'سبب الرفض';
+
+  @override
+  String get adminProvideReason => 'قدم سبباً...';
+
+  @override
+  String get adminCancel => 'إلغاء';
+
+  @override
+  String get adminProvideReasonMsg => 'يرجى تقديم سبب للرفض';
+
+  @override
+  String get adminFailedLoadEvents => 'فشل تحميل الفعاليات';
+
+  @override
+  String get adminNoPendingEvents => 'لا توجد فعاليات قيد الانتظار';
+
+  @override
+  String get adminAllEventsReviewed => 'تمت مراجعة جميع الفعاليات.';
+
+  @override
+  String adminPendingReview(int count) {
+    return 'بانتظار المراجعة ($count)';
+  }
+
+  @override
+  String get adminDate => 'التاريخ';
+
+  @override
+  String get orgBecomeOrganizer => 'أصبح منظماً';
+
+  @override
+  String get orgRegisterPrompt =>
+      'لم تقم بالتسجيل كمنظم بعد.\nسجل لتبدأ في إنشاء الفعاليات!';
+
+  @override
+  String get orgRegisterBtn => 'التسجيل كمنظم';
+
+  @override
+  String get orgDashboardTitle => 'لوحة التحكم';
+
+  @override
+  String get orgOrganizerDashboard => 'لوحة تحكم المنظم';
+
+  @override
+  String get orgNotifications => 'الإشعارات';
+
+  @override
+  String get orgSettings => 'الإعدادات';
+
+  @override
+  String get orgCheckHomeNotif => 'تحقق من الصفحة الرئيسية لمعرفة الإشعارات';
+
+  @override
+  String get orgQuickActions => 'إجراءات سريعة';
+
+  @override
+  String get orgAnalytics => 'الإحصائيات';
+
+  @override
+  String get orgRecentEvents => 'الفعاليات الأخيرة';
+
+  @override
+  String orgTotalCount(int count) {
+    return 'الإجمالي $count';
+  }
+
+  @override
+  String get orgViewAll => 'عرض الكل';
+
+  @override
+  String get orgWelcomeBack => 'مرحباً بعودتك،';
+
+  @override
+  String get orgAccountPending => 'الحساب قيد الانتظار';
+
+  @override
+  String get orgAccountPendingDesc =>
+      'حسابك كمنظم ينتظر موافقة الإدارة. بعض الميزات مقيدة حتى تتم الموافقة.';
+
+  @override
+  String get orgAccountRejected => 'تم رفض الحساب';
+
+  @override
+  String get orgAccountRejectedDesc =>
+      'تم رفض طلبك. يرجى التواصل مع الدعم لمزيد من التفاصيل.';
+
+  @override
+  String get orgCreateEvent => 'إنشاء فعالية';
+
+  @override
+  String get orgAddNewEvent => 'إضافة فعالية جديدة';
+
+  @override
+  String get orgApprovalRequired => 'يتطلب الموافقة';
+
+  @override
+  String get orgMyEvents => 'فعالياتي';
+
+  @override
+  String get orgViewAllEvents => 'عرض جميع الفعاليات';
+
+  @override
+  String get orgEditProfile => 'تعديل الملف الشخصي';
+
+  @override
+  String get orgUpdateInfo => 'تحديث المعلومات';
+
+  @override
+  String get orgViewStats => 'عرض الإحصائيات';
+
+  @override
+  String get orgTotalEvents => 'إجمالي الفعاليات';
+
+  @override
+  String get orgApproved => 'مقبول';
+
+  @override
+  String get orgPending => 'قيد الانتظار';
+
+  @override
+  String get orgRejected => 'مرفوض';
+
+  @override
+  String get orgNoEventsYet => 'لا توجد فعاليات بعد';
+
+  @override
+  String get orgCreateFirstEvent => 'قم بإنشاء فعاليتك الأولى للبدء';
+
+  @override
+  String get orgMessages => 'الرسائل';
+
+  @override
+  String get orgNoMessages => 'لا توجد رسائل';
+
+  @override
+  String get ownerDashboard => 'لوحة تحكم المالك';
+
+  @override
+  String get ownerPostSaved => 'تم حفظ المنشور';
+
+  @override
+  String get ownerNoPosts => 'لا يوجد منشورات بعد';
+
+  @override
+  String get ownerCreateFirstPost => 'اضغط على + لإنشاء أول منشور مجتمعي لك';
+
+  @override
+  String get ownerNewPost => 'منشور جديد';
+
+  @override
+  String get ownerEditPost => 'تعديل المنشور';
+
+  @override
+  String get ownerTitleLabel => 'العنوان *';
+
+  @override
+  String get ownerShortDescLabel => 'وصف قصير *';
+
+  @override
+  String get ownerImageUrlLabel => 'رابط الصورة';
+
+  @override
+  String get ownerExtLinkLabel => 'رابط خارجي';
+
+  @override
+  String get ownerLocationLabel => 'الموقع';
+
+  @override
+  String get ownerPublish => 'نشر';
+
+  @override
+  String get ownerSaveChanges => 'حفظ التغييرات';
+
+  @override
+  String get ownerRequired => 'مطلوب';
+
+  @override
+  String get ownerActive => 'نشط';
+
+  @override
+  String get ownerInactive => 'غير نشط';
+
+  @override
+  String get ownerEdit => 'تعديل';
+
+  @override
+  String get ownerDelete => 'حذف';
+
+  @override
+  String get ownerDeletePost => 'حذف المنشور';
+
+  @override
+  String get ownerDeleteConfirm => 'هل أنت متأكد؟';
+
+  @override
+  String get greeting => 'السلام عليكم';
+
+  @override
+  String get featuredEvents => 'فعاليات مميزة';
+
+  @override
+  String get joinNow => 'انضم الآن';
+
+  @override
+  String byOrganizer(String name) {
+    return 'بواسطة $name';
+  }
+
+  @override
+  String get communityActivity => 'نشاط المجتمع';
+
+  @override
+  String peopleJoinedEvents(int count) {
+    return '$count شخص انضموا للفعاليات';
+  }
+
+  @override
+  String get recommendedForYou => 'موصى بها لك';
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String get yourKhairLevel => 'مستواك في خير: ';
+
+  @override
+  String moreEventsToGold(int count) {
+    return '$count فعاليات أخرى للوصول إلى الذهبي';
+  }
+
+  @override
+  String get viewProgress => 'عرض التقدم';
+
+  @override
+  String get navDiscover => 'اكتشف';
+
+  @override
+  String get navMap => 'الخريطة';
+
+  @override
+  String get navDashboard => 'لوحة التحكم';
+
+  @override
+  String get navProfile => 'الملف الشخصي';
+
+  @override
+  String get catTrending => 'الأكثر رواجاً';
+
+  @override
+  String get catNearYou => 'بالقرب منك';
+
+  @override
+  String get catGlobal => 'عالمي';
+
+  @override
+  String get catMasjid => 'مسجد';
+
+  @override
+  String get becomeOrganizerTitle => 'كن منظماً';
+
+  @override
+  String get becomeOrganizerDesc =>
+      'لوحة التحكم متاحة للمنظمين فقط.\n\nسجّل كمنظم لبدء إنشاء وإدارة الفعاليات الإسلامية!';
 }

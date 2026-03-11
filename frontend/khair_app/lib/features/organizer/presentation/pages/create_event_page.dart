@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../shared/widgets/app_components.dart';
 import '../../../events/domain/repositories/events_repository.dart';
@@ -40,9 +41,18 @@ class _CreateEventViewState extends State<_CreateEventView>
   late final AnimationController _slideController;
   late final Animation<Offset> _slideAnimation;
 
-  static const _stepLabels = [
-    'Basic Info', 'Location', 'Compliance', 'Media', 'Review'
-  ];
+  List<String> _getStepLabels(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      l10n.createEventStepBasicInfo,
+      l10n.createEventStepLocation,
+      l10n.createEventStepCompliance,
+      l10n.createEventStepMedia,
+      l10n.createEventStepReview,
+    ];
+  }
+
+
   static const _stepIcons = [
     Icons.edit_rounded,
     Icons.location_on_rounded,
@@ -80,7 +90,7 @@ class _CreateEventViewState extends State<_CreateEventView>
         switch (state.status) {
           case CreateEventStatus.success:
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text('Event submitted for review successfully!'),
+              content: Text(context.l10n.createEventSuccess),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -90,7 +100,7 @@ class _CreateEventViewState extends State<_CreateEventView>
           case CreateEventStatus.failure:
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content:
-                  Text(state.errorMessage ?? 'Something went wrong'),
+                  Text(state.errorMessage ?? context.l10n.createEventError),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -98,7 +108,7 @@ class _CreateEventViewState extends State<_CreateEventView>
             ));
           case CreateEventStatus.draftSaved:
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text('Event saved as draft'),
+              content: Text(context.l10n.createEventDraftSaved),
               backgroundColor: AppColors.surfaceHigh,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -123,7 +133,7 @@ class _CreateEventViewState extends State<_CreateEventView>
                     return AppStepper(
                       currentStep: state.currentStep,
                       totalSteps: 5,
-                      labels: _stepLabels,
+                      labels: _getStepLabels(context),
                       icons: _stepIcons,
                       onStepTap: (i) {
                         if (i < state.currentStep ||
@@ -193,15 +203,15 @@ class _CreateEventViewState extends State<_CreateEventView>
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
-                child: Text('Create Event',
-                    style: TextStyle(
+              Expanded(
+                child: Text(context.l10n.createEventTitle,
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
               ),
               Text(
-                'Step ${state.currentStep + 1} of 5',
+                context.l10n.createEventStepCount(state.currentStep + 1, 5),
                 style: TextStyle(
                     color: AppColors.whiteAlpha(0.4), fontSize: 13),
               ),
@@ -276,7 +286,7 @@ class _CreateEventBottomBar extends StatelessWidget {
                       border: Border.all(
                           color: AppColors.whiteAlpha(0.12)),
                     ),
-                    child: Text('Back',
+                    child: Text(context.l10n.createEventBack,
                         style: TextStyle(
                           color: AppColors.whiteAlpha(0.6),
                           fontWeight: FontWeight.w500,
@@ -296,7 +306,7 @@ class _CreateEventBottomBar extends StatelessWidget {
                       border: Border.all(
                           color: AppColors.whiteAlpha(0.12)),
                     ),
-                    child: Text('Save Draft',
+                    child: Text(context.l10n.createEventSaveDraft,
                         style: TextStyle(
                           color: AppColors.whiteAlpha(0.6),
                           fontWeight: FontWeight.w500,
@@ -326,8 +336,8 @@ class _CreateEventBottomBar extends StatelessWidget {
                     ),
                     child: Text(
                       isSubmitting
-                          ? 'Submitting...'
-                          : 'Submit for Review',
+                          ? context.l10n.createEventSubmitting
+                          : context.l10n.createEventSubmit,
                       style: TextStyle(
                         color: isSubmitting
                             ? AppColors.whiteAlpha(0.3)
@@ -358,7 +368,7 @@ class _CreateEventBottomBar extends StatelessWidget {
                           : null,
                     ),
                     child: Text(
-                      'Continue',
+                      context.l10n.createEventContinue,
                       style: TextStyle(
                         color: isValid
                             ? Colors.white

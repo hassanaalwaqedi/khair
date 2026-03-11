@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 /// Gamification card showing user level, progress, and reward path.
 class GamificationCard extends StatelessWidget {
   final String level;
@@ -54,7 +56,7 @@ class GamificationCard extends StatelessWidget {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: 'Your Khair Level: ',
+                      text: context.l10n.yourKhairLevel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -116,7 +118,7 @@ class GamificationCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '$eventsToNext more events to unlock Gold',
+                          context.l10n.moreEventsToGold(eventsToNext),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.5),
@@ -132,7 +134,7 @@ class GamificationCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'View Progress',
+                           context.l10n.viewProgress,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,

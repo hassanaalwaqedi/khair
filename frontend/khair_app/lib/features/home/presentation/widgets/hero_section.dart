@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 import '../../../notifications/presentation/bloc/notification_bloc.dart';
 import '../../../notifications/presentation/widgets/notification_dropdown.dart';
 import '../../../../core/theme/theme_bloc.dart';
+import '../../../../core/widgets/language_switcher.dart';
 
 /// Hero section with personalized greeting, animated gradient background,
 /// Islamic geometric pattern, daily quote, and weekly progress.
@@ -112,6 +115,12 @@ class _HeroSectionState extends State<HeroSection>
                   ),
                   Row(
                     children: [
+                      // Language switcher with flags
+                      const LanguageSwitcher(
+                        showLabel: false,
+                        lightStyle: true,
+                      ),
+                      const SizedBox(width: 8),
                       // Theme toggle
                       BlocBuilder<ThemeBloc, ThemeState>(
                         builder: (context, themeState) {
@@ -237,7 +246,7 @@ class _HeroSectionState extends State<HeroSection>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Assalamu Alaikum 👋',
+                      '${context.l10n.greeting} 👋',
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.white.withValues(alpha: 0.7),

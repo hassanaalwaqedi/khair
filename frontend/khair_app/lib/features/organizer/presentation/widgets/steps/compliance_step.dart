@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
 import '../../../../../shared/widgets/app_components.dart';
 import '../../cubit/create_event_cubit.dart';
@@ -26,34 +27,34 @@ class ComplianceStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Islamic Compliance',
+                  Text(context.l10n.createEventIslamicCompliance,
                       style: AppTypography.sectionTitle),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'These settings ensure your event aligns with Islamic guidelines.',
+                    context.l10n.createEventComplianceDesc,
                     style: TextStyle(
                         color: AppColors.whiteAlpha(0.4), fontSize: 13),
                   ),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Gender policy
-                  Text('Gender Policy', style: AppTypography.label),
+                  Text(context.l10n.createEventGenderPolicy, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
                     children: [
                       AppChip(
-                          label: 'Mixed',
+                          label: context.l10n.createEventGenderMixed,
                           isSelected: comp.genderPolicy == 'mixed',
                           onTap: () => cubit.updateCompliance(
                               comp.copyWith(genderPolicy: 'mixed'))),
                       AppChip(
-                          label: 'Male Only',
+                          label: context.l10n.createEventGenderMaleOnly,
                           isSelected: comp.genderPolicy == 'male_only',
                           onTap: () => cubit.updateCompliance(
                               comp.copyWith(genderPolicy: 'male_only'))),
                       AppChip(
-                          label: 'Female Only',
+                          label: context.l10n.createEventGenderFemaleOnly,
                           isSelected: comp.genderPolicy == 'female_only',
                           onTap: () => cubit.updateCompliance(comp
                               .copyWith(genderPolicy: 'female_only'))),
@@ -68,28 +69,28 @@ class ComplianceStep extends StatelessWidget {
             AppCard(
               child: Column(
                 children: [
-                  _toggle('Family Friendly',
-                      'Suitable for families with children',
+                  _toggle(context.l10n.createEventFamilyFriendly,
+                      context.l10n.createEventFamilyFriendlyDesc,
                       Icons.family_restroom_rounded, comp.familyFriendly,
                       (v) => cubit.updateCompliance(
                           comp.copyWith(familyFriendly: v))),
                   _toggle(
-                      'No Music',
-                      'This event does not include music',
+                      context.l10n.createEventNoMusic,
+                      context.l10n.createEventNoMusicDesc,
                       Icons.music_off_rounded,
                       comp.noMusic,
                       (v) => cubit.updateCompliance(
                           comp.copyWith(noMusic: v))),
                   _toggle(
-                      'No Inappropriate Content',
-                      'All content is aligned with Islamic values',
+                      context.l10n.createEventNoInappropriate,
+                      context.l10n.createEventNoInappropriateDesc,
                       Icons.verified_user_rounded,
                       comp.noInappropriateContent,
                       (v) => cubit.updateCompliance(
                           comp.copyWith(noInappropriateContent: v))),
                   _toggle(
-                      'Prayer Break Required',
-                      'Include prayer breaks for events > 2 hours',
+                      context.l10n.createEventPrayerBreak,
+                      context.l10n.createEventPrayerBreakDesc,
                       Icons.access_time_rounded,
                       comp.prayerBreakRequired,
                       (v) => cubit.updateCompliance(
@@ -125,7 +126,7 @@ class ComplianceStep extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'I confirm this event fully complies with Islamic guidelines and Khair platform standards.',
+                      context.l10n.createEventComplianceConfirm,
                       style: TextStyle(
                         color: AppColors.whiteAlpha(0.7),
                         fontSize: 13,
@@ -153,7 +154,7 @@ class ComplianceStep extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'You must confirm Islamic compliance before submitting.',
+                        context.l10n.createEventComplianceWarning,
                         style: TextStyle(
                             color: AppColors.whiteAlpha(0.6),
                             fontSize: 12),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/admin_entities.dart';
@@ -56,7 +57,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Admin Dashboard',
+          context.l10n.adminDashboardTitle,
           style: KhairTypography.headlineSmall.copyWith(
             color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
           ),
@@ -68,7 +69,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: context.l10n.adminRefresh,
             onPressed: () {
               context.read<AdminBloc>().add(const LoadAdminData());
             },
@@ -94,7 +95,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Organizers'),
+                    Text(context.l10n.adminOrganizersTab),
                     if (state.pendingOrganizerCount > 0) ...[
                       const SizedBox(width: 6),
                       _BadgeCount(count: state.pendingOrganizerCount),
@@ -110,7 +111,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Events'),
+                    Text(context.l10n.adminEventsTab),
                     if (state.pendingEventCount > 0) ...[
                       const SizedBox(width: 6),
                       _BadgeCount(count: state.pendingEventCount),
@@ -119,10 +120,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 ),
               ),
             ),
-            const Tab(text: 'Reports'),
-            const Tab(text: 'Audit Logs'),
-            const Tab(text: 'Quotes'),
-            const Tab(text: 'Users'),
+            Tab(text: context.l10n.adminReportsTab),
+            Tab(text: context.l10n.adminAuditLogsTab),
+            Tab(text: context.l10n.adminQuotesTab),
+            Tab(text: context.l10n.adminUsersTab),
           ],
         ),
       ),
@@ -131,15 +132,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         listener: (context, state) {
           if (state.actionStatus == AdminStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Action completed successfully'),
+              SnackBar(
+                content: Text(context.l10n.adminActionSuccess),
                 backgroundColor: KhairColors.success,
               ),
             );
           } else if (state.actionStatus == AdminStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Action failed'),
+                content: Text(state.errorMessage ?? context.l10n.adminActionFailed),
                 backgroundColor: KhairColors.error,
               ),
             );
@@ -175,17 +176,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         children: [
           Icon(Icons.flag, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          Text('Reports Management', style: KhairTypography.headlineSmall.copyWith(
+          Text(context.l10n.adminReportsMgmt, style: KhairTypography.headlineSmall.copyWith(
             color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
           )),
           const SizedBox(height: 8),
-          Text('Review and resolve user reports',
+          Text(context.l10n.adminReviewReportsDesc,
               style: KhairTypography.bodyMedium),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.go('/admin/reports'),
             icon: const Icon(Icons.open_in_new),
-            label: const Text('Open Reports'),
+            label: Text(context.l10n.adminOpenReports),
           ),
         ],
       ),
@@ -199,17 +200,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         children: [
           Icon(Icons.history, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          Text('Audit Logs', style: KhairTypography.headlineSmall.copyWith(
+          Text(context.l10n.adminAuditLogsTab, style: KhairTypography.headlineSmall.copyWith(
             color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
           )),
           const SizedBox(height: 8),
-          Text('View all admin and system actions',
+          Text(context.l10n.adminAuditLogsDesc,
               style: KhairTypography.bodyMedium),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.go('/admin/audit-logs'),
             icon: const Icon(Icons.open_in_new),
-            label: const Text('View Logs'),
+            label: Text(context.l10n.adminViewLogs),
           ),
         ],
       ),
@@ -239,7 +240,7 @@ class _OrganizersTab extends StatelessWidget {
 
         if (state.status == AdminStatus.failure) {
           return _ErrorView(
-            message: state.errorMessage ?? 'Failed to load organizers',
+            message: state.errorMessage ?? context.l10n.adminFailedLoadOrg,
             onRetry: () =>
                 context.read<AdminBloc>().add(const LoadAdminData()),
           );
@@ -250,8 +251,8 @@ class _OrganizersTab extends StatelessWidget {
         if (organizers.isEmpty) {
           return _EmptyView(
             icon: Icons.business_center_outlined,
-            title: 'No Pending Organizers',
-            subtitle: 'All organizer applications have been reviewed.',
+            title: context.l10n.adminNoPendingOrg,
+            subtitle: context.l10n.adminAllOrgReviewed,
           );
         }
 
@@ -266,7 +267,7 @@ class _OrganizersTab extends StatelessWidget {
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Text(
-                  'Pending Approval (${organizers.length})',
+                  context.l10n.adminPendingApproval(organizers.length),
                   style: KhairTypography.headlineSmall.copyWith(
                     color: isDark
                         ? KhairColors.darkTextPrimary
@@ -371,13 +372,13 @@ class _OrganizerCard extends StatelessWidget {
           // Details
           _DetailRow(
             icon: Icons.category_outlined,
-            label: 'Type',
+            label: context.l10n.adminType,
             value: organizer.organizationType,
           ),
           if (organizer.city != null || organizer.country != null)
             _DetailRow(
               icon: Icons.location_on_outlined,
-              label: 'Location',
+              label: context.l10n.adminLocation,
               value: [organizer.city, organizer.country]
                   .where((e) => e != null)
                   .join(', '),
@@ -385,12 +386,12 @@ class _OrganizerCard extends StatelessWidget {
           if (organizer.description != null && organizer.description!.isNotEmpty)
             _DetailRow(
               icon: Icons.description_outlined,
-              label: 'About',
+              label: context.l10n.adminAbout,
               value: organizer.description!,
             ),
           _DetailRow(
             icon: Icons.calendar_today_outlined,
-            label: 'Submitted',
+            label: context.l10n.adminSubmitted,
             value: dateFormat.format(organizer.createdAt),
           ),
 
@@ -411,7 +412,7 @@ class _OrganizerCard extends StatelessWidget {
                       borderRadius: KhairRadius.medium,
                     ),
                   ),
-                  child: const Text('Reject'),
+                  child: Text(context.l10n.adminReject),
                 ),
               ),
               const SizedBox(width: 12),
@@ -529,7 +530,7 @@ class _EventsTab extends StatelessWidget {
 
         if (state.status == AdminStatus.failure) {
           return _ErrorView(
-            message: state.errorMessage ?? 'Failed to load events',
+            message: state.errorMessage ?? context.l10n.adminFailedLoadEvents,
             onRetry: () =>
                 context.read<AdminBloc>().add(const LoadAdminData()),
           );
@@ -540,8 +541,8 @@ class _EventsTab extends StatelessWidget {
         if (events.isEmpty) {
           return _EmptyView(
             icon: Icons.event_available_outlined,
-            title: 'No Pending Events',
-            subtitle: 'All events have been reviewed.',
+            title: context.l10n.adminNoPendingEvents,
+            subtitle: context.l10n.adminAllEventsReviewed,
           );
         }
 
@@ -556,7 +557,7 @@ class _EventsTab extends StatelessWidget {
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Text(
-                  'Pending Review (${events.length})',
+                  context.l10n.adminPendingReview(events.length),
                   style: KhairTypography.headlineSmall.copyWith(
                     color: isDark
                         ? KhairColors.darkTextPrimary
@@ -644,19 +645,19 @@ class _EventCard extends StatelessWidget {
           // Event details
           _DetailRow(
             icon: Icons.calendar_today,
-            label: 'Date',
+            label: context.l10n.adminDate,
             value: dateFormat.format(event.startDate),
           ),
           if (event.eventType.isNotEmpty)
             _DetailRow(
               icon: Icons.category_outlined,
-              label: 'Type',
+              label: context.l10n.adminType,
               value: event.eventType,
             ),
           if (event.city != null || event.country != null)
             _DetailRow(
               icon: Icons.location_on_outlined,
-              label: 'Location',
+              label: context.l10n.adminLocation,
               value: [event.city, event.country]
                   .where((e) => e != null)
                   .join(', '),
@@ -677,7 +678,7 @@ class _EventCard extends StatelessWidget {
                       borderRadius: KhairRadius.medium,
                     ),
                   ),
-                  child: const Text('Reject'),
+                  child: Text(context.l10n.adminReject),
                 ),
               ),
               const SizedBox(width: 12),
@@ -721,14 +722,14 @@ class _EventCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Reject Event'),
+        title: Text(context.l10n.adminRejectTitle(event.title)),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Are you sure you want to reject "${event.title}"?'),
+            Text(context.l10n.adminRejectConfirm(event.title)),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
@@ -750,8 +751,8 @@ class _EventCard extends StatelessWidget {
               final reason = reasonController.text.trim();
               if (reason.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please provide a rejection reason'),
+                  SnackBar(
+                    content: Text(context.l10n.adminProvideReasonMsg),
                   ),
                 );
                 return;
@@ -765,7 +766,7 @@ class _EventCard extends StatelessWidget {
               backgroundColor: KhairColors.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Reject'),
+            child: Text(context.l10n.adminReject),
           ),
         ],
       ),
@@ -1138,6 +1139,26 @@ class _UserCard extends StatelessWidget {
                       color: _statusColor(), fontWeight: FontWeight.w700, fontSize: 10,
                     )),
                   ),
+                  if (user.isVerified) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2196F3).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.verified, size: 10, color: Color(0xFF2196F3)),
+                          const SizedBox(width: 3),
+                          Text('VERIFIED', style: KhairTypography.labelSmall.copyWith(
+                            color: const Color(0xFF2196F3), fontWeight: FontWeight.w700, fontSize: 10,
+                          )),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 6),
                   Text(dateFormat.format(user.createdAt), style: KhairTypography.labelSmall.copyWith(
                     color: KhairColors.textTertiary, fontSize: 10,
@@ -1152,6 +1173,8 @@ class _UserCard extends StatelessWidget {
             onSelected: (action) => _onAction(context, action),
             itemBuilder: (_) => [
               const PopupMenuItem(value: 'view', child: ListTile(leading: Icon(Icons.person), title: Text('View Profile'), dense: true, contentPadding: EdgeInsets.zero)),
+              if (!user.isVerified)
+                const PopupMenuItem(value: 'verify', child: ListTile(leading: Icon(Icons.verified, color: Color(0xFF2196F3)), title: Text('Verify User'), dense: true, contentPadding: EdgeInsets.zero)),
               if (user.role != 'organizer')
                 const PopupMenuItem(value: 'promote_organizer', child: ListTile(leading: Icon(Icons.business), title: Text('Promote to Organizer'), dense: true, contentPadding: EdgeInsets.zero)),
               if (user.role != 'admin')
@@ -1192,6 +1215,11 @@ class _UserCard extends StatelessWidget {
       case 'ban':
         _showReasonDialog(context, 'Ban User', 'Ban "${user.name}"? This action is severe.', (reason) {
           context.read<AdminBloc>().add(UpdateUserStatus(user.id, 'banned', reason: reason));
+        });
+        break;
+      case 'verify':
+        _showConfirmDialog(context, 'Verify User', 'Mark "${user.name}" as verified? This adds a verified badge to their profile.', () {
+          context.read<AdminBloc>().add(VerifyUserEvent(user.id));
         });
         break;
       case 'activate':

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../events/domain/entities/event.dart';
 
 /// Netflix-style featured events carousel using real Event data.
@@ -52,7 +53,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Featured Events',
+            context.l10n.featuredEvents,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -178,7 +179,7 @@ class _FeaturedCard extends StatelessWidget {
             if (event.organizerName != null) ...[
               const SizedBox(height: 4),
               Text(
-                'by ${event.organizerName}',
+                context.l10n.byOrganizer(event.organizerName!),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.6),
@@ -208,9 +209,9 @@ class _FeaturedCard extends StatelessWidget {
                     color: const Color(0xFFC8A951),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    'Join Now',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.joinNow,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF0A2E1F),

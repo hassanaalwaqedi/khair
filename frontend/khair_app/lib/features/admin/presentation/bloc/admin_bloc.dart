@@ -28,6 +28,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<UpdateUserRole>(_onUpdateUserRole);
     on<UpdateUserStatus>(_onUpdateUserStatus);
     on<DeleteUserEvent>(_onDeleteUser);
+    on<VerifyUserEvent>(_onVerifyUser);
   }
 
   Future<void> _onLoadData(
@@ -379,6 +380,26 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
           actionStatus: AdminStatus.success,
           users: updated,
         ));
+      },
+    );
+  }
+
+  Future<void> _onVerifyUser(
+    VerifyUserEvent event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.verifyUser(event.userId);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(actionStatus: AdminStatus.success));
+        add(const LoadUsers()); // Refresh users list
       },
     );
   }

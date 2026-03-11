@@ -111,6 +111,7 @@ class AdminUser extends Equatable {
   final String email;
   final String role;
   final String status;
+  final bool isVerified;
   final DateTime createdAt;
 
   const AdminUser({
@@ -119,6 +120,7 @@ class AdminUser extends Equatable {
     required this.email,
     required this.role,
     this.status = 'active',
+    this.isVerified = false,
     required this.createdAt,
   });
 
@@ -129,6 +131,7 @@ class AdminUser extends Equatable {
       email: json['email'] ?? '',
       role: json['role'] ?? 'user',
       status: json['status'] ?? 'active',
+      isVerified: json['is_verified'] == true,
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
@@ -139,5 +142,5 @@ class AdminUser extends Equatable {
   bool get isBanned => status == 'banned';
 
   @override
-  List<Object?> get props => [id, name, email, role, status, createdAt];
+  List<Object?> get props => [id, name, email, role, status, isVerified, createdAt];
 }

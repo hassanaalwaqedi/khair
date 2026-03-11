@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Maps UI role IDs to backend role strings
 String mapToBackendRole(String uiRole) {
@@ -88,7 +89,7 @@ class AccountDetailsStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Create Your Account',
+            context.l10n.registrationAccountDetailsTitle,
             style: KhairTypography.h1.copyWith(
               color: Colors.white,
               fontSize: 28,
@@ -96,7 +97,7 @@ class AccountDetailsStep extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            _subtitle,
+            _subtitle(context),
             style: KhairTypography.bodyLarge.copyWith(
               color: Colors.white.withValues(alpha: 0.7),
             ),
@@ -106,22 +107,22 @@ class AccountDetailsStep extends StatelessWidget {
           // Common: name
           _buildField(
             controller: nameController,
-            label: _nameLabel,
+            label: _nameLabel(context),
             icon: Icons.person_outline,
-            validator: _requiredValidator('name'),
+            validator: _requiredValidator(context, 'name'),
           ),
           const SizedBox(height: 14),
 
           // Common: email
           _buildField(
             controller: emailController,
-            label: 'Email',
+            label: context.l10n.email,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Email is required';
+              if (v == null || v.isEmpty) return context.l10n.enterEmail;
               if (!v.contains('@') || !v.contains('.')) {
-                return 'Enter a valid email';
+                return context.l10n.validEmail;
               }
               return null;
             },
@@ -131,7 +132,7 @@ class AccountDetailsStep extends StatelessWidget {
           // Common: password
           _buildField(
             controller: passwordController,
-            label: 'Password',
+            label: context.l10n.password,
             icon: Icons.lock_outline,
             obscureText: obscurePassword,
             suffixIcon: IconButton(
@@ -144,8 +145,8 @@ class AccountDetailsStep extends StatelessWidget {
               onPressed: onTogglePassword,
             ),
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Password is required';
-              if (v.length < 8) return 'At least 8 characters';
+              if (v == null || v.isEmpty) return context.l10n.enterPassword;
+              if (v.length < 8) return context.l10n.enterPassword;
               return null;
             },
           ),
@@ -154,7 +155,7 @@ class AccountDetailsStep extends StatelessWidget {
           // Common: confirm password
           _buildField(
             controller: confirmPasswordController,
-            label: 'Confirm Password',
+            label: context.l10n.confirmPassword,
             icon: Icons.lock_outline,
             obscureText: obscureConfirm,
             suffixIcon: IconButton(
@@ -167,7 +168,7 @@ class AccountDetailsStep extends StatelessWidget {
               onPressed: onToggleConfirm,
             ),
             validator: (v) {
-              if (v != passwordController.text) return 'Passwords do not match';
+              if (v != passwordController.text) return context.l10n.passwordsDoNotMatch;
               return null;
             },
           ),
@@ -180,64 +181,57 @@ class AccountDetailsStep extends StatelessWidget {
           // Common: city
           _buildField(
             controller: cityController,
-            label: 'City',
+            label: context.l10n.city,
             icon: Icons.location_city,
-            validator: _requiredValidator('city'),
+            validator: _requiredValidator(context, 'city'),
           ),
 
           // Role-specific fields
-          ..._buildRoleFields(),
+          ..._buildRoleFields(context),
         ],
       ),
     );
   }
 
-  String get _subtitle {
-    if (selectedRole == 'sheikh') {
-      return 'Tell us about your teaching background';
-    }
+  String _subtitle(BuildContext context) {
+    if (selectedRole == 'sheikh') return context.l10n.registrationAccountSubtitleSheikh;
+    if (selectedRole.startsWith('organization') || selectedRole == 'organization') return context.l10n.registrationAccountSubtitleOrg;
+    if (selectedRole == 'community_organizer' || selectedRole == 'volunteer') return context.l10n.registrationAccountSubtitleCommunity;
+    return context.l10n.registrationAccountSubtitleDefault;
+  }
+
+  String _nameLabel(BuildContext context) {
     if (selectedRole.startsWith('organization') || selectedRole == 'organization') {
-      return 'Set up your organization\'s account';
+      return context.l10n.registrationContactPersonName;
     }
-    if (selectedRole == 'community_organizer' || selectedRole == 'volunteer') {
-      return 'Tell us about your community work';
-    }
-    return 'Just the basics to get you started';
+    return context.l10n.registrationFullName;
   }
 
-  String get _nameLabel {
-    if (selectedRole.startsWith('organization') ||
-        selectedRole == 'organization') {
-      return 'Contact Person Name';
-    }
-    return 'Full Name';
-  }
-
-  List<Widget> _buildRoleFields() {
+  List<Widget> _buildRoleFields(BuildContext context) {
     switch (selectedRole) {
       case 'sheikh':
         return [
           const SizedBox(height: 14),
           _buildField(
             controller: specializationController!,
-            label: 'Specialization',
+            label: context.l10n.registrationSpecialization,
             icon: Icons.star_outline,
-            hint: 'e.g. Tafseer, Fiqh, Hadith',
-            validator: _requiredValidator('specialization'),
+            hint: context.l10n.registrationSpecializationHint,
+            validator: _requiredValidator(context, 'specialization'),
           ),
           const SizedBox(height: 14),
           _buildField(
             controller: yearsController!,
-            label: 'Years of Experience',
+            label: context.l10n.registrationYearsExperience,
             icon: Icons.timeline,
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 14),
           _buildField(
             controller: socialController!,
-            label: 'Social Media (optional)',
+            label: context.l10n.registrationSocialMediaOptional,
             icon: Icons.link,
-            hint: 'YouTube, Twitter, etc.',
+            hint: 'YouTube, Twitter, Facebook',
           ),
         ];
 
@@ -248,14 +242,14 @@ class AccountDetailsStep extends StatelessWidget {
           const SizedBox(height: 14),
           _buildField(
             controller: orgNameController!,
-            label: _orgLabel,
+            label: _orgLabel(context),
             icon: Icons.business,
-            validator: _requiredValidator('organization name'),
+            validator: _requiredValidator(context, 'organization name'),
           ),
           const SizedBox(height: 14),
           _buildField(
             controller: phoneController!,
-            label: 'Phone (optional)',
+            label: context.l10n.registrationPhoneOptional,
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
           ),
@@ -267,33 +261,32 @@ class AccountDetailsStep extends StatelessWidget {
           const SizedBox(height: 14),
           _buildField(
             controller: orgNameController!,
-            label: 'Community / Group Name',
+            label: context.l10n.registrationCommunityGroupName,
             icon: Icons.groups_outlined,
-            validator: _requiredValidator('community name'),
+            validator: _requiredValidator(context, 'community name'),
           ),
           const SizedBox(height: 14),
           _buildField(
             controller: focusController!,
-            label: 'Focus Area',
+            label: context.l10n.registrationCommunityFocus,
             icon: Icons.interests_outlined,
-            hint: 'e.g. Youth Events, Charity, Sports',
+            hint: context.l10n.registrationCommunityFocusHint,
           ),
         ];
 
       default:
-        // student, new_muslim, member — just common fields
         return [];
     }
   }
 
-  String get _orgLabel {
+  String _orgLabel(BuildContext context) {
     switch (selectedRole) {
       case 'organization_mosque':
-        return 'Mosque Name';
+        return context.l10n.registrationMosqueName;
       case 'organization_quran':
-        return 'Center Name';
+        return context.l10n.registrationCenterName;
       default:
-        return 'Organization Name';
+        return context.l10n.registrationOrganizationName;
     }
   }
 
@@ -354,9 +347,9 @@ class AccountDetailsStep extends StatelessWidget {
     );
   }
 
-  String? Function(String?) _requiredValidator(String fieldName) {
+  String? Function(String?) _requiredValidator(BuildContext context, String fieldName) {
     return (v) {
-      if (v == null || v.trim().isEmpty) return 'Please enter your $fieldName';
+      if (v == null || v.trim().isEmpty) return context.l10n.registrationRequired;
       return null;
     };
   }

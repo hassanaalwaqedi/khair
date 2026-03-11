@@ -49,7 +49,7 @@ class HomeSearchSection extends StatelessWidget {
                   fontSize: 13,
                 ),
                 prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 8),
+                  padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
                   child: Icon(
                     Icons.search_rounded,
                     color: Colors.white.withValues(alpha: 0.4),

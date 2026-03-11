@@ -57,6 +57,9 @@ abstract class AdminRepository {
 
   /// Delete user
   Future<Either<Failure, void>> deleteUser(String userId);
+
+  /// Verify user (mark as verified)
+  Future<Either<Failure, void>> verifyUser(String userId);
 }
 
 /// Parameters for status update

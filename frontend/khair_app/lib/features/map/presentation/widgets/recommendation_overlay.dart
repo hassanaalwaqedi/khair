@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/models/map_models.dart';
 
 class RecommendationOverlay extends StatelessWidget {
@@ -16,7 +17,7 @@ class RecommendationOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (events.isEmpty) return const SizedBox.shrink();
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
 
     return SizedBox(
       height: 88,

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -217,6 +218,13 @@ class JoinBloc extends Bloc<JoinEvent, JoinState> {
   }
 
   String _extractError(dynamic e) {
+    if (e is DioException && e.response?.data != null) {
+      final data = e.response!.data;
+      if (data is Map) {
+        final msg = data['message'] ?? data['error'];
+        if (msg != null && msg.toString().isNotEmpty) return msg.toString();
+      }
+    }
     if (e is Exception) {
       return e.toString().replaceAll('Exception: ', '');
     }

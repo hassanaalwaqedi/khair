@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../tokens/tokens.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/event.dart';
 
 class EventCard extends StatefulWidget {
@@ -277,7 +278,7 @@ class _EventCardState extends State<EventCard> {
       if (event.country != null && event.country!.isNotEmpty) event.country!,
     ];
     if (pieces.isEmpty) {
-      return 'Location announced soon';
+      return context.l10n.eventCardLocationSoon;
     }
     return pieces.join(', ');
   }
@@ -285,28 +286,29 @@ class _EventCardState extends State<EventCard> {
   String _attendeeText(Event event) {
     final reserved = event.reservedCount;
     if (event.capacity == null || event.capacity == 0) {
-      return '$reserved attending';
+      return context.l10n.eventDetailsAttending(reserved);
     }
-    return '$reserved / ${event.capacity} seats';
+    return context.l10n.eventCardSeatsRatio(reserved, event.capacity!);
   }
 
   (String, String) _categoryMeta(String rawType) {
     final type = rawType.toLowerCase();
-    const map = <String, (String, String)>{
-      'knowledge': ('📚', 'Knowledge'),
-      'quran': ('🕌', 'Quran'),
-      'lectures': ('🎤', 'Lectures'),
-      'community': ('👥', 'Community'),
-      'youth': ('🌱', 'Youth'),
-      'charity': ('🤲', 'Charity'),
-      'family': ('👨‍👩‍👧', 'Family'),
-      'conference': ('📚', 'Knowledge'),
-      'workshop': ('📚', 'Knowledge'),
-      'seminar': ('🎤', 'Lectures'),
-      'festival': ('👥', 'Community'),
-      'meetup': ('👥', 'Community'),
+    final l10n = context.l10n;
+    final map = <String, (String, String)>{
+      'knowledge': ('📚', l10n.categoryKnowledge),
+      'quran': ('🕌', l10n.categoryQuran),
+      'lectures': ('🎤', l10n.categoryLectures),
+      'community': ('👥', l10n.categoryCommunity),
+      'youth': ('🌱', l10n.categoryYouth),
+      'charity': ('🤲', l10n.categoryCharity),
+      'family': ('👨‍👩‍👧', l10n.categoryFamily),
+      'conference': ('📚', l10n.categoryKnowledge),
+      'workshop': ('📚', l10n.categoryKnowledge),
+      'seminar': ('🎤', l10n.categoryLectures),
+      'festival': ('👥', l10n.categoryCommunity),
+      'meetup': ('👥', l10n.categoryCommunity),
     };
-    return map[type] ?? ('🔥', 'Trending');
+    return map[type] ?? ('🔥', l10n.categoryTrending);
   }
 }
 

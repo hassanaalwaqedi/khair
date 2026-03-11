@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 import '../../../../tokens/tokens.dart';
 import '../../../location/presentation/bloc/location_bloc.dart';
@@ -31,7 +31,7 @@ class SmartFilterChips extends StatelessWidget {
               _dateChip(context, state.filter),
               const SizedBox(width: AppSpacing.x1),
               IslamicCategoryChip(
-                label: AppLocalizations.of(context)?.trending ?? 'Trending',
+                label: context.l10n.categoryTrending,
                 emoji: '🔥',
                 isSelected: state.filter.trending,
                 onTap: () => context.read<EventsBloc>().add(ToggleTrending()),
@@ -77,7 +77,7 @@ class SmartFilterChips extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
           ),
           child: Text(
-            '📍 ${AppLocalizations.of(context)?.locating ?? 'Locating...'}',
+            '📍 ${context.l10n.filterEventsLocating}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontWeight: FontWeight.w600,
@@ -89,15 +89,15 @@ class SmartFilterChips extends StatelessWidget {
   }
 
   List<Widget> _categoryChips(BuildContext context, EventFilter filter) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = context.l10n;
     final categories = [
-      (key: 'knowledge', label: l10n?.catKnowledge ?? 'Knowledge', emoji: '📚'),
-      (key: 'quran', label: l10n?.catQuran ?? 'Quran', emoji: '🕌'),
-      (key: 'lectures', label: l10n?.catLectures ?? 'Lectures', emoji: '🎤'),
-      (key: 'community', label: l10n?.catCommunity ?? 'Community', emoji: '👥'),
-      (key: 'youth', label: l10n?.catYouth ?? 'Youth', emoji: '🌱'),
-      (key: 'charity', label: l10n?.catCharity ?? 'Charity', emoji: '🤲'),
-      (key: 'family', label: l10n?.catFamily ?? 'Family', emoji: '👨‍👩‍👧'),
+      (key: 'knowledge', label: l10n.categoryKnowledge, emoji: '📚'),
+      (key: 'quran', label: l10n.categoryQuran, emoji: '🕌'),
+      (key: 'lectures', label: l10n.categoryLectures, emoji: '🎤'),
+      (key: 'community', label: l10n.categoryCommunity, emoji: '👥'),
+      (key: 'youth', label: l10n.categoryYouth, emoji: '🌱'),
+      (key: 'charity', label: l10n.categoryCharity, emoji: '🤲'),
+      (key: 'family', label: l10n.categoryFamily, emoji: '👨‍👩‍👧'),
     ];
 
     return categories
@@ -122,13 +122,13 @@ class SmartFilterChips extends StatelessWidget {
   }
 
   Widget _dateChip(BuildContext context, EventFilter filter) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = context.l10n;
     final label = switch (filter.dateFilter) {
-      DateFilter.today => '📅 ${l10n?.today ?? 'Today'}',
-      DateFilter.thisWeek => '📅 ${l10n?.thisWeek ?? 'This Week'}',
-      DateFilter.thisWeekend => '📅 ${l10n?.weekend ?? 'Weekend'}',
-      DateFilter.thisMonth => '📅 ${l10n?.thisMonth ?? 'This Month'}',
-      null => '📅 ${l10n?.dateLabel ?? 'Date'}',
+      DateFilter.today => '📅 ${l10n.filterEventsToday}',
+      DateFilter.thisWeek => '📅 ${l10n.filterEventsThisWeek}',
+      DateFilter.thisWeekend => '📅 ${l10n.filterEventsWeekend}',
+      DateFilter.thisMonth => '📅 ${l10n.filterEventsThisMonth}',
+      null => '📅 ${l10n.filterEventsDate}',
     };
 
     return GestureDetector(
@@ -183,7 +183,7 @@ class SmartFilterChips extends StatelessWidget {
           border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
         ),
         child: Text(
-          '✖ ${AppLocalizations.of(context)?.clear ?? 'Clear'}',
+          '✖ ${context.l10n.filterEventsClear}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w700,
@@ -208,7 +208,7 @@ class SmartFilterChips extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)?.filterByDate ?? 'Filter by Date',
+                context.l10n.filterEventsByDate,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
@@ -217,7 +217,7 @@ class SmartFilterChips extends StatelessWidget {
               const SizedBox(height: AppSpacing.x2),
               _DateOption(
                 selected: current == DateFilter.today,
-                label: '📅 ${AppLocalizations.of(context)?.today ?? 'Today'}',
+                label: '📅 ${context.l10n.filterEventsToday}',
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -227,7 +227,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisWeek,
-                label: '📅 ${AppLocalizations.of(context)?.thisWeek ?? 'This Week'}',
+                label: '📅 ${context.l10n.filterEventsThisWeek}',
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -237,7 +237,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisWeekend,
-                label: '📅 ${AppLocalizations.of(context)?.weekend ?? 'Weekend'}',
+                label: '📅 ${context.l10n.filterEventsWeekend}',
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -247,7 +247,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisMonth,
-                label: '📅 ${AppLocalizations.of(context)?.thisMonth ?? 'This Month'}',
+                label: '📅 ${context.l10n.filterEventsThisMonth}',
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -262,7 +262,7 @@ class SmartFilterChips extends StatelessWidget {
                     context.read<EventsBloc>().add(UpdateDateFilter(null));
                     Navigator.pop(context);
                   },
-                  child: Text(AppLocalizations.of(context)?.clearDateFilter ?? 'Clear Date Filter'),
+                  child: Text(context.l10n.filterEventsClearDateFilter),
                 ),
               ],
             ],

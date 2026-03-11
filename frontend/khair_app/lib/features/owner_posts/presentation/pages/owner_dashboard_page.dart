@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../bloc/owner_posts_bloc.dart';
 import '../../domain/entities/owner_post.dart';
 
@@ -24,8 +25,8 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1F16),
       appBar: AppBar(
-        title: const Text('Owner Dashboard',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(context.l10n.ownerDashboard,
+            style: const TextStyle(fontWeight: FontWeight.w700)),
         backgroundColor: const Color(0xFF0F3D2E),
         foregroundColor: Colors.white,
         elevation: 0,
@@ -41,9 +42,9 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
           if (state.formStatus == OwnerPostsStatus.success) {
             Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/owner-dashboard');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Post saved'),
-                  backgroundColor: Color(0xFF22C55E)),
+              SnackBar(
+                  content: Text(context.l10n.ownerPostSaved),
+                  backgroundColor: const Color(0xFF22C55E)),
             );
           }
         },
@@ -65,12 +66,12 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                       size: 64,
                       color: Colors.white.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
-                  Text('No posts yet',
+                  Text(context.l10n.ownerNoPosts,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 16)),
                   const SizedBox(height: 8),
-                  Text('Tap + to create your first community post',
+                  Text(context.l10n.ownerCreateFirstPost,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.3),
                           fontSize: 13)),
@@ -133,7 +134,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  existing == null ? 'New Post' : 'Edit Post',
+                  existing == null ? context.l10n.ownerNewPost : context.l10n.ownerEditPost,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -141,16 +142,16 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _field('Title *', titleCtrl, required: true),
+                _field(context.l10n.ownerTitleLabel, titleCtrl, context, required: true),
                 const SizedBox(height: 16),
-                _field('Short Description *', descCtrl,
+                _field(context.l10n.ownerShortDescLabel, descCtrl, context,
                     required: true, maxLines: 3),
                 const SizedBox(height: 16),
-                _field('Image URL', imageCtrl),
+                _field(context.l10n.ownerImageUrlLabel, imageCtrl, context),
                 const SizedBox(height: 16),
-                _field('External Link', linkCtrl),
+                _field(context.l10n.ownerExtLinkLabel, linkCtrl, context),
                 const SizedBox(height: 16),
-                _field('Location', locationCtrl),
+                _field(context.l10n.ownerLocationLabel, locationCtrl, context),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -197,7 +198,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                       }
                     },
                     child: Text(
-                      existing == null ? 'Publish' : 'Save Changes',
+                      existing == null ? context.l10n.ownerPublish : context.l10n.ownerSaveChanges,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -213,14 +214,14 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     );
   }
 
-  Widget _field(String label, TextEditingController ctrl,
+  Widget _field(String label, TextEditingController ctrl, BuildContext context,
       {bool required = false, int maxLines = 1}) {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
       style: const TextStyle(color: Colors.white),
       validator: required
-          ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
+          ? (v) => (v == null || v.trim().isEmpty) ? context.l10n.ownerRequired : null
           : null,
       decoration: InputDecoration(
         labelText: label,
@@ -283,7 +284,7 @@ class _PostCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  post.isActive ? 'Active' : 'Inactive',
+                  post.isActive ? context.l10n.ownerActive : context.l10n.ownerInactive,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -326,25 +327,25 @@ class _PostCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _actionBtn(Icons.edit_rounded, 'Edit', () {
+              _actionBtn(Icons.edit_rounded, context.l10n.ownerEdit, () {
                 final page = context
                     .findAncestorStateOfType<_OwnerDashboardPageState>();
                 page?._showPostForm(context, post);
               }),
               const SizedBox(width: 12),
-              _actionBtn(Icons.delete_outline_rounded, 'Delete', () {
+              _actionBtn(Icons.delete_outline_rounded, context.l10n.ownerDelete, () {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
                     backgroundColor: const Color(0xFF0F2A1F),
-                    title: const Text('Delete Post',
-                        style: TextStyle(color: Colors.white)),
-                    content: const Text('Are you sure?',
+                    title: Text(context.l10n.ownerDeletePost,
+                        style: const TextStyle(color: Colors.white)),
+                    content: Text(context.l10n.ownerDeleteConfirm,
                         style: TextStyle(color: Colors.white70)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
+                        child: Text(context.l10n.adminCancel),
                       ),
                       TextButton(
                         onPressed: () {
@@ -353,8 +354,8 @@ class _PostCard extends StatelessWidget {
                               .read<OwnerPostsBloc>()
                               .add(DeleteOwnerPost(post.id));
                         },
-                        child: const Text('Delete',
-                            style: TextStyle(color: Colors.red)),
+                        child: Text(context.l10n.ownerDelete,
+                            style: const TextStyle(color: Colors.red)),
                       ),
                     ],
                   ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 /// Social proof section showing real event participation count.
 class SocialProofSection extends StatelessWidget {
   final int totalReserved;
@@ -49,7 +51,7 @@ class SocialProofSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Community Activity',
+                    context.l10n.communityActivity,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -58,7 +60,7 @@ class SocialProofSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$totalReserved people have joined events',
+                    context.l10n.peopleJoinedEvents(totalReserved),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.5),

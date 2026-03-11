@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
 import '../../../../../shared/widgets/app_components.dart';
 import '../../cubit/create_event_cubit.dart';
@@ -18,11 +19,12 @@ class ReviewStep extends StatelessWidget {
         final cubit = context.read<CreateEventCubit>();
         final fd = state.formData;
         final comp = fd.compliance;
+        final l10n = context.l10n;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Review & Submit', style: AppTypography.sectionTitle),
+            Text(l10n.createEventReviewSubmit, style: AppTypography.sectionTitle),
             const SizedBox(height: AppSpacing.lg),
 
             // Event Summary Card
@@ -34,38 +36,38 @@ class ReviewStep extends StatelessWidget {
                     Icon(Icons.summarize_rounded,
                         color: AppColors.goldAccent, size: 20),
                     const SizedBox(width: 10),
-                    const Text('Event Summary',
-                        style: TextStyle(
+                    Text(l10n.createEventEventSummary,
+                        style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             fontSize: 15)),
                   ]),
                   const SizedBox(height: 14),
-                  _row('Title',
+                  _row(l10n.createEventTitleLabel,
                       fd.title.isNotEmpty ? fd.title : '—'),
-                  _row('Category',
+                  _row(l10n.createEventCategoryLabel,
                       fd.category[0].toUpperCase() +
                           fd.category.substring(1)),
-                  _row('Type',
+                  _row(l10n.createEventEventTypeLabel,
                       fd.eventType == 'offline'
-                          ? 'In-Person'
-                          : 'Online'),
-                  _row('Language', fd.language.toUpperCase()),
-                  _row('Start',
+                          ? l10n.createEventInPerson
+                          : l10n.createEventOnline),
+                  _row(l10n.createEventLanguageLabel, fd.language.toUpperCase()),
+                  _row(l10n.createEventStartDateTime.replaceFirst(' & Time', ''),
                       DateFormat('MMM d, yyyy – h:mm a')
                           .format(fd.startDateTime)),
                   if (fd.endDateTime != null)
-                    _row('End',
+                    _row(l10n.createEventEndDateTime.split(' ')[0],
                         DateFormat('MMM d, yyyy – h:mm a')
                             .format(fd.endDateTime!)),
                   if (fd.eventType == 'offline' && fd.city != null)
-                    _row('Location',
+                    _row(l10n.createEventStepLocation,
                         '${fd.city}, ${fd.countryName ?? fd.countryCode ?? ''}'),
                   if (fd.eventType == 'online')
-                    _row('Platform', fd.onlinePlatform ?? '—'),
-                  _row('Capacity', fd.capacity.toString()),
+                    _row(l10n.createEventPlatform, fd.onlinePlatform ?? '—'),
+                  _row(l10n.createEventMaxAttendees, fd.capacity.toString()),
                   if (fd.tags.isNotEmpty)
-                    _row('Tags', fd.tags.join(', ')),
+                    _row(l10n.createEventTagsLabel, fd.tags.join(', ')),
                 ],
               ),
             ),
@@ -80,32 +82,32 @@ class ReviewStep extends StatelessWidget {
                     Icon(Icons.shield_rounded,
                         color: AppColors.goldAccent, size: 20),
                     const SizedBox(width: 10),
-                    const Text('Compliance',
-                        style: TextStyle(
+                    Text(l10n.createEventReviewCompliance,
+                        style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             fontSize: 15)),
                   ]),
                   const SizedBox(height: 14),
-                  _compRow('Gender Policy',
-                      comp.genderPolicy.replaceAll('_', ' '), true),
-                  _compRow('Family Friendly',
-                      comp.familyFriendly ? 'Yes' : 'No',
+                  _compRow(l10n.createEventGenderPolicy,
+                      _getGenderPolicy(comp.genderPolicy, context), true),
+                  _compRow(l10n.createEventFamilyFriendly,
+                      comp.familyFriendly ? l10n.createEventReviewYes : l10n.createEventReviewNo,
                       comp.familyFriendly),
-                  _compRow('No Music',
-                      comp.noMusic ? 'Confirmed' : 'No',
+                  _compRow(l10n.createEventNoMusic,
+                      comp.noMusic ? l10n.createEventReviewConfirmed : l10n.createEventReviewNo,
                       comp.noMusic),
                   _compRow(
-                      'No Inappropriate',
+                      l10n.createEventNoInappropriate,
                       comp.noInappropriateContent
-                          ? 'Confirmed'
-                          : 'No',
+                          ? l10n.createEventReviewConfirmed
+                          : l10n.createEventReviewNo,
                       comp.noInappropriateContent),
-                  _compRow('Prayer Break',
-                      comp.prayerBreakRequired ? 'Included' : 'No',
+                  _compRow(l10n.createEventPrayerBreak,
+                      comp.prayerBreakRequired ? l10n.createEventReviewIncluded : l10n.createEventReviewNo,
                       comp.prayerBreakRequired),
-                  _compRow('Confirmed',
-                      comp.complianceConfirmed ? 'Yes' : 'No',
+                  _compRow(l10n.createEventReviewConfirmed,
+                      comp.complianceConfirmed ? l10n.createEventReviewYes : l10n.createEventReviewNo,
                       comp.complianceConfirmed),
                 ],
               ),
@@ -113,7 +115,7 @@ class ReviewStep extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
 
             // Risk Assessment
-            _riskCard(comp),
+            _riskCard(comp, context),
             const SizedBox(height: AppSpacing.md),
 
             // Trust Impact
@@ -125,8 +127,8 @@ class ReviewStep extends StatelessWidget {
                     Icon(Icons.trending_up_rounded,
                         color: AppColors.goldAccent, size: 20),
                     const SizedBox(width: 10),
-                    const Text('Trust Impact',
-                        style: TextStyle(
+                    Text(l10n.createEventReviewTrustImpact,
+                        style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             fontSize: 15)),
@@ -148,7 +150,7 @@ class ReviewStep extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Successfully hosting this event will increase your trust score. Flagged events may decrease it.',
+                            l10n.createEventTrustImpactDesc,
                             style: TextStyle(
                                 color: AppColors.whiteAlpha(0.55),
                                 fontSize: 12),
@@ -189,7 +191,7 @@ class ReviewStep extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'I confirm all information is accurate. I understand events are reviewed before publishing.',
+                      l10n.createEventFinalConfirm,
                       style: TextStyle(
                         color: AppColors.whiteAlpha(0.7),
                         fontSize: 13,
@@ -205,6 +207,14 @@ class ReviewStep extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getGenderPolicy(String policy, BuildContext context) {
+    switch (policy) {
+      case 'male_only': return context.l10n.createEventGenderMaleOnly;
+      case 'female_only': return context.l10n.createEventGenderFemaleOnly;
+      default: return context.l10n.createEventGenderMixed;
+    }
   }
 
   Widget _row(String label, String value) {
@@ -260,7 +270,7 @@ class ReviewStep extends StatelessWidget {
     );
   }
 
-  Widget _riskCard(ComplianceSettings comp) {
+  Widget _riskCard(ComplianceSettings comp, BuildContext context) {
     final risk = comp.riskLevel;
     final Color riskColor;
     final IconData riskIcon;
@@ -270,15 +280,15 @@ class ReviewStep extends StatelessWidget {
       case 'low':
         riskColor = AppColors.success;
         riskIcon = Icons.check_circle_rounded;
-        riskLabel = 'Low Risk — Likely auto-approved';
+        riskLabel = context.l10n.createEventRiskLow;
       case 'medium':
         riskColor = AppColors.warning;
         riskIcon = Icons.warning_rounded;
-        riskLabel = 'Medium Risk — Manual review required';
+        riskLabel = context.l10n.createEventRiskMedium;
       default:
         riskColor = AppColors.error;
         riskIcon = Icons.error_rounded;
-        riskLabel = 'High Risk — Additional review needed';
+        riskLabel = context.l10n.createEventRiskHigh;
     }
 
     return AppCard(
@@ -289,8 +299,8 @@ class ReviewStep extends StatelessWidget {
             Icon(Icons.analytics_rounded,
                 color: AppColors.goldAccent, size: 20),
             const SizedBox(width: 10),
-            const Text('Risk Assessment',
-                style: TextStyle(
+            Text(context.l10n.createEventReviewRiskAssessment,
+                style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 15)),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
 import '../../../../../shared/widgets/app_components.dart';
 import '../../../../auth/data/models/country_model.dart';
@@ -70,13 +71,13 @@ class _LocationStepState extends State<LocationStep> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isOffline ? 'Venue Details' : 'Online Setup',
+                isOffline ? context.l10n.createEventVenueDetails : context.l10n.createEventOnlineSetup,
                 style: AppTypography.sectionTitle,
               ),
               const SizedBox(height: AppSpacing.lg),
 
               if (isOffline) ...[
-                Text('Country', style: AppTypography.label),
+                Text(context.l10n.createEventCountry, style: AppTypography.label),
                 const SizedBox(height: AppSpacing.xs),
                 CountrySearchField(
                   countries: _countries,
@@ -93,8 +94,8 @@ class _LocationStepState extends State<LocationStep> {
                 const SizedBox(height: AppSpacing.md),
                 AppInputField(
                   controller: _cityCtrl,
-                  label: 'City',
-                  hint: 'e.g. Riyadh',
+                  label: context.l10n.city,
+                  hint: context.l10n.createEventCityHint,
                   icon: Icons.location_city_rounded,
                   onChanged: (v) =>
                       cubit.updateFormData(fd.copyWith(city: v)),
@@ -102,15 +103,15 @@ class _LocationStepState extends State<LocationStep> {
                 const SizedBox(height: AppSpacing.md),
                 AppInputField(
                   controller: _addressCtrl,
-                  label: 'Venue Address',
-                  hint: 'Full venue address',
+                  label: context.l10n.createEventAddress,
+                  hint: context.l10n.createEventAddressHint,
                   icon: Icons.place_rounded,
                   maxLines: 2,
                   onChanged: (v) =>
                       cubit.updateFormData(fd.copyWith(address: v)),
                 ),
               ] else ...[
-                Text('Platform', style: AppTypography.label),
+                Text(context.l10n.createEventPlatform, style: AppTypography.label),
                 const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   spacing: AppSpacing.xs,
@@ -149,8 +150,8 @@ class _LocationStepState extends State<LocationStep> {
                 const SizedBox(height: AppSpacing.lg),
                 AppInputField(
                   controller: _linkCtrl,
-                  label: 'Meeting Link',
-                  hint: 'https://zoom.us/j/...',
+                  label: context.l10n.createEventMeetingLink,
+                  hint: context.l10n.createEventMeetingLinkHint,
                   icon: Icons.link_rounded,
                   onChanged: (v) =>
                       cubit.updateFormData(fd.copyWith(onlineLink: v)),
@@ -158,8 +159,8 @@ class _LocationStepState extends State<LocationStep> {
                 const SizedBox(height: AppSpacing.md),
                 AppInputField(
                   controller: _passwordCtrl,
-                  label: 'Password (Optional)',
-                  hint: 'Meeting password',
+                  label: context.l10n.createEventPasswordOptional,
+                  hint: context.l10n.createEventPasswordHint,
                   icon: Icons.lock_rounded,
                   onChanged: (v) => cubit.updateFormData(
                       fd.copyWith(onlinePassword: v)),
@@ -184,14 +185,14 @@ class _LocationStepState extends State<LocationStep> {
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
                           children: [
-                            const Text('Link Visibility',
-                                style: TextStyle(
+                            Text(context.l10n.createEventLinkVisibility,
+                                style: const TextStyle(
                                     color: AppColors.info,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
                             Text(
-                              'The meeting link will only be visible to registered attendees 30 minutes before the event.',
+                              context.l10n.createEventLinkVisibilityDesc,
                               style: TextStyle(
                                   color: AppColors.whiteAlpha(0.5),
                                   fontSize: 12),

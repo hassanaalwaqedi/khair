@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/models/map_models.dart';
 import '../managers/map_state_manager.dart';
 import '../widgets/filter_panel.dart';
@@ -40,7 +41,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
         _mapController.move(state.center, state.zoom);
       },
       builder: (context, state) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = context.l10n;
         return Scaffold(
           body: Stack(
             children: [
@@ -184,7 +185,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
 
   Future<void> _showEventBottomSheet(
       BuildContext context, MapEvent event) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
     final localeCode = Localizations.localeOf(context).languageCode;
     context.read<MapStateManager>().onMarkerTapped(event);
 
@@ -268,7 +269,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
     ).toString();
     await Clipboard.setData(ClipboardData(text: url));
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.mapDirectionsCopied)),
     );

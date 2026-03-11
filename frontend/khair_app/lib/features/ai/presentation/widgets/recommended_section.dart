@@ -118,7 +118,7 @@ class _RecommendationChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 200,
-        margin: const EdgeInsets.only(right: 12),
+        margin: const EdgeInsetsDirectional.only(end: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isDark ? KhairColors.darkCard : KhairColors.surface,

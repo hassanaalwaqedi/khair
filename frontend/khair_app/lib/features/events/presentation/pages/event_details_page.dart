@@ -1,13 +1,18 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/share_helper.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/datasources/join_datasource.dart';
 import '../bloc/events_bloc.dart';
@@ -49,13 +54,13 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   Icon(Icons.error_outline,
                       size: 64, color: KhairColors.textTertiary),
                   const SizedBox(height: 16),
-                  Text('Event not found',
+                  Text(context.l10n.eventNotFound,
                       style: KhairTypography.bodyMedium
                           .copyWith(color: KhairColors.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context.go('/'),
-                    child: const Text('Back to Events'),
+                    child: Text(context.l10n.eventDetailsBack),
                   ),
                 ],
               ),
@@ -83,7 +88,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 ),
                 actions: [
                   Container(
-                    margin: const EdgeInsets.only(right: 8),
+                    margin: const EdgeInsetsDirectional.only(end: 8),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
@@ -91,12 +96,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     child: IconButton(
                       icon: const Icon(Icons.share_outlined,
                           color: Colors.white),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Share feature coming soon')),
-                        );
-                      },
+                      onPressed: () => _shareEvent(context, event),
                     ),
                   ),
                 ],
@@ -104,14 +104,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      event.imageUrl != null
-                          ? Image.network(
-                              event.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _buildImagePlaceholder(),
-                            )
-                          : _buildImagePlaceholder(),
+                      _buildEventImage(event),
                       // Gradient overlay
                       Container(
                         decoration: BoxDecoration(
@@ -162,7 +155,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
-                                    '${event.reservedCount} attending',
+                                    context.l10n.eventDetailsAttending(event.reservedCount),
                                     style: KhairTypography.labelSmall.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
@@ -198,7 +191,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                         context: context,
                         isDark: isDark,
                         icon: Icons.calendar_today,
-                        title: 'Date & Time',
+                        title: context.l10n.eventDetailsDateTime,
                         content: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -229,7 +222,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                         context: context,
                         isDark: isDark,
                         icon: Icons.location_on,
-                        title: 'Location',
+                        title: context.l10n.eventDetailsLocation,
                         content: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -297,7 +290,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           context: context,
                           isDark: isDark,
                           icon: Icons.business,
-                          title: 'Organized by',
+                          title: context.l10n.eventDetailsOrganizedBy,
                           content: Row(
                             children: [
                               Container(
@@ -334,7 +327,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                       // Description
                       if (event.description != null) ...[
                         Text(
-                          'About This Event',
+                          context.l10n.eventDetailsAbout,
                           style: KhairTypography.headlineSmall.copyWith(
                             color: isDark
                                 ? KhairColors.darkTextPrimary
@@ -391,8 +384,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   ),
                   child: Text(
                     isFull
-                        ? 'Sold Out'
-                        : '${event.capacity! - event.reservedCount} seats left',
+                        ? context.l10n.eventDetailsSoldOut
+                        : context.l10n.eventDetailsSeatsLeft(event.capacity! - event.reservedCount),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -418,7 +411,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   color: Colors.white,
                 ),
                 label: Text(
-                  isFull ? 'Sold Out' : 'Join Event',
+                  isFull ? context.l10n.eventDetailsSoldOut : context.l10n.eventDetailsJoin,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -431,6 +424,44 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  Future<void> _shareEvent(BuildContext context, event) async {
+    const baseUrl =
+        'https://khair.it.com';
+
+    try {
+      final apiClient = getIt<ApiClient>();
+      final response = await apiClient.get('/events/${event.id}/share');
+      final data = response.data['data'] ?? response.data;
+      final publicUrl = data['public_url'] ?? '$baseUrl/events/${event.id}';
+      final title = data['title'] ?? event.title;
+      final organizer = data['organizer'] ?? '';
+      final description = data['description'] ?? '';
+
+      final shareText = StringBuffer();
+      shareText.writeln('🌿 $title');
+      if (organizer.isNotEmpty) shareText.writeln('📋 By $organizer');
+      if (description.isNotEmpty) {
+        final desc = description.length > 100
+            ? '${description.substring(0, 100)}...'
+            : description;
+        shareText.writeln(desc);
+      }
+      shareText.writeln();
+      shareText.write('Join on Khair: $publicUrl');
+
+      if (!context.mounted) return;
+      await ShareHelper.share(context, shareText.toString());
+    } catch (e) {
+      // Fallback: share a simple text
+      if (!context.mounted) return;
+      final url = '$baseUrl/api/v1/events/public/${event.id}';
+      await ShareHelper.share(
+        context,
+        '🌿 Check out "${event.title}" on Khair!\n$url',
+      );
+    }
   }
 
   void _handleJoinTap(BuildContext context, String eventId, String eventTitle) {
@@ -449,18 +480,18 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   Future<void> _joinEventDirectly(BuildContext context, String eventId, String eventTitle) async {
     // Show loading
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 18, height: 18,
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
             ),
-            SizedBox(width: 12),
-            Text('Joining event...'),
+            const SizedBox(width: 12),
+            Text(context.l10n.eventDetailsJoining),
           ],
         ),
-        duration: Duration(seconds: 10),
+        duration: const Duration(seconds: 10),
       ),
     );
 
@@ -472,11 +503,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('You\'re in! Seat reserved successfully.'),
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 12),
+              Text(context.l10n.eventDetailsReservedSuccess),
             ],
           ),
           backgroundColor: KhairColors.success,
@@ -500,7 +531,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '🎉 You\'ve joined "$eventTitle"! See you there.',
+                    context.l10n.eventDetailsJoinedSeeYou(eventTitle),
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -517,12 +548,24 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       
-      String errorMsg = 'Failed to join event';
-      final errStr = e.toString();
-      if (errStr.contains('already')) {
-        errorMsg = 'You have already joined this event';
-      } else if (errStr.contains('full') || errStr.contains('capacity')) {
-        errorMsg = 'This event is full';
+      String errorMsg = context.l10n.eventDetailsJoinFailed;
+      // Extract the server's error message from DioException
+      String serverMsg = '';
+      if (e is DioException && e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          serverMsg = (data['message'] ?? data['error'] ?? '').toString();
+        }
+      }
+      if (serverMsg.isEmpty) {
+        serverMsg = e.toString();
+      }
+      if (serverMsg.contains('already')) {
+        errorMsg = context.l10n.eventDetailsAlreadyJoined;
+      } else if (serverMsg.contains('full') || serverMsg.contains('capacity') || serverMsg.contains('booked')) {
+        errorMsg = context.l10n.eventDetailsEventFull;
+      } else if (serverMsg.isNotEmpty && !serverMsg.contains('DioException')) {
+        errorMsg = serverMsg;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -542,23 +585,91 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     }
   }
 
-  Widget _buildImagePlaceholder() {
+  static const _baseUrl =
+      'https://khair.it.com';
+
+  String _resolveUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    return '$_baseUrl$url';
+  }
+
+  Widget _buildEventImage(event) {
+    final imageUrl = _resolveUrl(event.imageUrl);
+    if (imageUrl.isNotEmpty) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(event.eventType),
+      );
+    }
+    return _buildImagePlaceholder(event.eventType);
+  }
+
+  Widget _buildImagePlaceholder([String? eventType]) {
+    final cat = _getCategoryData(eventType ?? '');
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0D5B4D),
-            Color(0xFF2C8D73),
-            Color(0xFF74BBA3),
-          ],
+          colors: cat.colors,
         ),
       ),
       child: Center(
-        child: Icon(Icons.event,
-            size: 80, color: Colors.white.withValues(alpha: 0.54)),
+        child: Icon(cat.icon,
+            size: 80, color: Colors.white.withValues(alpha: 0.12)),
       ),
+    );
+  }
+
+  static _CategoryData _getCategoryData(String eventType) {
+    final type = eventType.toLowerCase();
+    if (type.contains('quran') || type.contains('recit')) {
+      return _CategoryData(
+        icon: Icons.menu_book_rounded,
+        colors: [const Color(0xFF1A5B4B), const Color(0xFF2D8E75), const Color(0xFF4DB89A)],
+      );
+    }
+    if (type.contains('lecture') || type.contains('know')) {
+      return _CategoryData(
+        icon: Icons.school_rounded,
+        colors: [const Color(0xFF1B4332), const Color(0xFF2D6A4F), const Color(0xFF40916C)],
+      );
+    }
+    if (type.contains('charity') || type.contains('donat')) {
+      return _CategoryData(
+        icon: Icons.volunteer_activism_rounded,
+        colors: [const Color(0xFF4A2040), const Color(0xFF7B3F6B), const Color(0xFFA0588D)],
+      );
+    }
+    if (type.contains('masjid') || type.contains('mosque') || type.contains('prayer')) {
+      return _CategoryData(
+        icon: Icons.mosque_rounded,
+        colors: [const Color(0xFF1A3A5C), const Color(0xFF2C6B97), const Color(0xFF4A90C2)],
+      );
+    }
+    if (type.contains('youth') || type.contains('commun')) {
+      return _CategoryData(
+        icon: Icons.groups_rounded,
+        colors: [const Color(0xFF2D4A22), const Color(0xFF4A7C3F), const Color(0xFF6BA55C)],
+      );
+    }
+    if (type.contains('confer') || type.contains('seminar')) {
+      return _CategoryData(
+        icon: Icons.mic_rounded,
+        colors: [const Color(0xFF3D2E1E), const Color(0xFF6B5240), const Color(0xFF9A7A5F)],
+      );
+    }
+    if (type.contains('workshop') || type.contains('class')) {
+      return _CategoryData(
+        icon: Icons.auto_stories_rounded,
+        colors: [const Color(0xFF1E3A3A), const Color(0xFF2C5E5E), const Color(0xFF4A8B8B)],
+      );
+    }
+    return _CategoryData(
+      icon: Icons.event_rounded,
+      colors: [const Color(0xFF0D3522), const Color(0xFF14553A), const Color(0xFF1E7A52)],
     );
   }
 
@@ -610,4 +721,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       ),
     );
   }
+}
+
+class _CategoryData {
+  final IconData icon;
+  final List<Color> colors;
+  _CategoryData({required this.icon, required this.colors});
 }

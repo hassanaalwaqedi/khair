@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 /// Horizontal scrollable category chips with animated selection.
 class CategoryScroller extends StatefulWidget {
   final ValueChanged<int>? onCategoryChanged;
@@ -13,26 +15,31 @@ class CategoryScroller extends StatefulWidget {
 class _CategoryScrollerState extends State<CategoryScroller> {
   int _selected = 0;
 
-  static const _categories = [
-    _Cat(icon: Icons.trending_up_rounded, label: 'Trending'),
-    _Cat(icon: Icons.near_me_rounded, label: 'Near You'),
-    _Cat(icon: Icons.volunteer_activism_rounded, label: 'Charity'),
-    _Cat(icon: Icons.menu_book_rounded, label: 'Knowledge'),
-    _Cat(icon: Icons.mosque_rounded, label: 'Masjid'),
-    _Cat(icon: Icons.public_rounded, label: 'Global'),
-  ];
+  List<_Cat> _categories(BuildContext context) => [
+        _Cat(icon: Icons.trending_up_rounded, label: context.l10n.catTrending),
+        _Cat(icon: Icons.near_me_rounded, label: context.l10n.catNearYou),
+        _Cat(
+            icon: Icons.volunteer_activism_rounded,
+            label: context.l10n.catCharity),
+        _Cat(
+            icon: Icons.menu_book_rounded,
+            label: context.l10n.catKnowledge),
+        _Cat(icon: Icons.mosque_rounded, label: context.l10n.catMasjid),
+        _Cat(icon: Icons.public_rounded, label: context.l10n.catGlobal),
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final cats = _categories(context);
     return SizedBox(
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        itemCount: _categories.length,
+        itemCount: cats.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, i) {
-          final cat = _categories[i];
+          final cat = cats[i];
           final isSelected = _selected == i;
           return GestureDetector(
             onTap: () {
@@ -42,7 +49,8 @@ class _CategoryScrollerState extends State<CategoryScroller> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF1B6B45)
@@ -57,7 +65,8 @@ class _CategoryScrollerState extends State<CategoryScroller> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF22C55E).withValues(alpha: 0.2),
+                          color: const Color(0xFF22C55E)
+                              .withValues(alpha: 0.2),
                           blurRadius: 12,
                           spreadRadius: 0,
                         ),

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
 import '../../../../../shared/widgets/app_components.dart';
 import '../../cubit/create_event_cubit.dart';
@@ -65,7 +66,7 @@ class _MediaStepState extends State<MediaStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Media & Details',
+                  Text(context.l10n.createEventMediaDetails,
                       style: AppTypography.sectionTitle),
                   const SizedBox(height: AppSpacing.lg),
                   GestureDetector(
@@ -113,7 +114,7 @@ class _MediaStepState extends State<MediaStep> {
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (_, __, ___) =>
-                                                _uploadPlaceholder(),
+                                                _uploadPlaceholder(context),
                                       ),
                                     ),
                                     Positioned(
@@ -136,7 +137,7 @@ class _MediaStepState extends State<MediaStep> {
                                     ),
                                   ],
                                 )
-                              : _uploadPlaceholder(),
+                              : _uploadPlaceholder(context),
                     ),
                   ),
                 ],
@@ -154,7 +155,7 @@ class _MediaStepState extends State<MediaStep> {
                       Expanded(
                         child: AppInputField(
                           controller: _capacityCtrl,
-                          label: 'Max Attendees',
+                          label: context.l10n.createEventMaxAttendees,
                           hint: '100',
                           icon: Icons.people_rounded,
                           keyboardType: TextInputType.number,
@@ -168,8 +169,8 @@ class _MediaStepState extends State<MediaStep> {
                       Expanded(
                         child: AppInputField(
                           controller: _priceCtrl,
-                          label: 'Ticket Price',
-                          hint: '0 = Free',
+                          label: context.l10n.createEventTicketPrice,
+                          hint: context.l10n.createEventTicketPriceHint,
                           icon: Icons.attach_money_rounded,
                           keyboardType: TextInputType.number,
                           onChanged: (v) => cubit.updateFormData(
@@ -183,7 +184,7 @@ class _MediaStepState extends State<MediaStep> {
                   const SizedBox(height: AppSpacing.lg),
 
                   // Registration deadline
-                  Text('Registration Deadline',
+                  Text(context.l10n.createEventRegistrationDeadline,
                       style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   GestureDetector(
@@ -221,7 +222,7 @@ class _MediaStepState extends State<MediaStep> {
                                 ? DateFormat('MMM d, yyyy')
                                     .format(
                                         fd.registrationDeadline!)
-                                : 'Select deadline',
+                                : context.l10n.createEventSelectDeadline,
                             style: TextStyle(
                                 color:
                                     AppColors.whiteAlpha(0.7),
@@ -263,7 +264,7 @@ class _MediaStepState extends State<MediaStep> {
                       crossAxisAlignment:
                           CrossAxisAlignment.start,
                       children: [
-                        Text('Auto-Approval',
+                        Text(context.l10n.createEventAutoApproval,
                             style: TextStyle(
                                 color:
                                     AppColors.whiteAlpha(0.85),
@@ -271,7 +272,7 @@ class _MediaStepState extends State<MediaStep> {
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 2),
                         Text(
-                            'Automatically approve registrations',
+                            context.l10n.createEventAutoApprovalDesc,
                             style: TextStyle(
                                 color:
                                     AppColors.whiteAlpha(0.4),
@@ -297,7 +298,7 @@ class _MediaStepState extends State<MediaStep> {
     );
   }
 
-  Widget _uploadPlaceholder() {
+  Widget _uploadPlaceholder(BuildContext context) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -305,11 +306,11 @@ class _MediaStepState extends State<MediaStep> {
           Icon(Icons.cloud_upload_outlined,
               color: AppColors.whiteAlpha(0.2), size: 40),
           const SizedBox(height: 10),
-          Text('Tap to upload cover image',
+          Text(context.l10n.createEventUploadPlaceholder,
               style: TextStyle(
                   color: AppColors.whiteAlpha(0.35), fontSize: 13)),
           const SizedBox(height: 4),
-          Text('JPG, PNG • Max 5MB',
+          Text(context.l10n.createEventUploadLimits,
               style: TextStyle(
                   color: AppColors.whiteAlpha(0.2), fontSize: 11)),
         ],

@@ -19,6 +19,7 @@ abstract class AdminRemoteDataSource {
   Future<void> updateUserRole(String userId, String role);
   Future<void> updateUserStatus(String userId, String status, {String? reason});
   Future<void> deleteUser(String userId);
+  Future<void> verifyUser(String userId);
 }
 
 /// Implementation of admin remote data source
@@ -178,5 +179,10 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   @override
   Future<void> deleteUser(String userId) async {
     await _apiClient.delete('/admin/users/$userId');
+  }
+
+  @override
+  Future<void> verifyUser(String userId) async {
+    await _apiClient.put('/admin/users/$userId/verify');
   }
 }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -101,7 +102,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Welcome to Khair',
+              context.l10n.welcomeToKhair,
               style: KhairTypography.h2.copyWith(
                 color: isDark
                     ? KhairColors.darkTextPrimary
@@ -110,7 +111,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Sign in to manage your profile and events',
+              context.l10n.signInToManage,
               style: KhairTypography.bodyMedium.copyWith(
                 color: KhairColors.textSecondary,
               ),
@@ -129,9 +130,9 @@ class ProfilePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.signIn,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -142,8 +143,8 @@ class ProfilePage extends StatelessWidget {
             TextButton(
               onPressed: () => context.go('/register'),
               child: Text(
-                'Create an account',
-                style: TextStyle(
+                context.l10n.createAccount.replaceAll('\n', ' '),
+                style: const TextStyle(
                   color: KhairColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -185,7 +186,7 @@ class ProfilePage extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Profile',
+                context.l10n.profile,
                 style: KhairTypography.h2.copyWith(color: Colors.white),
               ),
               const Spacer(),
@@ -295,7 +296,7 @@ class ProfilePage extends StatelessWidget {
               Expanded(
                 child: _StatItem(
                   value: memberSince,
-                  label: 'Member Since',
+                  label: context.l10n.memberSince,
                   icon: Icons.calendar_today_rounded,
                   isDark: isDark,
                 ),
@@ -308,11 +309,11 @@ class ProfilePage extends StatelessWidget {
               Expanded(
                 child: _StatItem(
                   value: state.isOrganizer
-                      ? 'Organizer'
+                      ? context.l10n.roleOrganizer
                       : state.isAdmin
-                          ? 'Admin'
-                          : 'Member',
-                  label: 'Account Type',
+                          ? context.l10n.roleAdmin
+                          : context.l10n.roleMember,
+                  label: context.l10n.accountType,
                   icon: Icons.shield_outlined,
                   isDark: isDark,
                 ),
@@ -324,8 +325,8 @@ class ProfilePage extends StatelessWidget {
               ),
               Expanded(
                 child: _StatItem(
-                  value: state.isApprovedOrganizer ? 'Active' : 'Basic',
-                  label: 'Status',
+                  value: state.isApprovedOrganizer ? context.l10n.statusActive : context.l10n.statusBasic,
+                  label: context.l10n.status,
                   icon: Icons.verified_outlined,
                   isDark: isDark,
                 ),
@@ -347,7 +348,7 @@ class ProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Quick Actions',
+            context.l10n.quickActions,
             style: KhairTypography.headlineSmall.copyWith(
               color:
                   isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
@@ -365,7 +366,7 @@ class ProfilePage extends StatelessWidget {
               if (state.isApprovedOrganizer)
                 _QuickActionCard(
                   icon: Icons.dashboard_outlined,
-                  label: 'Dashboard',
+                  label: context.l10n.organizerDashboard,
                   color: KhairColors.primary,
                   isDark: isDark,
                   onTap: () => context.go('/organizer'),
@@ -373,7 +374,7 @@ class ProfilePage extends StatelessWidget {
               if (state.isApprovedOrganizer)
                 _QuickActionCard(
                   icon: Icons.add_circle_outline,
-                  label: 'Create Event',
+                  label: context.l10n.createEvent,
                   color: KhairColors.info,
                   isDark: isDark,
                   onTap: () => context.go('/organizer/events/create'),
@@ -381,7 +382,7 @@ class ProfilePage extends StatelessWidget {
               if (!state.isOrganizer)
                 _QuickActionCard(
                   icon: Icons.star_outline_rounded,
-                  label: 'Become Organizer',
+                  label: context.l10n.becomeOrganizer,
                   color: KhairColors.secondary,
                   isDark: isDark,
                   onTap: () => context.go('/organizer/apply'),
@@ -389,14 +390,22 @@ class ProfilePage extends StatelessWidget {
               if (state.isAdmin)
                 _QuickActionCard(
                   icon: Icons.admin_panel_settings_outlined,
-                  label: 'Admin Panel',
+                  label: context.l10n.adminPanel,
                   color: KhairColors.error,
                   isDark: isDark,
                   onTap: () => context.go('/admin'),
                 ),
+              if (state.isAdmin)
+                _QuickActionCard(
+                  icon: Icons.article_outlined,
+                  label: context.l10n.ownerDashboard,
+                  color: KhairColors.secondary,
+                  isDark: isDark,
+                  onTap: () => context.go('/owner-dashboard'),
+                ),
               _QuickActionCard(
                 icon: Icons.explore_outlined,
-                label: 'Browse Events',
+                label: context.l10n.browseEvents,
                 color: KhairColors.accent,
                 isDark: isDark,
                 onTap: () => context.go('/'),
@@ -414,24 +423,24 @@ class ProfilePage extends StatelessWidget {
       BuildContext context, AuthState state, bool isDark) {
     final user = state.user!;
     return _Section(
-      title: 'Account Information',
+      title: context.l10n.accountInformation,
       isDark: isDark,
       children: [
         _InfoRow(
           icon: Icons.email_outlined,
-          label: 'Email',
+          label: context.l10n.email,
           value: user.email,
           isDark: isDark,
         ),
         _InfoRow(
           icon: Icons.badge_outlined,
-          label: 'Role',
+          label: context.l10n.role,
           value: user.role[0].toUpperCase() + user.role.substring(1),
           isDark: isDark,
         ),
         _InfoRow(
           icon: Icons.calendar_today_outlined,
-          label: 'Member since',
+          label: context.l10n.memberSince,
           value: DateFormat('MMMM dd, yyyy').format(user.createdAt),
           isDark: isDark,
         ),
@@ -445,18 +454,18 @@ class ProfilePage extends StatelessWidget {
       BuildContext context, AuthState state, bool isDark) {
     final organizer = state.organizer!;
     return _Section(
-      title: 'Organizer Profile',
+      title: context.l10n.organizerProfile,
       isDark: isDark,
       children: [
         _InfoRow(
           icon: Icons.business,
-          label: 'Organization',
+          label: context.l10n.organization,
           value: organizer.name,
           isDark: isDark,
         ),
         _InfoRow(
           icon: Icons.verified_outlined,
-          label: 'Status',
+          label: context.l10n.status,
           value:
               organizer.status[0].toUpperCase() + organizer.status.substring(1),
           isDark: isDark,
@@ -469,14 +478,14 @@ class ProfilePage extends StatelessWidget {
         if (organizer.website != null)
           _InfoRow(
             icon: Icons.language,
-            label: 'Website',
+            label: context.l10n.website,
             value: organizer.website!,
             isDark: isDark,
           ),
         if (organizer.phone != null)
           _InfoRow(
             icon: Icons.phone_outlined,
-            label: 'Phone',
+            label: context.l10n.phone,
             value: organizer.phone!,
             isDark: isDark,
           ),
@@ -497,15 +506,15 @@ class ProfilePage extends StatelessWidget {
             showDialog(
               context: context,
               builder: (ctx) => AlertDialog(
-                title: const Text('Sign Out'),
-                content: const Text('Are you sure you want to sign out?'),
+                title: Text(context.l10n.signOutConfirmTitle),
+                content: Text(context.l10n.signOutConfirmMessage),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
+                    child: Text(context.l10n.cancel),
                   ),
                   ElevatedButton(
                     onPressed: () {
@@ -516,7 +525,7 @@ class ProfilePage extends StatelessWidget {
                       backgroundColor: KhairColors.error,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Sign Out'),
+                    child: Text(context.l10n.signOut),
                   ),
                 ],
               ),
@@ -524,7 +533,7 @@ class ProfilePage extends StatelessWidget {
           },
           icon: Icon(Icons.logout, color: KhairColors.error),
           label: Text(
-            'Sign Out',
+            context.l10n.signOut,
             style: TextStyle(
               color: KhairColors.error,
               fontWeight: FontWeight.w600,

@@ -284,8 +284,8 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+              begin: AlignmentDirectional.centerStart,
+              end: AlignmentDirectional.centerEnd,
               colors: [baseColor, highlightColor, baseColor],
               stops: [
                 (_controller.value - 0.3).clamp(0.0, 1.0),
@@ -341,7 +341,7 @@ class DashboardShimmer extends StatelessWidget {
               4,
               (_) => const Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: 12),
+                  padding: const EdgeInsetsDirectional.only(end: 12),
                   child: ShimmerLoading(height: 100),
                 ),
               ),

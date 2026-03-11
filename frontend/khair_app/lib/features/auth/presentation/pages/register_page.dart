@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../data/models/country_model.dart';
 import '../../data/datasources/countries_datasource.dart';
 import '../bloc/registration_bloc.dart';
@@ -220,7 +221,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
           TextButton(
             onPressed: () => context.go('/login'),
             child: Text(
-              'Sign In',
+              context.l10n.signIn,
               style: TextStyle(
                 color: KhairColors.secondary,
                 fontWeight: FontWeight.w600,
@@ -243,7 +244,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
           Row(
             children: [
               Text(
-                'Step ${displayStep + 1} of ${_stepLabels.length}',
+                '${context.l10n.registrationProgressRole} ${displayStep + 1} / ${_stepLabels.length}',
                 style: KhairTypography.labelSmall.copyWith(
                   color: Colors.white.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
@@ -266,7 +267,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
               final isCurrent = i == displayStep;
               return Expanded(
                 child: Container(
-                  margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
+                  margin: EdgeInsetsDirectional.only(end: i < 3 ? 6 : 0),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     height: 4,
@@ -391,7 +392,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
     if (_currentStep == _reviewStepIndex) {
       return ReviewStep(
         selectedRole: _selectedRole!,
-        roleLabelText: _getRoleLabel(_selectedRole!),
+        roleLabelText: _getRoleLabel(context, _selectedRole!),
         name: _nameController.text,
         email: _emailController.text,
         goals: _selectedGoals,
@@ -426,8 +427,8 @@ class _RegisterWizardState extends State<_RegisterWizard>
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text('Back',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(context.l10n.cancel, // using cancel for back button here
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           if (_currentStep > 0 && _currentStep < _reviewStepIndex)
@@ -449,9 +450,9 @@ class _RegisterWizardState extends State<_RegisterWizard>
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.registrationContinue,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   ),
@@ -494,7 +495,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
           ),
           const SizedBox(height: 24),
           Text(
-            'Verify Your Email',
+            context.l10n.registrationVerifyEmailTitle,
             style: KhairTypography.h2.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
@@ -589,9 +590,9 @@ class _RegisterWizardState extends State<_RegisterWizard>
                       child: CircularProgressIndicator(
                           strokeWidth: 2.5, color: Colors.white),
                     )
-                  : const Text('Verify',
+                  : Text(context.l10n.registrationVerifyEmailButton,
                       style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                          const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             ),
           ),
           const SizedBox(height: 16),
@@ -605,7 +606,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
                         );
                   },
             child: Text(
-              'Resend Code',
+              context.l10n.registrationResendCode,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w600,
@@ -638,12 +639,12 @@ class _RegisterWizardState extends State<_RegisterWizard>
           ),
           const SizedBox(height: 24),
           Text(
-            'Welcome to Khair!',
+            context.l10n.registrationCompleteTitle,
             style: KhairTypography.h1.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 12),
           Text(
-            _getWelcomeMessage(backendRole),
+            _getWelcomeMessage(context, backendRole),
             style: KhairTypography.bodyLarge.copyWith(
               color: Colors.white.withValues(alpha: 0.7),
               height: 1.6,
@@ -670,7 +671,7 @@ class _RegisterWizardState extends State<_RegisterWizard>
                 ),
               ),
               child: Text(
-                isAuthority ? 'Set Up Your Organization' : 'Start Exploring',
+                isAuthority ? context.l10n.registrationRoleStepTitleOrganization : context.l10n.browseEvents,
                 style: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 16),
               ),
@@ -895,36 +896,32 @@ class _RegisterWizardState extends State<_RegisterWizard>
     }
   }
 
-  String _getRoleLabel(String role) {
-    const labels = {
-      'sheikh': 'Sheikh / Lecturer',
-      'organization_mosque': 'Mosque',
-      'organization_quran': 'Quran Memorization Center',
-      'organization': 'Islamic Organization',
-      'community_organizer': 'Community Event Organizer',
-      'student': 'Student',
-      'new_muslim': 'New Muslim',
-      'volunteer': 'Volunteer',
-      'member': 'Regular Community Member',
+  String _getRoleLabel(BuildContext context, String role) {
+    final l10n = context.l10n;
+    final labels = {
+      'sheikh': l10n.registrationRoleSheikh,
+      'organization_mosque': l10n.registrationOrgTypeMosque,
+      'organization_quran': l10n.registrationOrgTypeQuranCenter,
+      'organization': l10n.registrationRoleOrganization,
+      'community_organizer': l10n.registrationRoleCommunityOrganizer,
+      'student': l10n.registrationRoleStudent,
+      'new_muslim': l10n.registrationRoleNewMuslim,
+      'volunteer': l10n.registrationRoleCommunityOrganizer, // mapping volunteer to community organizer
+      'member': l10n.registrationRoleStudent, // mapping member to student
     };
     return labels[role] ?? role;
   }
 
-  String _getWelcomeMessage(String backendRole) {
-    const messages = {
-      'organization':
-          'Your organization is now registered. You are part of a growing Ummah of knowledge and service.',
-      'sheikh':
-          'Welcome, dear teacher. Your knowledge is a trust (amanah). May Allah benefit the Ummah through you.',
-      'new_muslim':
-          'Welcome to Islam and to our community! We are honored to support your journey. You are never alone.',
-      'student':
-          'Welcome, seeker of knowledge. "Whoever follows a path seeking knowledge, Allah will make his path to Paradise easy."',
-      'community_organizer':
-          'Welcome, community builder. Your efforts to unite the Ummah are a form of worship.',
+  String _getWelcomeMessage(BuildContext context, String backendRole) {
+    final l10n = context.l10n;
+    final messages = {
+      'organization': l10n.registrationRoleDescOrganization,
+      'sheikh': l10n.registrationRoleDescSheikh,
+      'new_muslim': l10n.registrationWelcomeIslamSubtitle,
+      'student': l10n.registrationRoleDescStudent,
+      'community_organizer': l10n.registrationRoleDescCommunityOrganizer,
     };
-    return messages[backendRole] ??
-        'You are now part of a growing Ummah of knowledge and service.';
+    return messages[backendRole] ?? l10n.registrationWelcomeIslamSubtitle;
   }
 }
 

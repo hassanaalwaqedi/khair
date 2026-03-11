@@ -31,6 +31,7 @@ import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart' as owner;
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../../features/location/presentation/bloc/location_bloc.dart';
+import '../../features/sheikh/presentation/bloc/sheikh_bloc.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -63,6 +64,9 @@ final GoRouter appRouter = GoRouter(
             ),
             BlocProvider(
               create: (_) => getIt<LocationBloc>(),
+            ),
+            BlocProvider(
+              create: (_) => getIt<SheikhBloc>()..add(const LoadSheikhs()),
             ),
           ],
           child: MainScaffold(child: child),

@@ -43,6 +43,8 @@ import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../features/sheikh/data/datasources/sheikh_remote_datasource.dart';
+import '../../features/sheikh/presentation/bloc/sheikh_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -54,7 +56,7 @@ Future<void> configureDependencies() async {
   // Dio
   final dio = Dio(BaseOptions(
     baseUrl: const String.fromEnvironment('API_URL',
-        defaultValue: 'https://khair-evdzcxfucuh4g2c9.swedencentral-01.azurewebsites.net/api/v1'),
+        defaultValue: 'https://khair.it.com/api/v1'),
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     responseType: ResponseType.json,
@@ -199,5 +201,13 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
+  );
+
+  // Sheikh Directory Feature
+  getIt.registerLazySingleton<SheikhRemoteDataSource>(
+    () => SheikhRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<SheikhBloc>(
+    () => SheikhBloc(getIt<SheikhRemoteDataSource>()),
   );
 }

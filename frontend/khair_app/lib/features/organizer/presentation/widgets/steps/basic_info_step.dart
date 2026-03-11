@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
 import '../../../../../shared/widgets/app_components.dart';
 import '../../cubit/create_event_cubit.dart';
@@ -60,14 +61,14 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Basic Information', style: AppTypography.sectionTitle),
+                  Text(context.l10n.createEventBasicInfoTitle, style: AppTypography.sectionTitle),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Title
                   AppInputField(
                     controller: _titleCtrl,
-                    label: 'Event Title',
-                    hint: 'Enter a compelling event title',
+                    label: context.l10n.createEventTitleLabel,
+                    hint: context.l10n.createEventTitleHint,
                     icon: Icons.title_rounded,
                     maxLength: 100,
                     onChanged: (v) => cubit.updateTitle(v),
@@ -75,7 +76,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                   const SizedBox(height: AppSpacing.md),
 
                   // Category
-                  Text('Category', style: AppTypography.label),
+                  Text(context.l10n.createEventCategoryLabel, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -93,8 +94,8 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                   // Description
                   AppInputField(
                     controller: _descCtrl,
-                    label: 'Description (min 50 characters)',
-                    hint: 'Describe your event in detail...',
+                    label: context.l10n.createEventDescLabel,
+                    hint: context.l10n.createEventDescHint,
                     icon: Icons.description_rounded,
                     maxLines: 5,
                     maxLength: 5000,
@@ -103,7 +104,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                   if (_descCtrl.text.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xxs),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerEnd,
                       child: Text(
                         '${_descCtrl.text.length} / 5000',
                         style: TextStyle(
@@ -125,7 +126,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tags', style: AppTypography.label),
+                  Text(context.l10n.createEventTagsLabel, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -148,34 +149,34 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Event Type', style: AppTypography.label),
+                  Text(context.l10n.createEventEventTypeLabel, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Expanded(
-                          child: _typeOption('offline', 'In-Person',
+                          child: _typeOption('offline', context.l10n.createEventInPerson,
                               Icons.location_on_rounded, fd.eventType, cubit)),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                          child: _typeOption('online', 'Online',
+                          child: _typeOption('online', context.l10n.createEventOnline,
                               Icons.videocam_rounded, fd.eventType, cubit)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Language
-                  Text('Language', style: AppTypography.label),
+                  Text(context.l10n.createEventLanguageLabel, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
                     children: [
-                      AppChip(label: 'English', isSelected: fd.language == 'en',
+                      AppChip(label: context.l10n.langEnglish, isSelected: fd.language == 'en',
                           onTap: () => cubit.updateLanguage('en')),
-                      AppChip(label: 'Arabic', isSelected: fd.language == 'ar',
+                      AppChip(label: context.l10n.langArabic, isSelected: fd.language == 'ar',
                           onTap: () => cubit.updateLanguage('ar')),
-                      AppChip(label: 'French', isSelected: fd.language == 'fr',
+                      AppChip(label: context.l10n.langFrench, isSelected: fd.language == 'fr',
                           onTap: () => cubit.updateLanguage('fr')),
-                      AppChip(label: 'Turkish', isSelected: fd.language == 'tr',
+                      AppChip(label: context.l10n.langTurkish, isSelected: fd.language == 'tr',
                           onTap: () => cubit.updateLanguage('tr')),
                     ],
                   ),
@@ -189,7 +190,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Start Date & Time', style: AppTypography.label),
+                  Text(context.l10n.createEventStartDateTime, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
@@ -204,7 +205,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text('End Date & Time (Optional)', style: AppTypography.label),
+                  Text(context.l10n.createEventEndDateTime, style: AppTypography.label),
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [

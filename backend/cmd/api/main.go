@@ -39,6 +39,7 @@ import (
 	"github.com/khair/backend/internal/reputation"
 	"github.com/khair/backend/internal/reservation"
 	"github.com/khair/backend/internal/review"
+	"github.com/khair/backend/internal/sheikh"
 	"github.com/khair/backend/internal/sharing"
 	"github.com/khair/backend/internal/spiritualquote"
 	"github.com/khair/backend/internal/sse"
@@ -343,6 +344,11 @@ func main() {
 	joinRegService := joinreg.NewService(db, cfg)
 	joinRegHandler := joinreg.NewHandler(joinRegService)
 	joinRegHandler.RegisterRoutes(v1, rateLimiter.Middleware("default"))
+
+	// Sheikh Directory API (public)
+	sheikhService := sheikh.NewService(db)
+	sheikhHandler := sheikh.NewHandler(sheikhService)
+	sheikhHandler.RegisterRoutes(v1)
 
 	// Spiritual Quotes API (public)
 	quoteRepo := spiritualquote.NewRepository(db)
