@@ -38,8 +38,40 @@ class AppColors {
   static const Color textSecondary = Color(0xFF9BA4AE);
   static const Color textMuted = Color(0xFF6B7580);
 
-  // ── White Alpha helpers ──
+  // ── Light Surface Layers ──
+  static const Color lightSurfaceBase = Color(0xFFF5F7FA);
+  static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
+  static const Color lightSurfaceHigh = Color(0xFFF0F2F5);
+
+  // ── Light Text ──
+  static const Color lightTextPrimary = Color(0xFF1A1D21);
+  static const Color lightTextSecondary = Color(0xFF5A6371);
+  static const Color lightTextMuted = Color(0xFF8B95A3);
+
+  // ── White / Black Alpha helpers ──
   static Color whiteAlpha(double a) => Colors.white.withValues(alpha: a);
+  static Color blackAlpha(double a) => Colors.black.withValues(alpha: a);
+
+  // ── Theme-aware helpers ──
+  static Color surfaceColor(BuildContext context, [double elevation = 0.05]) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? whiteAlpha(elevation) : blackAlpha(elevation * 0.5);
+  }
+
+  static Color borderColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? whiteAlpha(0.08) : blackAlpha(0.08);
+  }
+
+  static Color onSurfaceColor(BuildContext context, [double alpha = 1.0]) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? Colors.white.withValues(alpha: alpha) : Colors.black.withValues(alpha: alpha);
+  }
+
+  static Color onSurfaceMutedColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? textSecondary : lightTextSecondary;
+  }
 }
 
 /// Unified gradients.
@@ -57,6 +89,17 @@ class AppGradients {
     ],
   );
 
+  static const LinearGradient heroBackgroundLight = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFF1B6B45),
+      Color(0xFF2E7D5A),
+      Color(0xFF3A9D6E),
+      Color(0xFF2E7D5A),
+    ],
+  );
+
   static const LinearGradient pageBackground = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
@@ -65,6 +108,27 @@ class AppGradients {
       Color(0xFF0A1F16),
     ],
   );
+
+  static const LinearGradient pageBackgroundLight = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFF5F7FA),
+      Color(0xFFEEF1F5),
+    ],
+  );
+
+  static LinearGradient pageBackgroundOf(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? pageBackground
+        : pageBackgroundLight;
+  }
+
+  static LinearGradient heroBackgroundOf(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? heroBackground
+        : heroBackgroundLight;
+  }
 
   static const LinearGradient goldShimmer = LinearGradient(
     colors: [Color(0xFFC8A951), Color(0xFFE8D98F)],

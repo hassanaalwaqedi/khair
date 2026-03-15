@@ -18,12 +18,14 @@ import (
 	"github.com/khair/backend/internal/analytics"
 	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
+	"github.com/khair/backend/internal/calendar"
 	"github.com/khair/backend/internal/countries"
 	"github.com/khair/backend/internal/discovery"
 	"github.com/khair/backend/internal/event"
 	"github.com/khair/backend/internal/growthanalytics"
 	"github.com/khair/backend/internal/joinreg"
 	"github.com/khair/backend/internal/launch"
+	"github.com/khair/backend/internal/legal"
 	"github.com/khair/backend/internal/location"
 	"github.com/khair/backend/internal/mapservice"
 	"github.com/khair/backend/internal/models"
@@ -163,8 +165,14 @@ func main() {
 	// Prometheus metrics endpoint
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
+	// Privacy policy (for Google Play)
+	router.GET("/privacy", func(c *gin.Context) {
+		c.File("templates/privacy.html")
+	})
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
+	v1.Use(rateLimiter.Middleware("default")) // Global: 100 req/hr per IP, 200 req/hr per user
 
 	// Auth middleware
 	authMiddleware := middleware.AuthMiddleware(cfg)
@@ -191,15 +199,16 @@ func main() {
 	notificationService := notification.NewService(db)
 	cacheService := cache.NewService(redisClient)
 	sseHub := sse.NewHub()
-	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService, notificationService, cacheService, sseHub)
+
+	// FCM push notifications (moved before admin service which depends on it)
+	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
+	pushService := push.NewService(db, fcmClient)
+
+	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService, notificationService, pushService, cacheService, sseHub)
 
 	// WebSocket hub (Redis Pub/Sub for horizontal scaling)
 	wsHub := ws.NewHub(redisClient, cfg.JWT.Secret)
 	go wsHub.Run()
-
-	// FCM push notifications
-	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
-	pushService := push.NewService(db, fcmClient)
 
 	// Analytics + Discovery
 	analyticsService := analytics.NewService(db)
@@ -337,7 +346,7 @@ func main() {
 
 	// Reservation API (join/cancel events, availability)
 	reservationService := reservation.NewService(db, cfg)
-	reservationHandler := reservation.NewHandler(reservationService)
+	reservationHandler := reservation.NewHandler(reservationService, notificationService, pushService, eventService)
 	reservationHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Join Registration API (2-step attendee sign-up)
@@ -412,6 +421,15 @@ func main() {
 	ownerPostsService := ownerposts.NewService(db)
 	ownerPostsHandler := ownerposts.NewHandler(ownerPostsService)
 	ownerPostsHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
+
+	// Calendar Export API (public)
+	calendarHandler := calendar.NewHandler(eventService)
+	calendarHandler.RegisterRoutes(v1)
+
+	// Legal Text API (public + admin)
+	legalService := legal.NewService(db)
+	legalHandler := legal.NewHandler(legalService)
+	legalHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 
 	// 404 handler
 	router.NoRoute(func(c *gin.Context) {

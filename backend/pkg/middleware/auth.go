@@ -269,14 +269,24 @@ func CORSMiddleware() gin.HandlerFunc {
 		allowedOrigins["http://localhost:5000"] = true
 	}
 
+	// Always allow Firebase hosting and custom domains
+	allowedOrigins["https://khair-it-app.web.app"] = true
+	allowedOrigins["https://khair-it-app.firebaseapp.com"] = true
+	allowedOrigins["https://khair.it.com"] = true
+	allowedOrigins["https://khair.app"] = true
+	allowedOrigins["https://www.khair.app"] = true
+	allowedOrigins["https://app.khair.app"] = true
+
 	return func(c *gin.Context) {
 		origin := normalizeOrigin(c.GetHeader("Origin"))
 		if allowedOrigins[origin] || (!isReleaseMode && isLocalDevOrigin(origin)) {
 			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Request-ID, X-Country-Code, X-Invite-Code, Accept, Origin")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			c.Header("Access-Control-Expose-Headers", "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining")
+			c.Header("Access-Control-Max-Age", "86400")
 		}
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-		c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 		c.Header("Vary", "Origin")
 
 		if c.Request.Method == "OPTIONS" {

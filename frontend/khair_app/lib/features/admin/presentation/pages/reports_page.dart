@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -13,46 +15,46 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   String _filter = 'pending';
+  List<Map<String, dynamic>> _reports = [];
+  bool _loading = true;
+  int _total = 0;
 
-  // Mock data for demonstration
-  final List<_ReportData> _reports = [
-    _ReportData(
-      id: '1',
-      targetType: 'event',
-      targetName: 'Tech Conference 2026',
-      reporterType: 'user',
-      reasonCategory: 'spam',
-      description: 'This appears to be a duplicate event with fake details.',
-      status: 'pending',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    _ReportData(
-      id: '2',
-      targetType: 'organizer',
-      targetName: 'Fake Events Co.',
-      reporterType: 'guest',
-      reasonCategory: 'misleading_charity',
-      description: 'This organizer claims donations but has no transparency.',
-      status: 'pending',
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-    ),
-    _ReportData(
-      id: '3',
-      targetType: 'event',
-      targetName: 'Political Rally',
-      reporterType: 'system',
-      reasonCategory: 'political_content',
-      description: 'Automated flag: contains political keywords.',
-      status: 'pending',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchReports();
+  }
+
+  Future<void> _fetchReports() async {
+    setState(() => _loading = true);
+    try {
+      final dio = getIt<Dio>();
+      final response = await dio.get('/admin/reports', queryParameters: {
+        'status': _filter,
+      });
+      final data = response.data;
+      if (data['success'] == true) {
+        setState(() {
+          _reports = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          _total = data['total'] ?? 0;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load reports: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports Management'),
+        title: Text('Reports Management ($_total)'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
@@ -67,22 +69,38 @@ class _ReportsPageState extends State<ReportsPage> {
               children: [
                 _buildFilterChip('pending', 'Pending'),
                 const SizedBox(width: 8),
-                _buildFilterChip('reviewing', 'Reviewing'),
-                const SizedBox(width: 8),
                 _buildFilterChip('resolved', 'Resolved'),
+                const SizedBox(width: 8),
+                _buildFilterChip('dismissed', 'Dismissed'),
               ],
             ),
           ),
           // Reports list
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _reports.where((r) => r.status == _filter || _filter == 'all').length,
-              itemBuilder: (context, index) {
-                final filteredReports = _reports.where((r) => r.status == _filter || _filter == 'all').toList();
-                return _buildReportCard(filteredReports[index]);
-              },
-            ),
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _reports.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_outline,
+                                size: 64, color: Colors.grey[300]),
+                            const SizedBox(height: 12),
+                            Text('No $_filter reports',
+                                style: TextStyle(color: Colors.grey[500])),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchReports,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _reports.length,
+                          itemBuilder: (context, index) =>
+                              _buildReportCard(_reports[index]),
+                        ),
+                      ),
           ),
         ],
       ),
@@ -94,7 +112,10 @@ class _ReportsPageState extends State<ReportsPage> {
     return FilterChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (_) => setState(() => _filter = value),
+      onSelected: (_) {
+        setState(() => _filter = value);
+        _fetchReports();
+      },
       selectedColor: AppTheme.primaryColor.withAlpha(51),
       labelStyle: TextStyle(
         color: isSelected ? AppTheme.primaryColor : null,
@@ -103,7 +124,13 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  Widget _buildReportCard(_ReportData report) {
+  Widget _buildReportCard(Map<String, dynamic> report) {
+    final targetType = report['target_type'] ?? '';
+    final reasonCategory = report['reason_category'] ?? '';
+    final description = report['description'];
+    final createdAt = DateTime.tryParse(report['created_at'] ?? '') ?? DateTime.now();
+    final reportId = report['id'] ?? '';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -111,27 +138,23 @@ class _ReportsPageState extends State<ReportsPage> {
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _getReasonColor(report.reasonCategory).withAlpha(26),
+                  color: _getReasonColor(reasonCategory).withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  report.targetType == 'event' ? Icons.event : Icons.business,
-                  color: _getReasonColor(report.reasonCategory),
+                  targetType == 'event' ? Icons.event : Icons.business,
+                  color: _getReasonColor(reasonCategory),
                 ),
               ),
               const SizedBox(width: 12),
@@ -140,11 +163,11 @@ class _ReportsPageState extends State<ReportsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      report.targetName,
+                      '$targetType #${reportId.toString().substring(0, 8)}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${_formatReasonCategory(report.reasonCategory)} • ${_formatReporterType(report.reporterType)}',
+                      _formatReasonCategory(reasonCategory),
                       style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                   ],
@@ -153,13 +176,13 @@ class _ReportsPageState extends State<ReportsPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getReasonColor(report.reasonCategory).withAlpha(26),
+                  color: _getReasonColor(reasonCategory).withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _formatReasonCategory(report.reasonCategory),
+                  _formatReasonCategory(reasonCategory),
                   style: TextStyle(
-                    color: _getReasonColor(report.reasonCategory),
+                    color: _getReasonColor(reasonCategory),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -168,8 +191,7 @@ class _ReportsPageState extends State<ReportsPage> {
             ],
           ),
           const SizedBox(height: 12),
-          // Description
-          if (report.description != null)
+          if (description != null && description.toString().isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -177,32 +199,32 @@ class _ReportsPageState extends State<ReportsPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                report.description!,
+                description.toString(),
                 style: TextStyle(color: Colors.grey[700], fontSize: 13),
               ),
             ),
           const SizedBox(height: 12),
-          // Timestamp & actions
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('MMM d, y • HH:mm').format(report.createdAt),
+                DateFormat('MMM d, y • HH:mm').format(createdAt),
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => _dismissReport(report),
-                    child: const Text('Dismiss'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _showResolveDialog(report),
-                    child: const Text('Resolve'),
-                  ),
-                ],
-              ),
+              if (_filter == 'pending')
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => _dismissReport(reportId),
+                      child: const Text('Dismiss'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _showResolveDialog(reportId),
+                      child: const Text('Resolve'),
+                    ),
+                  ],
+                ),
             ],
           ),
         ],
@@ -226,46 +248,45 @@ class _ReportsPageState extends State<ReportsPage> {
   }
 
   String _formatReasonCategory(String reason) {
-    return reason.replaceAll('_', ' ').split(' ').map((w) => 
+    if (reason.isEmpty) return 'Unknown';
+    return reason.replaceAll('_', ' ').split(' ').map((w) =>
       w[0].toUpperCase() + w.substring(1)
     ).join(' ');
   }
 
-  String _formatReporterType(String type) {
-    switch (type) {
-      case 'system':
-        return '🤖 System';
-      case 'user':
-        return '👤 User';
-      default:
-        return '👥 Guest';
+  Future<void> _dismissReport(String reportId) async {
+    try {
+      final dio = getIt<Dio>();
+      await dio.post('/admin/reports/$reportId/dismiss');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report dismissed')),
+        );
+      }
+      _fetchReports();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to dismiss: $e')),
+        );
+      }
     }
   }
 
-  void _dismissReport(_ReportData report) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Report for "${report.targetName}" dismissed')),
-    );
-    setState(() => _reports.remove(report));
-  }
-
-  void _showResolveDialog(_ReportData report) {
+  void _showResolveDialog(String reportId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Resolve Report'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Choose an action for "${report.targetName}":'),
-            const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.check_circle, color: AppTheme.successColor),
               title: const Text('Approve (No Action)'),
               onTap: () {
                 Navigator.pop(context);
-                _resolveWithAction(report, 'approve');
+                _resolveWithAction(reportId, 'approve');
               },
             ),
             ListTile(
@@ -273,7 +294,7 @@ class _ReportsPageState extends State<ReportsPage> {
               title: const Text('Issue Warning'),
               onTap: () {
                 Navigator.pop(context);
-                _resolveWithAction(report, 'warn');
+                _resolveWithAction(reportId, 'warn');
               },
             ),
             ListTile(
@@ -281,7 +302,7 @@ class _ReportsPageState extends State<ReportsPage> {
               title: const Text('Remove Content'),
               onTap: () {
                 Navigator.pop(context);
-                _resolveWithAction(report, 'reject');
+                _resolveWithAction(reportId, 'reject');
               },
             ),
           ],
@@ -296,32 +317,24 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  void _resolveWithAction(_ReportData report, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Report resolved with action: $action')),
-    );
-    setState(() => _reports.remove(report));
+  Future<void> _resolveWithAction(String reportId, String action) async {
+    try {
+      final dio = getIt<Dio>();
+      await dio.post('/admin/reports/$reportId/resolve', data: {
+        'action': action,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Report resolved with action: $action')),
+        );
+      }
+      _fetchReports();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to resolve: $e')),
+        );
+      }
+    }
   }
-}
-
-class _ReportData {
-  final String id;
-  final String targetType;
-  final String targetName;
-  final String reporterType;
-  final String reasonCategory;
-  final String? description;
-  final String status;
-  final DateTime createdAt;
-
-  _ReportData({
-    required this.id,
-    required this.targetType,
-    required this.targetName,
-    required this.reporterType,
-    required this.reasonCategory,
-    this.description,
-    required this.status,
-    required this.createdAt,
-  });
 }

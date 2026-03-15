@@ -203,6 +203,40 @@ class AdminRepositoryImpl implements AdminRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, int>> sendNotification({
+    required String title,
+    required String message,
+    required String target,
+    String? userId,
+  }) async {
+    try {
+      final count = await _remoteDataSource.sendNotification(
+        title: title,
+        message: message,
+        target: target,
+        userId: userId,
+      );
+      return Right(count);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> searchUsersForNotification(String query) async {
+    try {
+      final users = await _remoteDataSource.searchUsersForNotification(query);
+      return Right(users);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   String _getErrorMessage(DioException e) {
     if (e.response?.data != null && e.response!.data is Map) {
       return e.response!.data['error'] ?? 'An error occurred';

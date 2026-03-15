@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/app_design_system.dart';
 
 /// Horizontal scrollable category chips with animated selection.
 class CategoryScroller extends StatefulWidget {
@@ -31,6 +32,7 @@ class _CategoryScrollerState extends State<CategoryScroller> {
   @override
   Widget build(BuildContext context) {
     final cats = _categories(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 48,
       child: ListView.separated(
@@ -54,12 +56,12 @@ class _CategoryScrollerState extends State<CategoryScroller> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF1B6B45)
-                    : Colors.white.withValues(alpha: 0.06),
+                    : AppColors.surfaceColor(context, 0.06),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF22C55E).withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.08),
+                      : AppColors.borderColor(context),
                   width: 1.5,
                 ),
                 boxShadow: isSelected
@@ -81,7 +83,7 @@ class _CategoryScrollerState extends State<CategoryScroller> {
                     size: 18,
                     color: isSelected
                         ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
+                        : AppColors.onSurfaceColor(context, 0.5),
                   ),
                   const SizedBox(width: 8),
                   AnimatedDefaultTextStyle(
@@ -92,7 +94,7 @@ class _CategoryScrollerState extends State<CategoryScroller> {
                           isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
-                          : Colors.white.withValues(alpha: 0.6),
+                          : AppColors.onSurfaceColor(context, 0.6),
                     ),
                     child: Text(cat.label),
                   ),

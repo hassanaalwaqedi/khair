@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/media_url_helper.dart';
 import '../../../events/domain/entities/event.dart';
 
 /// "Featured Events" horizontal carousel section — premium design
@@ -171,18 +172,9 @@ class _FeaturedCard extends StatelessWidget {
 
   const _FeaturedCard({required this.event, this.onTap});
 
-  static const _baseUrl =
-      'https://khair.it.com';
-
-  String _resolveUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    return '$_baseUrl$url';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final imageUrl = _resolveUrl(event.imageUrl);
+    final imageUrl = resolveMediaUrl(event.imageUrl);
     final categoryData = _getCategoryData(event.eventType);
 
     return GestureDetector(

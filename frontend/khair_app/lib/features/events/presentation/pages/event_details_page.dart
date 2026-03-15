@@ -12,6 +12,7 @@ import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/media_url_helper.dart';
 import '../../../../core/utils/share_helper.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/datasources/join_datasource.dart';
@@ -585,17 +586,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     }
   }
 
-  static const _baseUrl =
-      'https://khair.it.com';
 
-  String _resolveUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    return '$_baseUrl$url';
-  }
 
   Widget _buildEventImage(event) {
-    final imageUrl = _resolveUrl(event.imageUrl);
+    final imageUrl = resolveMediaUrl(event.imageUrl);
     if (imageUrl.isNotEmpty) {
       return Image.network(
         imageUrl,

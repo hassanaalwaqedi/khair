@@ -9,6 +9,7 @@ enum CreateEventStatus {
   failure,
   draftSaved,
   imageUploading,
+  aiGenerating,
 }
 
 /// Structured compliance settings — replaces individual booleans

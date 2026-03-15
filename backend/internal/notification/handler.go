@@ -49,6 +49,23 @@ func (s *Service) Create(userID uuid.UUID, title, message string) error {
 	return nil
 }
 
+// CreateForAll inserts a notification for every active user. Returns the count of users notified.
+func (s *Service) CreateForAll(title, message string) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx,
+		`INSERT INTO notifications (user_id, title, message)
+		 SELECT id, $1, $2 FROM users WHERE status != 'suspended'`,
+		title, message,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("create notification for all: %w", err)
+	}
+	count, _ := result.RowsAffected()
+	return count, nil
+}
+
 // ListByUserID returns all notifications for a user, newest first
 func (s *Service) ListByUserID(userID uuid.UUID) ([]Notification, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)

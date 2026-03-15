@@ -28,7 +28,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     // Load stats and users on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminBloc>().add(const LoadStats());
@@ -124,11 +124,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             Tab(text: context.l10n.adminAuditLogsTab),
             Tab(text: context.l10n.adminQuotesTab),
             Tab(text: context.l10n.adminUsersTab),
+            const Tab(icon: Icon(Icons.notifications_active), text: 'Notifications'),
           ],
         ),
       ),
       body: BlocListener<AdminBloc, AdminState>(
-        listenWhen: (prev, curr) => prev.actionStatus != curr.actionStatus,
+        listenWhen: (prev, curr) => prev.actionStatus != curr.actionStatus || prev.notificationSendStatus != curr.notificationSendStatus,
         listener: (context, state) {
           if (state.actionStatus == AdminStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +142,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.errorMessage ?? context.l10n.adminActionFailed),
+                backgroundColor: KhairColors.error,
+              ),
+            );
+          }
+          if (state.notificationSendStatus == AdminStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Notification sent to ${state.notificationSentCount ?? 0} user(s)'),
+                backgroundColor: KhairColors.success,
+              ),
+            );
+          } else if (state.notificationSendStatus == AdminStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Failed to send notification'),
                 backgroundColor: KhairColors.error,
               ),
             );
@@ -160,6 +176,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   _buildAuditLogsTab(isDark),
                   _QuotesTab(isDark: isDark),
                   _UsersTab(isDark: isDark),
+                  _NotificationsTab(isDark: isDark),
                 ],
               ),
             ),
@@ -1638,6 +1655,478 @@ class _QuotesTabState extends State<_QuotesTab> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+// ── Notifications Tab ──
+
+class _NotificationsTab extends StatefulWidget {
+  final bool isDark;
+  const _NotificationsTab({required this.isDark});
+
+  @override
+  State<_NotificationsTab> createState() => _NotificationsTabState();
+}
+
+class _NotificationsTabState extends State<_NotificationsTab> {
+  final _titleController = TextEditingController();
+  final _messageController = TextEditingController();
+  final _searchController = TextEditingController();
+  String _target = 'all'; // 'all' or 'individual'
+  String? _selectedUserId;
+  String? _selectedUserName;
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _messageController.dispose();
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        context.read<AdminBloc>().add(SearchUsersForNotification(query));
+      }
+    });
+  }
+
+  void _selectUser(Map<String, dynamic> user) {
+    setState(() {
+      _selectedUserId = user['id']?.toString();
+      _selectedUserName = '${user['name']} (${user['email']})';
+      _searchController.clear();
+    });
+    context.read<AdminBloc>().add(const SearchUsersForNotification(''));
+  }
+
+  void _send() {
+    final title = _titleController.text.trim();
+    final message = _messageController.text.trim();
+
+    if (title.isEmpty || message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title and message are required')),
+      );
+      return;
+    }
+
+    if (_target == 'individual' && _selectedUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a user')),
+      );
+      return;
+    }
+
+    context.read<AdminBloc>().add(SendAdminNotification(
+          title: title,
+          message: message,
+          target: _target,
+          userId: _selectedUserId,
+        ));
+
+    // Clear form
+    _titleController.clear();
+    _messageController.clear();
+    setState(() {
+      _selectedUserId = null;
+      _selectedUserName = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [KhairColors.primary, KhairColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.notifications_active, color: Colors.white),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Send Notification',
+                    style: KhairTypography.headlineSmall.copyWith(
+                      color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    'Send push notifications to your users',
+                    style: KhairTypography.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+
+          // Target selector
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+              borderRadius: KhairRadius.medium,
+              border: Border.all(
+                color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _target = 'all';
+                      _selectedUserId = null;
+                      _selectedUserName = null;
+                    }),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _target == 'all' ? KhairColors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.group,
+                            size: 18,
+                            color: _target == 'all' ? Colors.white : KhairColors.textTertiary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'All Users',
+                            style: KhairTypography.labelLarge.copyWith(
+                              color: _target == 'all' ? Colors.white : KhairColors.textTertiary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _target = 'individual'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _target == 'individual' ? KhairColors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person,
+                            size: 18,
+                            color: _target == 'individual' ? Colors.white : KhairColors.textTertiary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Individual',
+                            style: KhairTypography.labelLarge.copyWith(
+                              color: _target == 'individual' ? Colors.white : KhairColors.textTertiary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // User search (only for individual)
+          if (_target == 'individual') ...[
+            if (_selectedUserName != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: KhairColors.primarySurface,
+                  borderRadius: KhairRadius.medium,
+                  border: Border.all(color: KhairColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person, size: 18, color: KhairColors.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _selectedUserName!,
+                        style: KhairTypography.bodyMedium.copyWith(
+                          color: KhairColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        _selectedUserId = null;
+                        _selectedUserName = null;
+                      }),
+                      child: const Icon(Icons.close, size: 18, color: KhairColors.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            if (_selectedUserId == null) ...[
+              TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search user by name or email...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  filled: true,
+                  fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              BlocBuilder<AdminBloc, AdminState>(
+                buildWhen: (prev, curr) => prev.searchedUsers != curr.searchedUsers,
+                builder: (context, state) {
+                  if (state.searchedUsers.isEmpty) return const SizedBox(height: 12);
+                  return Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    constraints: const BoxConstraints(maxHeight: 180),
+                    decoration: BoxDecoration(
+                      color: widget.isDark ? KhairColors.darkCard : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: state.searchedUsers.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                      ),
+                      itemBuilder: (context, index) {
+                        final user = state.searchedUsers[index];
+                        return ListTile(
+                          dense: true,
+                          leading: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: KhairColors.primarySurface,
+                            child: Text(
+                              (user['name'] as String? ?? '?')[0].toUpperCase(),
+                              style: const TextStyle(
+                                color: KhairColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            user['name']?.toString() ?? 'Unknown',
+                            style: KhairTypography.labelMedium.copyWith(
+                              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            user['email']?.toString() ?? '',
+                            style: KhairTypography.bodySmall,
+                          ),
+                          onTap: () => _selectUser(user),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+
+          // Title field
+          Text(
+            'Title',
+            style: KhairTypography.labelLarge.copyWith(
+              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: 'Notification title...',
+              filled: true,
+              fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // Message field
+          Text(
+            'Message',
+            style: KhairTypography.labelLarge.copyWith(
+              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _messageController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'Write your notification message...',
+              filled: true,
+              fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Info banner
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: KhairColors.infoLight,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 18, color: KhairColors.info),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _target == 'all'
+                        ? 'This notification will be sent to all active users and will also appear in their notification center.'
+                        : 'This notification will be sent only to the selected user.',
+                    style: KhairTypography.bodySmall.copyWith(color: KhairColors.info),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Send button
+          BlocBuilder<AdminBloc, AdminState>(
+            buildWhen: (prev, curr) => prev.notificationSendStatus != curr.notificationSendStatus,
+            builder: (context, state) {
+              return SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: state.isNotificationSending ? null : _send,
+                  icon: state.isNotificationSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.send, size: 20),
+                  label: Text(
+                    state.isNotificationSending
+                        ? 'Sending...'
+                        : _target == 'all'
+                            ? 'Send to All Users'
+                            : 'Send to User',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KhairColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

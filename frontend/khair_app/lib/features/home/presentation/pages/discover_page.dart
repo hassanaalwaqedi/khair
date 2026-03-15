@@ -107,16 +107,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             children: [
                               Icon(Icons.cloud_off_rounded,
                                   size: 48,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.3)),
+                                  color: AppColors.onSurfaceColor(context, 0.3)),
                               const SizedBox(height: 16),
                               Text(
                                 'Something went wrong',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.7),
+                                  color: AppColors.onSurfaceColor(context, 0.7),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -126,8 +124,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.4),
+                                  color: AppColors.onSurfaceColor(context, 0.4),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -167,16 +164,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             children: [
                               Icon(Icons.event_busy_rounded,
                                   size: 48,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.3)),
+                                  color: AppColors.onSurfaceColor(context, 0.3)),
                               const SizedBox(height: 16),
                               Text(
                                 'No events found',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.7),
+                                  color: AppColors.onSurfaceColor(context, 0.7),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -185,8 +180,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.4),
+                                  color: AppColors.onSurfaceColor(context, 0.4),
                                 ),
                               ),
                               const SizedBox(height: 20),

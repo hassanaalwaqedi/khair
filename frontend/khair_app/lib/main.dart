@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import 'core/crash/crash_reporter.dart';
 import 'core/di/injection.dart';
 import 'core/locale/locale_bloc.dart';
 import 'core/network/connectivity_service.dart';
@@ -12,15 +14,24 @@ import 'core/widgets/offline_indicator.dart';
 import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
 import 'features/spiritual_quotes/presentation/widgets/spiritual_quote_startup_modal.dart';
+import 'core/push/push_notification_service.dart';
 import 'l10n/generated/app_localizations.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  CrashReporter.init(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  await configureDependencies();
-  ConnectivityService.instance.initialize();
+    // Initialize Firebase
+    await Firebase.initializeApp();
 
-  runApp(const KhairApp());
+    await configureDependencies();
+    ConnectivityService.instance.initialize();
+
+    // Initialize push notifications (requests permission + registers token)
+    await PushNotificationService.instance.initialize();
+
+    runApp(const KhairApp());
+  });
 }
 
 class KhairApp extends StatelessWidget {

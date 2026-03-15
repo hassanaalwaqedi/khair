@@ -45,10 +45,14 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _gradientCtrl,
       builder: (context, child) {
         final t = _gradientCtrl.value;
+        final baseColors = isDark
+            ? const [Color(0xFF0A2E1F), Color(0xFF0F3D2E), Color(0xFF14513A), Color(0xFF0F3D2E)]
+            : const [Color(0xFF1B6B45), Color(0xFF2E7D5A), Color(0xFF3A9D6E), Color(0xFF2E7D5A)];
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(24, 40, 20, 20),
@@ -56,12 +60,7 @@ class _HeroSectionState extends State<HeroSection>
             gradient: LinearGradient(
               begin: Alignment(-1 + t, -1),
               end: Alignment(1, 1 - t),
-              colors: const [
-                Color(0xFF0A2E1F),
-                Color(0xFF0F3D2E),
-                Color(0xFF14513A),
-                Color(0xFF0F3D2E),
-              ],
+              colors: baseColors,
             ),
           ),
           child: child,

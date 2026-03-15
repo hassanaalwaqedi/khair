@@ -337,3 +337,34 @@ func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 
 	return events, nil
 }
+
+// FindDuplicate checks if a similar event already exists for the same organizer
+func (r *Repository) FindDuplicate(organizerID uuid.UUID, title string, startDate time.Time) (*models.Event, error) {
+	query := `
+		SELECT id, organizer_id, title, description, event_type, language,
+		       country, city, address, latitude, longitude, start_date, end_date,
+		       image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
+		       status, is_published, rejection_reason, approved_at, created_at, updated_at
+		FROM events
+		WHERE organizer_id = $1
+		  AND LOWER(title) = LOWER($2)
+		  AND DATE(start_date) = DATE($3)
+		  AND status NOT IN ('cancelled', 'rejected')
+		LIMIT 1`
+
+	var event models.Event
+	err := r.db.QueryRow(query, organizerID, title, startDate).Scan(
+		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
+		&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
+		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
+		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+		&event.Status, &event.IsPublished, &event.RejectionReason, &event.ApprovedAt, &event.CreatedAt, &event.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}

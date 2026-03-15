@@ -1,20 +1,29 @@
 package reservation
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/event"
+	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/pkg/response"
 )
 
 // Handler handles seat reservation HTTP endpoints
 type Handler struct {
-	service *Service
+	service  *Service
+	notifSvc *notification.Service
+	pushSvc  *push.Service
+	eventSvc *event.Service
 }
 
 // NewHandler creates a new reservation handler
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, notifSvc *notification.Service, pushSvc *push.Service, eventSvc *event.Service) *Handler {
+	return &Handler{service: service, notifSvc: notifSvc, pushSvc: pushSvc, eventSvc: eventSvc}
 }
 
 // RegisterRoutes registers reservation routes
@@ -68,6 +77,9 @@ func (h *Handler) JoinEvent(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
+
+	// Send notifications in background
+	go h.sendJoinNotifications(uid, eventID, reg.ID)
 
 	response.SuccessWithMessage(c, "Seat reserved! Verify your email to confirm.", map[string]interface{}{
 		"registration_id": reg.ID,
@@ -194,4 +206,63 @@ func (h *Handler) GetMyReservations(c *gin.Context) {
 	}
 
 	response.Success(c, reservations)
+}
+
+// sendJoinNotifications sends DB + push notifications to user and organizer
+func (h *Handler) sendJoinNotifications(userID, eventID, regID uuid.UUID) {
+	// Get event details for the notification message
+	evt, err := h.eventSvc.GetByID(eventID)
+	if err != nil {
+		log.Printf("[NOTIFICATION] Failed to get event for join notification: %v", err)
+		return
+	}
+
+	title := evt.Title
+
+	// 1. Notify the user
+	userTitle := "Event Registration Confirmed"
+	userMsg := fmt.Sprintf("You successfully joined: %s", title)
+
+	if h.notifSvc != nil {
+		if err := h.notifSvc.Create(userID, userTitle, userMsg); err != nil {
+			log.Printf("[NOTIFICATION] Failed to create user join notification: %v", err)
+		}
+	}
+	if h.pushSvc != nil {
+		h.pushSvc.SendToUser(userID, userTitle, userMsg, map[string]string{
+			"type":     "event_joined",
+			"event_id": eventID.String(),
+		})
+	}
+
+	// 2. Notify the organizer
+	orgUserID := h.getOrganizerUserID(evt.OrganizerID)
+	if orgUserID != uuid.Nil {
+		orgTitle := "New Participant Joined"
+		orgMsg := fmt.Sprintf("A new participant joined your event: %s", title)
+
+		if h.notifSvc != nil {
+			if err := h.notifSvc.Create(orgUserID, orgTitle, orgMsg); err != nil {
+				log.Printf("[NOTIFICATION] Failed to create organizer join notification: %v", err)
+			}
+		}
+		if h.pushSvc != nil {
+			h.pushSvc.SendToUser(orgUserID, orgTitle, orgMsg, map[string]string{
+				"type":     "new_participant",
+				"event_id": eventID.String(),
+			})
+		}
+	}
+}
+
+// getOrganizerUserID gets the user_id for an organizer
+func (h *Handler) getOrganizerUserID(organizerID uuid.UUID) uuid.UUID {
+	var userID uuid.UUID
+	err := h.service.repo.db.QueryRow(
+		`SELECT user_id FROM organizers WHERE id = $1`, organizerID,
+	).Scan(&userID)
+	if err != nil {
+		return uuid.Nil
+	}
+	return userID
 }

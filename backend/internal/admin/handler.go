@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"database/sql"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -65,6 +66,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 			rbacGroup.POST("/roles", h.CreateRole)
 			rbacGroup.POST("/roles/:id/permissions", h.AssignPermissions)
 		}
+
+		// Notification management
+		admin.POST("/notifications/send", h.SendNotification)
+		admin.GET("/users/search", h.SearchUsers)
 	}
 }
 
@@ -462,4 +467,42 @@ func (h *Handler) ResolveReport(c *gin.Context) {
 		return
 	}
 	response.SuccessWithMessage(c, "Report resolved", nil)
+}
+
+// ── Admin Notifications ──
+
+// SendNotification sends a notification to all users or a specific user
+func (h *Handler) SendNotification(c *gin.Context) {
+	var req SendNotificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: title, message, and target are required")
+		return
+	}
+
+	count, err := h.service.SendNotification(&req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "Notification sent successfully", gin.H{
+		"recipients_count": count,
+	})
+}
+
+// SearchUsers searches users by name or email for the notification user picker
+func (h *Handler) SearchUsers(c *gin.Context) {
+	query := c.Query("q")
+	if len(query) < 2 {
+		response.Success(c, []interface{}{})
+		return
+	}
+
+	users, err := h.service.SearchUsers(query)
+	if err != nil {
+		response.InternalServerError(c, "Failed to search users")
+		return
+	}
+
+	response.Success(c, users)
 }

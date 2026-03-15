@@ -101,10 +101,15 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		return nil, errors.New("your organization is not yet approved")
 	}
 
-	// Parse dates
+	// Parse and validate dates
 	startDate, err := time.Parse(time.RFC3339, req.StartDate)
 	if err != nil {
 		return nil, errors.New("invalid start date format, use RFC3339")
+	}
+
+	// Event must be in the future
+	if startDate.Before(time.Now()) {
+		return nil, errors.New("event start date must be in the future")
 	}
 
 	var endDate *time.Time
@@ -113,7 +118,16 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		if err != nil {
 			return nil, errors.New("invalid end date format, use RFC3339")
 		}
+		// End date must be after start date
+		if !ed.After(startDate) {
+			return nil, errors.New("event end date must be after start date")
+		}
 		endDate = &ed
+	}
+
+	// Duplicate detection: same organizer + similar title + same date
+	if dup, _ := s.repo.FindDuplicate(organizer.ID, req.Title, startDate); dup != nil {
+		return nil, fmt.Errorf("a similar event '%s' already exists on the same date (ID: %s). Please edit the existing event or change the date", dup.Title, dup.ID)
 	}
 
 	event := &models.Event{
@@ -332,4 +346,71 @@ func (s *Service) GetMyEvents(userID uuid.UUID) ([]models.Event, error) {
 	}
 
 	return s.repo.ListByOrganizerID(organizer.ID)
+}
+
+// CreateDraft saves an event as a draft (not submitted for approval)
+func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
+	// Get or auto-create organizer profile
+	organizer, err := s.organizerRepo.GetByUserID(userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			organizer = &models.Organizer{
+				ID:        uuid.New(),
+				UserID:    userID,
+				Name:      "Organizer",
+				Status:    "approved",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			}
+			if createErr := s.organizerRepo.Create(organizer); createErr != nil {
+				return nil, fmt.Errorf("auto-create organizer profile: %w", createErr)
+			}
+		} else {
+			return nil, fmt.Errorf("get organizer profile: %w", err)
+		}
+	}
+
+	// Parse dates (lenient for drafts)
+	var startDate time.Time
+	var endDate *time.Time
+
+	if req.StartDate != "" {
+		sd, err := time.Parse(time.RFC3339, req.StartDate)
+		if err == nil {
+			startDate = sd
+		}
+	}
+
+	if req.EndDate != nil {
+		ed, err := time.Parse(time.RFC3339, *req.EndDate)
+		if err == nil {
+			endDate = &ed
+		}
+	}
+
+	event := &models.Event{
+		ID:          uuid.New(),
+		OrganizerID: organizer.ID,
+		Title:       req.Title,
+		Description: req.Description,
+		EventType:   req.EventType,
+		Language:    req.Language,
+		Country:     req.Country,
+		City:        req.City,
+		Address:     req.Address,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
+		StartDate:   startDate,
+		EndDate:     endDate,
+		ImageURL:    req.ImageURL,
+		Status:      "draft",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	if err := s.repo.Create(event); err != nil {
+		return nil, fmt.Errorf("save draft event: %w", err)
+	}
+
+	return event, nil
 }

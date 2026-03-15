@@ -47,11 +47,20 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CreateEventCubit, CreateEventState>(
-      buildWhen: (p, c) => p.formData != c.formData,
+    return BlocListener<CreateEventCubit, CreateEventState>(
+      listenWhen: (p, c) => p.status != c.status && c.status == CreateEventStatus.initial,
+      listener: (context, state) {
+        // Sync controllers when AI updates form data
+        if (_descCtrl.text != state.formData.description) {
+          _descCtrl.text = state.formData.description;
+        }
+      },
+      child: BlocBuilder<CreateEventCubit, CreateEventState>(
+      buildWhen: (p, c) => p.formData != c.formData || p.status != c.status,
       builder: (context, state) {
         final cubit = context.read<CreateEventCubit>();
         final fd = state.formData;
+        final isAiLoading = state.status == CreateEventStatus.aiGenerating;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,10 +82,42 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                     maxLength: 100,
                     onChanged: (v) => cubit.updateTitle(v),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  // Category
-                  Text(context.l10n.createEventCategoryLabel, style: AppTypography.label),
+                  // Category + AI detect button
+                  Row(
+                    children: [
+                      Text(context.l10n.createEventCategoryLabel, style: AppTypography.label),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: isAiLoading || fd.title.isEmpty ? null : () => cubit.detectCategory(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            gradient: fd.title.isNotEmpty && !isAiLoading
+                                ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)])
+                                : null,
+                            color: fd.title.isEmpty || isAiLoading ? AppColors.whiteAlpha(0.06) : null,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isAiLoading)
+                                const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white))
+                              else
+                                const Text('🔍', style: TextStyle(fontSize: 11)),
+                              const SizedBox(width: 4),
+                              Text('Auto-detect', style: TextStyle(
+                                color: fd.title.isNotEmpty && !isAiLoading ? Colors.white : AppColors.whiteAlpha(0.3),
+                                fontSize: 11, fontWeight: FontWeight.w600,
+                              )),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -116,6 +157,41 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // AI Generate Description Button
+                  GestureDetector(
+                    onTap: isAiLoading || fd.title.isEmpty ? null : () => cubit.generateDescription(),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: fd.title.isNotEmpty && !isAiLoading
+                            ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)])
+                            : null,
+                        color: fd.title.isEmpty || isAiLoading ? AppColors.whiteAlpha(0.06) : null,
+                        borderRadius: AppRadius.inputRadius,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isAiLoading)
+                            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          else
+                            const Text('✨', style: TextStyle(fontSize: 14)),
+                          const SizedBox(width: 8),
+                          Text(
+                            isAiLoading ? 'Generating...' : 'Generate with AI',
+                            style: TextStyle(
+                              color: fd.title.isNotEmpty && !isAiLoading ? Colors.white : AppColors.whiteAlpha(0.3),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -229,6 +305,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
           ],
         );
       },
+    ),
     );
   }
 

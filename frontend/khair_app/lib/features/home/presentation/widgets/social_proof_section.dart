@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/app_design_system.dart';
 
 /// Social proof section showing real event participation count.
 class SocialProofSection extends StatelessWidget {
@@ -26,9 +27,9 @@ class SocialProofSection extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 24),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: AppColors.surfaceColor(context, 0.05),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: AppColors.borderColor(context)),
         ),
         child: Row(
           children: [
@@ -55,7 +56,7 @@ class SocialProofSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppColors.onSurfaceColor(context, 0.9),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -63,7 +64,7 @@ class SocialProofSection extends StatelessWidget {
                     context.l10n.peopleJoinedEvents(totalReserved),
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.onSurfaceColor(context, 0.5),
                     ),
                   ),
                 ],

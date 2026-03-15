@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class AuditLogsPage extends StatefulWidget {
@@ -12,65 +14,48 @@ class AuditLogsPage extends StatefulWidget {
 }
 
 class _AuditLogsPageState extends State<AuditLogsPage> {
-  // Mock data for demonstration
-  final List<_AuditLogEntry> _logs = [
-    _AuditLogEntry(
-      id: '1',
-      actorType: 'admin',
-      actorName: 'Admin User',
-      action: 'organizer_approved',
-      targetType: 'organizer',
-      targetName: 'Tech Events Co.',
-      reason: 'Verified organization credentials',
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-    ),
-    _AuditLogEntry(
-      id: '2',
-      actorType: 'system',
-      actorName: 'System',
-      action: 'event_flagged',
-      targetType: 'event',
-      targetName: 'Political Rally',
-      reason: 'Automated: Contains banned keywords',
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    _AuditLogEntry(
-      id: '3',
-      actorType: 'admin',
-      actorName: 'Admin User',
-      action: 'organizer_warned',
-      targetType: 'organizer',
-      targetName: 'Spam Events Ltd.',
-      reason: 'Multiple spam reports received',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    _AuditLogEntry(
-      id: '4',
-      actorType: 'admin',
-      actorName: 'Admin User',
-      action: 'organizer_suspended',
-      targetType: 'organizer',
-      targetName: 'Fake Charity Org.',
-      reason: 'Misleading charity claims confirmed',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    _AuditLogEntry(
-      id: '5',
-      actorType: 'admin',
-      actorName: 'Admin User',
-      action: 'event_approved',
-      targetType: 'event',
-      targetName: 'Flutter Workshop',
-      reason: 'Content verified',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-  ];
+  List<Map<String, dynamic>> _logs = [];
+  bool _loading = true;
+  int _total = 0;
+  String? _actorTypeFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLogs();
+  }
+
+  Future<void> _fetchLogs() async {
+    setState(() => _loading = true);
+    try {
+      final dio = getIt<Dio>();
+      final params = <String, dynamic>{};
+      if (_actorTypeFilter != null) params['actor_type'] = _actorTypeFilter;
+
+      final response = await dio.get('/admin/audit-logs', queryParameters: params);
+      final data = response.data;
+      if (data['success'] == true) {
+        setState(() {
+          _logs = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          _total = data['total'] ?? 0;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load audit logs: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Audit Logs'),
+        title: Text('Audit Logs ($_total)'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
@@ -82,15 +67,39 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _logs.length,
-        itemBuilder: (context, index) => _buildLogEntry(_logs[index]),
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _logs.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.receipt_long, size: 64, color: Colors.grey[300]),
+                      const SizedBox(height: 12),
+                      Text('No audit logs found',
+                          style: TextStyle(color: Colors.grey[500])),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchLogs,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _logs.length,
+                    itemBuilder: (context, index) => _buildLogEntry(_logs[index]),
+                  ),
+                ),
     );
   }
 
-  Widget _buildLogEntry(_AuditLogEntry log) {
+  Widget _buildLogEntry(Map<String, dynamic> log) {
+    final actorType = log['actor_type'] ?? '';
+    final action = (log['action'] ?? '').toString();
+    final targetType = log['target_type'] ?? '';
+    final targetId = (log['target_id'] ?? '').toString();
+    final reason = log['reason'];
+    final createdAt = DateTime.tryParse(log['created_at'] ?? '') ?? DateTime.now();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -102,76 +111,69 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Action icon
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getActionColor(log.action).withAlpha(26),
+              color: _getActionColor(action).withAlpha(26),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              _getActionIcon(log.action),
-              color: _getActionColor(log.action),
+              _getActionIcon(action),
+              color: _getActionColor(action),
               size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Action & target
                 RichText(
                   text: TextSpan(
                     style: TextStyle(color: Colors.grey[800], fontSize: 14),
                     children: [
                       TextSpan(
-                        text: log.actorName,
+                        text: actorType == 'system' ? 'System' : 'Admin',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      TextSpan(text: ' ${_formatAction(action)} '),
                       TextSpan(
-                        text: ' ${_formatAction(log.action)} ',
-                      ),
-                      TextSpan(
-                        text: log.targetName,
+                        text: '$targetType #${targetId.length > 8 ? targetId.substring(0, 8) : targetId}',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Reason
-                if (log.reason != null)
+                if (reason != null && reason.toString().isNotEmpty)
                   Text(
-                    log.reason!,
+                    reason.toString(),
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                   ),
                 const SizedBox(height: 8),
-                // Timestamp & badges
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 14, color: Colors.grey[400]),
                     const SizedBox(width: 4),
                     Text(
-                      DateFormat('MMM d, y • HH:mm').format(log.createdAt),
+                      DateFormat('MMM d, y • HH:mm').format(createdAt),
                       style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
                     const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: log.actorType == 'system' 
-                          ? Colors.blue.withAlpha(26) 
-                          : Colors.green.withAlpha(26),
+                        color: actorType == 'system'
+                            ? Colors.blue.withAlpha(26)
+                            : Colors.green.withAlpha(26),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        log.actorType.toUpperCase(),
+                        actorType.toString().toUpperCase(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: log.actorType == 'system' ? Colors.blue : Colors.green,
+                          color: actorType == 'system' ? Colors.blue : Colors.green,
                         ),
                       ),
                     ),
@@ -214,59 +216,51 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Filter Logs',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Filter Logs',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilterChip(label: const Text('All'), selected: true, onSelected: (_) {}),
-                FilterChip(label: const Text('Admin'), selected: false, onSelected: (_) {}),
-                FilterChip(label: const Text('System'), selected: false, onSelected: (_) {}),
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _actorTypeFilter == null,
+                  onSelected: (_) {
+                    setState(() => _actorTypeFilter = null);
+                    Navigator.pop(ctx);
+                    _fetchLogs();
+                  },
+                ),
+                FilterChip(
+                  label: const Text('Admin'),
+                  selected: _actorTypeFilter == 'admin',
+                  onSelected: (_) {
+                    setState(() => _actorTypeFilter = 'admin');
+                    Navigator.pop(ctx);
+                    _fetchLogs();
+                  },
+                ),
+                FilterChip(
+                  label: const Text('System'),
+                  selected: _actorTypeFilter == 'system',
+                  onSelected: (_) {
+                    setState(() => _actorTypeFilter = 'system');
+                    Navigator.pop(ctx);
+                    _fetchLogs();
+                  },
+                ),
               ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Apply Filter'),
-              ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class _AuditLogEntry {
-  final String id;
-  final String actorType;
-  final String actorName;
-  final String action;
-  final String targetType;
-  final String targetName;
-  final String? reason;
-  final DateTime createdAt;
-
-  _AuditLogEntry({
-    required this.id,
-    required this.actorType,
-    required this.actorName,
-    required this.action,
-    required this.targetType,
-    required this.targetName,
-    this.reason,
-    required this.createdAt,
-  });
 }

@@ -145,7 +145,9 @@ class _QuoteRotatorState extends State<QuoteRotator>
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 180),
+        child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -180,7 +182,7 @@ class _QuoteRotatorState extends State<QuoteRotator>
               ),
               // Content
               Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -188,8 +190,8 @@ class _QuoteRotatorState extends State<QuoteRotator>
                     Row(
                       children: [
                         Container(
-                          width: 28,
-                          height: 28,
+                          width: 24,
+                          height: 24,
                           decoration: BoxDecoration(
                             color: (isQuran
                                     ? const Color(0xFFC8A951)
@@ -204,14 +206,14 @@ class _QuoteRotatorState extends State<QuoteRotator>
                             color: isQuran
                                 ? const Color(0xFFC8A951)
                                 : const Color(0xFF22C55E),
-                            size: 14,
+                            size: 12,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           isQuran ? 'Quran' : 'Hadith',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: Colors.white.withOpacity(0.7),
                             letterSpacing: 0.5,
@@ -225,7 +227,7 @@ class _QuoteRotatorState extends State<QuoteRotator>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     // Animated quote text
                     FadeTransition(
                       opacity: _fadeAnim,
@@ -237,20 +239,22 @@ class _QuoteRotatorState extends State<QuoteRotator>
                               quote.textAr,
                               textAlign: TextAlign.center,
                               textDirection: TextDirection.rtl,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 17,
+                                fontSize: 14,
                                 fontFamily: 'Cairo',
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
-                                height: 1.6,
+                                height: 1.5,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             Text(
                               '— ${quote.source} (${quote.reference})',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFFC8A951)
                                     .withOpacity(0.9),
@@ -263,7 +267,7 @@ class _QuoteRotatorState extends State<QuoteRotator>
                     ),
                     // Dots indicator
                     if (_quotes.length > 1) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
@@ -290,6 +294,7 @@ class _QuoteRotatorState extends State<QuoteRotator>
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -297,7 +302,7 @@ class _QuoteRotatorState extends State<QuoteRotator>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        height: 110,
+        height: 80,
         decoration: BoxDecoration(
           color: const Color(0xFF0F3D2E).withOpacity(0.3),
           borderRadius: BorderRadius.circular(20),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/app_design_system.dart';
 
 /// Gamification card showing user level, progress, and reward path.
 class GamificationCard extends StatelessWidget {
@@ -17,18 +18,18 @@ class GamificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A3A2E),
-            Color(0xFF0F2A1F),
-          ],
+          colors: isDark
+              ? const [Color(0xFF1A3A2E), Color(0xFF0F2A1F)]
+              : const [Color(0xFFE8F5EC), Color(0xFFD4EDDA)],
         ),
         border: Border.all(
           color: const Color(0xFFC8A951).withValues(alpha: 0.2),
@@ -60,7 +61,7 @@ class GamificationCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.onSurfaceColor(context, 0.8),
                       ),
                     ),
                     TextSpan(
@@ -93,7 +94,7 @@ class GamificationCard extends StatelessWidget {
                         children: [
                           Container(
                             width: double.infinity,
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: AppColors.surfaceColor(context, 0.08),
                           ),
                           FractionallySizedBox(
                             widthFactor: value,
@@ -121,7 +122,7 @@ class GamificationCard extends StatelessWidget {
                           context.l10n.moreEventsToGold(eventsToNext),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppColors.onSurfaceColor(context, 0.5),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -130,7 +131,7 @@ class GamificationCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppColors.surfaceColor(context, 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

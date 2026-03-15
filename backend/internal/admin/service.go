@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 
 	eventpkg "github.com/khair/backend/internal/event"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/internal/rbac"
 	"github.com/khair/backend/internal/sse"
 	"github.com/khair/backend/pkg/cache"
@@ -23,6 +25,7 @@ type Service struct {
 	eventRepo           EventRepository
 	rbacService         *rbac.Service
 	notificationService *notification.Service
+	pushService         *push.Service
 	cacheService        *cache.Service
 	sseHub              *sse.Hub
 }
@@ -46,13 +49,14 @@ type StatusUpdateRequest struct {
 	RejectionReason *string `json:"rejection_reason"`
 }
 
-func NewService(db *sql.DB, organizerRepo OrganizerRepository, eventRepo EventRepository, rbacService *rbac.Service, notifService *notification.Service, cacheService *cache.Service, sseHub *sse.Hub) *Service {
+func NewService(db *sql.DB, organizerRepo OrganizerRepository, eventRepo EventRepository, rbacService *rbac.Service, notifService *notification.Service, pushSvc *push.Service, cacheService *cache.Service, sseHub *sse.Hub) *Service {
 	return &Service{
 		db:                  db,
 		organizerRepo:       organizerRepo,
 		eventRepo:           eventRepo,
 		rbacService:         rbacService,
 		notificationService: notifService,
+		pushService:         pushSvc,
 		cacheService:        cacheService,
 		sseHub:              sseHub,
 	}
@@ -258,4 +262,116 @@ func (s *Service) UnsuspendUser(userID uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// ── Admin Notifications ──
+
+// SendNotificationRequest is the request body for admin send notification
+type SendNotificationRequest struct {
+	Title   string  `json:"title" binding:"required"`
+	Message string  `json:"message" binding:"required"`
+	Target  string  `json:"target" binding:"required,oneof=all individual"`
+	UserID  *string `json:"user_id"` // required when target=individual
+}
+
+// SendNotification sends a notification to all users or a specific user
+func (s *Service) SendNotification(req *SendNotificationRequest) (int64, error) {
+	if s.notificationService == nil {
+		return 0, errors.New("notification service not available")
+	}
+
+	if req.Target == "all" {
+		count, err := s.notificationService.CreateForAll(req.Title, req.Message)
+		if err != nil {
+			return 0, fmt.Errorf("send notification to all: %w", err)
+		}
+
+		// Send FCM push to all users in background
+		if s.pushService != nil {
+			go s.sendPushToAll(req.Title, req.Message)
+		}
+
+		log.Printf("[ADMIN] Sent notification to %d users: %s", count, req.Title)
+		return count, nil
+	}
+
+	// Individual
+	if req.UserID == nil || *req.UserID == "" {
+		return 0, errors.New("user_id is required for individual notifications")
+	}
+
+	userID, err := uuid.Parse(*req.UserID)
+	if err != nil {
+		return 0, errors.New("invalid user_id")
+	}
+
+	if err := s.notificationService.Create(userID, req.Title, req.Message); err != nil {
+		return 0, fmt.Errorf("send notification to user: %w", err)
+	}
+
+	// Send FCM push
+	if s.pushService != nil {
+		go s.pushService.SendToUser(userID, req.Title, req.Message, nil)
+	}
+
+	log.Printf("[ADMIN] Sent notification to user %s: %s", userID, req.Title)
+	return 1, nil
+}
+
+// sendPushToAll sends FCM push notifications to all users with device tokens
+func (s *Service) sendPushToAll(title, message string) {
+	rows, err := s.db.Query(`SELECT DISTINCT user_id FROM device_tokens`)
+	if err != nil {
+		log.Printf("[ADMIN] Error getting device token users: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var uid uuid.UUID
+		if err := rows.Scan(&uid); err != nil {
+			continue
+		}
+		s.pushService.SendToUser(uid, title, message, nil)
+	}
+}
+
+// AdminUserBasic is a simplified user struct for search results
+type AdminUserBasic struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+// SearchUsers searches for users by name or email
+func (s *Service) SearchUsers(query string) ([]AdminUserBasic, error) {
+	query = strings.TrimSpace(query)
+	if len(query) < 2 {
+		return []AdminUserBasic{}, nil
+	}
+
+	rows, err := s.db.Query(
+		`SELECT id, COALESCE(display_name, email), email FROM users
+		 WHERE (LOWER(COALESCE(display_name, '')) LIKE $1 OR LOWER(email) LIKE $1)
+		 AND status != 'suspended'
+		 ORDER BY display_name ASC LIMIT 20`,
+		"%"+strings.ToLower(query)+"%",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []AdminUserBasic
+	for rows.Next() {
+		var u AdminUserBasic
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email); err != nil {
+			continue
+		}
+		users = append(users, u)
+	}
+	if users == nil {
+		users = []AdminUserBasic{}
+	}
+	return users, nil
 }

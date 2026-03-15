@@ -87,7 +87,7 @@ func Load() *Config {
 			User:     getEnv("DB_USER", "khair"),
 			Password: requireEnv("DB_PASSWORD"),
 			DBName:   getEnv("DB_NAME", "khair"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			SSLMode:  getEnv("DB_SSLMODE", "require"),
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),

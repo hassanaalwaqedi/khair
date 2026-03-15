@@ -29,6 +29,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<UpdateUserStatus>(_onUpdateUserStatus);
     on<DeleteUserEvent>(_onDeleteUser);
     on<VerifyUserEvent>(_onVerifyUser);
+    on<SendAdminNotification>(_onSendNotification);
+    on<SearchUsersForNotification>(_onSearchUsers);
   }
 
   Future<void> _onLoadData(
@@ -401,6 +403,48 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         emit(state.copyWith(actionStatus: AdminStatus.success));
         add(const LoadUsers()); // Refresh users list
       },
+    );
+  }
+
+  Future<void> _onSendNotification(
+    SendAdminNotification event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(notificationSendStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.sendNotification(
+      title: event.title,
+      message: event.message,
+      target: event.target,
+      userId: event.userId,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        notificationSendStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (count) => emit(state.copyWith(
+        notificationSendStatus: AdminStatus.success,
+        notificationSentCount: count,
+      )),
+    );
+  }
+
+  Future<void> _onSearchUsers(
+    SearchUsersForNotification event,
+    Emitter<AdminState> emit,
+  ) async {
+    if (event.query.length < 2) {
+      emit(state.copyWith(searchedUsers: const []));
+      return;
+    }
+
+    final result = await _adminRepository.searchUsersForNotification(event.query);
+
+    result.fold(
+      (failure) => emit(state.copyWith(searchedUsers: const [])),
+      (users) => emit(state.copyWith(searchedUsers: users)),
     );
   }
 }

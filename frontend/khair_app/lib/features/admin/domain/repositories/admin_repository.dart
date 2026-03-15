@@ -60,6 +60,17 @@ abstract class AdminRepository {
 
   /// Verify user (mark as verified)
   Future<Either<Failure, void>> verifyUser(String userId);
+
+  /// Send notification to all users or individual user
+  Future<Either<Failure, int>> sendNotification({
+    required String title,
+    required String message,
+    required String target,
+    String? userId,
+  });
+
+  /// Search users for notification user picker
+  Future<Either<Failure, List<Map<String, dynamic>>>> searchUsersForNotification(String query);
 }
 
 /// Parameters for status update

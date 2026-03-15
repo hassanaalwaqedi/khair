@@ -16,7 +16,7 @@ class AppScaffoldBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(gradient: AppGradients.pageBackground),
+      decoration: BoxDecoration(gradient: AppGradients.pageBackgroundOf(context)),
       child: child,
     );
   }

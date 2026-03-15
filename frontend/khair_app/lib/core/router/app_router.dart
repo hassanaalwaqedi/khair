@@ -26,6 +26,7 @@ import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
 import '../../features/static/presentation/pages/static_page.dart';
 import '../../features/verification/presentation/pages/verification_page.dart';
 import '../../features/home/presentation/pages/discover_page.dart';
+import '../../features/notifications/presentation/pages/notification_center_page.dart';
 
 import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart' as owner;
@@ -219,6 +220,11 @@ final GoRouter appRouter = GoRouter(
         create: (_) => getIt<OwnerPostsBloc>(),
         child: const owner.OwnerDashboardPage(),
       ),
+    ),
+    // Notification Center
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationCenterPage(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

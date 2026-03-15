@@ -27,7 +27,7 @@ func DefaultProductionConfig() *ProductionConfig {
 
 	origins := os.Getenv("CORS_ORIGINS")
 	if origins == "" {
-		origins = "https://khair.app"
+		origins = "https://khair-it-app.web.app,https://khair-it-app.firebaseapp.com,https://khair.it.com"
 	}
 
 	return &ProductionConfig{

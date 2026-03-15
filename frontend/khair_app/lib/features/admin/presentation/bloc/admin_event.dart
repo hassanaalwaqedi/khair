@@ -134,3 +134,31 @@ class VerifyUserEvent extends AdminEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+/// Send notification to all or individual user
+class SendAdminNotification extends AdminEvent {
+  final String title;
+  final String message;
+  final String target; // 'all' or 'individual'
+  final String? userId;
+
+  const SendAdminNotification({
+    required this.title,
+    required this.message,
+    required this.target,
+    this.userId,
+  });
+
+  @override
+  List<Object?> get props => [title, message, target, userId];
+}
+
+/// Search users for notification user picker
+class SearchUsersForNotification extends AdminEvent {
+  final String query;
+
+  const SearchUsersForNotification(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}

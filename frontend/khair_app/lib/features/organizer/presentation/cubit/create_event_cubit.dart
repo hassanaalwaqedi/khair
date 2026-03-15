@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../events/domain/repositories/events_repository.dart';
 import 'create_event_state.dart';
 
@@ -156,24 +160,133 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(state.copyWith(status: CreateEventStatus.draftSaved));
   }
 
-  // ── Image Upload (placeholder — real upload needs multipart endpoint) ──
+  // ── Image Upload (real multipart upload to backend) ──
 
   Future<void> uploadImage(String filePath) async {
     emit(state.copyWith(status: CreateEventStatus.imageUploading));
 
     try {
-      // TODO: Replace with real multipart upload to backend
-      // For now, store the local file path as the URL
-      await Future.delayed(const Duration(milliseconds: 500));
+      final dio = getIt<Dio>();
+      final file = File(filePath);
+      if (!await file.exists()) {
+        emit(state.copyWith(
+          status: CreateEventStatus.failure,
+          errorMessage: 'Selected file not found.',
+        ));
+        return;
+      }
+
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split(Platform.pathSeparator).last,
+        ),
+      });
+
+      final response = await dio.post('/upload/image', data: formData);
+
+      final url = response.data['data']?['url'] as String?;
+      if (url == null || url.isEmpty) {
+        emit(state.copyWith(
+          status: CreateEventStatus.failure,
+          errorMessage: 'Upload succeeded but no URL returned.',
+        ));
+        return;
+      }
+
       emit(state.copyWith(
-        formData: state.formData.copyWith(coverImageUrl: filePath),
+        formData: state.formData.copyWith(coverImageUrl: url),
         status: CreateEventStatus.initial,
+      ));
+    } on DioException catch (e) {
+      final msg = e.response?.data?['error'] ?? e.message ?? 'Upload failed';
+      emit(state.copyWith(
+        status: CreateEventStatus.failure,
+        errorMessage: 'Image upload failed: $msg',
       ));
     } catch (e) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
         errorMessage: 'Image upload failed: $e',
       ));
+    }
+  }
+
+  // ── AI Description Generator ──
+
+  Future<void> generateDescription() async {
+    if (state.formData.title.isEmpty) return;
+    emit(state.copyWith(status: CreateEventStatus.aiGenerating));
+
+    try {
+      final dio = getIt<Dio>();
+      final response = await dio.post('/ai/enhance-description', data: {
+        'title': state.formData.title,
+        'description': state.formData.description.isEmpty
+            ? state.formData.title
+            : state.formData.description,
+        'tags': state.formData.tags,
+      });
+
+      final data = response.data['data'];
+      if (data != null) {
+        final enhanced = data['description'] ?? state.formData.description;
+        final suggestedTags = data['suggested_tags'] != null
+            ? List<String>.from(data['suggested_tags'])
+            : state.formData.tags;
+
+        emit(state.copyWith(
+          formData: state.formData.copyWith(
+            description: enhanced,
+            tags: suggestedTags,
+          ),
+          status: CreateEventStatus.initial,
+        ));
+      } else {
+        emit(state.copyWith(status: CreateEventStatus.initial));
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['error'] ?? 'AI generation failed';
+      emit(state.copyWith(
+        status: CreateEventStatus.failure,
+        errorMessage: msg.toString(),
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: CreateEventStatus.failure,
+        errorMessage: 'AI generation failed: $e',
+      ));
+    }
+  }
+
+  // ── AI Category Detection ──
+
+  Future<void> detectCategory() async {
+    if (state.formData.title.isEmpty) return;
+    emit(state.copyWith(status: CreateEventStatus.aiGenerating));
+
+    try {
+      final dio = getIt<Dio>();
+      final response = await dio.post('/ai/detect-category', data: {
+        'title': state.formData.title,
+        'description': state.formData.description.isEmpty
+            ? state.formData.title
+            : state.formData.description,
+      });
+
+      final data = response.data['data'];
+      if (data != null && data['category'] != null) {
+        emit(state.copyWith(
+          formData: state.formData.copyWith(
+            category: data['category'],
+          ),
+          status: CreateEventStatus.initial,
+        ));
+      } else {
+        emit(state.copyWith(status: CreateEventStatus.initial));
+      }
+    } catch (e) {
+      emit(state.copyWith(status: CreateEventStatus.initial));
     }
   }
 }
