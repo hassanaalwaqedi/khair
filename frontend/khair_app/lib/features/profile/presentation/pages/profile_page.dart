@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../core/locale/l10n_extension.dart';
@@ -48,6 +50,11 @@ class ProfilePage extends StatelessWidget {
               SliverToBoxAdapter(
                 child: _buildStatsRow(context, state, isDark),
               ),
+              // Verification prompt for pending organizers/sheikhs
+              if (state.isOrganizer && !state.isApprovedOrganizer)
+                SliverToBoxAdapter(
+                  child: _buildVerificationBanner(context, isDark),
+                ),
               // Quick actions
               SliverToBoxAdapter(
                 child: _buildQuickActions(context, state, isDark),
@@ -65,6 +72,10 @@ class ProfilePage extends StatelessWidget {
               SliverToBoxAdapter(
                 child: _buildSignOutButton(context, isDark),
               ),
+              // Delete account
+              SliverToBoxAdapter(
+                child: _buildDeleteAccountSection(context),
+              ),
               // Bottom spacing for floating nav
               const SliverToBoxAdapter(
                 child: SizedBox(height: 100),
@@ -79,78 +90,199 @@ class ProfilePage extends StatelessWidget {
   // ─── Signed-Out State ────────────────────────────────
 
   Widget _buildSignedOutState(BuildContext context, bool isDark) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDark
-                    ? KhairColors.darkSurfaceVariant
-                    : KhairColors.surfaceVariant,
-              ),
-              child: Icon(
-                Icons.person_outline_rounded,
-                size: 48,
-                color: KhairColors.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.l10n.welcomeToKhair,
-              style: KhairTypography.h2.copyWith(
-                color: isDark
-                    ? KhairColors.darkTextPrimary
-                    : KhairColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.signInToManage,
-              style: KhairTypography.bodyMedium.copyWith(
-                color: KhairColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.go('/login'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: KhairColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
+    final border = isDark ? KhairColors.darkBorder : KhairColors.border;
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+
+                // ── HEADER: Logo + Language ──
+                Row(
+                  children: [
+                    Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: KhairColors.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.mosque, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('Khair', style: TextStyle(
+                      fontSize: 20, color: tp, fontWeight: FontWeight.w800,
+                    )),
+                    const Spacer(),
+                    const LanguageSwitcher(showLabel: false),
+                  ],
+                ),
+
+                const SizedBox(height: 48),
+
+                // ── HERO ILLUSTRATION ──
+                Container(
+                  width: 88, height: 88,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        KhairColors.primary.withValues(alpha: 0.15),
+                        KhairColors.secondary.withValues(alpha: 0.1),
+                      ],
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.explore_rounded,
+                    size: 42,
+                    color: KhairColors.primary,
                   ),
                 ),
-                child: Text(
-                  context.l10n.signIn,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+
+                const SizedBox(height: 28),
+
+                // ── HERO TEXT ──
+                Text(
+                  context.l10n.guestHeroTitle,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: tp,
+                    height: 1.25,
+                    letterSpacing: -0.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/register'),
-              child: Text(
-                context.l10n.createAccount.replaceAll('\n', ' '),
-                style: const TextStyle(
+                const SizedBox(height: 12),
+                Text(
+                  context.l10n.guestHeroSubtitle,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: ts,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 40),
+
+                // ── BENEFITS SECTION ──
+                _BenefitCard(
+                  icon: Icons.location_on_rounded,
+                  emoji: '📍',
+                  text: context.l10n.guestBenefitEvents,
                   color: KhairColors.primary,
-                  fontWeight: FontWeight.w600,
+                  cardBg: cardBg,
+                  border: border,
+                  tp: tp,
                 ),
-              ),
+                const SizedBox(height: 10),
+                _BenefitCard(
+                  icon: Icons.school_rounded,
+                  emoji: '🎓',
+                  text: context.l10n.guestBenefitTeachers,
+                  color: KhairColors.info,
+                  cardBg: cardBg,
+                  border: border,
+                  tp: tp,
+                ),
+                const SizedBox(height: 10),
+                _BenefitCard(
+                  icon: Icons.people_rounded,
+                  emoji: '🤝',
+                  text: context.l10n.guestBenefitCommunity,
+                  color: KhairColors.secondary,
+                  cardBg: cardBg,
+                  border: border,
+                  tp: tp,
+                ),
+
+                const SizedBox(height: 40),
+
+                // ── CTA: Get Started ──
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/register'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KhairColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      context.l10n.guestGetStarted,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // ── CTA: Already have account ──
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/login'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: KhairColors.primary.withValues(alpha: 0.4),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      context.l10n.guestAlreadyHaveAccount,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: KhairColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── Bottom prompt ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_open_rounded, size: 14, color: ts),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.l10n.guestSignUpToExplore,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ts,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 80),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -190,6 +322,11 @@ class ProfilePage extends StatelessWidget {
                 style: KhairTypography.h2.copyWith(color: Colors.white),
               ),
               const Spacer(),
+              IconButton(
+                onPressed: () => context.push('/profile/edit'),
+                icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                tooltip: 'Edit Profile',
+              ),
               const LanguageSwitcher(showLabel: false),
             ],
           ),
@@ -493,6 +630,83 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  // ─── Verification Banner ──────────────────────────────
+
+  Widget _buildVerificationBanner(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: GestureDetector(
+        onTap: () => context.push('/verification'),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                KhairColors.warning.withValues(alpha: 0.12),
+                KhairColors.secondary.withValues(alpha: 0.08),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: KhairColors.warning.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: KhairColors.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.verified_user_outlined,
+                  color: KhairColors.warning,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Verify Your Account',
+                      style: KhairTypography.labelLarge.copyWith(
+                        color: isDark
+                            ? KhairColors.darkTextPrimary
+                            : KhairColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Upload your ID & certificate to get verified',
+                      style: KhairTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? KhairColors.darkTextSecondary
+                            : KhairColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: KhairColors.warning,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ─── Sign Out ────────────────────────────────────────
 
   Widget _buildSignOutButton(BuildContext context, bool isDark) {
@@ -552,6 +766,71 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  Widget _buildDeleteAccountSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SizedBox(
+        width: double.infinity,
+        child: TextButton.icon(
+          onPressed: () => _showDeleteAccountDialog(context),
+          icon: Icon(Icons.delete_forever, color: KhairColors.error, size: 18),
+          label: Text(
+            context.l10n.deleteAccountTitle,
+            style: TextStyle(
+              color: KhairColors.error.withValues(alpha: 0.7),
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.deleteAccountTitle),
+        content: Text(context.l10n.deleteAccountWarning),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final apiClient = getIt<ApiClient>();
+                await apiClient.delete('/me');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.deleteAccountSuccess)),
+                  );
+                  context.read<AuthBloc>().add(LogoutRequested());
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.deleteAccountError)),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhairColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(context.l10n.deleteAccountConfirm),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Helpers ─────────────────────────────────────────
 
   IconData _roleIcon(String role) {
@@ -567,6 +846,65 @@ class ProfilePage extends StatelessWidget {
 }
 
 // ─── Reusable Widgets ────────────────────────────────
+
+class _BenefitCard extends StatelessWidget {
+  final IconData icon;
+  final String emoji;
+  final String text;
+  final Color color;
+  final Color cardBg;
+  final Color border;
+  final Color tp;
+
+  const _BenefitCard({
+    required this.icon,
+    required this.emoji,
+    required this.text,
+    required this.color,
+    required this.cardBg,
+    required this.border,
+    required this.tp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: tp,
+              ),
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, size: 20, color: color.withValues(alpha: 0.5)),
+        ],
+      ),
+    );
+  }
+}
 
 class _StatItem extends StatelessWidget {
   final String value;
