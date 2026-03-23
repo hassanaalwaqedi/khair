@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../data/models/country_model.dart';
 import '../../data/datasources/countries_datasource.dart';
@@ -74,9 +73,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
-  // Page controller for smooth transitions
-  late final PageController _pageController;
-
   // Verification controllers
   final _codeController = TextEditingController();
 
@@ -88,23 +84,15 @@ class _RegisterWizardState extends State<_RegisterWizard>
     return ['Role', 'Account', 'Goals', 'Review'];
   }
 
-  /// The step index where the review step begins
   int get _reviewStepIndex => _stepLabels.length - 1;
-
-  /// The step index where the verification code page is shown
   int get _verificationStepIndex => _stepLabels.length;
-
-  /// The step index where the done page is shown
   int get _doneStepIndex => _stepLabels.length + 1;
-
-  /// Whether the current role has an upload step
   bool get _hasUploadStep =>
       _selectedRole != null && isAuthorityRole(_selectedRole!);
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
     _loadCountries();
   }
 
@@ -136,7 +124,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
     _cityController.dispose();
     _phoneController.dispose();
     _focusController.dispose();
-    _pageController.dispose();
     _codeController.dispose();
     super.dispose();
   }
@@ -146,46 +133,20 @@ class _RegisterWizardState extends State<_RegisterWizard>
     return BlocListener<RegistrationBloc, RegistrationState>(
       listener: _blocListener,
       child: Scaffold(
-        body: Stack(
-          children: [
-            // Emerald gradient background
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0A2E1C),
-                    Color(0xFF0D3D26),
-                    Color(0xFF0B2E23),
-                    Color(0xFF071E18),
-                  ],
-                  stops: [0.0, 0.3, 0.7, 1.0],
-                ),
+        backgroundColor: const Color(0xFF0B0F14),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildAppBar(context),
+              if (_currentStep <= _reviewStepIndex) _buildProgressDots(),
+              Expanded(
+                child: _currentStep <= _reviewStepIndex
+                    ? _buildStepContent()
+                    : _buildVerificationOrDone(),
               ),
-            ),
-            // Subtle Islamic geometric pattern
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _IslamicPatternPainter(),
-              ),
-            ),
-            // Content
-            SafeArea(
-              child: Column(
-                children: [
-                  _buildAppBar(context),
-                  _buildProgressBar(),
-                  Expanded(
-                    child: _currentStep <= _reviewStepIndex
-                        ? _buildStepContent()
-                        : _buildVerificationOrDone(),
-                  ),
-                  if (_currentStep <= _reviewStepIndex) _buildBottomButtons(),
-                ],
-              ),
-            ),
-          ],
+              if (_currentStep <= _reviewStepIndex) _buildBottomButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -195,13 +156,21 @@ class _RegisterWizardState extends State<_RegisterWizard>
 
   Widget _buildAppBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.arrow_back_ios_rounded,
+                  color: Colors.white, size: 16),
+            ),
             onPressed: () {
-              if (_currentStep > 0 && _currentStep < 4) {
+              if (_currentStep > 0 && _currentStep <= _reviewStepIndex) {
                 _goToStep(_currentStep - 1);
               } else {
                 context.go('/');
@@ -223,8 +192,9 @@ class _RegisterWizardState extends State<_RegisterWizard>
             child: Text(
               context.l10n.signIn,
               style: TextStyle(
-                color: KhairColors.secondary,
+                color: AppColors.primaryLight,
                 fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ),
@@ -233,28 +203,30 @@ class _RegisterWizardState extends State<_RegisterWizard>
     );
   }
 
-  // ─── Progress Bar ────────────────────────────
+  // ─── Progress Dots ────────────────────────────
 
-  Widget _buildProgressBar() {
-    final displayStep = _currentStep.clamp(0, 3);
+  Widget _buildProgressDots() {
+    final displayStep = _currentStep.clamp(0, _stepLabels.length - 1);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
       child: Column(
         children: [
           Row(
             children: [
               Text(
                 '${context.l10n.registrationProgressRole} ${displayStep + 1} / ${_stepLabels.length}',
-                style: KhairTypography.labelSmall.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w600,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const Spacer(),
               Text(
                 _stepLabels[displayStep],
-                style: KhairTypography.labelSmall.copyWith(
-                  color: KhairColors.secondary,
+                style: TextStyle(
+                  color: AppColors.primaryLight,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -267,17 +239,18 @@ class _RegisterWizardState extends State<_RegisterWizard>
               final isCurrent = i == displayStep;
               return Expanded(
                 child: Container(
-                  margin: EdgeInsetsDirectional.only(end: i < 3 ? 6 : 0),
+                  margin: EdgeInsetsDirectional.only(
+                      end: i < _stepLabels.length - 1 ? 4 : 0),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    height: 4,
+                    height: 3,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(2),
                       color: isCompleted
-                          ? KhairColors.secondary
+                          ? AppColors.primary
                           : isCurrent
-                              ? KhairColors.secondary.withValues(alpha: 0.5)
-                              : Colors.white.withValues(alpha: 0.1),
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -289,31 +262,41 @@ class _RegisterWizardState extends State<_RegisterWizard>
     );
   }
 
-  // ─── Step Content ────────────────────────────
+  // ─── Step Content (in a centered card) ────────
 
   Widget _buildStepContent() {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.05, 0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
+    return Center(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.06)),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey(_currentStep),
+                  child: _buildCurrentStep(),
+                ),
+              ),
             ),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey(_currentStep),
-          child: _buildCurrentStep(),
+          ),
         ),
       ),
     );
@@ -374,7 +357,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
     }
 
     // For authority roles: step 3 = Upload, step 4 = Review
-    // For simple roles: step 3 = Review
     if (_hasUploadStep && _currentStep == 3) {
       return MediaUploadStep(
         selectedImage: _selectedImage,
@@ -411,55 +393,60 @@ class _RegisterWizardState extends State<_RegisterWizard>
     final canContinue = _canContinue();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-      child: Row(
-        children: [
-          if (_currentStep > 0 && _currentStep < _reviewStepIndex)
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => _goToStep(_currentStep - 1),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Row(
+            children: [
+              if (_currentStep > 0 && _currentStep < _reviewStepIndex) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _goToStep(_currentStep - 1),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white.withValues(alpha: 0.7),
+                      side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.12)),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(context.l10n.cancel,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
-                child: Text(context.l10n.cancel, // using cancel for back button here
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-              ),
-            ),
-          if (_currentStep > 0 && _currentStep < _reviewStepIndex)
-            const SizedBox(width: 12),
-          if (_currentStep < _reviewStepIndex)
-            Expanded(
-              child: ElevatedButton(
-                onPressed: canContinue ? _nextStep : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: KhairColors.secondary,
-                  foregroundColor: const Color(0xFF1A1A2E),
-                  disabledBackgroundColor:
-                      Colors.white.withValues(alpha: 0.08),
-                  disabledForegroundColor:
-                      Colors.white.withValues(alpha: 0.3),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  context.l10n.registrationContinue,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
+                const SizedBox(width: 12),
+              ],
+              if (_currentStep < _reviewStepIndex)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: canContinue ? _nextStep : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          Colors.white.withValues(alpha: 0.06),
+                      disabledForegroundColor:
+                          Colors.white.withValues(alpha: 0.25),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      context.l10n.registrationContinue,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -478,142 +465,158 @@ class _RegisterWizardState extends State<_RegisterWizard>
   }
 
   Widget _buildVerificationState(RegistrationState state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          Container(
-            width: 80,
-            height: 80,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: KhairColors.secondary.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border:
+                  Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
-            child: Icon(Icons.mark_email_unread_rounded,
-                color: KhairColors.secondary, size: 40),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            context.l10n.registrationVerifyEmailTitle,
-            style: KhairTypography.h2.copyWith(color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter the 6-digit code sent to\n${_emailController.text}',
-            style: KhairTypography.bodyMedium.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          TextFormField(
-            controller: _codeController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 6,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 12,
-            ),
-            decoration: InputDecoration(
-              counterText: '',
-              hintText: '000000',
-              hintStyle: TextStyle(
-                color: Colors.white.withValues(alpha: 0.15),
-                fontSize: 28,
-                letterSpacing: 12,
-              ),
-              filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.06),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide:
-                    BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide:
-                    BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide:
-                    BorderSide(color: KhairColors.secondary, width: 1.5),
-              ),
-            ),
-          ),
-          if (state.errorMessage != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              state.errorMessage!,
-              style: const TextStyle(color: Color(0xFFFF8A80), fontSize: 13),
-            ),
-          ],
-          if (state.resendSuccess) ...[
-            const SizedBox(height: 12),
-            Text(
-              'A new code has been sent!',
-              style: TextStyle(color: KhairColors.success, fontSize: 13),
-            ),
-          ],
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: state.status == RegistrationStatus.loading
-                  ? null
-                  : () {
-                      if (_codeController.text.length == 6) {
-                        context.read<RegistrationBloc>().add(
-                              SubmitVerificationCode(
-                                email: _emailController.text,
-                                code: _codeController.text,
-                              ),
-                            );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: KhairColors.secondary,
-                foregroundColor: const Color(0xFF1A1A2E),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.mark_email_unread_rounded,
+                      color: AppColors.primary, size: 36),
                 ),
-              ),
-              child: state.status == RegistrationStatus.loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2.5, color: Colors.white),
-                    )
-                  : Text(context.l10n.registrationVerifyEmailButton,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: state.status == RegistrationStatus.loading
-                ? null
-                : () {
+                const SizedBox(height: 20),
+                Text(
+                  context.l10n.registrationVerifyEmailTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.registrationCodeExpiresInTenMinutes,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // OTP Input
+                TextFormField(
+                  controller: _codeController,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 12,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: '• • • • • •',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      fontSize: 28,
+                      letterSpacing: 12,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: AppColors.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed:
+                        state.status == RegistrationStatus.loading
+                            ? null
+                            : () {
+                                final code = _codeController.text.trim();
+                                if (code.length != 6) return;
+                                final email =
+                                    _emailController.text.trim();
+                                context.read<RegistrationBloc>().add(
+                                    SubmitVerificationCode(
+                                        email: email, code: code));
+                              },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: state.status == RegistrationStatus.loading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : Text(
+                            context.l10n.registrationVerifyEmailButton,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15),
+                          ),
+                  ),
+                ),
+                if (state.resendSuccess)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      context.l10n.registrationVerificationCodeResent,
+                      style: const TextStyle(
+                          color: KhairColors.success, fontSize: 13),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
                     context.read<RegistrationBloc>().add(
-                          ResendVerificationCode(
-                              email: _emailController.text),
-                        );
+                        ResendVerificationCode(
+                            email: _emailController.text.trim()));
                   },
-            child: Text(
-              context.l10n.registrationResendCode,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w600,
-              ),
+                  child: Text(
+                    context.l10n.registrationResendCode,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -622,62 +625,127 @@ class _RegisterWizardState extends State<_RegisterWizard>
     final backendRole = mapToBackendRole(_selectedRole ?? 'student');
     final isAuthority = isAuthorityRole(_selectedRole ?? 'student');
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          const SizedBox(height: 60),
-          Container(
-            width: 96,
-            height: 96,
+    // Role-based onboarding hints
+    String onboardingHint;
+    String ctaLabel;
+    String route;
+
+    if (backendRole == 'sheikh') {
+      onboardingHint =
+          'Complete your profile to start receiving students and lesson requests.';
+      ctaLabel = 'Go to Dashboard';
+      route = '/organizer';
+    } else if (isAuthority) {
+      onboardingHint = 'Create your first event and grow your community!';
+      ctaLabel = 'Go to Dashboard';
+      route = '/organizer';
+    } else {
+      onboardingHint =
+          'Discover events, connect with scholars, and grow your faith journey.';
+      ctaLabel = context.l10n.browseEvents;
+      route = '/';
+    }
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: KhairColors.success.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border:
+                  Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
-            child: const Icon(Icons.check_circle_rounded,
-                color: KhairColors.success, size: 56),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            context.l10n.registrationCompleteTitle,
-            style: KhairTypography.h1.copyWith(color: Colors.white),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _getWelcomeMessage(context, backendRole),
-            style: KhairTypography.bodyLarge.copyWith(
-              color: Colors.white.withValues(alpha: 0.7),
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                if (isAuthority) {
-                  context.go('/verification');
-                } else {
-                  context.go('/');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: KhairColors.secondary,
-                foregroundColor: const Color(0xFF1A1A2E),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: KhairColors.success.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_circle_rounded,
+                      color: KhairColors.success, size: 48),
                 ),
-              ),
-              child: Text(
-                isAuthority ? context.l10n.registrationRoleStepTitleOrganization : context.l10n.browseEvents,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 16),
-              ),
+                const SizedBox(height: 20),
+                Text(
+                  context.l10n.registrationCompleteTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _getWelcomeMessage(context, backendRole),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 14,
+                    height: 1.6,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Onboarding hint chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lightbulb_outline_rounded,
+                          color: AppColors.primaryLight, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          onboardingHint,
+                          style: TextStyle(
+                            color: AppColors.primaryLight,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => context.go(route),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      ctaLabel,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -689,11 +757,11 @@ class _RegisterWizardState extends State<_RegisterWizard>
       case 0:
         return _selectedRole != null;
       case 1:
-        return true; // validation happens on tap
+        return true;
       case 2:
-        return true; // goals are optional
+        return true;
       case 3:
-        return true; // upload is optional
+        return true;
       default:
         return false;
     }
@@ -704,11 +772,13 @@ class _RegisterWizardState extends State<_RegisterWizard>
       if (!(_formKey.currentState?.validate() ?? false)) return;
     }
 
-    // If leaving upload step and an image was selected but not uploaded, upload it
-    if (_hasUploadStep && _currentStep == 3 && _selectedImage != null && _uploadedImageUrl == null) {
+    if (_hasUploadStep &&
+        _currentStep == 3 &&
+        _selectedImage != null &&
+        _uploadedImageUrl == null) {
       setState(() => _isUploadingImage = true);
       context.read<RegistrationBloc>().add(UploadImage(_selectedImage!));
-      return; // Wait for upload result in _blocListener
+      return;
     }
 
     _goToStep(_currentStep + 1);
@@ -724,7 +794,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
     final backendRole = mapToBackendRole(_selectedRole!);
     final bloc = context.read<RegistrationBloc>();
 
-    // Simple roles: submit everything in one go
     if (!isAuthorityRole(_selectedRole!)) {
       bloc.add(SubmitSimpleRegistration(
         role: backendRole,
@@ -735,7 +804,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // Authority roles: submit step by step
     bloc.add(SubmitStep1(
       role: backendRole,
       email: _emailController.text.trim(),
@@ -759,7 +827,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // Image uploaded successfully → proceed to next step
     if (state.imageUrl != null && _isUploadingImage) {
       setState(() {
         _isUploadingImage = false;
@@ -769,8 +836,8 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // After step 1 success for authority roles → submit step 2
-    if (state.status == RegistrationStatus.success && state.currentStep == 2) {
+    if (state.status == RegistrationStatus.success &&
+        state.currentStep == 2) {
       context.read<RegistrationBloc>().add(SubmitStep2(
             displayName: _nameController.text.trim(),
             bio: '',
@@ -782,8 +849,8 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // After step 2 → submit step 3 (with logo_url if available)
-    if (state.status == RegistrationStatus.success && state.currentStep == 3) {
+    if (state.status == RegistrationStatus.success &&
+        state.currentStep == 3) {
       final step3Data = _collectStep3Data();
       if (_uploadedImageUrl != null) {
         step3Data['logo_url'] = _uploadedImageUrl;
@@ -792,13 +859,12 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // After step 3 → submit step 4
-    if (state.status == RegistrationStatus.success && state.currentStep == 4) {
+    if (state.status == RegistrationStatus.success &&
+        state.currentStep == 4) {
       context.read<RegistrationBloc>().add(const SubmitStep4());
       return;
     }
 
-    // Pending verification → show verification UI
     if (state.status == RegistrationStatus.pendingVerification) {
       setState(() {
         _isSubmitting = false;
@@ -807,7 +873,6 @@ class _RegisterWizardState extends State<_RegisterWizard>
       return;
     }
 
-    // Complete → redirect
     if (state.status == RegistrationStatus.complete) {
       setState(() {
         _isSubmitting = false;
@@ -906,8 +971,8 @@ class _RegisterWizardState extends State<_RegisterWizard>
       'community_organizer': l10n.registrationRoleCommunityOrganizer,
       'student': l10n.registrationRoleStudent,
       'new_muslim': l10n.registrationRoleNewMuslim,
-      'volunteer': l10n.registrationRoleCommunityOrganizer, // mapping volunteer to community organizer
-      'member': l10n.registrationRoleStudent, // mapping member to student
+      'volunteer': l10n.registrationRoleCommunityOrganizer,
+      'member': l10n.registrationRoleStudent,
     };
     return labels[role] ?? role;
   }
@@ -923,48 +988,4 @@ class _RegisterWizardState extends State<_RegisterWizard>
     };
     return messages[backendRole] ?? l10n.registrationWelcomeIslamSubtitle;
   }
-}
-
-// ─── Subtle Islamic Geometric Pattern ────────
-
-class _IslamicPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.02)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-
-    const spacing = 60.0;
-    final cols = (size.width / spacing).ceil() + 1;
-    final rows = (size.height / spacing).ceil() + 1;
-
-    for (int row = 0; row < rows; row++) {
-      for (int col = 0; col < cols; col++) {
-        final cx = col * spacing + (row.isOdd ? spacing / 2 : 0);
-        final cy = row * spacing;
-        _drawOctagonStar(canvas, cx, cy, 14, paint);
-      }
-    }
-  }
-
-  void _drawOctagonStar(
-      Canvas canvas, double cx, double cy, double r, Paint paint) {
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      final angle = (i * math.pi / 4) - math.pi / 8;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
