@@ -119,7 +119,16 @@ func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*StepRespon
 	// Check if email already exists
 	existing, _ := s.repo.GetUserByEmail(req.Email)
 	if existing != nil {
-		return nil, errors.New("this email is already registered")
+		if existing.VerifiedAt != nil {
+			// Verified user — reject
+			return nil, errors.New("this email is already registered")
+		}
+		// Unverified user — delete so they can re-register
+		if err := s.repo.DeleteUnverifiedUser(existing.ID); err != nil {
+			log.Printf("[WARN] Failed to delete unverified user %s: %v", req.Email, err)
+			return nil, errors.New("this email is already registered")
+		}
+		log.Printf("[INFO] Deleted unverified user %s to allow re-registration", req.Email)
 	}
 
 	// Validate password strength
@@ -307,6 +316,7 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 		Location:               strPtr(location),
 		City:                   strPtr(city),
 		Country:                strPtr(country),
+		AvatarURL:              strPtr(getString(formData, "logo_url")),
 		PreferredLanguage:      lang,
 		ProfileCompletionScore: CalculateProfileCompletion(role, formData),
 		CreatedAt:              now,
@@ -334,7 +344,7 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 
 	// Send verification email
 	if s.emailSvc != nil && s.emailSvc.IsEnabled() {
-		if err := s.emailSvc.SendVerificationEmail(draft.Email, code); err != nil {
+		if err := s.emailSvc.SendVerificationEmail(draft.Email, code, lang); err != nil {
 			log.Printf("[WARN] Failed to send verification email to %s: %v", draft.Email, err)
 		}
 	}
@@ -342,6 +352,9 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 	// Audit log
 	userID := user.ID
 	s.logAudit(&userID, &user.Email, intPtr(4), "registration_complete_pending_verification", ipAddress, "")
+
+	// ── Auto welcome notification ────────────────────────────────
+	go s.sendWelcomeNotification(user.ID, role, displayName)
 
 	return &RegistrationCompleteResponse{
 		User:            user,
@@ -387,7 +400,7 @@ func (s *Service) ResendCode(req *ResendCodeRequest) error {
 	}
 
 	if s.emailSvc != nil && s.emailSvc.IsEnabled() {
-		if err := s.emailSvc.SendVerificationEmail(req.Email, code); err != nil {
+		if err := s.emailSvc.SendVerificationEmail(req.Email, code, "en"); err != nil {
 			log.Printf("[WARN] Failed to resend verification email to %s: %v", req.Email, err)
 		}
 	}
@@ -580,4 +593,62 @@ func strPtr(s string) *string {
 
 func intPtr(i int) *int {
 	return &i
+}
+
+// sendWelcomeNotification inserts a role-appropriate welcome notification.
+// Authority roles get an "under review" message; normal roles get an instant welcome.
+func (s *Service) sendWelcomeNotification(userID uuid.UUID, role, displayName string) {
+	var title, message string
+
+	name := displayName
+	if name == "" {
+		name = "there"
+	}
+
+	switch role {
+	case "sheikh":
+		title = "Welcome to Khair – Account Under Review"
+		message = fmt.Sprintf(
+			"Assalamu Alaikum %s! Thank you for registering as a Sheikh on Khair. "+
+				"Your account is currently under review by the Khair team. "+
+				"This process usually takes a few hours. "+
+				"We will notify you once your account has been approved. JazakAllahu Khairan!",
+			name,
+		)
+	case "organization":
+		title = "Welcome to Khair – Account Under Review"
+		message = fmt.Sprintf(
+			"Assalamu Alaikum %s! Thank you for registering your organization on Khair. "+
+				"Your account is currently under review by the Khair team. "+
+				"This process usually takes a few hours. "+
+				"You will be notified once your account is approved and you can start creating events.",
+			name,
+		)
+	case "community_organizer":
+		title = "Welcome to Khair – Account Under Review"
+		message = fmt.Sprintf(
+			"Assalamu Alaikum %s! Thank you for joining Khair as a Community Organizer. "+
+				"Your account is currently under review by the Khair team. "+
+				"This usually takes a few hours. "+
+				"Once approved, you'll be able to organize and manage community events.",
+			name,
+		)
+	default:
+		// Normal users: student, new_muslim, etc.
+		title = "Welcome to Khair! 🎉"
+		message = fmt.Sprintf(
+			"Assalamu Alaikum %s! Welcome to Khair – your Islamic community platform. "+
+				"Explore events, connect with scholars, and grow your faith journey. "+
+				"May Allah bless your path! 🤲",
+			name,
+		)
+	}
+
+	_, err := s.repo.db.Exec(
+		`INSERT INTO notifications (user_id, title, message) VALUES ($1, $2, $3)`,
+		userID, title, message,
+	)
+	if err != nil {
+		log.Printf("[WARN] Failed to send welcome notification to %s: %v", userID, err)
+	}
 }

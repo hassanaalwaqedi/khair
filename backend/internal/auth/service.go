@@ -114,10 +114,19 @@ type MessageResponse struct {
 
 // Register registers a new user and sends verification OTP
 func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
-	// Check if user already exists — generic error to prevent enumeration
+	// Check if user already exists
 	existingUser, _ := s.repo.GetUserByEmail(req.Email)
 	if existingUser != nil {
-		return nil, errors.New("registration failed, please try again")
+		if existingUser.IsVerified {
+			// Verified user — reject (generic error to prevent enumeration)
+			return nil, errors.New("registration failed, please try again")
+		}
+		// Unverified user — delete so they can re-register
+		if err := s.repo.DeleteUnverifiedUser(existingUser.ID); err != nil {
+			log.Printf("[WARN] Failed to delete unverified user %s: %v", req.Email, err)
+			return nil, errors.New("registration failed, please try again")
+		}
+		log.Printf("[INFO] Deleted unverified user %s to allow re-registration", req.Email)
 	}
 
 	// Hash password with bcrypt
@@ -173,7 +182,7 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 	}
 
 	// Send verification email (do NOT return OTP in response)
-	if err := s.emailSvc.SendVerificationEmail(req.Email, otp); err != nil {
+	if err := s.emailSvc.SendVerificationEmail(req.Email, otp, "en"); err != nil {
 		log.Printf("[WARN] Failed to send verification email to %s: %v", req.Email, err)
 		// Don't fail registration if email fails — user can resend
 	}
@@ -419,7 +428,7 @@ func (s *Service) ResendOTP(req *ResendOTPRequest) (*MessageResponse, error) {
 	}
 
 	// Send email
-	if err := s.emailSvc.SendVerificationEmail(req.Email, otp); err != nil {
+	if err := s.emailSvc.SendVerificationEmail(req.Email, otp, "en"); err != nil {
 		log.Printf("[WARN] Failed to resend verification email to %s: %v", req.Email, err)
 		return nil, errors.New("failed to send verification email")
 	}

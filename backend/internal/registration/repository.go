@@ -3,6 +3,7 @@ package registration
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,40 @@ type Repository struct {
 // NewRepository creates a new registration repository
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
+}
+
+// DeleteUnverifiedUser removes an unverified user and all related records.
+// This allows the email to be re-registered. Safety: only deletes if is_verified = false.
+func (r *Repository) DeleteUnverifiedUser(userID uuid.UUID) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Delete email verifications
+	_, _ = tx.Exec(`DELETE FROM email_verifications WHERE user_id = $1`, userID)
+	// Delete profiles
+	_, _ = tx.Exec(`DELETE FROM profiles WHERE user_id = $1`, userID)
+	// Delete organizer profile
+	_, _ = tx.Exec(`DELETE FROM organizers WHERE user_id = $1`, userID)
+	// Delete sheikh profile
+	_, _ = tx.Exec(`DELETE FROM sheikhs WHERE user_id = $1`, userID)
+	// Delete notifications
+	_, _ = tx.Exec(`DELETE FROM notifications WHERE user_id = $1`, userID)
+	// Delete refresh tokens
+	_, _ = tx.Exec(`DELETE FROM refresh_tokens WHERE user_id = $1`, userID)
+	// Delete user ONLY if unverified (safety check)
+	result, err := tx.Exec(`DELETE FROM users WHERE id = $1 AND is_verified = false`, userID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("user is already verified, cannot delete")
+	}
+
+	return tx.Commit()
 }
 
 // --- User Operations ---
