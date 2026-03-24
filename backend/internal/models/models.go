@@ -139,14 +139,18 @@ type Event struct {
 	GenderRestriction *string    `json:"gender_restriction,omitempty"`
 	AgeMin            *int       `json:"age_min,omitempty"`
 	AgeMax            *int       `json:"age_max,omitempty"`
-	Status            string     `json:"status"`
-	IsPublished       bool       `json:"is_published"`
-	RejectionReason   *string    `json:"rejection_reason,omitempty"`
-	ReviewedBy        *uuid.UUID `json:"reviewed_by,omitempty"`
-	ReviewedAt        *time.Time `json:"reviewed_at,omitempty"`
-	ApprovedAt        *time.Time `json:"approved_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
+	Status                       string     `json:"status"`
+	IsPublished                  bool       `json:"is_published"`
+	IsOnline                     bool       `json:"is_online"`
+	OnlineLink                   *string    `json:"online_link,omitempty"`
+	JoinInstructions             *string    `json:"join_instructions,omitempty"`
+	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
+	RejectionReason              *string    `json:"rejection_reason,omitempty"`
+	ReviewedBy                   *uuid.UUID `json:"reviewed_by,omitempty"`
+	ReviewedAt                   *time.Time `json:"reviewed_at,omitempty"`
+	ApprovedAt                   *time.Time `json:"approved_at,omitempty"`
+	CreatedAt                    time.Time  `json:"created_at"`
+	UpdatedAt                    time.Time  `json:"updated_at"`
 }
 
 // EventRegistration represents a user's event seat reservation

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 4: Review — Summary before final submission
@@ -53,25 +54,25 @@ class ReviewStep extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                KhairColors.secondary.withValues(alpha: 0.2),
-                KhairColors.secondary.withValues(alpha: 0.08),
+                AppColors.primary.withValues(alpha: 0.2),
+                AppColors.primary.withValues(alpha: 0.08),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: KhairColors.secondary.withValues(alpha: 0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.badge_outlined,
-                  color: KhairColors.secondary, size: 18),
+                  color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
               Text(
                 roleLabelText,
                 style: KhairTypography.labelLarge.copyWith(
-                  color: KhairColors.secondary,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -113,10 +114,10 @@ class ReviewStep extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isSubmitting ? null : onSubmit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: KhairColors.secondary,
-              foregroundColor: const Color(0xFF1A1A2E),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
               disabledBackgroundColor:
-                  KhairColors.secondary.withValues(alpha: 0.4),
+                  AppColors.primary.withValues(alpha: 0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -259,16 +260,16 @@ class ReviewStep extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: KhairColors.secondary.withValues(alpha: 0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: KhairColors.secondary.withValues(alpha: 0.25),
+                    color: AppColors.primary.withValues(alpha: 0.25),
                   ),
                 ),
                 child: Text(
                   goalLabels[g] ?? g,
                   style: KhairTypography.labelSmall.copyWith(
-                    color: KhairColors.secondary,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -52,7 +52,7 @@ func main() {
 	defer redisClient.Close()
 
 	// Initialize services used by the worker
-	emailSvc := email.NewService(cfg.SMTP)
+	emailSvc := email.NewService(cfg.Email)
 	notifSvc := notification.NewService(db)
 	queue := jobqueue.NewQueue(redisClient)
 
@@ -159,8 +159,13 @@ func handleSendEmail(job *jobqueue.Job, emailSvc *email.Service) error {
 		return fmt.Errorf("unmarshal email payload: %w", err)
 	}
 
+	lang := payload.Language
+	if lang == "" {
+		lang = "en"
+	}
+
 	if payload.Template == "verification" && payload.OTP != "" {
-		return emailSvc.SendVerificationEmail(payload.To, payload.OTP)
+		return emailSvc.SendVerificationEmail(payload.To, payload.OTP, lang)
 	}
 
 	log.Printf("[WORKER] Email job to=%s subject=%q (no handler for generic emails yet)", payload.To, payload.Subject)

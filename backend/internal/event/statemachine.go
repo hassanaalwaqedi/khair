@@ -9,8 +9,11 @@ var validTransitions = map[string][]string{
 	"draft":          {"pending", "approved", "rejected", "needs_revision"},
 	"pending":        {"approved", "rejected", "needs_revision"},
 	"needs_revision": {"pending"},
-	"approved":       {"published"},
+	"approved":       {"published", "completed", "cancelled"},
+	"published":      {"completed", "cancelled"},
 	"rejected":       {"pending"},
+	"completed":      {},
+	"cancelled":      {"pending"},
 }
 
 // ValidateTransition checks whether moving from → to is allowed.

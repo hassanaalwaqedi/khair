@@ -18,6 +18,7 @@ type ModerationScanner interface {
 
 type Service struct {
 	repo          *Repository
+	db            *sql.DB
 	organizerRepo OrganizerRepository
 	moderation    ModerationScanner
 }
@@ -32,8 +33,19 @@ type OrganizerRepository interface {
 func NewService(db *sql.DB, organizerRepo OrganizerRepository) *Service {
 	return &Service{
 		repo:          NewRepository(db),
+		db:            db,
 		organizerRepo: organizerRepo,
 	}
+}
+
+// getUserDisplayName fetches the user's display name from the database
+func (s *Service) getUserDisplayName(userID uuid.UUID) string {
+	var name sql.NullString
+	err := s.db.QueryRow(`SELECT display_name FROM users WHERE id = $1`, userID).Scan(&name)
+	if err == nil && name.Valid && name.String != "" {
+		return name.String
+	}
+	return "Organizer"
 }
 
 func (s *Service) SetModeration(m ModerationScanner) {
@@ -42,34 +54,42 @@ func (s *Service) SetModeration(m ModerationScanner) {
 
 // CreateEventRequest represents a request to create an event
 type CreateEventRequest struct {
-	Title       string   `json:"title" binding:"required"`
-	Description *string  `json:"description"`
-	EventType   string   `json:"event_type" binding:"required"`
-	Language    *string  `json:"language"`
-	Country     *string  `json:"country"`
-	City        *string  `json:"city"`
-	Address     *string  `json:"address"`
-	Latitude    *float64 `json:"latitude"`
-	Longitude   *float64 `json:"longitude"`
-	StartDate   string   `json:"start_date" binding:"required"`
-	EndDate     *string  `json:"end_date"`
-	ImageURL    *string  `json:"image_url"`
+	Title                        string   `json:"title" binding:"required"`
+	Description                  *string  `json:"description"`
+	EventType                    string   `json:"event_type" binding:"required"`
+	Language                     *string  `json:"language"`
+	Country                      *string  `json:"country"`
+	City                         *string  `json:"city"`
+	Address                      *string  `json:"address"`
+	Latitude                     *float64 `json:"latitude"`
+	Longitude                    *float64 `json:"longitude"`
+	StartDate                    string   `json:"start_date" binding:"required"`
+	EndDate                      *string  `json:"end_date"`
+	ImageURL                     *string  `json:"image_url"`
+	IsOnline                     bool     `json:"is_online"`
+	OnlineLink                   *string  `json:"online_link"`
+	JoinInstructions             *string  `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
 }
 
 // UpdateEventRequest represents a request to update an event
 type UpdateEventRequest struct {
-	Title       *string  `json:"title"`
-	Description *string  `json:"description"`
-	EventType   *string  `json:"event_type"`
-	Language    *string  `json:"language"`
-	Country     *string  `json:"country"`
-	City        *string  `json:"city"`
-	Address     *string  `json:"address"`
-	Latitude    *float64 `json:"latitude"`
-	Longitude   *float64 `json:"longitude"`
-	StartDate   *string  `json:"start_date"`
-	EndDate     *string  `json:"end_date"`
-	ImageURL    *string  `json:"image_url"`
+	Title                        *string  `json:"title"`
+	Description                  *string  `json:"description"`
+	EventType                    *string  `json:"event_type"`
+	Language                     *string  `json:"language"`
+	Country                      *string  `json:"country"`
+	City                         *string  `json:"city"`
+	Address                      *string  `json:"address"`
+	Latitude                     *float64 `json:"latitude"`
+	Longitude                    *float64 `json:"longitude"`
+	StartDate                    *string  `json:"start_date"`
+	EndDate                      *string  `json:"end_date"`
+	ImageURL                     *string  `json:"image_url"`
+	IsOnline                     *bool    `json:"is_online"`
+	OnlineLink                   *string  `json:"online_link"`
+	JoinInstructions             *string  `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
 }
 
 // Create creates a new event
@@ -80,10 +100,11 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		if err == sql.ErrNoRows {
 			// Auto-create organizer profile for users who don't have one
 			log.Printf("[INFO] Auto-creating organizer profile for user %s", userID)
+			orgName := s.getUserDisplayName(userID)
 			organizer = &models.Organizer{
 				ID:        uuid.New(),
 				UserID:    userID,
-				Name:      "Organizer",
+				Name:      orgName,
 				Status:    "approved",
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -130,24 +151,33 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		return nil, fmt.Errorf("a similar event '%s' already exists on the same date (ID: %s). Please edit the existing event or change the date", dup.Title, dup.ID)
 	}
 
+	joinLinkMinutes := 15
+	if req.JoinLinkVisibleBeforeMinutes != nil {
+		joinLinkMinutes = *req.JoinLinkVisibleBeforeMinutes
+	}
+
 	event := &models.Event{
-		ID:          uuid.New(),
-		OrganizerID: organizer.ID,
-		Title:       req.Title,
-		Description: req.Description,
-		EventType:   req.EventType,
-		Language:    req.Language,
-		Country:     req.Country,
-		City:        req.City,
-		Address:     req.Address,
-		Latitude:    req.Latitude,
-		Longitude:   req.Longitude,
-		StartDate:   startDate,
-		EndDate:     endDate,
-		ImageURL:    req.ImageURL,
-		Status:      "pending",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:                           uuid.New(),
+		OrganizerID:                  organizer.ID,
+		Title:                        req.Title,
+		Description:                  req.Description,
+		EventType:                    req.EventType,
+		Language:                     req.Language,
+		Country:                      req.Country,
+		City:                         req.City,
+		Address:                      req.Address,
+		Latitude:                     req.Latitude,
+		Longitude:                    req.Longitude,
+		StartDate:                    startDate,
+		EndDate:                      endDate,
+		ImageURL:                     req.ImageURL,
+		IsOnline:                     req.IsOnline,
+		OnlineLink:                   req.OnlineLink,
+		JoinInstructions:             req.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
+		Status:                       "pending",
+		CreatedAt:                    time.Now(),
+		UpdatedAt:                    time.Now(),
 	}
 
 	if err := s.repo.Create(event); err != nil {
@@ -190,6 +220,11 @@ func (s *Service) ListPublic(filter *EventFilter) ([]models.EventWithOrganizer, 
 	filter.Status = &status
 	isPublished := true
 	filter.IsPublished = &isPublished
+	// Default to future events only if no explicit start date filter is provided
+	if filter.StartDate == nil {
+		now := time.Now()
+		filter.StartDate = &now
+	}
 	return s.repo.List(filter)
 }
 
@@ -246,6 +281,9 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 		if err != nil {
 			return nil, errors.New("invalid start date format")
 		}
+		if startDate.Before(time.Now()) {
+			return nil, errors.New("event start date must be in the future")
+		}
 		event.StartDate = startDate
 	}
 	if req.EndDate != nil {
@@ -257,6 +295,18 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	}
 	if req.ImageURL != nil {
 		event.ImageURL = req.ImageURL
+	}
+	if req.IsOnline != nil {
+		event.IsOnline = *req.IsOnline
+	}
+	if req.OnlineLink != nil {
+		event.OnlineLink = req.OnlineLink
+	}
+	if req.JoinInstructions != nil {
+		event.JoinInstructions = req.JoinInstructions
+	}
+	if req.JoinLinkVisibleBeforeMinutes != nil {
+		event.JoinLinkVisibleBeforeMinutes = *req.JoinLinkVisibleBeforeMinutes
 	}
 
 	if err := s.repo.Update(event); err != nil {
@@ -354,10 +404,11 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 	organizer, err := s.organizerRepo.GetByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			orgName := s.getUserDisplayName(userID)
 			organizer = &models.Organizer{
 				ID:        uuid.New(),
 				UserID:    userID,
-				Name:      "Organizer",
+				Name:      orgName,
 				Status:    "approved",
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),

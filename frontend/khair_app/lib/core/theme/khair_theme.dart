@@ -1,62 +1,67 @@
 import 'package:flutter/material.dart';
 
 /// Khair Design System - Colors
-/// A calm, trustworthy palette for a global Muslim-focused platform
+/// Clean, professional palette — blue primary + neutral UI + Islamic green identity
 class KhairColors {
   KhairColors._();
 
-  // Primary - Calm Green (Trust, Growth, Islam)
-  static const Color primary = Color(0xFF2E7D5A);
-  static const Color primaryLight = Color(0xFF4CAF7D);
-  static const Color primaryDark = Color(0xFF1B5E3C);
-  static const Color primarySurface = Color(0xFFE8F5EE);
+  // Primary - Blue (Trust, Professional)
+  static const Color primary = Color(0xFF2563EB);
+  static const Color primaryLight = Color(0xFF60A5FA);
+  static const Color primaryDark = Color(0xFF1D4ED8);
+  static const Color primarySurface = Color(0xFFEFF6FF);
 
-  // Secondary - Warm Gold (Premium, Excellence)
-  static const Color secondary = Color(0xFFD4A84B);
-  static const Color secondaryLight = Color(0xFFE8C97F);
+  // Secondary - Warm Gold (Premium)
+  static const Color secondary = Color(0xFFD5B26B);
+  static const Color secondaryLight = Color(0xFFE8D98F);
   static const Color secondaryDark = Color(0xFFB8922F);
+
+  // Islamic Identity (Green — limited to Islamic content only)
+  static const Color islamicGreen = Color(0xFF16A34A);
+  static const Color islamicGreenLight = Color(0xFFDCFCE7);
+  static const Color islamicGreenDark = Color(0xFF166534);
 
   // Accent
   static const Color accent = Color(0xFF22D3EE);
   static const Color accentLight = Color(0xFFCFFAFE);
 
   // Neutral Scale (100–900)
-  static const Color neutral50 = Color(0xFFFAFBFC);
-  static const Color neutral100 = Color(0xFFF5F7F9);
-  static const Color neutral200 = Color(0xFFEEF1F4);
-  static const Color neutral300 = Color(0xFFE5E9ED);
-  static const Color neutral400 = Color(0xFFCBD2D9);
-  static const Color neutral500 = Color(0xFF8C939B);
-  static const Color neutral600 = Color(0xFF5C6670);
-  static const Color neutral700 = Color(0xFF3D4752);
-  static const Color neutral800 = Color(0xFF1A1F26);
-  static const Color neutral900 = Color(0xFF0D1117);
+  static const Color neutral50 = Color(0xFFF9FAFB);
+  static const Color neutral100 = Color(0xFFF3F4F6);
+  static const Color neutral200 = Color(0xFFE5E7EB);
+  static const Color neutral300 = Color(0xFFD1D5DB);
+  static const Color neutral400 = Color(0xFF9CA3AF);
+  static const Color neutral500 = Color(0xFF6B7280);
+  static const Color neutral600 = Color(0xFF4B5563);
+  static const Color neutral700 = Color(0xFF374151);
+  static const Color neutral800 = Color(0xFF1F2937);
+  static const Color neutral900 = Color(0xFF111827);
 
   // Light Theme Surfaces
-  static const Color background = Color(0xFFFAFBFC);
+  static const Color background = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF5F7F9);
-  static const Color border = Color(0xFFE5E9ED);
-  static const Color divider = Color(0xFFEEF1F4);
+  static const Color surfaceVariant = Color(0xFFF6F7F8);
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color divider = Color(0xFFF3F4F6);
 
-  // Dark Theme Surfaces (no pure black — dark gray scale)
-  static const Color darkBackground = Color(0xFF0F1419);
-  static const Color darkSurface = Color(0xFF1A1F26);
-  static const Color darkSurfaceVariant = Color(0xFF252D38);
-  static const Color darkCard = Color(0xFF1E2732);
-  static const Color darkBorder = Color(0xFF2F3A46);
-  static const Color darkDivider = Color(0xFF2F3A46);
+  // Dark Theme Surfaces
+  static const Color darkBackground = Color(0xFF0B0F14);
+  static const Color darkSurface = Color(0xFF111827);
+  static const Color darkSurfaceVariant = Color(0xFF1F2937);
+  static const Color darkCard = Color(0xFF1F2937);
+  static const Color darkBorder = Color(0xFF374151);
+  static const Color darkDivider = Color(0xFF1F2937);
 
   // Text
-  static const Color textPrimary = Color(0xFF1A1F26);
-  static const Color textSecondary = Color(0xFF5C6670);
-  static const Color textTertiary = Color(0xFF8C939B);
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textTertiary = Color(0xFF9CA3AF);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Dark Text
-  static const Color darkTextPrimary = Color(0xFFF0F3F6);
-  static const Color darkTextSecondary = Color(0xFF9BA4AE);
-  static const Color darkTextTertiary = Color(0xFF6B7580);
+  static const Color darkTextPrimary = Color(0xFFF9FAFB);
+  static const Color darkTextSecondary = Color(0xFF9CA3AF);
+  static const Color darkTextTertiary = Color(0xFF6B7280);
 
   // Semantic
   static const Color success = Color(0xFF22C55E);
@@ -76,11 +81,11 @@ class KhairColors {
   static const Color verified = Color(0xFF0EA5E9);
   static const Color verifiedLight = Color(0xFFE0F2FE);
 
-  // Islamic design constants
+  // Islamic gradient (limited use — Quran/Hadith cards, Islamic badges)
   static const LinearGradient islamicGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1B5E3C), Color(0xFF2E7D5A), Color(0xFF3A9D6E)],
+    colors: [Color(0xFF166534), Color(0xFF16A34A), Color(0xFF22C55E)],
   );
 
   static const double islamicPatternOpacity = 0.05;
@@ -95,7 +100,6 @@ class KhairTypography {
   static const String arabicFontFamily = 'Cairo';
   static const String arabicBodyFontFamily = 'IBMPlexSansArabic';
 
-  // H1 – 32px / bold
   static const TextStyle h1 = TextStyle(
     fontFamily: headingFontFamily,
     fontSize: 32,
@@ -105,7 +109,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // H2 – 24px / semibold
   static const TextStyle h2 = TextStyle(
     fontFamily: headingFontFamily,
     fontSize: 24,
@@ -115,7 +118,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // H3 – 20px / medium
   static const TextStyle h3 = TextStyle(
     fontFamily: headingFontFamily,
     fontSize: 20,
@@ -124,7 +126,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // Display
   static const TextStyle displayLarge = TextStyle(
     fontFamily: headingFontFamily,
     fontSize: 48,
@@ -151,7 +152,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // Headings (alias to match Material naming)
   static const TextStyle headlineLarge = h2;
   static const TextStyle headlineMedium = h3;
 
@@ -163,7 +163,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // Body – 16px
   static const TextStyle bodyLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
@@ -172,7 +171,6 @@ class KhairTypography {
     color: KhairColors.textPrimary,
   );
 
-  // Small – 14px
   static const TextStyle bodyMedium = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
@@ -181,7 +179,6 @@ class KhairTypography {
     color: KhairColors.textSecondary,
   );
 
-  // Caption – 12px
   static const TextStyle bodySmall = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
@@ -190,7 +187,6 @@ class KhairTypography {
     color: KhairColors.textTertiary,
   );
 
-  // Labels
   static const TextStyle labelLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
@@ -218,7 +214,6 @@ class KhairTypography {
     color: KhairColors.textTertiary,
   );
 
-  // Button
   static const TextStyle button = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
@@ -228,7 +223,7 @@ class KhairTypography {
   );
 }
 
-/// Khair Design System - Spacing (4px base scale)
+/// Khair Design System - Spacing
 class KhairSpacing {
   KhairSpacing._();
 
@@ -241,7 +236,6 @@ class KhairSpacing {
   static const double xxl = 48;
   static const double xxxl = 64;
 
-  // Responsive padding
   static EdgeInsets get pagePadding =>
       const EdgeInsets.symmetric(horizontal: 24);
   static EdgeInsets get cardPadding => const EdgeInsets.all(16);
@@ -254,9 +248,9 @@ class KhairRadius {
   KhairRadius._();
 
   static const double xs = 4;
-  static const double sm = 6; // sm: 6px as per spec
-  static const double md = 12; // md: 12px as per spec
-  static const double lg = 20; // lg: 20px as per spec
+  static const double sm = 6;
+  static const double md = 12;
+  static const double lg = 20;
   static const double xl = 24;
   static const double full = 999;
 
@@ -266,7 +260,7 @@ class KhairRadius {
   static BorderRadius get extraLarge => BorderRadius.circular(xl);
 }
 
-/// Khair Design System - Shadows (soft subtle only)
+/// Khair Design System - Shadows
 class KhairShadows {
   KhairShadows._();
 
@@ -294,7 +288,6 @@ class KhairShadows {
         ),
       ];
 
-  // Elevated hover state
   static List<BoxShadow> get hover => [
         BoxShadow(
           color: Colors.black.withAlpha(16),
@@ -366,7 +359,8 @@ class KhairTheme {
             backgroundColor: KhairColors.primary,
             foregroundColor: KhairColors.textOnPrimary,
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: KhairRadius.medium,
             ),
@@ -376,8 +370,9 @@ class KhairTheme {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: KhairColors.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            side: const BorderSide(color: KhairColors.primary),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            side: const BorderSide(color: KhairColors.border),
             shape: RoundedRectangleBorder(
               borderRadius: KhairRadius.medium,
             ),
@@ -403,7 +398,8 @@ class KhairTheme {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: KhairRadius.medium,
-            borderSide: const BorderSide(color: KhairColors.primary, width: 2),
+            borderSide:
+                const BorderSide(color: KhairColors.primary, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: KhairRadius.medium,
@@ -486,7 +482,8 @@ class KhairTheme {
             backgroundColor: KhairColors.primaryLight,
             foregroundColor: KhairColors.neutral900,
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: KhairRadius.medium,
             ),
@@ -496,8 +493,9 @@ class KhairTheme {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: KhairColors.primaryLight,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            side: const BorderSide(color: KhairColors.primaryLight),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            side: const BorderSide(color: KhairColors.darkBorder),
             shape: RoundedRectangleBorder(
               borderRadius: KhairRadius.medium,
             ),

@@ -61,6 +61,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
         final cubit = context.read<CreateEventCubit>();
         final fd = state.formData;
         final isAiLoading = state.status == CreateEventStatus.aiGenerating;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +71,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.createEventBasicInfoTitle, style: AppTypography.sectionTitle),
+                  Text(context.l10n.createEventBasicInfoTitle, style: AppTypography.sectionTitle.copyWith(
+                    color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+                  )),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Title
@@ -87,17 +90,18 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                   // Category + AI detect button
                   Row(
                     children: [
-                      Text(context.l10n.createEventCategoryLabel, style: AppTypography.label),
+                      Text(context.l10n.createEventCategoryLabel, style: AppTypography.label.copyWith(
+                        color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                      )),
                       const Spacer(),
                       GestureDetector(
                         onTap: isAiLoading || fd.title.isEmpty ? null : () => cubit.detectCategory(),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            gradient: fd.title.isNotEmpty && !isAiLoading
-                                ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)])
-                                : null,
-                            color: fd.title.isEmpty || isAiLoading ? AppColors.whiteAlpha(0.06) : null,
+                            color: fd.title.isNotEmpty && !isAiLoading
+                                ? AppColors.primary
+                                : (isDark ? AppColors.whiteAlpha(0.06) : AppColors.lightSurfaceHigh),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -109,7 +113,8 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                                 const Text('🔍', style: TextStyle(fontSize: 11)),
                               const SizedBox(width: 4),
                               Text('Auto-detect', style: TextStyle(
-                                color: fd.title.isNotEmpty && !isAiLoading ? Colors.white : AppColors.whiteAlpha(0.3),
+                                color: fd.title.isNotEmpty && !isAiLoading ? Colors.white
+                                    : (isDark ? AppColors.textMuted : AppColors.lightTextMuted),
                                 fontSize: 11, fontWeight: FontWeight.w600,
                               )),
                             ],
@@ -149,9 +154,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                       child: Text(
                         '${_descCtrl.text.length} / 5000',
                         style: TextStyle(
-                          color: _descCtrl.text.length < 50
-                              ? AppColors.error
-                              : AppColors.whiteAlpha(0.3),
+                           color: _descCtrl.text.length < 50
+                               ? AppColors.error
+                               : (isDark ? AppColors.textMuted : AppColors.lightTextMuted),
                           fontSize: 11,
                         ),
                       ),
@@ -166,10 +171,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        gradient: fd.title.isNotEmpty && !isAiLoading
-                            ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)])
-                            : null,
-                        color: fd.title.isEmpty || isAiLoading ? AppColors.whiteAlpha(0.06) : null,
+                        color: fd.title.isNotEmpty && !isAiLoading
+                            ? AppColors.primary
+                            : (isDark ? AppColors.whiteAlpha(0.06) : AppColors.lightSurfaceHigh),
                         borderRadius: AppRadius.inputRadius,
                       ),
                       child: Row(
@@ -183,7 +187,8 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                           Text(
                             isAiLoading ? 'Generating...' : 'Generate with AI',
                             style: TextStyle(
-                              color: fd.title.isNotEmpty && !isAiLoading ? Colors.white : AppColors.whiteAlpha(0.3),
+                              color: fd.title.isNotEmpty && !isAiLoading ? Colors.white
+                                  : (isDark ? AppColors.textMuted : AppColors.lightTextMuted),
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -202,7 +207,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.createEventTagsLabel, style: AppTypography.label),
+                   Text(context.l10n.createEventTagsLabel, style: AppTypography.label.copyWith(
+                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                   )),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -225,7 +232,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.createEventEventTypeLabel, style: AppTypography.label),
+                   Text(context.l10n.createEventEventTypeLabel, style: AppTypography.label.copyWith(
+                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                   )),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
@@ -241,7 +250,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                   const SizedBox(height: AppSpacing.lg),
 
                   // Language
-                  Text(context.l10n.createEventLanguageLabel, style: AppTypography.label),
+                   Text(context.l10n.createEventLanguageLabel, style: AppTypography.label.copyWith(
+                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                   )),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -266,7 +277,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.createEventStartDateTime, style: AppTypography.label),
+                   Text(context.l10n.createEventStartDateTime, style: AppTypography.label.copyWith(
+                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                   )),
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
@@ -281,7 +294,9 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text(context.l10n.createEventEndDateTime, style: AppTypography.label),
+                   Text(context.l10n.createEventEndDateTime, style: AppTypography.label.copyWith(
+                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                   )),
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
@@ -311,37 +326,38 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
 
   Widget _typeOption(String value, String label, IconData icon,
       String current, CreateEventCubit cubit) {
-    final isSelected = current == value;
-    return GestureDetector(
+     final isSelected = current == value;
+     final isDark = Theme.of(context).brightness == Brightness.dark;
+     return GestureDetector(
       onTap: () => cubit.updateEventType(value),
       child: AnimatedContainer(
         duration: AppAnimations.normal,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.15)
-              : AppColors.whiteAlpha(0.04),
+           color: isSelected
+               ? AppColors.primary.withValues(alpha: 0.12)
+               : isDark ? AppColors.whiteAlpha(0.04) : AppColors.lightSurfaceHigh,
           borderRadius: AppRadius.inputRadius,
           border: Border.all(
-            color: isSelected
-                ? AppColors.goldAccent
-                : AppColors.whiteAlpha(0.08),
+             color: isSelected
+                 ? AppColors.primary
+                 : isDark ? AppColors.borderDark : AppColors.borderLight,
             width: isSelected ? 1.5 : 1,
           ),
-          boxShadow: isSelected ? AppShadows.goldGlow(0.1) : null,
+           boxShadow: isSelected ? AppShadows.primaryGlow(0.1) : null,
         ),
         child: Column(
           children: [
-            Icon(icon,
-                color: isSelected
-                    ? AppColors.goldAccent
+             Icon(icon,
+                 color: isSelected
+                     ? AppColors.primary
                     : AppColors.whiteAlpha(0.4),
                 size: 28),
             const SizedBox(height: 8),
             Text(label,
                 style: TextStyle(
-                  color: isSelected
-                      ? Colors.white
+                   color: isSelected
+                       ? AppColors.primary
                       : AppColors.whiteAlpha(0.5),
                   fontWeight:
                       isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -355,6 +371,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
 
   Widget _datePicker(BuildContext context, String label, DateTime date,
       ValueChanged<DateTime> onChanged) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () async {
         final picked = await showDatePicker(
@@ -368,19 +385,19 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.whiteAlpha(0.05),
+          color: isDark ? AppColors.whiteAlpha(0.05) : AppColors.lightSurfaceHigh,
           borderRadius: AppRadius.inputRadius,
-          border: Border.all(color: AppColors.whiteAlpha(0.08)),
+          border: Border.all(color: isDark ? AppColors.whiteAlpha(0.08) : AppColors.borderLight),
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
-                color: AppColors.whiteAlpha(0.3), size: 18),
+             Icon(Icons.calendar_today_rounded,
+                 color: isDark ? AppColors.textMuted : AppColors.lightTextMuted, size: 18),
             const SizedBox(width: 8),
             Text(
               DateFormat('MMM d, yyyy').format(date),
               style:
-                  TextStyle(color: AppColors.whiteAlpha(0.7), fontSize: 13),
+                  TextStyle(color: isDark ? AppColors.whiteAlpha(0.7) : AppColors.lightTextPrimary, fontSize: 13),
             ),
           ],
         ),
@@ -390,6 +407,7 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
 
   Widget _timePicker(BuildContext context, TimeOfDay time,
       ValueChanged<TimeOfDay> onChanged) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () async {
         final picked =
@@ -399,19 +417,20 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.whiteAlpha(0.05),
+          color: isDark ? AppColors.whiteAlpha(0.05) : AppColors.lightSurfaceHigh,
           borderRadius: AppRadius.inputRadius,
-          border: Border.all(color: AppColors.whiteAlpha(0.08)),
+          border: Border.all(color: isDark ? AppColors.whiteAlpha(0.08) : AppColors.borderLight),
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time_rounded,
-                color: AppColors.whiteAlpha(0.3), size: 18),
+             Icon(Icons.access_time_rounded,
+                 color: isDark ? AppColors.textMuted : AppColors.lightTextMuted, size: 18),
             const SizedBox(width: 8),
             Text(
               time.format(context),
-              style:
-                  TextStyle(color: AppColors.whiteAlpha(0.7), fontSize: 13),
+              style: TextStyle(
+                  color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                  fontSize: 13),
             ),
           ],
         ),

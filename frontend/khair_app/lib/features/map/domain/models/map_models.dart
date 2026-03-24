@@ -1,143 +1,36 @@
 import 'package:equatable/equatable.dart';
 import 'package:latlong2/latlong.dart';
 
-enum MapDatePreset { any, today, weekend, custom }
-
-enum ContextLayerType { mosque, islamicCenter, halalRestaurant }
-
-extension ContextLayerTypeX on ContextLayerType {
-  String get apiValue {
-    switch (this) {
-      case ContextLayerType.mosque:
-        return 'mosque';
-      case ContextLayerType.islamicCenter:
-        return 'islamic_center';
-      case ContextLayerType.halalRestaurant:
-        return 'halal_restaurant';
-    }
-  }
-
-  String get label {
-    switch (this) {
-      case ContextLayerType.mosque:
-        return 'Mosques';
-      case ContextLayerType.islamicCenter:
-        return 'Islamic Centers';
-      case ContextLayerType.halalRestaurant:
-        return 'Halal Restaurants';
-    }
-  }
-}
-
+/// Simplified map filters — discovery-first, no complexity.
 class MapFilters extends Equatable {
   final double radiusKm;
-  final MapDatePreset datePreset;
-  final DateTime? dateFrom;
-  final DateTime? dateTo;
-  final String? gender;
-  final int? age;
-  final Set<String> categories;
-  final bool freeOnly;
-  final bool almostFullOnly;
-  final Set<ContextLayerType> contextLayers;
-  final bool personalized;
-  final String sortBy;
+  final Set<String> categories; // quran, lecture, charity, etc.
+  final String eventType; // 'all', 'online', 'in_person'
+  final String search;
 
   const MapFilters({
     this.radiusKm = 10,
-    this.datePreset = MapDatePreset.any,
-    this.dateFrom,
-    this.dateTo,
-    this.gender,
-    this.age,
     this.categories = const {},
-    this.freeOnly = false,
-    this.almostFullOnly = false,
-    this.contextLayers = const {},
-    this.personalized = false,
-    this.sortBy = 'relevance',
+    this.eventType = 'all',
+    this.search = '',
   });
 
   MapFilters copyWith({
     double? radiusKm,
-    MapDatePreset? datePreset,
-    DateTime? dateFrom,
-    DateTime? dateTo,
-    String? gender,
-    int? age,
     Set<String>? categories,
-    bool? freeOnly,
-    bool? almostFullOnly,
-    Set<ContextLayerType>? contextLayers,
-    bool? personalized,
-    String? sortBy,
-    bool clearGender = false,
-    bool clearDateRange = false,
+    String? eventType,
+    String? search,
   }) {
     return MapFilters(
       radiusKm: radiusKm ?? this.radiusKm,
-      datePreset: datePreset ?? this.datePreset,
-      dateFrom: clearDateRange ? null : (dateFrom ?? this.dateFrom),
-      dateTo: clearDateRange ? null : (dateTo ?? this.dateTo),
-      gender: clearGender ? null : (gender ?? this.gender),
-      age: age ?? this.age,
       categories: categories ?? this.categories,
-      freeOnly: freeOnly ?? this.freeOnly,
-      almostFullOnly: almostFullOnly ?? this.almostFullOnly,
-      contextLayers: contextLayers ?? this.contextLayers,
-      personalized: personalized ?? this.personalized,
-      sortBy: sortBy ?? this.sortBy,
+      eventType: eventType ?? this.eventType,
+      search: search ?? this.search,
     );
   }
 
-  DateTime? get resolvedDateFrom {
-    final now = DateTime.now();
-    switch (datePreset) {
-      case MapDatePreset.today:
-        return DateTime(now.year, now.month, now.day);
-      case MapDatePreset.weekend:
-        final daysToSaturday = (6 - now.weekday) % 7;
-        final saturday = now.add(Duration(days: daysToSaturday));
-        return DateTime(saturday.year, saturday.month, saturday.day);
-      case MapDatePreset.custom:
-        return dateFrom;
-      case MapDatePreset.any:
-        return null;
-    }
-  }
-
-  DateTime? get resolvedDateTo {
-    final now = DateTime.now();
-    switch (datePreset) {
-      case MapDatePreset.today:
-        return DateTime(now.year, now.month, now.day, 23, 59, 59);
-      case MapDatePreset.weekend:
-        final daysToSaturday = (6 - now.weekday) % 7;
-        final saturday = now.add(Duration(days: daysToSaturday));
-        return DateTime(
-            saturday.year, saturday.month, saturday.day + 1, 23, 59, 59);
-      case MapDatePreset.custom:
-        return dateTo;
-      case MapDatePreset.any:
-        return null;
-    }
-  }
-
   @override
-  List<Object?> get props => [
-        radiusKm,
-        datePreset,
-        dateFrom,
-        dateTo,
-        gender,
-        age,
-        categories,
-        freeOnly,
-        almostFullOnly,
-        contextLayers,
-        personalized,
-        sortBy,
-      ];
+  List<Object?> get props => [radiusKm, categories, eventType, search];
 }
 
 class MapEvent extends Equatable {
@@ -188,6 +81,8 @@ class MapEvent extends Equatable {
   });
 
   LatLng get point => LatLng(latitude, longitude);
+
+  bool get isOnline => latitude == 0 && longitude == 0;
 
   factory MapEvent.fromJson(Map<String, dynamic> json) {
     return MapEvent(
@@ -274,90 +169,6 @@ class NearbyMapResult extends Equatable {
 
   @override
   List<Object?> get props => [events, page, pageSize, totalCount, hasNextPage];
-}
-
-class MapContextPlace extends Equatable {
-  final String id;
-  final String name;
-  final String placeType;
-  final String? address;
-  final String? city;
-  final String? country;
-  final double latitude;
-  final double longitude;
-  final bool verified;
-
-  const MapContextPlace({
-    required this.id,
-    required this.name,
-    required this.placeType,
-    this.address,
-    this.city,
-    this.country,
-    required this.latitude,
-    required this.longitude,
-    required this.verified,
-  });
-
-  LatLng get point => LatLng(latitude, longitude);
-
-  factory MapContextPlace.fromJson(Map<String, dynamic> json) {
-    return MapContextPlace(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      placeType: json['place_type'] as String,
-      address: json['address'] as String?,
-      city: json['city'] as String?,
-      country: json['country'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-      verified: json['verified'] as bool? ?? false,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        id,
-        name,
-        placeType,
-        address,
-        city,
-        country,
-        latitude,
-        longitude,
-        verified,
-      ];
-}
-
-class MapFilterOptions extends Equatable {
-  final List<String> categories;
-  final List<String> genderRestrictions;
-  final List<int> radiusOptionsKm;
-
-  const MapFilterOptions({
-    required this.categories,
-    required this.genderRestrictions,
-    required this.radiusOptionsKm,
-  });
-
-  factory MapFilterOptions.fromJson(Map<String, dynamic> json) {
-    return MapFilterOptions(
-      categories: (json['categories'] as List<dynamic>? ?? const [])
-          .map((e) => e.toString())
-          .toList(),
-      genderRestrictions:
-          (json['gender_restrictions'] as List<dynamic>? ?? const [])
-              .map((e) => e.toString())
-              .toList(),
-      radiusOptionsKm:
-          (json['radius_options_km'] as List<dynamic>? ?? const [5, 10, 25, 50])
-              .map((e) => e as int)
-              .toList(),
-    );
-  }
-
-  @override
-  List<Object?> get props => [categories, genderRestrictions, radiusOptionsKm];
 }
 
 class MapClusterNode extends Equatable {

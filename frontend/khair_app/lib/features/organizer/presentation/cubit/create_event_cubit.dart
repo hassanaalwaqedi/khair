@@ -134,6 +134,8 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       country: fd.eventType == 'offline' ? fd.countryCode : null,
       city: fd.eventType == 'offline' ? fd.city : null,
       address: fd.eventType == 'offline' ? fd.address : null,
+      latitude: fd.eventType == 'offline' ? fd.latitude : null,
+      longitude: fd.eventType == 'offline' ? fd.longitude : null,
       startDate: fd.startDateTime,
       endDate: fd.endDateTime,
       imageUrl: fd.coverImageUrl,

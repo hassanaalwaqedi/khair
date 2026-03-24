@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF6366F1);
-  static const Color secondaryColor = Color(0xFF8B5CF6);
+  // Colors — Blue primary + neutral
+  static const Color primaryColor = Color(0xFF2563EB);
+  static const Color secondaryColor = Color(0xFF60A5FA);
   static const Color accentColor = Color(0xFF22D3EE);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color backgroundColor = Color(0xFFFFFFFF);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color errorColor = Color(0xFFEF4444);
   static const Color successColor = Color(0xFF22C55E);
   static const Color warningColor = Color(0xFFF59E0B);
   
   // Dark theme colors
-  static const Color darkBackgroundColor = Color(0xFF0F172A);
-  static const Color darkSurfaceColor = Color(0xFF1E293B);
-  static const Color darkCardColor = Color(0xFF334155);
+  static const Color darkBackgroundColor = Color(0xFF0B0F14);
+  static const Color darkSurfaceColor = Color(0xFF111827);
+  static const Color darkCardColor = Color(0xFF1F2937);
   
   static ThemeData get lightTheme {
     return ThemeData(
@@ -31,16 +31,17 @@ class AppTheme {
       fontFamily: 'Inter',
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
-        foregroundColor: Color(0xFF1E293B),
+        foregroundColor: Color(0xFF111827),
         elevation: 0,
         centerTitle: true,
       ),
       cardTheme: CardThemeData(
         color: surfaceColor,
-        elevation: 2,
-        shadowColor: const Color(0x1A000000),
+        elevation: 0,
+        shadowColor: const Color(0x0A000000),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -61,12 +62,12 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          side: const BorderSide(color: primaryColor),
+          side: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF1F5F9),
+        fillColor: const Color(0xFFF6F7F8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -86,8 +87,8 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFF1F5F9),
-        selectedColor: const Color(0x336366F1),
+        backgroundColor: const Color(0xFFF6F7F8),
+        selectedColor: const Color(0x332563EB),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -120,6 +121,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF374151)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -140,7 +142,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          side: const BorderSide(color: primaryColor),
+          side: const BorderSide(color: Color(0xFF374151)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -166,7 +168,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: darkCardColor,
-        selectedColor: const Color(0x4D6366F1),
+        selectedColor: const Color(0x4D2563EB),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

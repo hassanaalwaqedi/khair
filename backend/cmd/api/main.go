@@ -19,6 +19,7 @@ import (
 	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
 	"github.com/khair/backend/internal/calendar"
+	"github.com/khair/backend/internal/chat"
 	"github.com/khair/backend/internal/countries"
 	"github.com/khair/backend/internal/discovery"
 	"github.com/khair/backend/internal/event"
@@ -26,11 +27,13 @@ import (
 	"github.com/khair/backend/internal/joinreg"
 	"github.com/khair/backend/internal/launch"
 	"github.com/khair/backend/internal/legal"
+	"github.com/khair/backend/internal/lesson"
 	"github.com/khair/backend/internal/location"
 	"github.com/khair/backend/internal/mapservice"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/organizer"
+	"github.com/khair/backend/internal/profile"
 	"github.com/khair/backend/internal/orgdash"
 	"github.com/khair/backend/internal/ownerposts"
 	"github.com/khair/backend/internal/payment"
@@ -66,6 +69,7 @@ import (
 	"github.com/khair/backend/pkg/ratelimit"
 	"github.com/khair/backend/pkg/response"
 	"github.com/khair/backend/pkg/security"
+	khairsentry "github.com/khair/backend/pkg/sentry"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -79,6 +83,10 @@ func main() {
 		Level:  cfg.Logger.Level,
 		Pretty: cfg.Logger.Pretty,
 	})
+
+	// Initialize Sentry error tracking (no-op if SENTRY_DSN not set)
+	sentryCleanup := khairsentry.Init()
+	defer sentryCleanup()
 
 	appLogger.Info("Starting Khair API Server",
 		logger.String("version", "1.0.0"),
@@ -144,6 +152,7 @@ func main() {
 	router.MaxMultipartMemory = 8 << 20
 
 	// Apply global middleware
+	router.Use(khairsentry.Middleware())
 	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.SecurityHeaders())
 	router.Use(security.ProductionHeadersMiddleware(secConfig))
@@ -170,6 +179,11 @@ func main() {
 		c.File("templates/privacy.html")
 	})
 
+	// Terms of service (for Google Play / Apple)
+	router.GET("/terms", func(c *gin.Context) {
+		c.File("templates/terms.html")
+	})
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	v1.Use(rateLimiter.Middleware("default")) // Global: 100 req/hr per IP, 200 req/hr per user
@@ -183,7 +197,7 @@ func main() {
 	eventRepo := event.NewRepository(db)
 
 	// Initialize email service
-	emailSvc := email.NewService(cfg.SMTP)
+	emailSvc := email.NewService(cfg.Email)
 
 	// Initialize RBAC
 	rbacRepo := rbac.NewRepository(db)
@@ -324,6 +338,10 @@ func main() {
 	notificationHandler := notification.NewHandler(notificationService)
 	notificationHandler.RegisterRoutes(v1, authMiddleware)
 
+	// Profile API (auth required, with AI moderation)
+	profileHandler := profile.NewHandler(db, geminiClient)
+	profileHandler.RegisterRoutes(v1, router, authMiddleware)
+
 	// Countries API (public, no auth)
 	countriesRepo := countries.NewRepository(db)
 	countriesHandler := countries.NewHandler(countriesRepo)
@@ -354,10 +372,25 @@ func main() {
 	joinRegHandler := joinreg.NewHandler(joinRegService)
 	joinRegHandler.RegisterRoutes(v1, rateLimiter.Middleware("default"))
 
-	// Sheikh Directory API (public)
+	// Sheikh Directory API (public + auth + admin)
 	sheikhService := sheikh.NewService(db)
 	sheikhHandler := sheikh.NewHandler(sheikhService)
 	sheikhHandler.RegisterRoutes(v1)
+	sheikhHandler.RegisterAuthRoutes(v1, authMiddleware)
+	sheikhHandler.RegisterAdminRoutes(v1, authMiddleware, adminMiddleware)
+
+	// Lesson Request API
+	lessonService := lesson.NewService(db, notificationService, pushService)
+	lessonHandler := lesson.NewHandler(lessonService)
+	lessonHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Chat API
+	chatService := chat.NewService(db, notificationService, pushService)
+	chatHandler := chat.NewHandler(chatService)
+	chatHandler.RegisterRoutes(v1, authMiddleware)
+
+	// Connect lesson → chat (auto-create conversation on accept)
+	lessonService.SetChatService(chatService)
 
 	// Spiritual Quotes API (public)
 	quoteRepo := spiritualquote.NewRepository(db)

@@ -325,6 +325,7 @@ func (h *Handler) parseNearbyFilter(c *gin.Context, requireBounds bool) (*Nearby
 		DateTo:       dateTo,
 		FreeOnly:     parseBoolDefault(c, "free_only", false),
 		AlmostFull:   parseBoolDefault(c, "almost_full", false),
+		Search:       strings.TrimSpace(c.Query("search")),
 		SortBy:       sortBy,
 		Page:         page,
 		PageSize:     pageSize,

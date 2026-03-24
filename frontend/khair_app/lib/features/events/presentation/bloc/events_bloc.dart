@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -10,9 +11,9 @@ import '../../../location/domain/entities/location_entity.dart';
 part 'events_event.dart';
 part 'events_state.dart';
 
-const _pollInterval = Duration(seconds: 30);
+const _pollInterval = Duration(seconds: 60);
 
-class EventsBloc extends Bloc<EventsEvent, EventsState> {
+class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObserver {
   final EventsRepository _eventsRepository;
   LocationEntity? _currentLocation;
   Timer? _searchDebounce;
@@ -33,16 +34,41 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
     on<ClearAllFilters>(_onClearAllFilters);
     on<RefreshEvents>(_onRefreshEvents);
 
+    // Observe app lifecycle to pause/resume polling
+    WidgetsBinding.instance.addObserver(this);
+
     // Start periodic polling for new approved events
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
     _pollTimer = Timer.periodic(_pollInterval, (_) {
       if (!isClosed) add(RefreshEvents());
     });
   }
 
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startPolling();
+      // Also do an immediate refresh when returning to foreground
+      if (!isClosed) add(RefreshEvents());
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _stopPolling();
+    }
+  }
+
   @override
   Future<void> close() {
     _searchDebounce?.cancel();
-    _pollTimer?.cancel();
+    _stopPolling();
+    WidgetsBinding.instance.removeObserver(this);
     return super.close();
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 
 /// Step: Media Upload — Logo / Profile Photo for authority roles
@@ -75,7 +76,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
   void _showPickerOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D3D26),
+      backgroundColor: const Color(0xFF111827),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -162,7 +163,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
               icon,
               color: isDestructive
                   ? const Color(0xFFFF8A80)
-                  : KhairColors.secondary,
+                  : AppColors.primary,
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -241,14 +242,14 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                       : Colors.white.withValues(alpha: 0.06),
                   border: Border.all(
                     color: hasImage
-                        ? KhairColors.secondary
+                        ? AppColors.primary
                         : Colors.white.withValues(alpha: 0.15),
                     width: hasImage ? 3 : 2,
                   ),
                   boxShadow: hasImage
                       ? [
                           BoxShadow(
-                            color: KhairColors.secondary.withValues(alpha: 0.2),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),
@@ -258,7 +259,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                 child: widget.isUploading
                     ? const Center(
                         child: CircularProgressIndicator(
-                          color: KhairColors.secondary,
+                          color: AppColors.primary,
                           strokeWidth: 3,
                         ),
                       )
@@ -285,7 +286,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                             children: [
                               Icon(
                                 Icons.add_a_photo_rounded,
-                                color: KhairColors.secondary.withValues(alpha: 0.7),
+                                color: AppColors.primary.withValues(alpha: 0.7),
                                 size: 40,
                               ),
                               const SizedBox(height: 12),
@@ -311,13 +312,13 @@ class _MediaUploadStepState extends State<MediaUploadStep>
               onPressed: _showPickerOptions,
               icon: Icon(
                 Icons.edit_rounded,
-                color: KhairColors.secondary,
+                color: AppColors.primary,
                 size: 18,
               ),
               label: Text(
                 context.l10n.mediaUploadChange,
                 style: TextStyle(
-                  color: KhairColors.secondary,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -1,0 +1,646 @@
+﻿./gradlew : WARNING: A restricted method in 
+java.lang.System has been called
+At line:1 char:13
++ cd android; ./gradlew assembleDebug --stacktrace 2>&1 
+| Out-File -Fil ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A  
+   rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by 
+net.rubygrapefruit.platform.internal.NativeLibraryLoader 
+in an unnamed module (file:/C:/Users/hsana/.gradle/wrappe
+r/dists/gradle-8.14-all/c2qonpi39x1mddn7hk5gh9iqj/gradle-
+8.14/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid 
+a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future 
+release unless native access is enabled
+
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+
+> Task :gradle:compileKotlin
+w: file:///C:/Users/hsana/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:11:37 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/hsana/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:609:69 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/hsana/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:186:64 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+w: file:///C:/Users/hsana/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:187:69 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.7.3) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+> Task :app:DebugMinSdkCheck
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:compileFlutterBuildDebug
+> Task :app:packJniLibsflutterBuildDebug
+> Task :file_picker:preBuild UP-TO-DATE
+> Task :file_picker:preDebugBuild UP-TO-DATE
+> Task :file_picker:writeDebugAarMetadata UP-TO-DATE
+> Task :firebase_core:preBuild UP-TO-DATE
+> Task :firebase_core:preDebugBuild UP-TO-DATE
+> Task :firebase_core:writeDebugAarMetadata UP-TO-DATE
+> Task :firebase_messaging:preBuild UP-TO-DATE
+> Task :firebase_messaging:preDebugBuild UP-TO-DATE
+> Task :firebase_messaging:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:preBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:preDebugBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_secure_storage:preBuild UP-TO-DATE
+> Task :flutter_secure_storage:preDebugBuild UP-TO-DATE
+> Task :flutter_secure_storage:writeDebugAarMetadata UP-TO-DATE
+> Task :geolocator_android:preBuild UP-TO-DATE
+> Task :geolocator_android:preDebugBuild UP-TO-DATE
+> Task :geolocator_android:writeDebugAarMetadata UP-TO-DATE
+> Task :image_picker_android:preBuild UP-TO-DATE
+> Task :image_picker_android:preDebugBuild UP-TO-DATE
+> Task :image_picker_android:writeDebugAarMetadata UP-TO-DATE
+> Task :path_provider_android:preBuild UP-TO-DATE
+> Task :path_provider_android:preDebugBuild UP-TO-DATE
+> Task :path_provider_android:writeDebugAarMetadata UP-TO-DATE
+> Task :share_plus:preBuild UP-TO-DATE
+> Task :share_plus:preDebugBuild UP-TO-DATE
+> Task :share_plus:writeDebugAarMetadata UP-TO-DATE
+> Task :shared_preferences_android:preBuild UP-TO-DATE
+> Task :shared_preferences_android:preDebugBuild UP-TO-DATE
+> Task :shared_preferences_android:writeDebugAarMetadata UP-TO-DATE
+> Task :sqflite_android:preBuild UP-TO-DATE
+> Task :sqflite_android:preDebugBuild UP-TO-DATE
+> Task :sqflite_android:writeDebugAarMetadata UP-TO-DATE
+> Task :url_launcher_android:preBuild UP-TO-DATE
+> Task :url_launcher_android:preDebugBuild UP-TO-DATE
+> Task :url_launcher_android:writeDebugAarMetadata UP-TO-DATE
+> Task :video_player_android:preBuild UP-TO-DATE
+> Task :video_player_android:preDebugBuild UP-TO-DATE
+> Task :video_player_android:writeDebugAarMetadata UP-TO-DATE
+> Task :app:cleanMergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :file_picker:mergeDebugShaders UP-TO-DATE
+> Task :file_picker:compileDebugShaders NO-SOURCE
+> Task :file_picker:generateDebugAssets UP-TO-DATE
+> Task :file_picker:packageDebugAssets UP-TO-DATE
+> Task :firebase_core:mergeDebugShaders UP-TO-DATE
+> Task :firebase_core:compileDebugShaders NO-SOURCE
+> Task :firebase_core:generateDebugAssets UP-TO-DATE
+> Task :app:checkDebugAarMetadata FAILED
+> Task :firebase_core:packageDebugAssets
+
+[Incubating] Problems report is available at: file:///C:/Users/hsana/khair/frontend/khair_app/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:checkDebugAarMetadata'.
+> A failure occurred while executing com.android.build.gr
+adle.internal.tasks.CheckAarMetadataWorkAction
+   > 6 issues were found when checking AAR metadata:
+     
+       1.  Dependency 'androidx.browser:browser:1.9.0' 
+requires Android Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+     
+       2.  Dependency 
+'androidx.activity:activity-ktx:1.12.4' requires Android 
+Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+     
+       3.  Dependency 
+'androidx.activity:activity:1.12.4' requires Android 
+Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+     
+       4.  Dependency 
+'androidx.navigationevent:navigationevent-android:1.0.2' 
+requires Android Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+     
+       5.  Dependency 'androidx.core:core-ktx:1.17.0' 
+requires Android Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+     
+       6.  Dependency 'androidx.core:core:1.17.0' 
+requires Android Gradle plugin 8.9.1 or higher.
+     
+           This build currently uses Android Gradle 
+plugin 8.7.3.
+
+* Try:
+> Run with --info or --debug option to get more log 
+output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution 
+failed for task ':app:checkDebugAarMetadata'.
+	at org.gradle.api.internal.tasks.execution.ExecuteAction
+sTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskE
+xecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Tr
+y.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteAction
+sTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.j
+ava:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteAction
+sTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116
+)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskP
+athTrackingTaskExecuter.execute(ProblemsTaskPathTrackingT
+askExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePrope
+rtiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.
+java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskEx
+ecutionModeExecuter.execute(ResolveTaskExecutionModeExecu
+ter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithN
+oActionsExecuter.execute(SkipTaskWithNoActionsExecuter.ja
+va:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTas
+kExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptio
+nTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execu
+te(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutio
+nGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutio
+nGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.lambda$execute$0(D
+efaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationR
+ef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.execute(DefaultTas
+kExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.execute(DefaultTas
+kExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$Executo
+rWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$Executo
+rWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAn
+dRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecuto
+r$1.run(AbstractManagedExecutor.java:48)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecu
+tor$WorkExecutionException: A failure occurred while 
+executing com.android.build.gradle.internal.tasks.CheckAa
+rMetadataWorkAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$Wor
+kItemExecution.waitForCompletion(DefaultWorkerExecutor.ja
+va:287)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lamb
+da$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracke
+r.java:130)
+	at 
+org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.wi
+thoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.wi
+thoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.wi
+thoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.wait
+ForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:12
+6)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.wait
+ForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92
+)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.wait
+ForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.wait
+ForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+$3.run(TaskExecution.java:252)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+.executeAction(TaskExecution.java:229)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+.executeActions(TaskExecution.java:212)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+.executeWithPreviousOutputFiles(TaskExecution.java:195)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+.execute(TaskExecution.java:162)
+	at org.gradle.internal.execution.steps.ExecuteStep.execu
+teInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.acces
+s$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.cal
+l(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.cal
+l(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.internal.execution.steps.ExecuteStep.execu
+te(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execu
+te(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionSt
+ep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.execu
+teWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execu
+te(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputPa
+rentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputPa
+rentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOut
+putsStep.execute(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOut
+putsStep.execute(RemovePreviousOutputsStep.java:37)
+	at org.gradle.internal.execution.steps.BroadcastChanging
+OutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChanging
+OutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAft
+erExecutionStep.execute(CaptureOutputsAfterExecutionStep.
+java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAft
+erExecutionStep.execute(CaptureOutputsAfterExecutionStep.
+java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChang
+esStep.execute(ResolveInputChangesStep.java:40)
+	at org.gradle.internal.execution.steps.ResolveInputChang
+esStep.execute(ResolveInputChangesStep.java:29)
+	at org.gradle.internal.execution.steps.BuildCacheStep.ex
+ecuteWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.la
+mbda$execute$1(BuildCacheStep.java:75)
+	at 
+org.gradle.internal.Either$Right.fold(Either.java:175)
+	at org.gradle.internal.execution.caching.CachingState.fo
+ld(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.ex
+ecute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.ex
+ecute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionSta
+teStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionSta
+teStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.
+executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.
+lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.
+execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.
+execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapsh
+ottingInputsFinishedStep.execute(MarkSnapshottingInputsFi
+nishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapsh
+ottingInputsFinishedStep.execute(MarkSnapshottingInputsFi
+nishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementa
+lCachingStateStep.executeDelegate(ResolveIncrementalCachi
+ngStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementa
+lCachingStateStep.executeDelegate(ResolveIncrementalCachi
+ngStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCa
+chingStateStep.execute(AbstractResolveCachingStateStep.ja
+va:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCa
+chingStateStep.execute(AbstractResolveCachingStateStep.ja
+va:39)
+	at org.gradle.internal.execution.steps.ResolveChangesSte
+p.execute(ResolveChangesStep.java:65)
+	at org.gradle.internal.execution.steps.ResolveChangesSte
+p.execute(ResolveChangesStep.java:36)
+	at org.gradle.internal.execution.steps.ValidateStep.exec
+ute(ValidateStep.java:107)
+	at org.gradle.internal.execution.steps.ValidateStep.exec
+ute(ValidateStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractCaptureSt
+ateBeforeExecutionStep.execute(AbstractCaptureStateBefore
+ExecutionStep.java:64)
+	at org.gradle.internal.execution.steps.AbstractCaptureSt
+ateBeforeExecutionStep.execute(AbstractCaptureStateBefore
+ExecutionStep.java:43)
+	at org.gradle.internal.execution.steps.AbstractSkipEmpty
+WorkStep.executeWithNonEmptySources(AbstractSkipEmptyWork
+Step.java:125)
+	at org.gradle.internal.execution.steps.AbstractSkipEmpty
+WorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractSkipEmpty
+WorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapsh
+ottingInputsStartedStep.execute(MarkSnapshottingInputsSta
+rtedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecu
+tionStateStep.execute(LoadPreviousExecutionStateStep.java
+:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecu
+tionStateStep.execute(LoadPreviousExecutionStateStep.java
+:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutput
+sStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutput
+sStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWork
+spaceStep.lambda$execute$0(AssignMutableWorkspaceStep.jav
+a:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution
+$4.withWorkspace(TaskExecution.java:289)
+	at org.gradle.internal.execution.steps.AssignMutableWork
+spaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWork
+spaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineSte
+p.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineSte
+p.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildO
+perationFiringStep.lambda$execute$2(ExecuteWorkBuildOpera
+tionFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildO
+perationFiringStep.execute(ExecuteWorkBuildOperationFirin
+gStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildO
+perationFiringStep.execute(ExecuteWorkBuildOperationFirin
+gStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep
+.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep
+.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.exec
+ute(IdentifyStep.java:48)
+	at org.gradle.internal.execution.steps.IdentifyStep.exec
+ute(IdentifyStep.java:35)
+	at org.gradle.internal.execution.impl.DefaultExecutionEn
+gine$1.execute(DefaultExecutionEngine.java:64)
+	at org.gradle.api.internal.tasks.execution.ExecuteAction
+sTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.j
+ava:127)
+	at org.gradle.api.internal.tasks.execution.ExecuteAction
+sTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116
+)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskP
+athTrackingTaskExecuter.execute(ProblemsTaskPathTrackingT
+askExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePrope
+rtiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.
+java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskEx
+ecutionModeExecuter.execute(ResolveTaskExecutionModeExecu
+ter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithN
+oActionsExecuter.execute(SkipTaskWithNoActionsExecuter.ja
+va:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTas
+kExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+27 actionable tasks: 6 executed, 21 up-to-date
+	at org.gradle.api.internal.tasks.execution.CatchExceptio
+nTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTa
+skExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execu
+te(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutio
+nGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutio
+nGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.lambda$execute$0(D
+efaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationR
+ef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.execute(DefaultTas
+kExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGr
+aph$BuildOperationAwareExecutionAction.execute(DefaultTas
+kExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$Executo
+rWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$Executo
+rWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAn
+dRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecuto
+r$1.run(AbstractManagedExecutor.java:48)
+Caused by: java.lang.RuntimeException: 6 issues were 
+found when checking AAR metadata:
+
+  1.  Dependency 'androidx.browser:browser:1.9.0' 
+requires Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+
+  2.  Dependency 'androidx.activity:activity-ktx:1.12.4' 
+requires Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+
+  3.  Dependency 'androidx.activity:activity:1.12.4' 
+requires Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+
+  4.  Dependency 
+'androidx.navigationevent:navigationevent-android:1.0.2' 
+requires Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+
+  5.  Dependency 'androidx.core:core-ktx:1.17.0' 
+requires Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+
+  6.  Dependency 'androidx.core:core:1.17.0' requires 
+Android Gradle plugin 8.9.1 or higher.
+
+      This build currently uses Android Gradle plugin 
+8.7.3.
+	at com.android.build.gradle.internal.tasks.CheckAarMetad
+ataWorkAction.execute(CheckAarMetadataTask.kt:288)
+	at org.gradle.workers.internal.DefaultWorkerServer.execu
+te(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$
+1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$
+1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.exec
+uteInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$
+1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Abs
+tractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Abs
+tractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$CallableBuildOperationWorker.execute(DefaultBuildOp
+erationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationR
+unner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWra
+ppedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$
+1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lam
+bda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at org.gradle.internal.work.DefaultConditionalExecutionQ
+ueue$ExecutionRunner.runExecution(DefaultConditionalExecu
+tionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQ
+ueue$ExecutionRunner.access$700(DefaultConditionalExecuti
+onQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQ
+ueue$ExecutionRunner$1.run(DefaultConditionalExecutionQue
+ue.java:169)
+	at 
+org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.wi
+thLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.ru
+nAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.ru
+nAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQ
+ueue$ExecutionRunner.runBatch(DefaultConditionalExecution
+Queue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQ
+ueue$ExecutionRunner.run(DefaultConditionalExecutionQueue
+.java:133)
+	... 2 more
+
+
+BUILD FAILED in 38s

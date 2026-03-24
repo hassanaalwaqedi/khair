@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../../core/locale/l10n_extension.dart';
 import '../../../../../core/theme/app_design_system.dart';
@@ -63,6 +65,50 @@ class ReviewStep extends StatelessWidget {
                   if (fd.eventType == 'offline' && fd.city != null)
                     _row(l10n.createEventStepLocation,
                         '${fd.city}, ${fd.countryName ?? fd.countryCode ?? ''}'),
+                  if (fd.eventType == 'offline' &&
+                      fd.latitude != null &&
+                      fd.longitude != null) ...[
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        height: 120,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: LatLng(
+                                fd.latitude!, fd.longitude!),
+                            initialZoom: 13,
+                            interactionOptions:
+                                const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName:
+                                  'com.khair.khair_app',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(fd.latitude!,
+                                      fd.longitude!),
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Color(0xFFE53935),
+                                    size: 36,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   if (fd.eventType == 'online')
                     _row(l10n.createEventPlatform, fd.onlinePlatform ?? '—'),
                   _row(l10n.createEventMaxAttendees, fd.capacity.toString()),

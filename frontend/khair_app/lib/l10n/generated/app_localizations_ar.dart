@@ -806,6 +806,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get eventDetailsEventFull => 'هذه الفعالية ممتلئة';
 
   @override
+  String get eventDetailsEventEnded => 'انتهت الفعالية';
+
+  @override
+  String get eventDetailsAlreadyJoinedBtn => '✓ تم الانضمام';
+
+  @override
+  String get eventDetailsReservedHoldInfo =>
+      'مقعدك محجوز لمدة 10 دقائق. تحقق من بريدك الإلكتروني للتأكيد.';
+
+  @override
   String get joinModalSubtitle => 'أنشئ حساباً بسيطاً لحجز مقعدك.';
 
   @override
@@ -1879,4 +1889,373 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get becomeOrganizerDesc =>
       'لوحة التحكم متاحة للمنظمين فقط.\n\nسجّل كمنظم لبدء إنشاء وإدارة الفعاليات الإسلامية!';
+
+  @override
+  String get mapPickerTitle => 'اختر الموقع على الخريطة';
+
+  @override
+  String get mapPickerSearchHint => 'ابحث عن مكان أو عنوان...';
+
+  @override
+  String get mapPickerUseCurrentLocation => 'استخدم موقعي الحالي';
+
+  @override
+  String get mapPickerTapToSelect => 'انقر على الخريطة لتحديد الموقع';
+
+  @override
+  String get mapPickerSelectedLocation => 'الموقع المحدد';
+
+  @override
+  String get mapPickerSearching => 'جارٍ تحديد العنوان...';
+
+  @override
+  String get mapPickerRefineAddress =>
+      'يمكنك تعديل تفاصيل العنوان أدناه إذا لزم الأمر';
+
+  @override
+  String get eventDetailsGetDirections => 'الحصول على الاتجاهات';
+
+  @override
+  String get eventDetailsOpenInMaps => 'فتح في الخرائط';
+
+  @override
+  String get editProfile => 'تعديل الملف الشخصي';
+
+  @override
+  String get displayName => 'الاسم المعروض';
+
+  @override
+  String get bio => 'نبذة';
+
+  @override
+  String get fullAddress => 'العنوان الكامل';
+
+  @override
+  String get preferredLanguage => 'اللغة المفضلة';
+
+  @override
+  String get tapToChangePhoto => 'اضغط لتغيير الصورة';
+
+  @override
+  String get checkingImage => 'جاري فحص الصورة...';
+
+  @override
+  String get aiVerifyingPhoto => 'الذكاء الاصطناعي يتحقق من صورتك';
+
+  @override
+  String get nameRequired => 'الاسم مطلوب';
+
+  @override
+  String get tellUsAboutYourself => 'أخبرنا عن نفسك...';
+
+  @override
+  String get yourLocationOrAddress => 'موقعك أو عنوانك';
+
+  @override
+  String get profileUpdatedSuccess => 'تم تحديث الملف الشخصي بنجاح!';
+
+  @override
+  String get failedSaveProfile => 'فشل في حفظ الملف الشخصي';
+
+  @override
+  String get failedLoadProfile => 'فشل في تحميل الملف الشخصي';
+
+  @override
+  String get contentNotAllowed => 'المحتوى غير مسموح';
+
+  @override
+  String get understood => 'مفهوم';
+
+  @override
+  String get imageApproved => 'تمت الموافقة على الصورة ✓';
+
+  @override
+  String get failedProcessImage => 'فشل في معالجة الصورة';
+
+  @override
+  String get imageMustBeUnder5MB => 'حجم الصورة يجب أن يكون أقل من 5 ميغابايت';
+
+  @override
+  String get aiModerationNotice =>
+      'يتم مراجعة المحتوى الخاص بك بواسطة الذكاء الاصطناعي للحفاظ على مجتمع خير آمنًا ومحترمًا.';
+
+  @override
+  String get mapSearchHint => 'ابحث عن مدينة أو فعالية';
+
+  @override
+  String get mapFindKhairNearYou => 'اعثر على الخير بالقرب منك';
+
+  @override
+  String get mapSearchThisArea => 'ابحث في هذه المنطقة';
+
+  @override
+  String mapEventsNearby(int count) {
+    return '$count فعاليات قريبة';
+  }
+
+  @override
+  String get mapClearFilters => 'مسح الفلاتر';
+
+  @override
+  String get mapNoEventsFound => 'لا توجد فعاليات هنا بعد';
+
+  @override
+  String get mapBeFirstToCreate => 'كن أول من ينشئ واحدة!';
+
+  @override
+  String get mapCreateEvent => 'إنشاء فعالية';
+
+  @override
+  String get mapApplyFilters => 'تطبيق الفلاتر';
+
+  @override
+  String get mapFilters => 'الفلاتر';
+
+  @override
+  String get mapFilterDistance => 'المسافة';
+
+  @override
+  String get mapFilterType => 'النوع';
+
+  @override
+  String get mapFilterCategory => 'الفئة';
+
+  @override
+  String get mapFilterAll => 'الكل';
+
+  @override
+  String get mapFilterInPerson => 'حضوري';
+
+  @override
+  String get mapFilterOnline => 'عن بُعد';
+
+  @override
+  String get mapFilterQuran => 'قرآن';
+
+  @override
+  String get mapFilterLecture => 'محاضرة';
+
+  @override
+  String get mapFilterCharity => 'عمل خيري';
+
+  @override
+  String get mapFilterHalaqa => 'حلقة';
+
+  @override
+  String get mapFilterFamily => 'عائلة';
+
+  @override
+  String get mapJoin => 'انضمام';
+
+  @override
+  String get sheikhLearnFromScholars => 'تعلم من العلماء';
+
+  @override
+  String get sheikhViewProfile => 'عرض الملف';
+
+  @override
+  String get sheikhNew => 'جديد';
+
+  @override
+  String get allEvents => 'جميع الفعاليات';
+
+  @override
+  String get online => 'أونلاين';
+
+  @override
+  String get offline => 'حضوري';
+
+  @override
+  String get khairRecommends => 'خير يوصي';
+
+  @override
+  String get verifiedByKhair => 'موثّق من خير';
+
+  @override
+  String get visit => 'زيارة';
+
+  @override
+  String get seeAllEvents => 'عرض الكل';
+
+  @override
+  String get discoverNoEventsNearYou => 'لا توجد فعاليات بالقرب منك';
+
+  @override
+  String get discoverExploreOtherCities => 'استكشف الفعاليات في مدن أخرى.';
+
+  @override
+  String get discoverExploreAllEvents => 'استكشف جميع الفعاليات';
+
+  @override
+  String get discoverSomethingWentWrong => 'حدث خطأ ما';
+
+  @override
+  String get discoverCouldNotLoad => 'تعذر تحميل الفعاليات.';
+
+  @override
+  String discoverEventsCount(int count) {
+    return '$count فعاليات';
+  }
+
+  @override
+  String get sheikhLocation => 'الموقع';
+
+  @override
+  String get sheikhExperience => 'الخبرة';
+
+  @override
+  String sheikhYearsExperience(int count) {
+    return '$count سنوات';
+  }
+
+  @override
+  String get sheikhStatus => 'الحالة';
+
+  @override
+  String get sheikhVerified => 'موثّق';
+
+  @override
+  String get sheikhPending => 'قيد المراجعة';
+
+  @override
+  String get sheikhRequestLesson => 'طلب درس';
+
+  @override
+  String get sheikhContact => 'تواصل';
+
+  @override
+  String get sheikhContactInfo => 'معلومات التواصل';
+
+  @override
+  String get sheikhAboutMe => 'نبذة عني';
+
+  @override
+  String get sheikhQualifications => 'المؤهلات';
+
+  @override
+  String get sheikhStudentReviews => 'تقييمات الطلاب';
+
+  @override
+  String get sheikhIjazahCredentials => 'الإجازات والشهادات';
+
+  @override
+  String get sheikhReportProfile => 'الإبلاغ عن هذا الملف';
+
+  @override
+  String get sheikhReportTitle => '🚨 الإبلاغ عن الشيخ';
+
+  @override
+  String get sheikhReportDesc =>
+      'يرجى وصف المشكلة. تتم مراجعة البلاغات من فريقنا.';
+
+  @override
+  String get sheikhReportHint => 'صف المشكلة...';
+
+  @override
+  String get sheikhSubmitReport => 'إرسال البلاغ';
+
+  @override
+  String get sheikhReportSubmitted => 'تم إرسال البلاغ. شكراً لك.';
+
+  @override
+  String sheikhSendLessonRequest(String name) {
+    return 'إرسال طلب درس لـ $name';
+  }
+
+  @override
+  String get sheikhWhatToLearn => 'ماذا تريد أن تتعلم؟';
+
+  @override
+  String get sheikhWhatToLearnHint => 'مثال: أريد تعلم التفسير...';
+
+  @override
+  String get sheikhPreferredTime => 'الوقت المفضل (اختياري)';
+
+  @override
+  String get sheikhSelectDateTime => 'اختر التاريخ والوقت';
+
+  @override
+  String get sheikhSendRequest => 'إرسال الطلب';
+
+  @override
+  String get sheikhRequestSent => 'تم إرسال طلب الدرس! سيراجعه الشيخ.';
+
+  @override
+  String get sheikhNewScholar => 'عالم جديد';
+
+  @override
+  String get sheikhBuildingReputation => 'يبني سمعته';
+
+  @override
+  String sheikhReviewsCount(int count) {
+    return '$count تقييمات';
+  }
+
+  @override
+  String get sheikhNoReviewsYet => 'لا توجد تقييمات بعد';
+
+  @override
+  String get sheikhWriteReview => 'كتابة تقييم';
+
+  @override
+  String get sheikhYourReview => 'تقييمك';
+
+  @override
+  String get sheikhShareExperience => 'شارك تجربتك...';
+
+  @override
+  String get sheikhSubmitReview => 'إرسال التقييم';
+
+  @override
+  String get sheikhReviewSubmitted => 'تم إرسال التقييم! سيظهر بعد المراجعة.';
+
+  @override
+  String get sheikhAllCities => 'جميع المدن';
+
+  @override
+  String get allCities => 'جميع المدن';
+
+  @override
+  String get mapNoEventsFoundHere => 'لا توجد فعاليات هنا بعد';
+
+  @override
+  String get guestHeroTitle => 'اكتشف فعاليات\nهادفة بالقرب منك';
+
+  @override
+  String get guestHeroSubtitle =>
+      'انضم إلى الدروس والمحاضرات والتجمعات المجتمعية حولك';
+
+  @override
+  String get guestBenefitEvents => 'اعثر على فعاليات بالقرب منك';
+
+  @override
+  String get guestBenefitTeachers => 'تعلّم من معلمين موثّقين';
+
+  @override
+  String get guestBenefitCommunity => 'تواصل مع مجتمعك';
+
+  @override
+  String get guestGetStarted => 'ابدأ الآن';
+
+  @override
+  String get guestAlreadyHaveAccount => 'لديّ حساب بالفعل';
+
+  @override
+  String get guestSignUpToExplore => 'سجّل لاستكشاف الفعاليات بالقرب منك';
+
+  @override
+  String get deleteAccountTitle => 'حذف الحساب';
+
+  @override
+  String get deleteAccountWarning =>
+      'هذا الإجراء نهائي. سيتم حذف جميع بياناتك وفعالياتك ونشاطك. لا يمكن التراجع عن هذا.';
+
+  @override
+  String get deleteAccountConfirm => 'حذف حسابي';
+
+  @override
+  String get deleteAccountSuccess => 'تم حذف حسابك.';
+
+  @override
+  String get deleteAccountError => 'فشل في حذف الحساب. يرجى المحاولة مرة أخرى.';
 }

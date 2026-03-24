@@ -52,9 +52,16 @@ type GeminiContent struct {
 	Parts []GeminiPart `json:"parts"`
 }
 
-// GeminiPart holds the text content
+// GeminiPart holds the text or inline data content
 type GeminiPart struct {
-	Text string `json:"text"`
+	Text       string            `json:"text,omitempty"`
+	InlineData *GeminiInlineData `json:"inline_data,omitempty"`
+}
+
+// GeminiInlineData holds base64-encoded file data
+type GeminiInlineData struct {
+	MimeType string `json:"mime_type"`
+	Data     string `json:"data"`
 }
 
 // GeminiGenerationConfig controls output parameters
@@ -149,3 +156,141 @@ func (c *Client) GenerateJSON(ctx context.Context, prompt string, temperature fl
 
 	return nil
 }
+
+// ─── Content Moderation ──────────────────────────────────
+
+// TextModerationResult holds AI text moderation output
+type TextModerationResult struct {
+	Passed  bool   `json:"passed"`
+	Warning string `json:"warning"`
+}
+
+// ModerateText checks text for profanity, racism, hate speech, or inappropriate content
+func (c *Client) ModerateText(ctx context.Context, text string) (*TextModerationResult, error) {
+	if !c.IsEnabled() {
+		// If AI is disabled, allow all content
+		return &TextModerationResult{Passed: true}, nil
+	}
+
+	prompt := fmt.Sprintf(`You are a content moderation AI for an Islamic community platform called "Khair".
+Analyze the following text and determine if it contains:
+- Profanity or vulgar language (in any language)
+- Racism, hate speech, or discrimination
+- Sexual or inappropriate content
+- Violence or threats
+- Insults or harassment
+
+Text to analyze: "%s"
+
+Respond in JSON:
+{"passed": true/false, "warning": "explanation if failed, empty if passed"}
+
+If the text is clean and appropriate, set passed=true and warning="".
+If the text contains any violation, set passed=false and provide a clear, respectful warning message explaining why this content is not allowed. Keep the warning concise and user-friendly.`, text)
+
+	var result TextModerationResult
+	if err := c.GenerateJSON(ctx, prompt, 0.1, &result); err != nil {
+		// On AI error, allow content (fail-open) but log
+		return &TextModerationResult{Passed: true}, nil
+	}
+
+	return &result, nil
+}
+
+// ImageModerationResult holds AI image moderation output
+type ImageModerationResult struct {
+	Passed  bool   `json:"passed"`
+	Warning string `json:"warning"`
+}
+
+// ModerateImage checks a base64-encoded image for inappropriate content
+func (c *Client) ModerateImage(ctx context.Context, base64Data, mimeType string) (*ImageModerationResult, error) {
+	if !c.IsEnabled() {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	url := fmt.Sprintf(
+		"https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
+		c.model, c.apiKey,
+	)
+
+	reqBody := GeminiRequest{
+		Contents: []GeminiContent{
+			{
+				Parts: []GeminiPart{
+					{
+						Text: `You are a content moderation AI for an Islamic community platform called "Khair".
+Analyze the provided image and determine if it is appropriate for an Islamic community platform profile photo.
+
+Check for:
+- Nudity or sexually explicit content
+- Violence or gore
+- Drug or alcohol-related imagery
+- Offensive symbols or hate symbols
+- Any other inappropriate content for a family-friendly Islamic platform
+
+Respond ONLY in JSON:
+{"passed": true/false, "warning": "explanation if failed, empty if passed"}
+
+If the image is appropriate (normal photos, landscapes, logos, etc.), set passed=true.
+If inappropriate, set passed=false and provide a clear, respectful warning.`,
+					},
+					{
+						InlineData: &GeminiInlineData{
+							MimeType: mimeType,
+							Data:     base64Data,
+						},
+					},
+				},
+			},
+		},
+		GenerationConfig: GeminiGenerationConfig{
+			Temperature:      0.1,
+			MaxOutputTokens:  256,
+			ResponseMimeType: "application/json",
+		},
+	}
+
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	var geminiResp GeminiResponse
+	if err := json.Unmarshal(respBody, &geminiResp); err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	var result ImageModerationResult
+	if err := json.Unmarshal([]byte(geminiResp.Candidates[0].Content.Parts[0].Text), &result); err != nil {
+		return &ImageModerationResult{Passed: true}, nil
+	}
+
+	return &result, nil
+}
+

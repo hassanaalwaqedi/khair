@@ -10,8 +10,11 @@ class Event extends Equatable {
   final String? country;
   final String? city;
   final String? address;
+  final String? fullAddress;
   final double? latitude;
   final double? longitude;
+  final String? meetingUrl;
+  final String? meetingPlatform;
   final DateTime startDate;
   final DateTime? endDate;
   final String? imageUrl;
@@ -20,6 +23,12 @@ class Event extends Equatable {
   final String status;
   final String? rejectionReason;
   final String? organizerName;
+  final bool isOnline;
+  final String? onlineLink;
+  final String? joinInstructions;
+  final int joinLinkVisibleBeforeMinutes;
+  final bool isUserJoined;
+  final bool isLinkUnlocked;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -33,8 +42,11 @@ class Event extends Equatable {
     this.country,
     this.city,
     this.address,
+    this.fullAddress,
     this.latitude,
     this.longitude,
+    this.meetingUrl,
+    this.meetingPlatform,
     required this.startDate,
     this.endDate,
     this.imageUrl,
@@ -43,6 +55,12 @@ class Event extends Equatable {
     required this.status,
     this.rejectionReason,
     this.organizerName,
+    this.isOnline = false,
+    this.onlineLink,
+    this.joinInstructions,
+    this.joinLinkVisibleBeforeMinutes = 15,
+    this.isUserJoined = false,
+    this.isLinkUnlocked = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -58,8 +76,11 @@ class Event extends Equatable {
         country,
         city,
         address,
+        fullAddress,
         latitude,
         longitude,
+        meetingUrl,
+        meetingPlatform,
         startDate,
         endDate,
         imageUrl,
@@ -68,6 +89,12 @@ class Event extends Equatable {
         status,
         rejectionReason,
         organizerName,
+        isOnline,
+        onlineLink,
+        joinInstructions,
+        joinLinkVisibleBeforeMinutes,
+        isUserJoined,
+        isLinkUnlocked,
         createdAt,
         updatedAt,
       ];
@@ -172,9 +199,11 @@ class EventFilter extends Equatable {
           params['end_date'] = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
           break;
         case DateFilter.thisWeek:
+          // Start from now, not beginning of week, to exclude past days
           final weekStart = now.subtract(Duration(days: now.weekday - 1));
-          params['start_date'] = DateTime(weekStart.year, weekStart.month, weekStart.day).toIso8601String();
-          params['end_date'] = DateTime(weekStart.year, weekStart.month, weekStart.day + 6, 23, 59, 59).toIso8601String();
+          final weekEnd = weekStart.add(const Duration(days: 6));
+          params['start_date'] = now.toIso8601String();
+          params['end_date'] = DateTime(weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59).toIso8601String();
           break;
         case DateFilter.thisWeekend:
           final daysToSaturday = (6 - now.weekday) % 7;
@@ -183,7 +212,8 @@ class EventFilter extends Equatable {
           params['end_date'] = DateTime(saturday.year, saturday.month, saturday.day + 1, 23, 59, 59).toIso8601String();
           break;
         case DateFilter.thisMonth:
-          params['start_date'] = DateTime(now.year, now.month, 1).toIso8601String();
+          // Start from now, not beginning of month, to exclude past days
+          params['start_date'] = now.toIso8601String();
           params['end_date'] = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toIso8601String();
           break;
       }

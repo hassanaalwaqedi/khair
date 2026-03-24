@@ -516,13 +516,21 @@ class ProfilePage extends StatelessWidget {
                   isDark: isDark,
                   onTap: () => context.go('/organizer/events/create'),
                 ),
-              if (!state.isOrganizer)
+              if (!state.isOrganizer && !state.isSheikh)
                 _QuickActionCard(
                   icon: Icons.star_outline_rounded,
                   label: context.l10n.becomeOrganizer,
                   color: KhairColors.secondary,
                   isDark: isDark,
                   onTap: () => context.go('/organizer/apply'),
+                ),
+              if (state.isSheikh)
+                _QuickActionCard(
+                  icon: Icons.school_rounded,
+                  label: 'Sheikh Dashboard',
+                  color: KhairColors.primary,
+                  isDark: isDark,
+                  onTap: () => context.go('/sheikh-dashboard'),
                 ),
               if (state.isAdmin)
                 _QuickActionCard(

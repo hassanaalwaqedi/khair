@@ -44,6 +44,13 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		events.GET("/:id", h.GetByID)
 	}
 
+	// Protected routes — auth-aware event details (shows join status + online link)
+	authEvents := r.Group("/events")
+	authEvents.Use(authMiddleware)
+	{
+		authEvents.GET("/:id/details", h.GetByIDAuth)
+	}
+
 	// Protected routes for organizers
 	protected := r.Group("/events")
 	protected.Use(authMiddleware)
@@ -65,21 +72,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 }
 
 // ListPublic lists approved events
-// @Summary List approved events
-// @Description List all approved events with optional filters
-// @Tags events
-// @Accept json
-// @Produce json
-// @Param country query string false "Filter by country"
-// @Param city query string false "Filter by city"
-// @Param event_type query string false "Filter by event type"
-// @Param language query string false "Filter by language"
-// @Param start_date query string false "Filter by start date (RFC3339)"
-// @Param end_date query string false "Filter by end date (RFC3339)"
-// @Param page query int false "Page number" default(1)
-// @Param page_size query int false "Page size" default(20)
-// @Success 200 {object} response.PaginatedResponse
-// @Router /events [get]
 func (h *Handler) ListPublic(c *gin.Context) {
 	filter := h.buildFilter(c)
 
@@ -89,19 +81,15 @@ func (h *Handler) ListPublic(c *gin.Context) {
 		return
 	}
 
+	// Strip online_link from public list responses for security
+	for i := range events {
+		events[i].OnlineLink = nil
+	}
+
 	response.Paginated(c, events, filter.Page, filter.PageSize, total)
 }
 
-// GetByID gets an event by ID
-// @Summary Get event details
-// @Description Get detailed information about an event
-// @Tags events
-// @Accept json
-// @Produce json
-// @Param id path string true "Event ID"
-// @Success 200 {object} models.EventWithOrganizer
-// @Failure 404 {object} response.Response
-// @Router /events/{id} [get]
+// GetByID gets an event by ID (public — no online link exposed)
 func (h *Handler) GetByID(c *gin.Context) {
 	idParam := c.Param("id")
 	if h.mapAlias != nil {
@@ -133,21 +121,124 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
+	// Strip online_link from public response for security
+	event.OnlineLink = nil
+
 	response.Success(c, event)
 }
 
+// EventDetailResponse extends EventWithOrganizer with user-specific fields
+type EventDetailResponse struct {
+	ID                           uuid.UUID  `json:"id"`
+	OrganizerID                  uuid.UUID  `json:"organizer_id"`
+	Title                        string     `json:"title"`
+	Description                  *string    `json:"description,omitempty"`
+	EventType                    string     `json:"event_type"`
+	Language                     *string    `json:"language,omitempty"`
+	Country                      *string    `json:"country,omitempty"`
+	City                         *string    `json:"city,omitempty"`
+	Address                      *string    `json:"address,omitempty"`
+	Latitude                     *float64   `json:"latitude,omitempty"`
+	Longitude                    *float64   `json:"longitude,omitempty"`
+	StartDate                    time.Time  `json:"start_date"`
+	EndDate                      *time.Time `json:"end_date,omitempty"`
+	ImageURL                     *string    `json:"image_url,omitempty"`
+	Capacity                     *int       `json:"capacity,omitempty"`
+	ReservedCount                int        `json:"reserved_count"`
+	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
+	AgeMin                       *int       `json:"age_min,omitempty"`
+	AgeMax                       *int       `json:"age_max,omitempty"`
+	Status                       string     `json:"status"`
+	IsPublished                  bool       `json:"is_published"`
+	IsOnline                     bool       `json:"is_online"`
+	OnlineLink                   *string    `json:"online_link,omitempty"`
+	JoinInstructions             *string    `json:"join_instructions,omitempty"`
+	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
+	RejectionReason              *string    `json:"rejection_reason,omitempty"`
+	ApprovedAt                   *time.Time `json:"approved_at,omitempty"`
+	CreatedAt                    time.Time  `json:"created_at"`
+	UpdatedAt                    time.Time  `json:"updated_at"`
+	OrganizerName                string     `json:"organizer_name"`
+	// User-specific fields
+	IsUserJoined  bool `json:"is_user_joined"`
+	IsLinkUnlocked bool `json:"is_link_unlocked"`
+}
+
+// GetByIDAuth gets event details for authenticated users — includes join status and conditional online link
+func (h *Handler) GetByIDAuth(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid event ID")
+		return
+	}
+
+	event, err := h.service.GetByID(id)
+	if err != nil {
+		response.NotFound(c, "Event not found")
+		return
+	}
+
+	if event.Status != "approved" {
+		response.NotFound(c, "Event not found")
+		return
+	}
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	// Check user registration
+	regStatus, _ := h.service.repo.CheckUserRegistration(userID, id)
+	isJoined := regStatus == "confirmed"
+
+	// Determine if link should be visible
+	isLinkUnlocked := false
+	var onlineLink *string
+	if event.IsOnline && isJoined && event.OnlineLink != nil {
+		unlockTime := event.StartDate.Add(-time.Duration(event.JoinLinkVisibleBeforeMinutes) * time.Minute)
+		if time.Now().After(unlockTime) {
+			isLinkUnlocked = true
+			onlineLink = event.OnlineLink
+		}
+	}
+
+	resp := EventDetailResponse{
+		ID:                           event.ID,
+		OrganizerID:                  event.OrganizerID,
+		Title:                        event.Title,
+		Description:                  event.Description,
+		EventType:                    event.EventType,
+		Language:                     event.Language,
+		Country:                      event.Country,
+		City:                         event.City,
+		Address:                      event.Address,
+		Latitude:                     event.Latitude,
+		Longitude:                    event.Longitude,
+		StartDate:                    event.StartDate,
+		EndDate:                      event.EndDate,
+		ImageURL:                     event.ImageURL,
+		Capacity:                     event.Capacity,
+		ReservedCount:                event.ReservedCount,
+		GenderRestriction:            event.GenderRestriction,
+		AgeMin:                       event.AgeMin,
+		AgeMax:                       event.AgeMax,
+		Status:                       event.Status,
+		IsPublished:                  event.IsPublished,
+		IsOnline:                     event.IsOnline,
+		OnlineLink:                   onlineLink,
+		JoinInstructions:             event.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes: event.JoinLinkVisibleBeforeMinutes,
+		RejectionReason:              event.RejectionReason,
+		ApprovedAt:                   event.ApprovedAt,
+		CreatedAt:                    event.CreatedAt,
+		UpdatedAt:                    event.UpdatedAt,
+		OrganizerName:                event.OrganizerName,
+		IsUserJoined:                 isJoined,
+		IsLinkUnlocked:               isLinkUnlocked,
+	}
+
+	response.Success(c, resp)
+}
+
 // Create creates a new event
-// @Summary Create a new event
-// @Description Create a new event (organizer only)
-// @Tags events
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body CreateEventRequest true "Event details"
-// @Success 201 {object} models.Event
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Router /events [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req CreateEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -167,19 +258,6 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 // Update updates an event
-// @Summary Update an event
-// @Description Update an existing event (organizer only, must own the event)
-// @Tags events
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "Event ID"
-// @Param request body UpdateEventRequest true "Event details"
-// @Success 200 {object} models.Event
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 403 {object} response.Response
-// @Router /events/{id} [put]
 func (h *Handler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -205,18 +283,6 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 // Delete deletes an event
-// @Summary Delete an event
-// @Description Delete an existing event (organizer only, must own the event)
-// @Tags events
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "Event ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 403 {object} response.Response
-// @Router /events/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -235,17 +301,6 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 // SubmitForReview submits an event for admin review
-// @Summary Submit event for review
-// @Description Submit an event for admin review (organizer only)
-// @Tags events
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "Event ID"
-// @Success 200 {object} models.Event
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Router /events/{id}/submit [post]
 func (h *Handler) SubmitForReview(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -265,15 +320,6 @@ func (h *Handler) SubmitForReview(c *gin.Context) {
 }
 
 // GetMyEvents gets events for the current organizer
-// @Summary Get my events
-// @Description Get all events created by the current organizer
-// @Tags events
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} []models.Event
-// @Failure 401 {object} response.Response
-// @Router /my/events [get]
 func (h *Handler) GetMyEvents(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 

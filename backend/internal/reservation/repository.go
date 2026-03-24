@@ -41,15 +41,33 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		), updated_at = NOW()
 		WHERE id = $1`, eventID)
 
-	// Lock the event row and check capacity
+	// Lock the event row and check capacity, status, and dates
 	var capacity sql.NullInt64
 	var reservedCount int
+	var status string
+	var startDate time.Time
+	var endDate sql.NullTime
 	err = tx.QueryRow(`
-		SELECT capacity, reserved_count FROM events WHERE id = $1 FOR UPDATE`,
+		SELECT capacity, reserved_count, status, start_date, end_date FROM events WHERE id = $1 FOR UPDATE`,
 		eventID,
-	).Scan(&capacity, &reservedCount)
+	).Scan(&capacity, &reservedCount, &status, &startDate, &endDate)
 	if err != nil {
 		return nil, errors.New("event not found")
+	}
+
+	// Check event status — only approved events can be joined
+	if status != "approved" {
+		return nil, errors.New("this event is not accepting registrations")
+	}
+
+	// Check if event has already ended
+	now := time.Now()
+	if endDate.Valid {
+		if endDate.Time.Before(now) {
+			return nil, errors.New("this event has already ended")
+		}
+	} else if startDate.Before(now) {
+		return nil, errors.New("this event has already ended")
 	}
 
 	// Check capacity
@@ -259,4 +277,26 @@ type EventAvailability struct {
 	ReservedCount int    `json:"reserved_count"`
 	Remaining     *int   `json:"remaining,omitempty"`
 	Available     bool   `json:"available"`
+}
+
+// GetEventAttendeeUserIDs returns user IDs of all confirmed attendees for an event
+func (r *Repository) GetEventAttendeeUserIDs(eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.db.Query(
+		`SELECT user_id FROM event_registrations WHERE event_id = $1 AND status = 'confirmed'`,
+		eventID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var userIDs []uuid.UUID
+	for rows.Next() {
+		var uid uuid.UUID
+		if err := rows.Scan(&uid); err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, uid)
+	}
+	return userIDs, nil
 }

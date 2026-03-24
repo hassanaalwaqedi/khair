@@ -108,26 +108,11 @@ class GeoService {
       'max_lng': northEast.longitude.toStringAsFixed(6),
       'page': page.toString(),
       'page_size': pageSize.toString(),
-      'sort': filters.sortBy,
-      'personalized': filters.personalized.toString(),
-      'free_only': filters.freeOnly.toString(),
-      'almost_full': filters.almostFullOnly.toString(),
       'zoom': zoom.toStringAsFixed(2),
     };
 
-    if (filters.gender != null && filters.gender!.isNotEmpty) {
-      query['gender'] = filters.gender;
-    }
-    if (filters.age != null) {
-      query['min_age'] = filters.age.toString();
-    }
-    final from = filters.resolvedDateFrom;
-    final to = filters.resolvedDateTo;
-    if (from != null) {
-      query['date_from'] = from.toIso8601String();
-    }
-    if (to != null) {
-      query['date_to'] = to.toIso8601String();
+    if (filters.search.isNotEmpty) {
+      query['search'] = filters.search;
     }
 
     for (final category in filters.categories) {
@@ -139,36 +124,6 @@ class GeoService {
         await _apiClient.get('/map/nearby', queryParameters: query);
     final payload = response.data['data'] as Map<String, dynamic>;
     return NearbyMapResult.fromJson(payload);
-  }
-
-  Future<MapFilterOptions> fetchFilterOptions() async {
-    final response = await _apiClient.get('/map/filter-options');
-    return MapFilterOptions.fromJson(
-        response.data['data'] as Map<String, dynamic>);
-  }
-
-  Future<List<MapContextPlace>> fetchContextualPlaces({
-    required LatLng northEast,
-    required LatLng southWest,
-    required Set<ContextLayerType> layers,
-  }) async {
-    if (layers.isEmpty) return const [];
-
-    final query = <String, dynamic>{
-      'min_lat': southWest.latitude.toStringAsFixed(6),
-      'min_lng': southWest.longitude.toStringAsFixed(6),
-      'max_lat': northEast.latitude.toStringAsFixed(6),
-      'max_lng': northEast.longitude.toStringAsFixed(6),
-      'page_size': '200',
-      'layers[]': layers.map((e) => e.apiValue).toList(),
-    };
-
-    final response =
-        await _apiClient.get('/map/contextual', queryParameters: query);
-    final data = response.data['data'] as List<dynamic>;
-    return data
-        .map((item) => MapContextPlace.fromJson(item as Map<String, dynamic>))
-        .toList();
   }
 
   Future<void> trackInteraction({

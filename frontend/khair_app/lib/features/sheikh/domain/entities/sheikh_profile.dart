@@ -14,6 +14,8 @@ class SheikhProfile {
   final int? yearsOfExperience;
   final String verificationStatus;
   final DateTime createdAt;
+  final double averageRating;
+  final int totalReviews;
 
   const SheikhProfile({
     required this.id,
@@ -30,6 +32,8 @@ class SheikhProfile {
     this.yearsOfExperience,
     required this.verificationStatus,
     required this.createdAt,
+    this.averageRating = 0.0,
+    this.totalReviews = 0,
   });
 
   factory SheikhProfile.fromJson(Map<String, dynamic> json) {
@@ -51,6 +55,8 @@ class SheikhProfile {
       yearsOfExperience: json['years_of_experience'] as int?,
       verificationStatus: json['verification_status'] as String? ?? 'unverified',
       createdAt: DateTime.parse(json['created_at'] as String),
+      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: (json['total_reviews'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -58,4 +64,7 @@ class SheikhProfile {
   String get name => displayName ?? email.split('@').first;
 
   bool get isVerified => verificationStatus == 'verified';
+
+  /// True if sheikh was created within the last 7 days
+  bool get isNew => DateTime.now().difference(createdAt).inDays <= 7;
 }

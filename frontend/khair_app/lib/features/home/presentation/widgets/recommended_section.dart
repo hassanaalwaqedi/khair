@@ -3,81 +3,57 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/media_url_helper.dart';
 import '../../../events/domain/entities/event.dart';
 
-/// Recommended-for-you section using real Event data.
+/// "Recommended for You" — horizontal scroll of smaller event cards.
 class RecommendedSection extends StatelessWidget {
   final List<Event> events;
   const RecommendedSection({super.key, required this.events});
-
-  static const _tagColors = {
-    'lecture': Color(0xFF2E7D5A),
-    'charity': Color(0xFFC8A951),
-    'social': Color(0xFF5B3A8C),
-    'workshop': Color(0xFF2E6B9E),
-    'quran': Color(0xFF22C55E),
-    'sports': Color(0xFFEF4444),
-  };
 
   @override
   Widget build(BuildContext context) {
     if (events.isEmpty) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
+    final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            children: [
-              Text(
-                context.l10n.recommendedForYou,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.95),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                context.l10n.seeAll,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFC8A951).withValues(alpha: 0.8),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(children: [
+            Text(context.l10n.recommendedForYou, style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.w700, color: tp, letterSpacing: -0.3)),
+            const Spacer(),
+            TextButton(
+              onPressed: () {},
+              child: Text(context.l10n.seeAll, style: TextStyle(
+                  color: KhairColors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: events.length.clamp(0, 8),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              return _RecommendedCard(
+                event: events[i],
+                cardBg: cardBg, bdr: bdr, tp: tp, ts: ts, isDark: isDark,
+              );
+            },
           ),
         ),
-        const SizedBox(height: 16),
-        ...List.generate(events.length.clamp(0, 5), (i) {
-          final event = events[i];
-          return TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: 1),
-            duration: Duration(milliseconds: 500 + i * 150),
-            curve: Curves.easeOut,
-            builder: (context, value, child) => Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 30 * (1 - value)),
-                child: child,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
-              child: GestureDetector(
-                onTap: () => context.push('/events/${event.id}'),
-                child: _RecommendedCard(
-                  event: event,
-                  tagColor: _tagColors[event.eventType.toLowerCase()] ??
-                      const Color(0xFF2E7D5A),
-                ),
-              ),
-            ),
-          );
-        }),
       ],
     );
   }
@@ -85,108 +61,72 @@ class RecommendedSection extends StatelessWidget {
 
 class _RecommendedCard extends StatelessWidget {
   final Event event;
-  final Color tagColor;
-  const _RecommendedCard({required this.event, required this.tagColor});
+  final Color cardBg, bdr, tp, ts;
+  final bool isDark;
+
+  const _RecommendedCard({
+    required this.event, required this.cardBg, required this.bdr,
+    required this.tp, required this.ts, required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final timeStr = DateFormat('EEE, MMM d • h:mm a').format(event.startDate);
-    final location = [event.city, event.country]
-        .where((s) => s != null && s.isNotEmpty)
-        .join(', ');
+    final dateStr = DateFormat('EEE, MMM d').format(event.startDate);
+    final timeStr = DateFormat('h:mm a').format(event.startDate);
+    final imageUrl = resolveMediaUrl(event.imageUrl);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: tagColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.event_rounded, color: tagColor, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: -0.2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (location.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    location,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.access_time_rounded,
-                        size: 13,
-                        color: Colors.white.withValues(alpha: 0.4)),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        timeStr,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: tagColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              event.eventType,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: tagColor,
+    return GestureDetector(
+      onTap: () => context.push('/events/${event.id}'),
+      child: Container(
+        width: 200,
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: bdr),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              child: SizedBox(
+                height: 90, width: double.infinity,
+                child: imageUrl.isNotEmpty
+                    ? Image.network(imageUrl, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _imgPlaceholder())
+                    : _imgPlaceholder(),
               ),
             ),
-          ),
-        ],
+            // Info
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(event.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tp, height: 1.3)),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Icon(Icons.calendar_today_rounded, size: 11, color: ts),
+                    const SizedBox(width: 4),
+                    Expanded(child: Text('$dateStr · $timeStr',
+                        style: TextStyle(fontSize: 11, color: ts), overflow: TextOverflow.ellipsis)),
+                  ]),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _imgPlaceholder() {
+    return Container(
+      color: isDark ? KhairColors.darkSurfaceVariant : KhairColors.surfaceVariant,
+      child: Center(child: Icon(Icons.event_rounded,
+          color: isDark ? KhairColors.darkTextTertiary : KhairColors.textTertiary, size: 28)),
     );
   }
 }

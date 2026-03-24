@@ -95,6 +95,8 @@ class CreateEventFormData extends Equatable {
   final String? countryName;
   final String? city;
   final String? address;
+  final double? latitude;
+  final double? longitude;
   final String? onlinePlatform;
   final String? onlineLink;
   final String? onlinePassword;
@@ -129,6 +131,8 @@ class CreateEventFormData extends Equatable {
     this.countryName,
     this.city,
     this.address,
+    this.latitude,
+    this.longitude,
     this.onlinePlatform = 'zoom',
     this.onlineLink,
     this.onlinePassword,
@@ -158,6 +162,8 @@ class CreateEventFormData extends Equatable {
     String? countryName,
     String? city,
     String? address,
+    double? latitude,
+    double? longitude,
     String? onlinePlatform,
     String? onlineLink,
     String? onlinePassword,
@@ -186,6 +192,8 @@ class CreateEventFormData extends Equatable {
       countryName: countryName ?? this.countryName,
       city: city ?? this.city,
       address: address ?? this.address,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       onlinePlatform: onlinePlatform ?? this.onlinePlatform,
       onlineLink: onlineLink ?? this.onlineLink,
       onlinePassword: onlinePassword ?? this.onlinePassword,
@@ -215,7 +223,7 @@ class CreateEventFormData extends Equatable {
   List<Object?> get props => [
         title, description, category, tags, eventType, language,
         startDate, startTime, endDate, endTime, ageMin, ageMax,
-        countryCode, countryName, city, address,
+        countryCode, countryName, city, address, latitude, longitude,
         onlinePlatform, onlineLink, onlinePassword,
         compliance, coverImageUrl, capacity, price,
         registrationDeadline, autoApproval, finalConfirmed,

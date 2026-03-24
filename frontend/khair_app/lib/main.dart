@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,24 +15,32 @@ import 'core/widgets/offline_indicator.dart';
 import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
 import 'features/spiritual_quotes/presentation/widgets/spiritual_quote_startup_modal.dart';
-import 'core/push/push_notification_service.dart';
+import 'core/push/push_notification_service_web.dart'
+    if (dart.library.io) 'core/push/push_notification_service.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() {
-  CrashReporter.init(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  CrashReporter.init(
+    sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
+    appRunner: () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Firebase
-    await Firebase.initializeApp();
+      // Firebase & push notifications are only configured for mobile
+      if (!kIsWeb) {
+        await Firebase.initializeApp();
+      }
 
-    await configureDependencies();
-    ConnectivityService.instance.initialize();
+      await configureDependencies();
+      ConnectivityService.instance.initialize();
 
-    // Initialize push notifications (requests permission + registers token)
-    await PushNotificationService.instance.initialize();
+      // Push notifications only on mobile (uses dart:io + Firebase which aren't configured for web)
+      if (!kIsWeb) {
+        await PushNotificationService.instance.initialize();
+      }
 
-    runApp(const KhairApp());
-  });
+      runApp(const KhairApp());
+    },
+  );
 }
 
 class KhairApp extends StatelessWidget {

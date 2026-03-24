@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 3: Vision & Goals — "What are you hoping to achieve with Khair?"
@@ -150,12 +151,12 @@ class _GoalChipState extends State<_GoalChip> {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? KhairColors.secondary.withValues(alpha: 0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : Colors.white.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
-                  ? KhairColors.secondary
+                  ? AppColors.primary
                   : Colors.white.withValues(alpha: 0.12),
               width: isSelected ? 1.5 : 1,
             ),
@@ -166,7 +167,7 @@ class _GoalChipState extends State<_GoalChip> {
               Icon(
                 widget.goal.icon,
                 color: isSelected
-                    ? KhairColors.secondary
+                    ? AppColors.primary
                     : Colors.white.withValues(alpha: 0.6),
                 size: 20,
               ),
@@ -175,7 +176,7 @@ class _GoalChipState extends State<_GoalChip> {
                 widget.goal.label,
                 style: TextStyle(
                   color: isSelected
-                      ? KhairColors.secondary
+                      ? AppColors.primary
                       : Colors.white.withValues(alpha: 0.85),
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   fontSize: 14,
@@ -183,7 +184,7 @@ class _GoalChipState extends State<_GoalChip> {
               ),
               if (isSelected) ...[
                 const SizedBox(width: 8),
-                Icon(Icons.check_circle, color: KhairColors.secondary, size: 18),
+                Icon(Icons.check_circle, color: AppColors.primary, size: 18),
               ],
             ],
           ),

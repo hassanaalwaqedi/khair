@@ -822,6 +822,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventDetailsEventFull => 'This event is full';
 
   @override
+  String get eventDetailsEventEnded => 'Event Ended';
+
+  @override
+  String get eventDetailsAlreadyJoinedBtn => '✓ Joined';
+
+  @override
+  String get eventDetailsReservedHoldInfo =>
+      'Your seat is held for 10 minutes. Verify your email to confirm.';
+
+  @override
   String get joinModalSubtitle =>
       'Create a simple account to reserve your seat.';
 
@@ -1912,4 +1922,377 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get becomeOrganizerDesc =>
       'Only organizers can access the dashboard.\n\nRegister as an organizer to start creating and managing Islamic events!';
+
+  @override
+  String get mapPickerTitle => 'Pick Location on Map';
+
+  @override
+  String get mapPickerSearchHint => 'Search for a place or address...';
+
+  @override
+  String get mapPickerUseCurrentLocation => 'Use my current location';
+
+  @override
+  String get mapPickerTapToSelect => 'Tap on the map to drop a pin';
+
+  @override
+  String get mapPickerSelectedLocation => 'Selected Location';
+
+  @override
+  String get mapPickerSearching => 'Resolving address...';
+
+  @override
+  String get mapPickerRefineAddress =>
+      'Fine-tune the address details below if needed';
+
+  @override
+  String get eventDetailsGetDirections => 'Get Directions';
+
+  @override
+  String get eventDetailsOpenInMaps => 'Open in Maps';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get displayName => 'Display Name';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get fullAddress => 'Full Address';
+
+  @override
+  String get preferredLanguage => 'Preferred Language';
+
+  @override
+  String get tapToChangePhoto => 'Tap to change photo';
+
+  @override
+  String get checkingImage => 'Checking image...';
+
+  @override
+  String get aiVerifyingPhoto => 'AI is verifying your photo';
+
+  @override
+  String get nameRequired => 'Name is required';
+
+  @override
+  String get tellUsAboutYourself => 'Tell us about yourself...';
+
+  @override
+  String get yourLocationOrAddress => 'Your location or address';
+
+  @override
+  String get profileUpdatedSuccess => 'Profile updated successfully!';
+
+  @override
+  String get failedSaveProfile => 'Failed to save profile';
+
+  @override
+  String get failedLoadProfile => 'Failed to load profile';
+
+  @override
+  String get contentNotAllowed => 'Content Not Allowed';
+
+  @override
+  String get understood => 'Understood';
+
+  @override
+  String get imageApproved => 'Image approved ✓';
+
+  @override
+  String get failedProcessImage => 'Failed to process image';
+
+  @override
+  String get imageMustBeUnder5MB => 'Image must be under 5 MB';
+
+  @override
+  String get aiModerationNotice =>
+      'Your content is reviewed by AI to keep the Khair community safe and respectful.';
+
+  @override
+  String get mapSearchHint => 'Search city or event';
+
+  @override
+  String get mapFindKhairNearYou => 'Find Khair near you';
+
+  @override
+  String get mapSearchThisArea => 'Search this area';
+
+  @override
+  String mapEventsNearby(int count) {
+    return '$count events nearby';
+  }
+
+  @override
+  String get mapClearFilters => 'Clear filters';
+
+  @override
+  String get mapNoEventsFound => 'No events found here yet';
+
+  @override
+  String get mapBeFirstToCreate => 'Be the first to create one!';
+
+  @override
+  String get mapCreateEvent => 'Create Event';
+
+  @override
+  String get mapApplyFilters => 'Apply Filters';
+
+  @override
+  String get mapFilters => 'Filters';
+
+  @override
+  String get mapFilterDistance => 'Distance';
+
+  @override
+  String get mapFilterType => 'Type';
+
+  @override
+  String get mapFilterCategory => 'Category';
+
+  @override
+  String get mapFilterAll => 'All';
+
+  @override
+  String get mapFilterInPerson => 'In-person';
+
+  @override
+  String get mapFilterOnline => 'Online';
+
+  @override
+  String get mapFilterQuran => 'Quran';
+
+  @override
+  String get mapFilterLecture => 'Lecture';
+
+  @override
+  String get mapFilterCharity => 'Charity';
+
+  @override
+  String get mapFilterHalaqa => 'Halaqa';
+
+  @override
+  String get mapFilterFamily => 'Family';
+
+  @override
+  String get mapJoin => 'Join';
+
+  @override
+  String get sheikhLearnFromScholars => 'Learn from Scholars';
+
+  @override
+  String get sheikhViewProfile => 'View Profile';
+
+  @override
+  String get sheikhNew => 'New';
+
+  @override
+  String get allEvents => 'All Events';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get offline => 'Offline';
+
+  @override
+  String get khairRecommends => 'Khair Recommends';
+
+  @override
+  String get verifiedByKhair => 'Verified by Khair';
+
+  @override
+  String get visit => 'Visit';
+
+  @override
+  String get seeAllEvents => 'See All';
+
+  @override
+  String get discoverNoEventsNearYou => 'No events found near you';
+
+  @override
+  String get discoverExploreOtherCities =>
+      'Explore events happening in other cities.';
+
+  @override
+  String get discoverExploreAllEvents => 'Explore All Events';
+
+  @override
+  String get discoverSomethingWentWrong => 'Something went wrong';
+
+  @override
+  String get discoverCouldNotLoad => 'Could not load events.';
+
+  @override
+  String discoverEventsCount(int count) {
+    return '$count events';
+  }
+
+  @override
+  String get sheikhLocation => 'Location';
+
+  @override
+  String get sheikhExperience => 'Experience';
+
+  @override
+  String sheikhYearsExperience(int count) {
+    return '$count years';
+  }
+
+  @override
+  String get sheikhStatus => 'Status';
+
+  @override
+  String get sheikhVerified => 'Verified';
+
+  @override
+  String get sheikhPending => 'Pending';
+
+  @override
+  String get sheikhRequestLesson => 'Request a Lesson';
+
+  @override
+  String get sheikhContact => 'Contact';
+
+  @override
+  String get sheikhContactInfo => 'Contact Information';
+
+  @override
+  String get sheikhAboutMe => 'About me';
+
+  @override
+  String get sheikhQualifications => 'Qualifications';
+
+  @override
+  String get sheikhStudentReviews => 'Student Reviews';
+
+  @override
+  String get sheikhIjazahCredentials => 'Ijazah & Credentials';
+
+  @override
+  String get sheikhReportProfile => 'Report this profile';
+
+  @override
+  String get sheikhReportTitle => '🚨 Report Sheikh';
+
+  @override
+  String get sheikhReportDesc =>
+      'Please describe the issue. Reports are reviewed by our team.';
+
+  @override
+  String get sheikhReportHint => 'Describe the issue...';
+
+  @override
+  String get sheikhSubmitReport => 'Submit Report';
+
+  @override
+  String get sheikhReportSubmitted => 'Report submitted. Thank you.';
+
+  @override
+  String sheikhSendLessonRequest(String name) {
+    return 'Send a lesson request to $name';
+  }
+
+  @override
+  String get sheikhWhatToLearn => 'What would you like to learn?';
+
+  @override
+  String get sheikhWhatToLearnHint => 'e.g. I want to learn Tafsir...';
+
+  @override
+  String get sheikhPreferredTime => 'Preferred time (optional)';
+
+  @override
+  String get sheikhSelectDateTime => 'Select date & time';
+
+  @override
+  String get sheikhSendRequest => 'Send Request';
+
+  @override
+  String get sheikhRequestSent =>
+      'Lesson request sent! The sheikh will review it.';
+
+  @override
+  String get sheikhNewScholar => 'New scholar';
+
+  @override
+  String get sheikhBuildingReputation => 'Building reputation';
+
+  @override
+  String sheikhReviewsCount(int count) {
+    return '$count reviews';
+  }
+
+  @override
+  String get sheikhNoReviewsYet => 'No reviews yet';
+
+  @override
+  String get sheikhWriteReview => 'Write a Review';
+
+  @override
+  String get sheikhYourReview => 'Your Review';
+
+  @override
+  String get sheikhShareExperience => 'Share your experience...';
+
+  @override
+  String get sheikhSubmitReview => 'Submit Review';
+
+  @override
+  String get sheikhReviewSubmitted =>
+      'Review submitted! It will appear after moderation.';
+
+  @override
+  String get sheikhAllCities => 'All Cities';
+
+  @override
+  String get allCities => 'All Cities';
+
+  @override
+  String get mapNoEventsFoundHere => 'No events found here yet';
+
+  @override
+  String get guestHeroTitle => 'Discover meaningful\nevents near you';
+
+  @override
+  String get guestHeroSubtitle =>
+      'Join classes, lectures, and community gatherings around you';
+
+  @override
+  String get guestBenefitEvents => 'Find events near you';
+
+  @override
+  String get guestBenefitTeachers => 'Learn from verified teachers';
+
+  @override
+  String get guestBenefitCommunity => 'Connect with your community';
+
+  @override
+  String get guestGetStarted => 'Get Started';
+
+  @override
+  String get guestAlreadyHaveAccount => 'I already have an account';
+
+  @override
+  String get guestSignUpToExplore => 'Sign up to explore events near you';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This action is permanent. All your data, events, and activity will be deleted. This cannot be undone.';
+
+  @override
+  String get deleteAccountConfirm => 'Delete My Account';
+
+  @override
+  String get deleteAccountSuccess => 'Your account has been deleted.';
+
+  @override
+  String get deleteAccountError =>
+      'Failed to delete account. Please try again.';
 }

@@ -78,29 +78,7 @@ class ReservationSuccessPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // Add to calendar button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement add to calendar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Calendar integration coming soon!')),
-                    );
-                  },
-                  icon: const Icon(Icons.calendar_today_rounded),
-                  label: const Text('Add to Calendar',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: AppTheme.primaryColor),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
+
 
               // View my events button
               SizedBox(

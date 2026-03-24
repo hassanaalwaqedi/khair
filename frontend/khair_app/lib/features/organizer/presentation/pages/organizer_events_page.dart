@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_components.dart';
 import '../../../events/domain/entities/event.dart';
@@ -248,6 +250,17 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'view', child: Text('View')),
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                if (event.status == 'approved')
+                  const PopupMenuItem(
+                    value: 'notify',
+                    child: Row(
+                      children: [
+                        Icon(Icons.campaign_rounded, size: 18, color: KhairColors.primary),
+                        SizedBox(width: 8),
+                        Text('Notify Attendees'),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
                   value: 'delete',
                   child: Text('Delete',
@@ -262,12 +275,196 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                   case 'edit':
                     context.go('/organizer/events/${event.id}/edit');
                     break;
+                  case 'notify':
+                    _showNotifyAttendeesDialog(context, event);
+                    break;
                 }
               },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showNotifyAttendeesDialog(BuildContext ctx, Event event) {
+    final messageController = TextEditingController();
+    bool includeLink = false;
+    bool isSending = false;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final bg = isDark ? KhairColors.darkSurface : Colors.white;
+            final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
+            final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+            final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+
+            return Container(
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: bdr,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Title
+                    Row(children: [
+                      Icon(Icons.campaign_rounded, color: KhairColors.primary, size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text('Send Message to Attendees',
+                        style: TextStyle(color: tp, fontSize: 18, fontWeight: FontWeight.w700),
+                      )),
+                    ]),
+                    const SizedBox(height: 6),
+                    Text('Message will be sent as push notification and in-app notification to all confirmed attendees of "${event.title}".',
+                      style: TextStyle(color: ts, fontSize: 13, height: 1.4),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Message input
+                    TextField(
+                      controller: messageController,
+                      maxLines: 4,
+                      maxLength: 500,
+                      style: TextStyle(color: tp, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Type your message to attendees...',
+                        hintStyle: TextStyle(color: ts.withValues(alpha: 0.5)),
+                        filled: true,
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : KhairColors.neutral50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: bdr),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: bdr),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: KhairColors.primary, width: 1.5),
+                        ),
+                        contentPadding: const EdgeInsets.all(14),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Include link checkbox
+                    if (event.isOnline)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setSheetState(() => includeLink = !includeLink),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(children: [
+                            SizedBox(
+                              width: 22, height: 22,
+                              child: Checkbox(
+                                value: includeLink,
+                                onChanged: (v) => setSheetState(() => includeLink = v ?? false),
+                                activeColor: KhairColors.primary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text('Include event link in notification',
+                              style: TextStyle(color: tp, fontSize: 13),
+                            ),
+                          ]),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+
+                    // Send button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: isSending || messageController.text.trim().isEmpty
+                            ? null
+                            : () async {
+                                setSheetState(() => isSending = true);
+                                try {
+                                  final api = getIt<ApiClient>();
+                                  await api.post(
+                                    '/api/v1/events/${event.id}/notify-attendees',
+                                    data: {
+                                      'message': messageController.text.trim(),
+                                      'include_link': includeLink,
+                                    },
+                                  );
+                                  if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                                  if (ctx.mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(
+                                      SnackBar(
+                                        content: const Text('Message sent to all attendees!'),
+                                        backgroundColor: KhairColors.success,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  setSheetState(() => isSending = false);
+                                  if (ctx.mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed to send: $e'),
+                                        backgroundColor: KhairColors.error,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        icon: isSending
+                            ? const SizedBox(width: 18, height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.send_rounded, size: 18),
+                        label: Text(isSending ? 'Sending...' : 'Send Message',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: KhairColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: KhairColors.primary.withValues(alpha: 0.5),
+                          disabledForegroundColor: Colors.white70,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

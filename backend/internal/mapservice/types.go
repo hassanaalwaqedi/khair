@@ -25,6 +25,7 @@ type NearbyFilter struct {
 	DateTo     *time.Time
 	FreeOnly   bool
 	AlmostFull bool
+	Search     string
 
 	SortBy       string
 	Page         int

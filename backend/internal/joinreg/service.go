@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+
 	"net/mail"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/pkg/config"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,6 +21,7 @@ import (
 type Service struct {
 	repo *Repository
 	cfg  *config.Config
+	notification *notification.Service
 }
 
 // NewService creates a new join registration service
@@ -26,6 +29,7 @@ func NewService(db *sql.DB, cfg *config.Config) *Service {
 	return &Service{
 		repo: NewRepository(db),
 		cfg:  cfg,
+		notification: notification.NewService(db),
 	}
 }
 

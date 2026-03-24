@@ -2,60 +2,85 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// Lightweight crash reporting service.
+/// Lightweight crash reporting service with Sentry integration.
 ///
 /// Captures uncaught Flutter errors and Dart zone errors.
-/// Logs them to the console in debug mode. In production this can be
-/// extended to send reports to Firebase Crashlytics, Sentry, or a
-/// custom backend endpoint.
+/// In debug mode, logs to console. In production, reports to Sentry.
 ///
 /// Usage — call [CrashReporter.init] in `main()`:
 /// ```dart
 /// void main() {
-///   CrashReporter.init(() async {
-///     WidgetsFlutterBinding.ensureInitialized();
-///     await configureDependencies();
-///     runApp(const KhairApp());
-///   });
+///   CrashReporter.init(
+///     sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
+///     appRunner: () async {
+///       WidgetsFlutterBinding.ensureInitialized();
+///       await configureDependencies();
+///       runApp(const KhairApp());
+///     },
+///   );
 /// }
 /// ```
 class CrashReporter {
   static final CrashReporter _instance = CrashReporter._();
   CrashReporter._();
 
-  /// Whether the reporter has been initialised.
-  static bool _initialised = false;
+  /// Whether Sentry is enabled for this session.
+  static bool _sentryEnabled = false;
 
   /// Initialise crash reporting and run the app inside a guarded zone.
-  static void init(Future<void> Function() appRunner) {
-    // Catch Flutter framework errors (widget build, layout, etc.)
+  static Future<void> init({
+    required Future<void> Function() appRunner,
+    String sentryDsn = '',
+  }) async {
+    // If a Sentry DSN is provided and we're not in debug, use Sentry
+    if (sentryDsn.isNotEmpty && !kDebugMode) {
+      _sentryEnabled = true;
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = sentryDsn;
+          options.tracesSampleRate = 0.3; // 30% of transactions
+          options.environment = kReleaseMode ? 'production' : 'staging';
+          options.sendDefaultPii = false;
+        },
+        appRunner: () => _runGuarded(appRunner),
+      );
+    } else {
+      // No Sentry — run with basic guarded zone
+      _runGuarded(appRunner);
+    }
+  }
+
+  static void _runGuarded(Future<void> Function() appRunner) {
+    // Catch Flutter framework errors
     FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details); // keep default red‐screen in debug
+      FlutterError.presentError(details);
       _instance._recordFlutterError(details);
     };
 
-    // Catch errors on the platform thread
+    // Catch platform dispatcher errors
     PlatformDispatcher.instance.onError = (error, stack) {
       _instance._recordError(error, stack, reason: 'PlatformDispatcher');
-      return true; // prevent default crash
+      return true;
     };
 
-    // Catch errors from background isolates
-    Isolate.current.addErrorListener(RawReceivePort((pair) async {
-      final errorAndStack = pair as List<dynamic>;
-      _instance._recordError(
-        errorAndStack.first,
-        StackTrace.fromString(errorAndStack.last.toString()),
-        reason: 'Isolate',
-      );
-    }).sendPort);
+    // Catch isolate errors (not available on web)
+    if (!kIsWeb) {
+      Isolate.current.addErrorListener(RawReceivePort((pair) async {
+        final errorAndStack = pair as List<dynamic>;
+        _instance._recordError(
+          errorAndStack.first,
+          StackTrace.fromString(errorAndStack.last.toString()),
+          reason: 'Isolate',
+        );
+      }).sendPort);
+    }
 
-    // Run app inside a zone to catch anything that slips through
+    // Run app inside a guarded zone
     runZonedGuarded(
       () async {
         await appRunner();
-        _initialised = true;
       },
       (error, stack) {
         _instance._recordError(error, stack, reason: 'runZonedGuarded');
@@ -73,8 +98,12 @@ class CrashReporter {
       library: details.library,
     );
 
-    // TODO: When Firebase Crashlytics is configured, uncomment:
-    // FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    if (_sentryEnabled) {
+      Sentry.captureException(
+        details.exception,
+        stackTrace: details.stack,
+      );
+    }
   }
 
   void _recordError(
@@ -84,8 +113,9 @@ class CrashReporter {
   }) {
     _log(reason ?? 'Uncaught', error.toString(), stack);
 
-    // TODO: When Firebase Crashlytics is configured, uncomment:
-    // FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    if (_sentryEnabled) {
+      Sentry.captureException(error, stackTrace: stack);
+    }
   }
 
   /// Record a non‑fatal error manually from anywhere in the app.
@@ -106,7 +136,6 @@ class CrashReporter {
       }
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
-
-    // TODO: In production, post to /api/v1/crash-reports or Crashlytics
   }
 }
+

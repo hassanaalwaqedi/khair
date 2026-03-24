@@ -16,7 +16,6 @@ import '../widgets/steps/media_step.dart';
 import '../widgets/steps/review_step.dart';
 
 /// Create Event page — 5-step wizard with BLoC state management.
-/// No business logic here. Cubit drives state, BlocListener handles side effects.
 class CreateEventPage extends StatelessWidget {
   const CreateEventPage({super.key});
 
@@ -84,6 +83,7 @@ class _CreateEventViewState extends State<_CreateEventView>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocListener<CreateEventCubit, CreateEventState>(
       listenWhen: (p, c) => p.status != c.status,
       listener: (context, state) {
@@ -120,55 +120,48 @@ class _CreateEventViewState extends State<_CreateEventView>
         }
       },
       child: Scaffold(
-        body: AppScaffoldBackground(
-          child: SafeArea(
-            child: Column(
-              children: [
-                _buildTopBar(context),
-                // Unified step indicator
-                BlocBuilder<CreateEventCubit, CreateEventState>(
+        backgroundColor: isDark ? AppColors.surfaceBase : AppColors.lightSurfaceBase,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildTopBar(context),
+              BlocBuilder<CreateEventCubit, CreateEventState>(
+                buildWhen: (p, c) => p.currentStep != c.currentStep,
+                builder: (context, state) {
+                  final cubit = context.read<CreateEventCubit>();
+                  return AppStepper(
+                    currentStep: state.currentStep,
+                    totalSteps: 5,
+                    labels: _getStepLabels(context),
+                    icons: _stepIcons,
+                    onStepTap: (i) {
+                      if (i < state.currentStep ||
+                          cubit.validateStep(state.currentStep)) {
+                        cubit.goToStep(i);
+                      }
+                    },
+                  );
+                },
+              ),
+              Expanded(
+                child: BlocBuilder<CreateEventCubit, CreateEventState>(
                   buildWhen: (p, c) => p.currentStep != c.currentStep,
                   builder: (context, state) {
-                    final cubit = context.read<CreateEventCubit>();
-                    return AppStepper(
-                      currentStep: state.currentStep,
-                      totalSteps: 5,
-                      labels: _getStepLabels(context),
-                      icons: _stepIcons,
-                      onStepTap: (i) {
-                        if (i < state.currentStep ||
-                            cubit.validateStep(state.currentStep)) {
-                          cubit.goToStep(i);
-                        }
-                      },
+                    _slideController.reset();
+                    _slideController.forward();
+                    return SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        padding: AppSpacing.pagePadding,
+                        physics: const BouncingScrollPhysics(),
+                        child: _buildCurrentStep(state.currentStep),
+                      ),
                     );
                   },
                 ),
-                // Step content
-                Expanded(
-                  child:
-                      BlocBuilder<CreateEventCubit, CreateEventState>(
-                    buildWhen: (p, c) =>
-                        p.currentStep != c.currentStep,
-                    builder: (context, state) {
-                      _slideController.reset();
-                      _slideController.forward();
-                      return SlideTransition(
-                        position: _slideAnimation,
-                        child: SingleChildScrollView(
-                          padding: AppSpacing.pagePadding,
-                          physics: const BouncingScrollPhysics(),
-                          child:
-                              _buildCurrentStep(state.currentStep),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // Bottom nav
-                const _CreateEventBottomBar(),
-              ],
-            ),
+              ),
+              const _CreateEventBottomBar(),
+            ],
           ),
         ),
       ),
@@ -176,16 +169,17 @@ class _CreateEventViewState extends State<_CreateEventView>
   }
 
   Widget _buildTopBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<CreateEventCubit, CreateEventState>(
       buildWhen: (p, c) => p.currentStep != c.currentStep,
       builder: (context, state) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
+            color: isDark ? AppColors.surfaceElevated : AppColors.lightSurfaceElevated,
             border: Border(
-                bottom:
-                    BorderSide(color: AppColors.whiteAlpha(0.06))),
+                bottom: BorderSide(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight)),
           ),
           child: Row(
             children: [
@@ -195,25 +189,27 @@ class _CreateEventViewState extends State<_CreateEventView>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.whiteAlpha(0.06),
+                    color: isDark ? AppColors.whiteAlpha(0.06) : AppColors.lightSurfaceHigh,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(Icons.close_rounded,
-                      color: AppColors.whiteAlpha(0.6), size: 20),
+                      color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                      size: 20),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(context.l10n.createEventTitle,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
               ),
               Text(
                 context.l10n.createEventStepCount(state.currentStep + 1, 5),
                 style: TextStyle(
-                    color: AppColors.whiteAlpha(0.4), fontSize: 13),
+                    color: isDark ? AppColors.textMuted : AppColors.lightTextMuted,
+                    fontSize: 13),
               ),
             ],
           ),
@@ -240,12 +236,13 @@ class _CreateEventViewState extends State<_CreateEventView>
   }
 }
 
-/// Bottom navigation bar — uses design system.
+/// Bottom navigation bar — blue primary actions.
 class _CreateEventBottomBar extends StatelessWidget {
   const _CreateEventBottomBar();
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<CreateEventCubit, CreateEventState>(
       buildWhen: (p, c) =>
           p.currentStep != c.currentStep ||
@@ -261,13 +258,13 @@ class _CreateEventBottomBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
+            color: isDark ? AppColors.surfaceElevated : AppColors.lightSurfaceElevated,
             border: Border(
                 top: BorderSide(
-                    color: AppColors.whiteAlpha(0.06))),
-            boxShadow: [
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight)),
+            boxShadow: isDark ? null : [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -4),
               ),
@@ -284,11 +281,11 @@ class _CreateEventBottomBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: AppRadius.buttonRadius,
                       border: Border.all(
-                          color: AppColors.whiteAlpha(0.12)),
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight),
                     ),
                     child: Text(context.l10n.createEventBack,
                         style: TextStyle(
-                          color: AppColors.whiteAlpha(0.6),
+                          color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
                         )),
@@ -304,11 +301,11 @@ class _CreateEventBottomBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: AppRadius.buttonRadius,
                       border: Border.all(
-                          color: AppColors.whiteAlpha(0.12)),
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight),
                     ),
                     child: Text(context.l10n.createEventSaveDraft,
                         style: TextStyle(
-                          color: AppColors.whiteAlpha(0.6),
+                          color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
                         )),
@@ -323,15 +320,12 @@ class _CreateEventBottomBar extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 28, vertical: 14),
                     decoration: BoxDecoration(
-                      gradient: !isSubmitting
-                          ? AppGradients.emeraldGlow
-                          : null,
-                      color: isSubmitting
-                          ? AppColors.whiteAlpha(0.06)
-                          : null,
+                      color: !isSubmitting
+                          ? AppColors.primary
+                          : isDark ? AppColors.whiteAlpha(0.06) : AppColors.lightSurfaceHigh,
                       borderRadius: AppRadius.buttonRadius,
                       boxShadow: !isSubmitting
-                          ? AppShadows.emeraldGlow(0.3)
+                          ? AppShadows.primaryGlow(0.2)
                           : null,
                     ),
                     child: Text(
@@ -340,7 +334,7 @@ class _CreateEventBottomBar extends StatelessWidget {
                           : context.l10n.createEventSubmit,
                       style: TextStyle(
                         color: isSubmitting
-                            ? AppColors.whiteAlpha(0.3)
+                            ? isDark ? AppColors.textMuted : AppColors.lightTextMuted
                             : Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
@@ -356,15 +350,12 @@ class _CreateEventBottomBar extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 28, vertical: 14),
                     decoration: BoxDecoration(
-                      gradient: isValid
-                          ? AppGradients.emeraldGlow
-                          : null,
-                      color: !isValid
-                          ? AppColors.whiteAlpha(0.06)
-                          : null,
+                      color: isValid
+                          ? AppColors.primary
+                          : isDark ? AppColors.whiteAlpha(0.06) : AppColors.lightSurfaceHigh,
                       borderRadius: AppRadius.buttonRadius,
                       boxShadow: isValid
-                          ? AppShadows.emeraldGlow(0.3)
+                          ? AppShadows.primaryGlow(0.2)
                           : null,
                     ),
                     child: Text(
@@ -372,7 +363,7 @@ class _CreateEventBottomBar extends StatelessWidget {
                       style: TextStyle(
                         color: isValid
                             ? Colors.white
-                            : AppColors.whiteAlpha(0.3),
+                            : isDark ? AppColors.textMuted : AppColors.lightTextMuted,
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),

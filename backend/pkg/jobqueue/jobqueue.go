@@ -33,9 +33,10 @@ type Job struct {
 
 // SendEmailPayload is the payload for email jobs.
 type SendEmailPayload struct {
-	To      string `json:"to"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	To       string `json:"to"`
+	Subject  string `json:"subject"`
+	Body     string `json:"body"`
+	Language string `json:"language,omitempty"`
 	// Template-based emails
 	Template string `json:"template,omitempty"`
 	OTP      string `json:"otp,omitempty"`

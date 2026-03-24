@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 
 /// Maps UI role IDs to backend role strings
@@ -331,7 +332,7 @@ class AccountDetailsStep extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: KhairColors.secondary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

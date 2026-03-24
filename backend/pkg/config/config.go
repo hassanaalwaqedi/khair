@@ -15,7 +15,7 @@ type Config struct {
 	JWT      JWTConfig
 	Logger   LoggerConfig
 	Gemini   GeminiConfig
-	SMTP     SMTPConfig
+	Email    EmailConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -63,13 +63,8 @@ type GeminiConfig struct {
 	Enabled   bool
 }
 
-// SMTPConfig holds SMTP email configuration
-type SMTPConfig struct {
-	Host         string
-	Port         int
-	User         string
-	Pass         string
-	From         string
+// EmailConfig holds SendGrid email configuration
+type EmailConfig struct {
 	SendGridKey  string
 	SendGridFrom string
 }
@@ -110,14 +105,9 @@ func Load() *Config {
 			MaxTokens: getEnvAsInt("GEMINI_MAX_TOKENS", 1024),
 			Enabled:   getEnv("GEMINI_API_KEY", "") != "",
 		},
-		SMTP: SMTPConfig{
-			Host:         strings.TrimSpace(getEnv("SMTP_HOST", "")),
-			Port:         getEnvAsInt("SMTP_PORT", 587),
-			User:         strings.TrimSpace(getEnv("SMTP_USER", "")),
-			Pass:         strings.TrimSpace(getEnv("SMTP_PASS", "")),
-			From:         strings.TrimSpace(getEnv("SMTP_FROM", "")),
+		Email: EmailConfig{
 			SendGridKey:  strings.TrimSpace(getEnv("SENDGRID_API_KEY", "")),
-			SendGridFrom: strings.TrimSpace(getEnv("SENDGRID_FROM", getEnv("SMTP_FROM", ""))),
+			SendGridFrom: strings.TrimSpace(getEnv("SENDGRID_FROM", "no-reply@khair.it.com")),
 		},
 	}
 

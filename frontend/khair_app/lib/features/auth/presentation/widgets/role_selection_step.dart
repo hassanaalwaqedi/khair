@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/locale/l10n_extension.dart';
 
 /// Step 1: Role Selection — "How Will You Use Khair?"
@@ -24,6 +25,12 @@ class RoleSelectionStep extends StatelessWidget {
         icon: Icons.menu_book_rounded,
       ),
       _RoleOption(
+        id: 'organization',
+        label: l10n.registrationRoleOrganization,
+        description: l10n.roleDescOrganization,
+        icon: Icons.account_balance_rounded,
+      ),
+      _RoleOption(
         id: 'organization_mosque',
         label: l10n.registrationOrgTypeMosque,
         description: l10n.roleDescMosque,
@@ -36,87 +43,48 @@ class RoleSelectionStep extends StatelessWidget {
         icon: Icons.auto_stories_rounded,
       ),
       _RoleOption(
-        id: 'organization',
-        label: l10n.registrationRoleOrganization,
-        description: l10n.roleDescOrganization,
-        icon: Icons.account_balance_rounded,
-      ),
-      _RoleOption(
-        id: 'community_organizer',
-        label: l10n.registrationRoleCommunityOrganizer,
-        description: l10n.roleDescCommunityOrganizer,
-        icon: Icons.groups_rounded,
-      ),
-      _RoleOption(
         id: 'student',
         label: l10n.registrationRoleStudent,
         description: l10n.roleDescStudent,
         icon: Icons.school_rounded,
-      ),
-      _RoleOption(
-        id: 'new_muslim',
-        label: l10n.registrationRoleNewMuslim,
-        description: l10n.roleDescNewMuslim,
-        icon: Icons.favorite_rounded,
-      ),
-      _RoleOption(
-        id: 'volunteer',
-        label: l10n.registrationRoleCommunityOrganizer, // using volunteer
-        description: l10n.roleDescVolunteer,
-        icon: Icons.volunteer_activism_rounded,
-      ),
-      _RoleOption(
-        id: 'member',
-        label: l10n.registrationRoleStudent, // using member
-        description: l10n.roleDescMember,
-        icon: Icons.person_rounded,
       ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = screenWidth > 900 ? 3 : screenWidth > 550 ? 2 : 1;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           context.l10n.registrationRoleSelectionTitle,
-          style: KhairTypography.h1.copyWith(
+          style: const TextStyle(
             color: Colors.white,
-            fontSize: 28,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           context.l10n.registrationRoleSelectionSubtitle,
-          style: KhairTypography.bodyLarge.copyWith(
-            color: Colors.white.withValues(alpha: 0.7),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 28),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: crossAxisCount == 1 ? 3.2 : 1.8,
-          ),
-          itemCount: _getRoles(context).length,
-          itemBuilder: (context, index) {
-            final role = _getRoles(context)[index];
-            final isSelected = selectedRole == role.id;
-            return _RoleCard(
+        const SizedBox(height: 24),
+        ...List.generate(_getRoles(context).length, (index) {
+          final role = _getRoles(context)[index];
+          final isSelected = selectedRole == role.id;
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < 4 ? 8 : 0),
+            child: _RoleTile(
               role: role,
               isSelected: isSelected,
               onTap: () => onRoleSelected(role.id),
-            );
-          },
-        ),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -136,143 +104,122 @@ class _RoleOption {
   });
 }
 
-class _RoleCard extends StatefulWidget {
+/// Clean list-tile style role selector
+class _RoleTile extends StatefulWidget {
   final _RoleOption role;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _RoleCard({
+  const _RoleTile({
     required this.role,
     required this.isSelected,
     required this.onTap,
   });
 
   @override
-  State<_RoleCard> createState() => _RoleCardState();
+  State<_RoleTile> createState() => _RoleTileState();
 }
 
-class _RoleCardState extends State<_RoleCard>
-    with SingleTickerProviderStateMixin {
+class _RoleTileState extends State<_RoleTile> {
   bool _hovering = false;
-  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final isSelected = widget.isSelected;
 
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        child: AnimatedScale(
-          scale: _pressed
-              ? 0.95
-              : _hovering
-                  ? 1.02
-                  : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : _hovering
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.18)
-                  : Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? KhairColors.secondary
-                    : _hovering
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : Colors.white.withValues(alpha: 0.10),
-                width: isSelected ? 2 : 1,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: KhairColors.secondary.withValues(alpha: 0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
+                  ? AppColors.primary.withValues(alpha: 0.6)
+                  : _hovering
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.06),
+              width: isSelected ? 1.5 : 1,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
+          ),
+          child: Row(
+            children: [
+              // Icon container
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  widget.role.icon,
+                  color: isSelected
+                      ? AppColors.primaryLight
+                      : Colors.white.withValues(alpha: 0.6),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? KhairColors.secondary.withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        widget.role.icon,
-                        color: isSelected
-                            ? KhairColors.secondary
-                            : Colors.white.withValues(alpha: 0.8),
-                        size: 22,
+                    Text(
+                      widget.role.label,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.role.label,
-                            style: KhairTypography.labelLarge.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            widget.role.description,
-                            style: KhairTypography.bodySmall.copyWith(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11.5,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.role.description,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 12,
+                        height: 1.3,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (isSelected)
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: KhairColors.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              // Check indicator
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primary
+                        : Colors.white.withValues(alpha: 0.15),
+                    width: 1.5,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 14)
+                    : null,
+              ),
+            ],
           ),
         ),
       ),

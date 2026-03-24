@@ -2,24 +2,23 @@ import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────
 // APP DESIGN SYSTEM — Single source of truth
+// Blue primary + neutral surfaces + Islamic green identity
 // ─────────────────────────────────────────────────
 
 /// Unified color palette for the entire app.
 class AppColors {
   AppColors._();
 
-  // ── Primary Emerald Scale ──
-  static const Color primary = Color(0xFF2E7D5A);
-  static const Color primaryLight = Color(0xFF4CAF7D);
-  static const Color primaryDark = Color(0xFF1B5E3C);
-  static const Color emeraldDeep = Color(0xFF0F3D2E);
-  static const Color emeraldDark = Color(0xFF0A2E1F);
-  static const Color emeraldDarker = Color(0xFF0A1F16);
+  // ── Primary Blue ──
+  static const Color primary = Color(0xFF2563EB);
+  static const Color primaryLight = Color(0xFF60A5FA);
+  static const Color primaryDark = Color(0xFF1D4ED8);
+  static const Color primarySurface = Color(0xFFEFF6FF); // blue-50
 
-  // ── Accent ──
-  static const Color goldAccent = Color(0xFFC8A951);
-  static const Color goldLight = Color(0xFFE8D98F);
-  static const Color tealAccent = Color(0xFF22D3EE);
+  // ── Islamic Identity (Green — limited use) ──
+  static const Color islamicGreen = Color(0xFF16A34A);
+  static const Color islamicGreenLight = Color(0xFFDCFCE7);
+  static const Color islamicGreenDark = Color(0xFF166534);
 
   // ── Semantic ──
   static const Color success = Color(0xFF22C55E);
@@ -27,26 +26,35 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
 
-  // ── Dark Surface Layers (depth system) ──
-  static const Color surfaceBase = Color(0xFF0A1F16);
-  static const Color surfaceElevated = Color(0xFF0F2A1F);
-  static const Color surfaceHigh = Color(0xFF142E23);
-  static const Color surfaceHighest = Color(0xFF1A3A2E);
-
-  // ── Text on dark ──
-  static const Color textPrimary = Color(0xFFF0F3F6);
-  static const Color textSecondary = Color(0xFF9BA4AE);
-  static const Color textMuted = Color(0xFF6B7580);
+  // ── Dark Surface Layers ──
+  static const Color surfaceBase = Color(0xFF0B0F14);
+  static const Color surfaceElevated = Color(0xFF111827);
+  static const Color surfaceHigh = Color(0xFF1F2937);
+  static const Color surfaceHighest = Color(0xFF374151);
 
   // ── Light Surface Layers ──
-  static const Color lightSurfaceBase = Color(0xFFF5F7FA);
+  static const Color lightSurfaceBase = Color(0xFFFFFFFF);
   static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
-  static const Color lightSurfaceHigh = Color(0xFFF0F2F5);
+  static const Color lightSurfaceHigh = Color(0xFFF6F7F8);
+
+  // ── Text on dark ──
+  static const Color textPrimary = Color(0xFFF9FAFB);
+  static const Color textSecondary = Color(0xFF9CA3AF);
+  static const Color textMuted = Color(0xFF6B7280);
 
   // ── Light Text ──
-  static const Color lightTextPrimary = Color(0xFF1A1D21);
-  static const Color lightTextSecondary = Color(0xFF5A6371);
-  static const Color lightTextMuted = Color(0xFF8B95A3);
+  static const Color lightTextPrimary = Color(0xFF111827);
+  static const Color lightTextSecondary = Color(0xFF6B7280);
+  static const Color lightTextMuted = Color(0xFF9CA3AF);
+
+  // ── Borders ──
+  static const Color borderLight = Color(0xFFE5E7EB);
+  static const Color borderDark = Color(0xFF374151);
+
+  // ── Legacy compatibility aliases ──
+  // (mapped to new blue/neutral palette until all usages are migrated)
+  static const Color goldAccent = primary;
+  static const Color emeraldDark = primaryDark;
 
   // ── White / Black Alpha helpers ──
   static Color whiteAlpha(double a) => Colors.white.withValues(alpha: a);
@@ -60,12 +68,14 @@ class AppColors {
 
   static Color borderColor(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? whiteAlpha(0.08) : blackAlpha(0.08);
+    return isDark ? borderDark : borderLight;
   }
 
   static Color onSurfaceColor(BuildContext context, [double alpha = 1.0]) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? Colors.white.withValues(alpha: alpha) : Colors.black.withValues(alpha: alpha);
+    return isDark
+        ? Colors.white.withValues(alpha: alpha)
+        : Colors.black.withValues(alpha: alpha);
   }
 
   static Color onSurfaceMutedColor(BuildContext context) {
@@ -78,14 +88,15 @@ class AppColors {
 class AppGradients {
   AppGradients._();
 
+  // ── Hero backgrounds ──
   static const LinearGradient heroBackground = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF0A2E1F),
-      Color(0xFF0F3D2E),
-      Color(0xFF14513A),
-      Color(0xFF0F3D2E),
+      Color(0xFF0B0F14),
+      Color(0xFF111827),
+      Color(0xFF1E293B),
+      Color(0xFF111827),
     ],
   );
 
@@ -93,19 +104,20 @@ class AppGradients {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF1B6B45),
-      Color(0xFF2E7D5A),
-      Color(0xFF3A9D6E),
-      Color(0xFF2E7D5A),
+      Color(0xFF1D4ED8),
+      Color(0xFF2563EB),
+      Color(0xFF3B82F6),
+      Color(0xFF2563EB),
     ],
   );
 
+  // ── Page backgrounds ──
   static const LinearGradient pageBackground = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFF0F2A1F),
-      Color(0xFF0A1F16),
+      Color(0xFF111827),
+      Color(0xFF0B0F14),
     ],
   );
 
@@ -113,8 +125,8 @@ class AppGradients {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFFF5F7FA),
-      Color(0xFFEEF1F5),
+      Color(0xFFFFFFFF),
+      Color(0xFFF6F7F8),
     ],
   );
 
@@ -130,13 +142,22 @@ class AppGradients {
         : heroBackgroundLight;
   }
 
-  static const LinearGradient goldShimmer = LinearGradient(
-    colors: [Color(0xFFC8A951), Color(0xFFE8D98F)],
+  // ── Accent gradients ──
+  static const LinearGradient primaryGlow = LinearGradient(
+    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB), Color(0xFF3B82F6)],
   );
 
-  static const LinearGradient emeraldGlow = LinearGradient(
-    colors: [Color(0xFF1B5E3C), Color(0xFF2E7D5A), Color(0xFF3A9D6E)],
+  static const LinearGradient goldShimmer = LinearGradient(
+    colors: [Color(0xFFD5B26B), Color(0xFFE8D98F)],
   );
+
+  // ── Islamic gradient (limited use) ──
+  static const LinearGradient islamicGradient = LinearGradient(
+    colors: [Color(0xFF166534), Color(0xFF16A34A), Color(0xFF22C55E)],
+  );
+
+  // Legacy compatibility aliases
+  static const LinearGradient emeraldGlow = primaryGlow;
 }
 
 /// Unified border radius.
@@ -163,7 +184,7 @@ class AppShadows {
 
   static List<BoxShadow> get soft => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.15),
+          color: Colors.black.withValues(alpha: 0.08),
           blurRadius: 16,
           offset: const Offset(0, 4),
         ),
@@ -171,24 +192,28 @@ class AppShadows {
 
   static List<BoxShadow> get medium => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.25),
+          color: Colors.black.withValues(alpha: 0.12),
           blurRadius: 24,
           offset: const Offset(0, 8),
         ),
       ];
 
-  static List<BoxShadow> goldGlow([double intensity = 0.1]) => [
+  static List<BoxShadow> primaryGlow([double intensity = 0.2]) => [
         BoxShadow(
-          color: const Color(0xFFC8A951).withValues(alpha: intensity),
-          blurRadius: 20,
-          offset: const Offset(0, 6),
+          color: const Color(0xFF2563EB).withValues(alpha: intensity),
+          blurRadius: 12,
         ),
       ];
 
-  static List<BoxShadow> emeraldGlow([double intensity = 0.2]) => [
+  // Legacy compatibility aliases
+  static List<BoxShadow> emeraldGlow([double intensity = 0.2]) =>
+      primaryGlow(intensity);
+
+  static List<BoxShadow> goldGlow([double intensity = 0.1]) => [
         BoxShadow(
-          color: const Color(0xFF22C55E).withValues(alpha: intensity),
-          blurRadius: 12,
+          color: const Color(0xFFD5B26B).withValues(alpha: intensity),
+          blurRadius: 20,
+          offset: const Offset(0, 6),
         ),
       ];
 }

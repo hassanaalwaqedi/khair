@@ -3,9 +3,13 @@
 .env.local
 .env.*.local
 .env.production
+.env.staging
 *.pem
 *.key
 *.p12
+firebase-service-account.json
+google-services.json
+GoogleService-Info.plist
 
 # IDE
 .idea/
@@ -16,6 +20,7 @@
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Go
 backend/bin/
@@ -46,6 +51,16 @@ vendor/
 # Logs
 *.log
 logs/
+crash.log
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Uploads (user content — must not be in repo)
+uploads/
 
 # Docker
 docker-compose.override.yml
+

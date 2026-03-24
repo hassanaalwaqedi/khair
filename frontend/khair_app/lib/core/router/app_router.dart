@@ -17,6 +17,7 @@ import '../../features/organizer/presentation/pages/organizer_profile_edit_page.
 import '../../features/organizer/presentation/pages/organizer_analytics_page.dart';
 import '../../features/organizer/presentation/pages/create_event_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/profile_edit_page.dart';
 import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/reports_page.dart';
@@ -33,6 +34,11 @@ import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart'
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../../features/location/presentation/bloc/location_bloc.dart';
 import '../../features/sheikh/presentation/bloc/sheikh_bloc.dart';
+import '../../features/chat/presentation/bloc/chat_bloc.dart';
+import '../../features/chat/presentation/pages/conversations_page.dart';
+import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
+import '../../features/sheikh_dashboard/presentation/pages/sheikh_dashboard_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -225,6 +231,38 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationCenterPage(),
+    ),
+    // Profile Edit
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => const ProfileEditPage(),
+    ),
+    // Conversations list
+    GoRoute(
+      path: '/conversations',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ChatBloc>(),
+        child: const ConversationsPage(),
+      ),
+    ),
+    // Chat page
+    GoRoute(
+      path: '/conversations/:id',
+      builder: (context, state) {
+        final convId = state.pathParameters['id']!;
+        return BlocProvider(
+          create: (_) => getIt<ChatBloc>(),
+          child: ChatPage(conversationId: convId),
+        );
+      },
+    ),
+    // Sheikh Dashboard
+    GoRoute(
+      path: '/sheikh-dashboard',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<SheikhDashboardBloc>(),
+        child: const SheikhDashboardPage(),
+      ),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

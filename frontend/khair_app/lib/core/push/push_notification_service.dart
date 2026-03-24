@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'local_notification_service.dart';
 
 import '../di/injection.dart';
 import '../network/api_client.dart';
@@ -25,6 +27,14 @@ class PushNotificationService {
       provisional: false,
       sound: true,
     );
+
+    // Android 13+ notification permission
+    if (Platform.isAndroid) {
+      var status = await Permission.notification.status;
+      if (status.isDenied) {
+        await Permission.notification.request();
+      }
+    }
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
       debugPrint('[FCM] User denied notification permission');
@@ -51,9 +61,13 @@ class PushNotificationService {
     });
 
     // 4. Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint('[FCM] Foreground message: ${message.notification?.title}');
-      // Notifications will be shown by the NotificationBloc polling
+      // Show local notification
+      await LocalNotificationService.instance.showNotification(
+        title: message.notification?.title,
+        body: message.notification?.body,
+      );
     });
 
     // 5. Handle background/terminated message taps

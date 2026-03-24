@@ -51,7 +51,8 @@ dependencies:
 
   # Firebase
   firebase_core: ^3.6.0
-  firebase_messaging: ^15.1.0
+  flutter_local_notifications: ^21.0.0
+  permission_handler: ^12.0.1
 
   # Media
   image_picker: ^1.2.1
@@ -59,6 +60,9 @@ dependencies:
   url_launcher: ^6.3.2
   file_picker: ^10.3.10
   share_plus: ^12.0.1
+  sentry_flutter: ^9.15.0
+  firebase_messaging: ^15.2.10
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -72,20 +76,32 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "icon.png"
+  image_path: "icon.jpeg"
   min_sdk_android: 21
   adaptive_icon_background: "#1B5E20"
-  adaptive_icon_foreground: "icon.png"
+  adaptive_icon_foreground: "icon.jpeg"
   web:
     generate: true
-    image_path: "icon.png"
+    image_path: "icon.jpeg"
   windows:
     generate: true
-    image_path: "icon.png"
+    image_path: "icon.jpeg"
+
+flutter_native_splash:
+  color: "#0f2a1f"
+  image: icon.jpeg
+  android: true
+  ios: true
+  web: true
+  android_12:
+    color: "#0f2a1f"
+    image: icon.jpeg
+    icon_background_color: "#0f2a1f"
+  fullscreen: true
 
 flutter:
   generate: true
   uses-material-design: true
   assets:
-    - icon.png
+    - icon.jpeg
     - video_khair.mp4

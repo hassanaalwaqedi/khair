@@ -5,7 +5,7 @@ import '../../core/theme/app_design_system.dart';
 
 // ──────────────────────────────────────────────────────
 // SHARED UI COMPONENTS
-// Used by Home Page, Create Event, Owner Dashboard, etc.
+// Blue primary + neutral design system
 // ──────────────────────────────────────────────────────
 
 /// Layered gradient scaffold background.
@@ -22,7 +22,7 @@ class AppScaffoldBackground extends StatelessWidget {
   }
 }
 
-/// Glass-style elevated card.
+/// Clean elevated card with subtle border.
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -41,16 +41,17 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: padding ?? AppSpacing.cardPadding,
       decoration: BoxDecoration(
-        color: AppColors.whiteAlpha(0.05),
+        color: isDark ? AppColors.surfaceElevated : AppColors.lightSurfaceElevated,
         borderRadius:
             BorderRadius.circular(borderRadius ?? AppRadius.lg),
         border: Border.all(
-          color: borderColor ?? AppColors.whiteAlpha(0.07),
+          color: borderColor ?? (isDark ? AppColors.borderDark : AppColors.borderLight),
         ),
-        boxShadow: boxShadow ?? AppShadows.soft,
+        boxShadow: boxShadow ?? (isDark ? null : AppShadows.soft),
       ),
       child: child,
     );
@@ -72,6 +73,7 @@ class AppGlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: AppRadius.cardRadius,
       child: BackdropFilter(
@@ -79,9 +81,13 @@ class AppGlassContainer extends StatelessWidget {
         child: Container(
           padding: padding ?? AppSpacing.cardPadding,
           decoration: BoxDecoration(
-            color: AppColors.whiteAlpha(0.06),
+            color: isDark
+                ? AppColors.whiteAlpha(0.06)
+                : AppColors.blackAlpha(0.03),
             borderRadius: AppRadius.cardRadius,
-            border: Border.all(color: AppColors.whiteAlpha(0.08)),
+            border: Border.all(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            ),
           ),
           child: child,
         ),
@@ -117,10 +123,21 @@ class AppInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+    final hintColor = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final iconColor = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final fillColor = isDark ? AppColors.whiteAlpha(0.05) : AppColors.lightSurfaceHigh;
+    final borderCol = isDark ? AppColors.borderDark : AppColors.borderLight;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(label, style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+        )),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -129,29 +146,28 @@ class AppInputField extends StatelessWidget {
           keyboardType: keyboardType,
           onChanged: onChanged,
           validator: validator,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: textColor, fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-                color: AppColors.whiteAlpha(0.25), fontSize: 13),
+                color: hintColor, fontSize: 13),
             prefixIcon: icon != null
-                ? Icon(icon,
-                    color: AppColors.whiteAlpha(0.3), size: 20)
+                ? Icon(icon, color: iconColor, size: 20)
                 : null,
             filled: true,
-            fillColor: AppColors.whiteAlpha(0.05),
+            fillColor: fillColor,
             border: OutlineInputBorder(
               borderRadius: AppRadius.inputRadius,
-              borderSide: BorderSide(color: AppColors.whiteAlpha(0.08)),
+              borderSide: BorderSide(color: borderCol),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: AppRadius.inputRadius,
-              borderSide: BorderSide(color: AppColors.whiteAlpha(0.08)),
+              borderSide: BorderSide(color: borderCol),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadius.inputRadius,
               borderSide:
-                  const BorderSide(color: AppColors.goldAccent, width: 1.5),
+                  const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: AppRadius.inputRadius,
@@ -167,7 +183,7 @@ class AppInputField extends StatelessWidget {
   }
 }
 
-/// Unified choice chip.
+/// Unified choice chip — blue selected, neutral default.
 class AppChip extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -184,6 +200,7 @@ class AppChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -192,16 +209,18 @@ class AppChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.2)
-              : AppColors.whiteAlpha(0.05),
+              ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+              : isDark
+                  ? AppColors.whiteAlpha(0.05)
+                  : AppColors.lightSurfaceHigh,
           borderRadius: AppRadius.chipRadius,
           border: Border.all(
             color: isSelected
-                ? AppColors.success.withValues(alpha: 0.5)
-                : AppColors.whiteAlpha(0.08),
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : isDark ? AppColors.borderDark : AppColors.borderLight,
             width: 1.5,
           ),
-          boxShadow: isSelected ? AppShadows.emeraldGlow(0.15) : null,
+          boxShadow: isSelected ? AppShadows.primaryGlow(0.1) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -210,8 +229,8 @@ class AppChip extends StatelessWidget {
               Icon(icon,
                   size: 16,
                   color: isSelected
-                      ? Colors.white
-                      : AppColors.whiteAlpha(0.5)),
+                      ? AppColors.primary
+                      : isDark ? AppColors.textSecondary : AppColors.lightTextSecondary),
               const SizedBox(width: 6),
             ],
             Text(
@@ -221,8 +240,8 @@ class AppChip extends StatelessWidget {
                 fontWeight:
                     isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
-                    ? Colors.white
-                    : AppColors.whiteAlpha(0.6),
+                    ? AppColors.primary
+                    : isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
               ),
             ),
           ],
@@ -232,7 +251,7 @@ class AppChip extends StatelessWidget {
   }
 }
 
-/// Unified primary action button.
+/// Unified primary action button — blue filled.
 class AppPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -255,22 +274,20 @@ class AppPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isGold ? AppColors.goldAccent : AppColors.primary,
-          foregroundColor:
-              isGold ? AppColors.emeraldDark : Colors.white,
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.buttonRadius,
           ),
           elevation: 0,
         ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: isGold ? AppColors.emeraldDark : Colors.white,
+                  color: Colors.white,
                 ),
               )
             : Text(
@@ -300,15 +317,21 @@ class AppSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, color: AppColors.goldAccent, size: 20),
+            Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(width: 8),
           ],
-          Text(title, style: AppTypography.sectionTitle),
+          Text(title, style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+            letterSpacing: -0.3,
+          )),
           const Spacer(),
           if (trailing != null) trailing!,
         ],
@@ -352,7 +375,7 @@ class AppFadeSlideIn extends StatelessWidget {
   }
 }
 
-/// Branded step indicator for multi-step wizards.
+/// Branded step indicator — blue active, neutral connectors.
 class AppStepper extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
@@ -371,6 +394,7 @@ class AppStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -391,12 +415,11 @@ class AppStepper extends StatelessWidget {
                             duration: AppAnimations.normal,
                             height: 2,
                             decoration: BoxDecoration(
-                              gradient: isCompleted
-                                  ? AppGradients.goldShimmer
-                                  : null,
                               color: isCompleted
-                                  ? null
-                                  : AppColors.whiteAlpha(0.08),
+                                  ? AppColors.primary
+                                  : isDark
+                                      ? AppColors.whiteAlpha(0.08)
+                                      : AppColors.borderLight,
                             ),
                           ),
                         ),
@@ -407,19 +430,21 @@ class AppStepper extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: isCompleted
-                              ? AppGradients.emeraldGlow
+                              ? AppGradients.primaryGlow
                               : null,
                           color: isCompleted
                               ? null
                               : isActive
-                                  ? AppColors.primary.withValues(alpha: 0.2)
-                                  : AppColors.whiteAlpha(0.06),
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : isDark
+                                      ? AppColors.whiteAlpha(0.06)
+                                      : AppColors.lightSurfaceHigh,
                           border: isActive
                               ? Border.all(
-                                  color: AppColors.goldAccent, width: 2)
+                                  color: AppColors.primary, width: 2)
                               : null,
                           boxShadow: isActive
-                              ? AppShadows.goldGlow(0.15)
+                              ? AppShadows.primaryGlow(0.15)
                               : null,
                         ),
                         child: Icon(
@@ -428,7 +453,9 @@ class AppStepper extends StatelessWidget {
                               : icons[i],
                           color: isCompleted || isActive
                               ? Colors.white
-                              : AppColors.whiteAlpha(0.3),
+                              : isDark
+                                  ? AppColors.textMuted
+                                  : AppColors.lightTextMuted,
                           size: isActive ? 18 : 14,
                         ),
                       ),
@@ -438,12 +465,11 @@ class AppStepper extends StatelessWidget {
                             duration: AppAnimations.normal,
                             height: 2,
                             decoration: BoxDecoration(
-                              gradient: isCompleted
-                                  ? AppGradients.goldShimmer
-                                  : null,
                               color: isCompleted
-                                  ? null
-                                  : AppColors.whiteAlpha(0.08),
+                                  ? AppColors.primary
+                                  : isDark
+                                      ? AppColors.whiteAlpha(0.08)
+                                      : AppColors.borderLight,
                             ),
                           ),
                         ),
@@ -454,8 +480,10 @@ class AppStepper extends StatelessWidget {
                     labels[i],
                     style: TextStyle(
                       color: isActive
-                          ? Colors.white
-                          : AppColors.whiteAlpha(0.35),
+                          ? isDark ? Colors.white : AppColors.primary
+                          : isDark
+                              ? AppColors.textMuted
+                              : AppColors.lightTextMuted,
                       fontSize: 10,
                       fontWeight:
                           isActive ? FontWeight.w600 : FontWeight.w400,

@@ -20,25 +20,23 @@ class MapStateManager extends Cubit<MapState> {
   final GeoService _geoService;
   final MarkerClusterManager _clusterManager;
 
+  static const int _maxVisibleMarkers = 200;
   static const int _maxCacheEntries = 24;
-  static const int _maxVisibleMarkers = 320;
-  static const Duration _moveDebounce = Duration(milliseconds: 300);
 
   final Map<String, NearbyMapResult> _viewportCache = {};
   final Set<String> _inFlightKeys = {};
-
-  Timer? _debounceTimer;
   StreamSubscription<bool>? _connectivitySub;
+  String _sessionHash = '';
 
   LatLng? _northEast;
   LatLng? _southWest;
-  String _sessionHash = '';
+
+  // ─── Lifecycle ────────────────────────────────
 
   Future<void> initialize() async {
     _sessionHash = _geoService.buildSessionHash();
     _trackInteraction('map_open');
     _bindConnectivity();
-    _loadFilterOptions();
 
     emit(state.copyWith(isLocating: true, errorMessage: null));
     final detection = await _geoService.detectUserLocation();
@@ -50,6 +48,7 @@ class MapStateManager extends Cubit<MapState> {
           detection.permissionDenied && detection.coordinates == null,
     ));
 
+    // Auto-fetch on initial load only
     final bounds = _defaultBounds(center, state.filters.radiusKm);
     await fetchViewport(
       center: center,
@@ -81,6 +80,8 @@ class MapStateManager extends Cubit<MapState> {
     );
   }
 
+  // ─── Viewport tracking (NO auto-fetch) ────────
+
   void onViewportChanged({
     required LatLng center,
     required LatLng northEast,
@@ -89,18 +90,29 @@ class MapStateManager extends Cubit<MapState> {
   }) {
     _northEast = northEast;
     _southWest = southWest;
-    emit(state.copyWith(center: center, zoom: zoom));
-
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(_moveDebounce, () {
-      fetchViewport(
-        center: center,
-        northEast: northEast,
-        southWest: southWest,
-        zoom: zoom,
-      );
-    });
+    // Only track position + show button, do NOT auto-fetch
+    emit(state.copyWith(
+      center: center,
+      zoom: zoom,
+      showSearchAreaButton: true,
+    ));
   }
+
+  // ─── "Search this area" ───────────────────────
+
+  Future<void> searchThisArea() async {
+    emit(state.copyWith(showSearchAreaButton: false));
+    if (_northEast == null || _southWest == null) return;
+    await fetchViewport(
+      center: state.center,
+      northEast: _northEast!,
+      southWest: _southWest!,
+      zoom: state.zoom,
+      forceRefresh: true,
+    );
+  }
+
+  // ─── Data fetching ────────────────────────────
 
   Future<void> fetchViewport({
     required LatLng center,
@@ -115,8 +127,6 @@ class MapStateManager extends Cubit<MapState> {
       southWest: southWest,
       zoom: zoom,
       filters: state.filters,
-      page: 1,
-      pageSize: 120,
     );
 
     _northEast = northEast;
@@ -145,7 +155,9 @@ class MapStateManager extends Cubit<MapState> {
     if (_inFlightKeys.contains(cacheKey)) return;
     _inFlightKeys.add(cacheKey);
     emit(state.copyWith(
-        status: MapLoadStatus.loading, errorMessage: null, isOffline: false));
+        status: MapLoadStatus.loading,
+        errorMessage: null,
+        isOffline: false));
 
     try {
       final result = await _geoService.fetchNearby(
@@ -154,21 +166,10 @@ class MapStateManager extends Cubit<MapState> {
         northEast: northEast,
         southWest: southWest,
         filters: state.filters,
-        page: 1,
         pageSize: 120,
       );
       _pushCache(cacheKey, result);
       _consumeNearbyResult(result, zoom: zoom, isOffline: false);
-
-      if (result.hasNextPage && zoom >= 14) {
-        unawaited(_loadSecondaryPage(
-          center: center,
-          northEast: northEast,
-          southWest: southWest,
-          zoom: zoom,
-        ));
-      }
-      unawaited(_loadContextualPlaces());
     } catch (e) {
       emit(state.copyWith(
         status: MapLoadStatus.failure,
@@ -179,14 +180,14 @@ class MapStateManager extends Cubit<MapState> {
     }
   }
 
+  // ─── Filters ──────────────────────────────────
+
   Future<void> updateFilters(MapFilters filters) async {
     emit(state.copyWith(filters: filters, errorMessage: null));
     _trackInteraction('filter_use', metadata: {
       'radius_km': filters.radiusKm,
       'categories': filters.categories.toList(),
-      'free_only': filters.freeOnly,
-      'almost_full_only': filters.almostFullOnly,
-      'date_preset': filters.datePreset.name,
+      'event_type': filters.eventType,
     });
 
     if (_northEast != null && _southWest != null) {
@@ -199,6 +200,8 @@ class MapStateManager extends Cubit<MapState> {
       );
     }
   }
+
+  // ─── Marker interaction ───────────────────────
 
   Future<void> onMarkerTapped(MapEvent event) async {
     emit(state.copyWith(selectedEvent: event));
@@ -230,79 +233,11 @@ class MapStateManager extends Cubit<MapState> {
 
   @override
   Future<void> close() {
-    _debounceTimer?.cancel();
     _connectivitySub?.cancel();
     return super.close();
   }
 
-  Future<void> _loadFilterOptions() async {
-    try {
-      final options = await _geoService.fetchFilterOptions();
-      emit(state.copyWith(filterOptions: options));
-    } catch (_) {
-      // Keep map usable even if options endpoint fails.
-    }
-  }
-
-  Future<void> _loadSecondaryPage({
-    required LatLng center,
-    required LatLng northEast,
-    required LatLng southWest,
-    required double zoom,
-  }) async {
-    try {
-      final page2 = await _geoService.fetchNearby(
-        center: center,
-        zoom: zoom,
-        northEast: northEast,
-        southWest: southWest,
-        filters: state.filters,
-        page: 2,
-        pageSize: 120,
-      );
-      final merged = <String, MapEvent>{for (final e in state.events) e.id: e};
-      for (final event in page2.events) {
-        merged[event.id] = event;
-        if (merged.length >= _maxVisibleMarkers) break;
-      }
-      final mergedEvents = merged.values.toList();
-      final clusters =
-          _clusterManager.buildClusters(events: mergedEvents, zoom: zoom);
-      emit(state.copyWith(
-        events: mergedEvents,
-        clusters: clusters,
-        recommendations: _pickRecommendations(mergedEvents),
-      ));
-    } catch (_) {
-      // Lazy page failure should not break the primary result.
-    }
-  }
-
-  Future<void> _loadContextualPlaces() async {
-    if (_northEast == null || _southWest == null) return;
-    if (state.filters.contextLayers.isEmpty) {
-      emit(state.copyWith(contextPlaces: const []));
-      return;
-    }
-
-    emit(state.copyWith(contextStatus: MapLoadStatus.loading));
-    try {
-      final places = await _geoService.fetchContextualPlaces(
-        northEast: _northEast!,
-        southWest: _southWest!,
-        layers: state.filters.contextLayers,
-      );
-      emit(state.copyWith(
-        contextStatus: MapLoadStatus.success,
-        contextPlaces: places,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        contextStatus: MapLoadStatus.failure,
-        errorMessage: e.toString(),
-      ));
-    }
-  }
+  // ─── Internal ─────────────────────────────────
 
   void _consumeNearbyResult(
     NearbyMapResult result, {
@@ -311,28 +246,17 @@ class MapStateManager extends Cubit<MapState> {
   }) {
     final limited =
         result.events.take(_maxVisibleMarkers).toList(growable: false);
-    final clusters = _clusterManager.buildClusters(events: limited, zoom: zoom);
+    final clusters =
+        _clusterManager.buildClusters(events: limited, zoom: zoom);
     emit(state.copyWith(
       status: MapLoadStatus.success,
       zoom: zoom,
       isOffline: isOffline,
       events: limited,
       clusters: clusters,
-      recommendations: _pickRecommendations(limited),
+      showSearchAreaButton: false,
       errorMessage: null,
     ));
-  }
-
-  List<MapEvent> _pickRecommendations(List<MapEvent> events) {
-    final sorted = [...events]..sort((a, b) {
-        final recommendedOrder =
-            (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0);
-        if (recommendedOrder != 0) return recommendedOrder;
-        final trendingOrder = (b.isTrending ? 1 : 0) - (a.isTrending ? 1 : 0);
-        if (trendingOrder != 0) return trendingOrder;
-        return b.recommendationScore.compareTo(a.recommendationScore);
-      });
-    return sorted.take(10).toList(growable: false);
   }
 
   void _pushCache(String key, NearbyMapResult result) {
@@ -348,13 +272,9 @@ class MapStateManager extends Cubit<MapState> {
     required LatLng southWest,
     required double zoom,
     required MapFilters filters,
-    required int page,
-    required int pageSize,
   }) {
     String normalize(double value) => value.toStringAsFixed(3);
     final categoryKey = filters.categories.toList()..sort();
-    final layerKey = filters.contextLayers.map((e) => e.apiValue).toList()
-      ..sort();
     return [
       normalize(center.latitude),
       normalize(center.longitude),
@@ -364,19 +284,9 @@ class MapStateManager extends Cubit<MapState> {
       normalize(southWest.longitude),
       zoom.toStringAsFixed(1),
       filters.radiusKm.toStringAsFixed(1),
-      filters.datePreset.name,
-      filters.resolvedDateFrom?.toIso8601String() ?? '',
-      filters.resolvedDateTo?.toIso8601String() ?? '',
-      filters.gender ?? '',
-      filters.age?.toString() ?? '',
+      filters.eventType,
       categoryKey.join('|'),
-      filters.freeOnly.toString(),
-      filters.almostFullOnly.toString(),
-      filters.personalized.toString(),
-      filters.sortBy,
-      layerKey.join('|'),
-      page.toString(),
-      pageSize.toString(),
+      filters.search,
     ].join('::');
   }
 

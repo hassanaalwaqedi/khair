@@ -8,19 +8,17 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/push"
-	"github.com/khair/backend/pkg/email"
 )
 
 // Service handles event reminder scheduling and sending.
 type Service struct {
-	db       *sql.DB
-	pushSvc  *push.Service
-	emailSvc *email.Service
+	db      *sql.DB
+	pushSvc *push.Service
 }
 
 // NewService creates a new reminder service.
-func NewService(db *sql.DB, pushSvc *push.Service, emailSvc *email.Service) *Service {
-	return &Service{db: db, pushSvc: pushSvc, emailSvc: emailSvc}
+func NewService(db *sql.DB, pushSvc *push.Service) *Service {
+	return &Service{db: db, pushSvc: pushSvc}
 }
 
 // ProcessReminders finds events starting soon and sends reminders.

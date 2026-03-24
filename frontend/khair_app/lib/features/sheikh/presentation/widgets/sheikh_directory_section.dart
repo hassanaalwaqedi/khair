@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_design_system.dart';
-import '../../../../shared/widgets/app_components.dart';
+import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/khair_theme.dart';
 import '../../domain/entities/sheikh_profile.dart';
 import '../pages/sheikh_profile_page.dart';
 
-/// "Find a Sheikh" directory section for the Discover page.
-/// Displays sheikh cards horizontally. Hides itself if no sheikhs exist.
+/// "Learn from Scholars" — marketplace-style horizontal cards.
 class SheikhDirectorySection extends StatelessWidget {
   final List<SheikhProfile> sheikhs;
   const SheikhDirectorySection({super.key, required this.sheikhs});
@@ -15,28 +14,35 @@ class SheikhDirectorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (sheikhs.isEmpty) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
+    final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionTitle(
-          title: 'Find a Sheikh',
-          icon: Icons.school_rounded,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(children: [
+            Icon(Icons.school_rounded, color: KhairColors.primary, size: 22),
+            const SizedBox(width: 8),
+            Text(context.l10n.sheikhLearnFromScholars, style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.w700, color: tp, letterSpacing: -0.3)),
+          ]),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 14),
         SizedBox(
-          height: 220,
+          height: 210,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: sheikhs.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, i) {
-              return AppFadeSlideIn(
-                delayMs: i * 100,
-                slideOffset: const Offset(20, 0),
-                child: _SheikhCard(sheikh: sheikhs[i]),
-              );
-            },
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) => _ScholarCard(
+              sheikh: sheikhs[i], cardBg: cardBg, bdr: bdr, tp: tp, ts: ts, isDark: isDark,
+            ),
           ),
         ),
       ],
@@ -44,12 +50,17 @@ class SheikhDirectorySection extends StatelessWidget {
   }
 }
 
-class _SheikhCard extends StatelessWidget {
+class _ScholarCard extends StatelessWidget {
   final SheikhProfile sheikh;
-  const _SheikhCard({required this.sheikh});
+  final Color cardBg, bdr, tp, ts;
+  final bool isDark;
 
-  static const _baseUrl =
-      'https://khair.it.com';
+  const _ScholarCard({
+    required this.sheikh, required this.cardBg, required this.bdr,
+    required this.tp, required this.ts, required this.isDark,
+  });
+
+  static const _baseUrl = 'https://khair.it.com';
 
   String _resolveUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -59,157 +70,111 @@ class _SheikhCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarUrl = _resolveUrl(sheikh.avatarUrl);
+    final imgUrl = _resolveUrl(sheikh.avatarUrl);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => SheikhProfilePage(sheikh: sheikh),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => SheikhProfilePage(sheikh: sheikh))),
       child: Container(
-        width: 180,
+        width: 160,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.whiteAlpha(0.05),
-          borderRadius: AppRadius.cardRadius,
-          border: Border.all(color: AppColors.whiteAlpha(0.07)),
-          boxShadow: AppShadows.soft,
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: bdr),
         ),
         child: Column(
           children: [
-            const SizedBox(height: 18),
-            // Avatar
+            // Avatar + "New" badge
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 72,
-                  height: 72,
+                  width: 56, height: 56,
                   decoration: BoxDecoration(
+                    color: KhairColors.primarySurface,
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0B5F50), Color(0xFF2D8E75)],
-                    ),
-                    border: Border.all(
-                      color: AppColors.goldAccent.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    border: Border.all(color: KhairColors.primary.withValues(alpha: 0.2), width: 2),
+                    image: imgUrl.isNotEmpty ? DecorationImage(
+                      image: NetworkImage(imgUrl), fit: BoxFit.cover,
+                    ) : null,
                   ),
-                  child: avatarUrl.isNotEmpty
-                      ? ClipOval(
-                          child: Image.network(
-                            avatarUrl,
-                            fit: BoxFit.cover,
-                            width: 72,
-                            height: 72,
-                            errorBuilder: (_, __, ___) => _buildInitials(),
-                          ),
-                        )
-                      : _buildInitials(),
+                  child: imgUrl.isEmpty ? Center(child: Text(
+                    sheikh.name.isNotEmpty ? sheikh.name[0].toUpperCase() : 'S',
+                    style: TextStyle(color: KhairColors.primary, fontSize: 22, fontWeight: FontWeight.w700),
+                  )) : null,
                 ),
-                // Verified badge
-                if (sheikh.isVerified)
+                if (sheikh.isNew)
                   Positioned(
-                    bottom: -2,
-                    right: -2,
+                    right: -8,
+                    top: -4,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: AppColors.goldAccent,
-                        shape: BoxShape.circle,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2196F3),
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2196F3).withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
                       ),
-                      child: const Icon(
-                        Icons.verified,
-                        size: 16,
-                        color: AppColors.emeraldDark,
-                      ),
+                      child: Text(context.l10n.sheikhNew,
+                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700,
+                              color: Colors.white)),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             // Name
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                sheikh.name,
-                style: AppTypography.cardTitle.copyWith(
-                  fontSize: 14,
-                  letterSpacing: -0.2,
-                ),
-                maxLines: 1,
+            Text(sheikh.name, textAlign: TextAlign.center, maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tp)),
+            const SizedBox(height: 3),
+            // Specialty
+            Text(
+              sheikh.specialization ?? 'Islamic Studies',
+              textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: ts),
             ),
             const SizedBox(height: 4),
-            // Specialization
-            if (sheikh.specialization != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  sheikh.specialization!,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.goldAccent.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            const Spacer(),
-            // Bottom info row
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
-              child: Row(
+            // Rating
+            if (sheikh.totalReviews > 0)
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (sheikh.city != null) ...[
-                    Icon(Icons.location_on_outlined,
-                        size: 11, color: AppColors.whiteAlpha(0.4)),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: Text(
-                        sheikh.city!,
-                        style: AppTypography.caption,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                  if (sheikh.city != null && sheikh.yearsOfExperience != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text('•',
-                          style: TextStyle(
-                              color: AppColors.whiteAlpha(0.3), fontSize: 8)),
-                    ),
-                  if (sheikh.yearsOfExperience != null)
-                    Text(
-                      '${sheikh.yearsOfExperience}y exp',
-                      style: AppTypography.caption,
-                    ),
+                  Icon(Icons.star_rounded, size: 14, color: const Color(0xFFFFC107)),
+                  const SizedBox(width: 2),
+                  Text(
+                    sheikh.averageRating.toStringAsFixed(1),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tp),
+                  ),
+                  const SizedBox(width: 2),
+                  Text('(${sheikh.totalReviews})',
+                      style: TextStyle(fontSize: 10, color: ts)),
                 ],
+              ),
+            const Spacer(),
+            // CTA
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => SheikhProfilePage(sheikh: sheikh))),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: KhairColors.primary,
+                  side: BorderSide(color: KhairColors.primary.withValues(alpha: 0.3)),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                child: Text(context.l10n.sheikhViewProfile),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInitials() {
-    return Center(
-      child: Text(
-        sheikh.name[0].toUpperCase(),
-        style: const TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
         ),
       ),
     );

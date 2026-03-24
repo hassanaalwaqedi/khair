@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/theme/app_design_system.dart';
 import '../../data/models/country_model.dart';
 
 /// Glassmorphic searchable country dropdown with flag emojis
@@ -89,7 +90,7 @@ class _CountrySearchFieldState extends State<CountrySearchField> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: _isOpen
-                    ? KhairColors.secondary
+                    ? AppColors.primary
                     : Colors.white.withValues(alpha: 0.12),
                 width: _isOpen ? 1.5 : 1,
               ),
@@ -130,7 +131,7 @@ class _CountrySearchFieldState extends State<CountrySearchField> {
             margin: const EdgeInsets.only(top: 4),
             constraints: const BoxConstraints(maxHeight: 280),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D3522),
+              color: const Color(0xFF111827),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
               boxShadow: [
@@ -195,7 +196,7 @@ class _CountrySearchFieldState extends State<CountrySearchField> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                color: isSelected ? KhairColors.secondary.withValues(alpha: 0.1) : null,
+                                color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : null,
                                 child: Row(
                                   children: [
                                     Text(
@@ -207,7 +208,7 @@ class _CountrySearchFieldState extends State<CountrySearchField> {
                                       child: Text(
                                         country.name,
                                         style: TextStyle(
-                                          color: isSelected ? KhairColors.secondary : Colors.white,
+                                          color: isSelected ? AppColors.primary : Colors.white,
                                           fontSize: 13.5,
                                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                         ),
@@ -222,7 +223,7 @@ class _CountrySearchFieldState extends State<CountrySearchField> {
                                     ),
                                     if (isSelected) ...[
                                       const SizedBox(width: 6),
-                                      Icon(Icons.check_circle, color: KhairColors.secondary, size: 16),
+                                      Icon(Icons.check_circle, color: AppColors.primary, size: 16),
                                     ],
                                   ],
                                 ),

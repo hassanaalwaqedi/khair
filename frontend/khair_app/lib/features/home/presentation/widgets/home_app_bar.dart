@@ -38,7 +38,7 @@ class HomeAppBar extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: Image.asset(
-              'icon.png',
+              'icon.jpeg',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
                 decoration: BoxDecoration(

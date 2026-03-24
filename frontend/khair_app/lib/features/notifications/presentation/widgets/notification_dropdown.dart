@@ -165,16 +165,35 @@ class _NotificationTile extends StatelessWidget {
     required this.isDark,
   });
 
+  void _openDetail(BuildContext context) {
+    // Mark as read
+    if (!notification.isRead) {
+      context
+          .read<NotificationBloc>()
+          .add(MarkNotificationRead(notification.id));
+    }
+
+    // Close the dropdown first, then show the detail dialog
+    Navigator.pop(context);
+
+    // Use a short delay to let the dropdown close before opening the dialog
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => _NotificationDetailDialog(
+            notification: notification,
+            isDark: isDark,
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        if (!notification.isRead) {
-          context
-              .read<NotificationBloc>()
-              .add(MarkNotificationRead(notification.id));
-        }
-      },
+      onTap: () => _openDetail(context),
       child: Container(
         color: notification.isRead
             ? Colors.transparent
@@ -185,16 +204,29 @@ class _NotificationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Unread indicator
+            // Khair branded avatar
             Container(
-              margin: const EdgeInsets.only(top: 6),
-              width: 8,
-              height: 8,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: notification.isRead
-                    ? Colors.transparent
-                    : KhairColors.primary,
+                gradient: LinearGradient(
+                  colors: notification.isRead
+                      ? [Colors.grey[400]!, Colors.grey[500]!]
+                      : [KhairColors.primary, const Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text(
+                  'K',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -203,6 +235,16 @@ class _NotificationTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'Khair',
+                    style: KhairTypography.labelSmall.copyWith(
+                      color: KhairColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     notification.title,
                     style: KhairTypography.labelMedium.copyWith(
@@ -225,17 +267,180 @@ class _NotificationTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    notification.timeAgo,
-                    style: KhairTypography.labelSmall.copyWith(
-                      color: KhairColors.textTertiary,
-                      fontSize: 11,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        notification.timeAgo,
+                        style: KhairTypography.labelSmall.copyWith(
+                          color: KhairColors.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: isDark ? Colors.white30 : Colors.grey[400],
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            // Unread dot
+            if (!notification.isRead)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: KhairColors.primary,
+                  boxShadow: [
+                    BoxShadow(
+                      color: KhairColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Notification Detail Dialog ──────────────────
+
+class _NotificationDetailDialog extends StatelessWidget {
+  final AppNotification notification;
+  final bool isDark;
+
+  const _NotificationDetailDialog({
+    required this.notification,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with Khair branding
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [KhairColors.primary, Color(0xFF2E7D32)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: KhairColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'K',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Khair',
+                            style: KhairTypography.headlineSmall.copyWith(
+                              color: KhairColors.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time_rounded,
+                                  size: 13, color: KhairColors.textTertiary),
+                              const SizedBox(width: 4),
+                              Text(
+                                notification.timeAgo,
+                                style: KhairTypography.labelSmall.copyWith(
+                                  color: KhairColors.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close_rounded,
+                          color: isDark ? Colors.white54 : Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Divider(
+                color: isDark ? Colors.white10 : Colors.grey[200],
+                height: 1,
+              ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                child: Text(
+                  notification.title,
+                  style: KhairTypography.h2.copyWith(
+                    color: isDark ? Colors.white : KhairColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Full message
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: Text(
+                  notification.message,
+                  style: KhairTypography.bodyLarge.copyWith(
+                    color: isDark ? Colors.white70 : KhairColors.textSecondary,
+                    height: 1.7,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

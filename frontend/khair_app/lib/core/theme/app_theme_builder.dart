@@ -9,7 +9,8 @@ ThemeData buildAppTheme({
   final isDark = brightness == Brightness.dark;
   final colorScheme = isDark ? AppColors.darkScheme : AppColors.lightScheme;
   final textTheme = AppTypography.textTheme(locale, isDark: isDark);
-  final background = isDark ? AppColors.darkBackground : AppColors.background;
+  final background =
+      isDark ? AppColors.darkBackground : AppColors.background;
   final surface = isDark ? AppColors.darkSurface : AppColors.surface;
   final border = isDark ? AppColors.darkBorder : AppColors.border;
   final secondaryText =
@@ -70,9 +71,11 @@ ThemeData buildAppTheme({
           if (states.contains(WidgetState.disabled)) {
             return const BorderSide(color: AppColors.disabled);
           }
-          return const BorderSide(color: AppColors.secondary, width: 1.4);
+          return BorderSide(color: border);
         }),
-        foregroundColor: WidgetStateProperty.all(AppColors.secondary),
+        foregroundColor: WidgetStateProperty.all(
+          isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        ),
         textStyle: WidgetStateProperty.all(textTheme.labelLarge),
         shape: WidgetStateProperty.all(
           RoundedRectangleBorder(
@@ -96,7 +99,7 @@ ThemeData buildAppTheme({
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: surface,
+      fillColor: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
       hintStyle: textTheme.bodyMedium?.copyWith(color: secondaryText),
       labelStyle: textTheme.bodyMedium?.copyWith(color: secondaryText),
       contentPadding: const EdgeInsets.symmetric(
@@ -116,7 +119,7 @@ ThemeData buildAppTheme({
       border: inputBorder,
     ),
     cardTheme: CardThemeData(
-      color: surface,
+      color: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceElevated,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -127,7 +130,7 @@ ThemeData buildAppTheme({
       clipBehavior: Clip.antiAlias,
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: surface,
+      backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
       selectedColor: AppColors.primary.withValues(alpha: 0.12),
       disabledColor: AppColors.disabled.withValues(alpha: 0.2),
       side: BorderSide(color: border),
@@ -143,6 +146,11 @@ ThemeData buildAppTheme({
         horizontal: AppSpacing.x2,
         vertical: AppSpacing.x1,
       ),
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.background,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: isDark ? AppColors.darkTextTertiary : AppColors.textTertiary,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {

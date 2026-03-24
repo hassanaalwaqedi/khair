@@ -31,13 +31,14 @@ class MarkerClusterManager {
   }
 
   double _gridSizeForZoom(double zoom) {
-    if (zoom <= 6) return 1.2;
-    if (zoom <= 8) return 0.7;
-    if (zoom <= 10) return 0.35;
-    if (zoom <= 12) return 0.16;
-    if (zoom <= 14) return 0.08;
-    if (zoom <= 16) return 0.03;
-    return 0.012;
+    // Very tight clustering — only merge truly overlapping markers
+    if (zoom <= 6) return 0.5;
+    if (zoom <= 8) return 0.15;
+    if (zoom <= 10) return 0.06;
+    if (zoom <= 12) return 0.02;   // ~2km — was 0.16 (~17km)
+    if (zoom <= 14) return 0.005;  // ~500m
+    if (zoom <= 16) return 0.001;  // ~100m
+    return 0.0004;                 // ~40m
   }
 
   LatLng _averagePoint(List<MapEvent> events) {

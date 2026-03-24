@@ -202,6 +202,12 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 						AND (e.capacity - COALESCE(e.reserved_count, 0)) <= GREATEST(5, CEIL(e.capacity * 0.15)::int)
 					)
 				)
+				-- Text search on title/organization
+				AND (
+					$23 = ''
+					OR e.title ILIKE '%' || $23 || '%'
+					OR o.name ILIKE '%' || $23 || '%'
+				)
 		),
 		paged AS (
 			SELECT
@@ -260,6 +266,7 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 		uuidValue(filter.UserID),            // $20
 		filter.PageSize,                     // $21
 		(filter.Page - 1) * filter.PageSize, // $22
+		filter.Search,                       // $23
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)

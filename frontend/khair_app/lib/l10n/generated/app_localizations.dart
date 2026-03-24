@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_tr.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +96,8 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en')
+    Locale('en'),
+    Locale('tr')
   ];
 
   /// No description provided for @appTitle.
@@ -1633,6 +1635,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This event is full'**
   String get eventDetailsEventFull;
+
+  /// No description provided for @eventDetailsEventEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Ended'**
+  String get eventDetailsEventEnded;
+
+  /// No description provided for @eventDetailsAlreadyJoinedBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Joined'**
+  String get eventDetailsAlreadyJoinedBtn;
+
+  /// No description provided for @eventDetailsReservedHoldInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your seat is held for 10 minutes. Verify your email to confirm.'**
+  String get eventDetailsReservedHoldInfo;
 
   /// No description provided for @joinModalSubtitle.
   ///
@@ -3685,6 +3705,714 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only organizers can access the dashboard.\n\nRegister as an organizer to start creating and managing Islamic events!'**
   String get becomeOrganizerDesc;
+
+  /// No description provided for @mapPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick Location on Map'**
+  String get mapPickerTitle;
+
+  /// No description provided for @mapPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a place or address...'**
+  String get mapPickerSearchHint;
+
+  /// No description provided for @mapPickerUseCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get mapPickerUseCurrentLocation;
+
+  /// No description provided for @mapPickerTapToSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap on the map to drop a pin'**
+  String get mapPickerTapToSelect;
+
+  /// No description provided for @mapPickerSelectedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Location'**
+  String get mapPickerSelectedLocation;
+
+  /// No description provided for @mapPickerSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolving address...'**
+  String get mapPickerSearching;
+
+  /// No description provided for @mapPickerRefineAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine-tune the address details below if needed'**
+  String get mapPickerRefineAddress;
+
+  /// No description provided for @eventDetailsGetDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Directions'**
+  String get eventDetailsGetDirections;
+
+  /// No description provided for @eventDetailsOpenInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Maps'**
+  String get eventDetailsOpenInMaps;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayName;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @fullAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Address'**
+  String get fullAddress;
+
+  /// No description provided for @preferredLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Language'**
+  String get preferredLanguage;
+
+  /// No description provided for @tapToChangePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change photo'**
+  String get tapToChangePhoto;
+
+  /// No description provided for @checkingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking image...'**
+  String get checkingImage;
+
+  /// No description provided for @aiVerifyingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is verifying your photo'**
+  String get aiVerifyingPhoto;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get nameRequired;
+
+  /// No description provided for @tellUsAboutYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about yourself...'**
+  String get tellUsAboutYourself;
+
+  /// No description provided for @yourLocationOrAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location or address'**
+  String get yourLocationOrAddress;
+
+  /// No description provided for @profileUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully!'**
+  String get profileUpdatedSuccess;
+
+  /// No description provided for @failedSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save profile'**
+  String get failedSaveProfile;
+
+  /// No description provided for @failedLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load profile'**
+  String get failedLoadProfile;
+
+  /// No description provided for @contentNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Not Allowed'**
+  String get contentNotAllowed;
+
+  /// No description provided for @understood.
+  ///
+  /// In en, this message translates to:
+  /// **'Understood'**
+  String get understood;
+
+  /// No description provided for @imageApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Image approved ✓'**
+  String get imageApproved;
+
+  /// No description provided for @failedProcessImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to process image'**
+  String get failedProcessImage;
+
+  /// No description provided for @imageMustBeUnder5MB.
+  ///
+  /// In en, this message translates to:
+  /// **'Image must be under 5 MB'**
+  String get imageMustBeUnder5MB;
+
+  /// No description provided for @aiModerationNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your content is reviewed by AI to keep the Khair community safe and respectful.'**
+  String get aiModerationNotice;
+
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search city or event'**
+  String get mapSearchHint;
+
+  /// No description provided for @mapFindKhairNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Khair near you'**
+  String get mapFindKhairNearYou;
+
+  /// No description provided for @mapSearchThisArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this area'**
+  String get mapSearchThisArea;
+
+  /// No description provided for @mapEventsNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events nearby'**
+  String mapEventsNearby(int count);
+
+  /// No description provided for @mapClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get mapClearFilters;
+
+  /// No description provided for @mapNoEventsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No events found here yet'**
+  String get mapNoEventsFound;
+
+  /// No description provided for @mapBeFirstToCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to create one!'**
+  String get mapBeFirstToCreate;
+
+  /// No description provided for @mapCreateEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Event'**
+  String get mapCreateEvent;
+
+  /// No description provided for @mapApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get mapApplyFilters;
+
+  /// No description provided for @mapFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get mapFilters;
+
+  /// No description provided for @mapFilterDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get mapFilterDistance;
+
+  /// No description provided for @mapFilterType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get mapFilterType;
+
+  /// No description provided for @mapFilterCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get mapFilterCategory;
+
+  /// No description provided for @mapFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get mapFilterAll;
+
+  /// No description provided for @mapFilterInPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'In-person'**
+  String get mapFilterInPerson;
+
+  /// No description provided for @mapFilterOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get mapFilterOnline;
+
+  /// No description provided for @mapFilterQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get mapFilterQuran;
+
+  /// No description provided for @mapFilterLecture.
+  ///
+  /// In en, this message translates to:
+  /// **'Lecture'**
+  String get mapFilterLecture;
+
+  /// No description provided for @mapFilterCharity.
+  ///
+  /// In en, this message translates to:
+  /// **'Charity'**
+  String get mapFilterCharity;
+
+  /// No description provided for @mapFilterHalaqa.
+  ///
+  /// In en, this message translates to:
+  /// **'Halaqa'**
+  String get mapFilterHalaqa;
+
+  /// No description provided for @mapFilterFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get mapFilterFamily;
+
+  /// No description provided for @mapJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get mapJoin;
+
+  /// No description provided for @sheikhLearnFromScholars.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn from Scholars'**
+  String get sheikhLearnFromScholars;
+
+  /// No description provided for @sheikhViewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get sheikhViewProfile;
+
+  /// No description provided for @sheikhNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get sheikhNew;
+
+  /// No description provided for @allEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'All Events'**
+  String get allEvents;
+
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offline;
+
+  /// No description provided for @khairRecommends.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair Recommends'**
+  String get khairRecommends;
+
+  /// No description provided for @verifiedByKhair.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified by Khair'**
+  String get verifiedByKhair;
+
+  /// No description provided for @visit.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit'**
+  String get visit;
+
+  /// No description provided for @seeAllEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'See All'**
+  String get seeAllEvents;
+
+  /// No description provided for @discoverNoEventsNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'No events found near you'**
+  String get discoverNoEventsNearYou;
+
+  /// No description provided for @discoverExploreOtherCities.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore events happening in other cities.'**
+  String get discoverExploreOtherCities;
+
+  /// No description provided for @discoverExploreAllEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore All Events'**
+  String get discoverExploreAllEvents;
+
+  /// No description provided for @discoverSomethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get discoverSomethingWentWrong;
+
+  /// No description provided for @discoverCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load events.'**
+  String get discoverCouldNotLoad;
+
+  /// No description provided for @discoverEventsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String discoverEventsCount(int count);
+
+  /// No description provided for @sheikhLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get sheikhLocation;
+
+  /// No description provided for @sheikhExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get sheikhExperience;
+
+  /// No description provided for @sheikhYearsExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} years'**
+  String sheikhYearsExperience(int count);
+
+  /// No description provided for @sheikhStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get sheikhStatus;
+
+  /// No description provided for @sheikhVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get sheikhVerified;
+
+  /// No description provided for @sheikhPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get sheikhPending;
+
+  /// No description provided for @sheikhRequestLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a Lesson'**
+  String get sheikhRequestLesson;
+
+  /// No description provided for @sheikhContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get sheikhContact;
+
+  /// No description provided for @sheikhContactInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get sheikhContactInfo;
+
+  /// No description provided for @sheikhAboutMe.
+  ///
+  /// In en, this message translates to:
+  /// **'About me'**
+  String get sheikhAboutMe;
+
+  /// No description provided for @sheikhQualifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Qualifications'**
+  String get sheikhQualifications;
+
+  /// No description provided for @sheikhStudentReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Student Reviews'**
+  String get sheikhStudentReviews;
+
+  /// No description provided for @sheikhIjazahCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Ijazah & Credentials'**
+  String get sheikhIjazahCredentials;
+
+  /// No description provided for @sheikhReportProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this profile'**
+  String get sheikhReportProfile;
+
+  /// No description provided for @sheikhReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 Report Sheikh'**
+  String get sheikhReportTitle;
+
+  /// No description provided for @sheikhReportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe the issue. Reports are reviewed by our team.'**
+  String get sheikhReportDesc;
+
+  /// No description provided for @sheikhReportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the issue...'**
+  String get sheikhReportHint;
+
+  /// No description provided for @sheikhSubmitReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Report'**
+  String get sheikhSubmitReport;
+
+  /// No description provided for @sheikhReportSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted. Thank you.'**
+  String get sheikhReportSubmitted;
+
+  /// No description provided for @sheikhSendLessonRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a lesson request to {name}'**
+  String sheikhSendLessonRequest(String name);
+
+  /// No description provided for @sheikhWhatToLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to learn?'**
+  String get sheikhWhatToLearn;
+
+  /// No description provided for @sheikhWhatToLearnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. I want to learn Tafsir...'**
+  String get sheikhWhatToLearnHint;
+
+  /// No description provided for @sheikhPreferredTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred time (optional)'**
+  String get sheikhPreferredTime;
+
+  /// No description provided for @sheikhSelectDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date & time'**
+  String get sheikhSelectDateTime;
+
+  /// No description provided for @sheikhSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Request'**
+  String get sheikhSendRequest;
+
+  /// No description provided for @sheikhRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson request sent! The sheikh will review it.'**
+  String get sheikhRequestSent;
+
+  /// No description provided for @sheikhNewScholar.
+  ///
+  /// In en, this message translates to:
+  /// **'New scholar'**
+  String get sheikhNewScholar;
+
+  /// No description provided for @sheikhBuildingReputation.
+  ///
+  /// In en, this message translates to:
+  /// **'Building reputation'**
+  String get sheikhBuildingReputation;
+
+  /// No description provided for @sheikhReviewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reviews'**
+  String sheikhReviewsCount(int count);
+
+  /// No description provided for @sheikhNoReviewsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get sheikhNoReviewsYet;
+
+  /// No description provided for @sheikhWriteReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a Review'**
+  String get sheikhWriteReview;
+
+  /// No description provided for @sheikhYourReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Review'**
+  String get sheikhYourReview;
+
+  /// No description provided for @sheikhShareExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your experience...'**
+  String get sheikhShareExperience;
+
+  /// No description provided for @sheikhSubmitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Review'**
+  String get sheikhSubmitReview;
+
+  /// No description provided for @sheikhReviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submitted! It will appear after moderation.'**
+  String get sheikhReviewSubmitted;
+
+  /// No description provided for @sheikhAllCities.
+  ///
+  /// In en, this message translates to:
+  /// **'All Cities'**
+  String get sheikhAllCities;
+
+  /// No description provided for @allCities.
+  ///
+  /// In en, this message translates to:
+  /// **'All Cities'**
+  String get allCities;
+
+  /// No description provided for @mapNoEventsFoundHere.
+  ///
+  /// In en, this message translates to:
+  /// **'No events found here yet'**
+  String get mapNoEventsFoundHere;
+
+  /// No description provided for @guestHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover meaningful\nevents near you'**
+  String get guestHeroTitle;
+
+  /// No description provided for @guestHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join classes, lectures, and community gatherings around you'**
+  String get guestHeroSubtitle;
+
+  /// No description provided for @guestBenefitEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Find events near you'**
+  String get guestBenefitEvents;
+
+  /// No description provided for @guestBenefitTeachers.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn from verified teachers'**
+  String get guestBenefitTeachers;
+
+  /// No description provided for @guestBenefitCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with your community'**
+  String get guestBenefitCommunity;
+
+  /// No description provided for @guestGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get guestGetStarted;
+
+  /// No description provided for @guestAlreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get guestAlreadyHaveAccount;
+
+  /// No description provided for @guestSignUpToExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up to explore events near you'**
+  String get guestSignUpToExplore;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent. All your data, events, and activity will be deleted. This cannot be undone.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete My Account'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted.'**
+  String get deleteAccountSuccess;
+
+  /// No description provided for @deleteAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account. Please try again.'**
+  String get deleteAccountError;
 }
 
 class _AppLocalizationsDelegate
@@ -3698,7 +4426,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+      <String>['ar', 'en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3711,6 +4439,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'tr':
+      return AppLocalizationsTr();
   }
 
   throw FlutterError(

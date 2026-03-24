@@ -3,9 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/media_url_helper.dart';
 import '../../../events/domain/entities/event.dart';
 
-/// Netflix-style featured events carousel using real Event data.
+/// Featured events carousel with event images, organizer, date, and CTA buttons.
 class FeaturedCarousel extends StatefulWidget {
   final List<Event> events;
   const FeaturedCarousel({super.key, required this.events});
@@ -17,13 +19,6 @@ class FeaturedCarousel extends StatefulWidget {
 class _FeaturedCarouselState extends State<FeaturedCarousel> {
   late PageController _ctrl;
   int _current = 0;
-
-  static const _gradients = [
-    [Color(0xFF0F3D2E), Color(0xFF1A6B45)],
-    [Color(0xFF2D1B4E), Color(0xFF5B3A8C)],
-    [Color(0xFF1B3A5C), Color(0xFF2E6B9E)],
-    [Color(0xFF3D1B1B), Color(0xFF8C3A3A)],
-  ];
 
   @override
   void initState() {
@@ -43,64 +38,64 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.events.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (widget.events.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            context.l10n.featuredEvents,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.95),
-              letterSpacing: -0.3,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(children: [
+            Text(context.l10n.featuredEvents, style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.w700, color: tp, letterSpacing: -0.3)),
+            const Spacer(),
+            TextButton(
+              onPressed: () {},
+              child: Text(context.l10n.seeAll, style: TextStyle(
+                  color: KhairColors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
             ),
-          ),
+          ]),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        // Carousel
         SizedBox(
-          height: 200,
+          height: 240,
           child: PageView.builder(
             controller: _ctrl,
             itemCount: widget.events.length.clamp(0, 5),
             itemBuilder: (context, i) {
-              final colors = _gradients[i % _gradients.length];
               return AnimatedScale(
                 scale: _current == i ? 1.0 : 0.94,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
                 child: GestureDetector(
-                onTap: () => context.push('/events/${widget.events[i].id}'),
-                child: _FeaturedCard(
-                  event: widget.events[i],
-                  color1: colors[0],
-                  color2: colors[1],
+                  onTap: () => context.push('/events/${widget.events[i].id}'),
+                  child: _FeaturedCard(event: widget.events[i]),
                 ),
-              ),
               );
             },
           ),
         ),
         const SizedBox(height: 12),
+        // Dots
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             widget.events.length.clamp(0, 5),
             (i) => AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _current == i ? 24 : 8,
-              height: 4,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: _current == i ? 20 : 6, height: 4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(2),
                 color: _current == i
-                    ? const Color(0xFFC8A951)
-                    : Colors.white.withValues(alpha: 0.15),
+                    ? KhairColors.primary
+                    : (isDark ? Colors.white.withValues(alpha: 0.12) : KhairColors.neutral300),
               ),
             ),
           ),
@@ -112,115 +107,125 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
 
 class _FeaturedCard extends StatelessWidget {
   final Event event;
-  final Color color1, color2;
-  const _FeaturedCard({
-    required this.event,
-    required this.color1,
-    required this.color2,
-  });
+  const _FeaturedCard({required this.event});
+
+  // Gradient fallback colors by event type
+  static const _fallbackGradients = {
+    'lecture': [Color(0xFF1E3A5F), Color(0xFF2563EB)],
+    'charity': [Color(0xFF4A2040), Color(0xFF7B3F6B)],
+    'quran': [Color(0xFF1B4332), Color(0xFF2D6A4F)],
+    'social': [Color(0xFF3730A3), Color(0xFF6366F1)],
+    'workshop': [Color(0xFF1E3A5F), Color(0xFF2563EB)],
+    'sports': [Color(0xFF7F1D1D), Color(0xFFDC2626)],
+  };
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('EEE, MMM d • h:mm a').format(event.startDate);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dateStr = DateFormat('EEE, MMM d · h:mm a').format(event.startDate);
+    final imageUrl = resolveMediaUrl(event.imageUrl);
+    final gradColors = _fallbackGradients[event.eventType.toLowerCase()] ??
+        [const Color(0xFF1E3A5F), KhairColors.primary];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color1, color2],
-        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color1.withValues(alpha: 0.4),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
+            blurRadius: 20, offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // Event type badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                event.eventType.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.8,
-                ),
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: gradColors,
             ),
-            const SizedBox(height: 12),
-            Text(
-              event.title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: -0.5,
-                height: 1.2,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (event.organizerName != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.byOrganizer(event.organizerName!),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.6),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              image: imageUrl.isNotEmpty ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withValues(alpha: 0.45), BlendMode.darken,
                 ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Row(
+              ) : null,
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.calendar_today_rounded,
-                    size: 14,
-                    color: Colors.white.withValues(alpha: 0.6)),
-                const SizedBox(width: 6),
-                Text(
-                  dateStr,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC8A951),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    context.l10n.joinNow,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0A2E1F),
+                // Type badge
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Text(event.eventType.toUpperCase(), style: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.8,
+                    )),
                   ),
-                ),
+                  const Spacer(),
+                  if (event.reservedCount > 0) Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.people_rounded, color: Colors.white, size: 12),
+                      const SizedBox(width: 4),
+                      Text('${event.reservedCount}', style: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white,
+                      )),
+                    ]),
+                  ),
+                ]),
+                const Spacer(),
+                // Title
+                Text(event.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white,
+                      letterSpacing: -0.3, height: 1.2,
+                    )),
+                if (event.organizerName != null) ...[
+                  const SizedBox(height: 4),
+                  Text(context.l10n.byOrganizer(event.organizerName!), style: TextStyle(
+                    fontSize: 12, color: Colors.white.withValues(alpha: 0.7),
+                  )),
+                ],
+                const SizedBox(height: 12),
+                // Bottom row: date + CTA
+                Row(children: [
+                  Icon(Icons.calendar_today_rounded, size: 13,
+                      color: Colors.white.withValues(alpha: 0.7)),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(dateStr, overflow: TextOverflow.ellipsis, style: TextStyle(
+                    fontSize: 12, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w500,
+                  ))),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(context.l10n.joinNow, style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: KhairColors.primary,
+                    )),
+                  ),
+                ]),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

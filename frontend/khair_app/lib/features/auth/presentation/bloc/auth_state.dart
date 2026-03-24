@@ -16,6 +16,7 @@ class AuthState extends Equatable {
   });
 
   bool get isOrganizer => user?.role == 'organizer';
+  bool get isSheikh => user?.role == 'sheikh';
   bool get isAdmin => user?.role == 'admin';
   bool get isApprovedOrganizer => organizer?.isApproved ?? false;
 
