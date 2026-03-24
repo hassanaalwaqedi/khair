@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/chat_bloc.dart';
 import '../../domain/entities/chat_message.dart';
 
@@ -26,14 +27,8 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     context.read<ChatBloc>().add(LoadMessages(widget.conversationId));
     // Get current user id from auth
-    _loadUserId();
-  }
-
-  void _loadUserId() {
-    try {
-      // Try to read from auth bloc or shared prefs
-      // For now, we'll detect from messages — the sender that isn't the other party
-    } catch (_) {}
+    final authState = context.read<AuthBloc>().state;
+    _currentUserId = authState.user?.id;
   }
 
   @override
@@ -73,7 +68,13 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: const Text('Chat'),
+        title: BlocBuilder<ChatBloc, ChatState>(
+          builder: (context, state) {
+            // Show the conversation partner name if we have conversations loaded
+            final conv = state.conversations.where((c) => c.id == widget.conversationId).firstOrNull;
+            return Text(conv?.otherPartyName ?? 'Chat');
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -198,15 +199,9 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // Detect if sender is the current user — simple heuristic
+  // Detect if sender is the current user
   bool _isCurrentUser(ChatMessage msg, List<ChatMessage> allMessages) {
-    // If user sent a message, the first one we sent is "ours"
-    // We use a simple approach: track the first non-unique sender
     if (_currentUserId != null) return msg.senderId == _currentUserId;
-
-    // Set from the latest message we sent (after send)
-    // Fallback: alternate based on sender patterns
-    // In production, pass userId from auth
     return false;
   }
 

@@ -64,6 +64,16 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 const SizedBox(height: 8),
                 Text('Request a lesson from a sheikh to start chatting',
                     style: TextStyle(fontSize: 13, color: ts)),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () => context.go('/'),
+                  icon: const Icon(Icons.school_rounded, size: 18),
+                  label: const Text('Browse Sheikhs'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KhairColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
               ]),
             );
           }

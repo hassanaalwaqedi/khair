@@ -75,6 +75,9 @@ final GoRouter appRouter = GoRouter(
             BlocProvider(
               create: (_) => getIt<SheikhBloc>()..add(const LoadSheikhs()),
             ),
+            BlocProvider(
+              create: (_) => getIt<ChatBloc>()..add(const LoadConversations()),
+            ),
           ],
           child: MainScaffold(child: child),
         );
@@ -96,6 +99,12 @@ final GoRouter appRouter = GoRouter(
           path: '/profile',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ProfilePage(),
+          ),
+        ),
+        GoRoute(
+          path: '/conversations',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: ConversationsPage(),
           ),
         ),
       ],
@@ -250,8 +259,11 @@ final GoRouter appRouter = GoRouter(
       path: '/conversations/:id',
       builder: (context, state) {
         final convId = state.pathParameters['id']!;
-        return BlocProvider(
-          create: (_) => getIt<ChatBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<ChatBloc>()..add(const LoadConversations())),
+            BlocProvider(create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus())),
+          ],
           child: ChatPage(conversationId: convId),
         );
       },

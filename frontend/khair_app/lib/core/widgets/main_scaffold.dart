@@ -6,10 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../tokens/tokens.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/chat/presentation/bloc/chat_bloc.dart';
 import '../locale/l10n_extension.dart';
 
-/// Meetup-style main scaffold with a floating glassmorphic bottom nav.
-/// 4 tabs: Discover · Map · Create · Profile
+/// Main scaffold with a floating glassmorphic bottom nav.
+/// 5 tabs: Discover · Map · Chat · Dashboard · Profile
 class MainScaffold extends StatelessWidget {
   final Widget child;
 
@@ -70,18 +71,34 @@ class MainScaffold extends StatelessWidget {
                     isSelected: _selectedIndex(context) == 1,
                     onTap: () => context.go('/map'),
                   ),
+                  // Chat tab with unread badge
+                  BlocBuilder<ChatBloc, ChatState>(
+                    builder: (context, chatState) {
+                      final totalUnread = chatState.conversations.fold<int>(
+                        0, (sum, c) => sum + c.unreadCount,
+                      );
+                      return _NavItem(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        activeIcon: Icons.chat_bubble_rounded,
+                        label: context.l10n.navChat,
+                        isSelected: _selectedIndex(context) == 2,
+                        badgeCount: totalUnread,
+                        onTap: () => context.go('/conversations'),
+                      );
+                    },
+                  ),
                   _NavItem(
                     icon: Icons.dashboard_outlined,
                     activeIcon: Icons.dashboard_rounded,
                     label: context.l10n.navDashboard,
-                    isSelected: _selectedIndex(context) == 2,
+                    isSelected: _selectedIndex(context) == 3,
                     onTap: () => _handleDashboardTap(context),
                   ),
                   _NavItem(
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person,
                     label: context.l10n.navProfile,
-                    isSelected: _selectedIndex(context) == 3,
+                    isSelected: _selectedIndex(context) == 4,
                     onTap: () => context.go('/profile'),
                   ),
                 ],
@@ -96,8 +113,11 @@ class MainScaffold extends StatelessWidget {
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/map')) return 1;
-    if (location.startsWith('/organizer')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/conversations')) return 2;
+    if (location.startsWith('/organizer') ||
+        location.startsWith('/admin') ||
+        location.startsWith('/sheikh-dashboard')) return 3;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
@@ -119,6 +139,12 @@ class MainScaffold extends StatelessWidget {
     // Organizer → go to organizer dashboard
     if (authState.isOrganizer) {
       context.go('/organizer');
+      return;
+    }
+
+    // Sheikh → go to sheikh dashboard
+    if (authState.isSheikh) {
+      context.go('/sheikh-dashboard');
       return;
     }
 
@@ -172,13 +198,14 @@ class MainScaffold extends StatelessWidget {
   }
 }
 
-/// Single nav item with animated icon + label
+/// Single nav item with animated icon + label + optional badge
 class _NavItem extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final int badgeCount;
 
   const _NavItem({
     required this.icon,
@@ -186,6 +213,7 @@ class _NavItem extends StatefulWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -216,86 +244,59 @@ class _NavItemState extends State<_NavItem> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: SizedBox(
-          width: 64,
+          width: 56,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  widget.isSelected ? widget.activeIcon : widget.icon,
-                  key: ValueKey(widget.isSelected),
-                  size: 24,
-                  color: widget.isSelected ? selectedColor : unselectedColor,
-                ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      widget.isSelected ? widget.activeIcon : widget.icon,
+                      key: ValueKey(widget.isSelected),
+                      size: 24,
+                      color: widget.isSelected ? selectedColor : unselectedColor,
+                    ),
+                  ),
+                  if (widget.badgeCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
+                        child: Text(
+                          widget.badgeCount > 99 ? '99+' : '${widget.badgeCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
                 widget.label,
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 10,
                   fontWeight:
                       widget.isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: widget.isSelected ? selectedColor : unselectedColor,
                   letterSpacing: 0.1,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Prominent "Create" action button in the center
-class _CreateButton extends StatefulWidget {
-  final VoidCallback onTap;
-
-  const _CreateButton({required this.onTap});
-
-  @override
-  State<_CreateButton> createState() => _CreateButtonState();
-}
-
-class _CreateButtonState extends State<_CreateButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.90 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1B5E3C), Color(0xFF2E7D5A)],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.add_rounded,
-            color: Colors.white,
-            size: 28,
           ),
         ),
       ),
