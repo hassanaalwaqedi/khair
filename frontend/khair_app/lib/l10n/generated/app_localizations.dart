@@ -3658,6 +3658,12 @@ abstract class AppLocalizations {
   /// **'Map'**
   String get navMap;
 
+  /// No description provided for @navChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get navChat;
+
   /// No description provided for @navDashboard.
   ///
   /// In en, this message translates to:

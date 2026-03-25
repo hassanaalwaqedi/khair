@@ -1899,6 +1899,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMap => 'Map';
 
   @override
+  String get navChat => 'Chat';
+
+  @override
   String get navDashboard => 'Dashboard';
 
   @override

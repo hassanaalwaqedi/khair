@@ -1912,6 +1912,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navMap => 'Harita';
 
   @override
+  String get navChat => 'Chat';
+
+  @override
   String get navDashboard => 'Panel';
 
   @override

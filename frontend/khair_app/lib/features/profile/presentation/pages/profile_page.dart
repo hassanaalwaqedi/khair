@@ -9,6 +9,7 @@ import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../sheikh/presentation/bloc/sheikh_bloc.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -323,7 +324,19 @@ class ProfilePage extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                onPressed: () => context.push('/profile/edit'),
+                onPressed: () async {
+                  final result = await context.push('/profile/edit');
+                  if (result == true) {
+                    // Refresh sheikh list so community view reflects changes
+                    try {
+                      context.read<SheikhBloc>().add(const LoadSheikhs());
+                    } catch (_) {}
+                    // Also refresh auth state to update profile data
+                    try {
+                      context.read<AuthBloc>().add(CheckAuthStatus());
+                    } catch (_) {}
+                  }
+                },
                 icon: const Icon(Icons.edit_outlined, color: Colors.white),
                 tooltip: 'Edit Profile',
               ),

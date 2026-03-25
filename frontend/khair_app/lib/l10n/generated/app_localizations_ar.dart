@@ -1866,6 +1866,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navMap => 'الخريطة';
 
   @override
+  String get navChat => 'المحادثات';
+
+  @override
   String get navDashboard => 'لوحة التحكم';
 
   @override
