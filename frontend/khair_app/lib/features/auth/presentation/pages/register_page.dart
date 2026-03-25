@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,7 +50,8 @@ class _RegisterWizardState extends State<_RegisterWizard>
   bool _countriesLoading = true;
 
   // Image upload state
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
   String? _uploadedImageUrl;
   bool _isUploadingImage = false;
 
@@ -359,12 +360,14 @@ class _RegisterWizardState extends State<_RegisterWizard>
     // For authority roles: step 3 = Upload, step 4 = Review
     if (_hasUploadStep && _currentStep == 3) {
       return MediaUploadStep(
-        selectedImage: _selectedImage,
+        selectedImageBytes: _selectedImageBytes,
+        selectedImageName: _selectedImageName,
         uploadedImageUrl: _uploadedImageUrl,
         isUploading: _isUploadingImage,
-        onImageSelected: (file) {
+        onImageSelected: (bytes, name) {
           setState(() {
-            _selectedImage = file;
+            _selectedImageBytes = bytes;
+            _selectedImageName = name;
             _uploadedImageUrl = null;
           });
         },
@@ -774,10 +777,13 @@ class _RegisterWizardState extends State<_RegisterWizard>
 
     if (_hasUploadStep &&
         _currentStep == 3 &&
-        _selectedImage != null &&
+        _selectedImageBytes != null &&
         _uploadedImageUrl == null) {
       setState(() => _isUploadingImage = true);
-      context.read<RegistrationBloc>().add(UploadImage(_selectedImage!));
+      context.read<RegistrationBloc>().add(UploadImage(
+        imageBytes: _selectedImageBytes!,
+        filename: _selectedImageName ?? 'image.jpg',
+      ));
       return;
     }
 

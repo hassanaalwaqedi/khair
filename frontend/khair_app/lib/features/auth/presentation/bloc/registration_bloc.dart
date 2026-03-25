@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:dio/dio.dart';
@@ -117,10 +117,11 @@ class GoToStep extends RegistrationEvent {
 }
 
 class UploadImage extends RegistrationEvent {
-  final File imageFile;
-  const UploadImage(this.imageFile);
+  final Uint8List imageBytes;
+  final String filename;
+  const UploadImage({required this.imageBytes, required this.filename});
   @override
-  List<Object?> get props => [imageFile];
+  List<Object?> get props => [imageBytes, filename];
 }
 
 // --- State ---
@@ -453,7 +454,7 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
   ) async {
     emit(state.copyWith(status: RegistrationStatus.loading));
     try {
-      final url = await _dataSource.uploadImage(event.imageFile);
+      final url = await _dataSource.uploadImageBytes(event.imageBytes, event.filename);
       emit(state.copyWith(
         status: RegistrationStatus.success,
         imageUrl: url,

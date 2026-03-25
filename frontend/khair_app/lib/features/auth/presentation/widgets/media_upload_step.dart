@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -10,14 +9,16 @@ import '../../../../core/locale/l10n_extension.dart';
 
 /// Step: Media Upload — Logo / Profile Photo for authority roles
 class MediaUploadStep extends StatefulWidget {
-  final File? selectedImage;
+  final Uint8List? selectedImageBytes;
+  final String? selectedImageName;
   final String? uploadedImageUrl;
   final bool isUploading;
-  final ValueChanged<File?> onImageSelected;
+  final void Function(Uint8List? bytes, String? name) onImageSelected;
 
   const MediaUploadStep({
     super.key,
-    this.selectedImage,
+    this.selectedImageBytes,
+    this.selectedImageName,
     this.uploadedImageUrl,
     this.isUploading = false,
     required this.onImageSelected,
@@ -66,7 +67,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
         setState(() {
           _imageBytes = bytes;
         });
-        widget.onImageSelected(File(pickedFile.path));
+        widget.onImageSelected(bytes, pickedFile.name);
       }
     } catch (_) {
       // Handle permission errors silently
@@ -117,7 +118,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                   _pickImage(ImageSource.gallery);
                 },
               ),
-              if (widget.selectedImage != null) ...[
+              if (widget.selectedImageBytes != null) ...[
                 const SizedBox(height: 12),
                 _buildPickerOption(
                   icon: Icons.delete_outline_rounded,
@@ -125,7 +126,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                   isDestructive: true,
                   onTap: () {
                     Navigator.pop(ctx);
-                    widget.onImageSelected(null);
+                    widget.onImageSelected(null, null);
                   },
                 ),
               ],
@@ -185,7 +186,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = widget.selectedImage != null;
+    final hasImage = widget.selectedImageBytes != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,14 +273,7 @@ class _MediaUploadStepState extends State<MediaUploadStep>
                                     height: 180,
                                     fit: BoxFit.cover,
                                   )
-                                : (kIsWeb
-                                    ? const Icon(Icons.image, size: 60, color: Colors.white30)
-                                    : Image.file(
-                                        widget.selectedImage!,
-                                        width: 180,
-                                        height: 180,
-                                        fit: BoxFit.cover,
-                                      )),
+                                : const Icon(Icons.image, size: 60, color: Colors.white30),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,

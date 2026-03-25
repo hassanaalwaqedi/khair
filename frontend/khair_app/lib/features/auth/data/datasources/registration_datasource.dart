@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 
@@ -114,13 +114,12 @@ class RegistrationRemoteDataSource {
     return response.data['data'] as Map<String, dynamic>;
   }
 
-  /// Upload profile image
-  Future<String> uploadImage(File imageFile) async {
-    final fileName = imageFile.path.split('/').last;
+  /// Upload profile image using bytes (web-compatible)
+  Future<String> uploadImageBytes(Uint8List bytes, String filename) async {
     final formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(
-        imageFile.path,
-        filename: fileName,
+      'image': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
       ),
     });
 
