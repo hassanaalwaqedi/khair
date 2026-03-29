@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -16,12 +17,14 @@ const queryTimeout = 5 * time.Second
 
 // Notification represents a user notification
 type Notification struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message"`
-	IsRead    bool      `json:"is_read"`
-	CreatedAt time.Time `json:"created_at"`
+	ID               uuid.UUID         `json:"id"`
+	UserID           uuid.UUID         `json:"user_id"`
+	Title            string            `json:"title"`
+	Message          string            `json:"message"`
+	NotificationType string            `json:"notification_type"`
+	Data             map[string]string `json:"data"`
+	IsRead           bool              `json:"is_read"`
+	CreatedAt        time.Time         `json:"created_at"`
 }
 
 // Service handles notification business logic
@@ -36,12 +39,22 @@ func NewService(db *sql.DB) *Service {
 
 // Create inserts a new notification for a user
 func (s *Service) Create(userID uuid.UUID, title, message string) error {
+	return s.CreateTyped(userID, title, message, "general", nil)
+}
+
+// CreateTyped inserts a notification with type and data for deep linking
+func (s *Service) CreateTyped(userID uuid.UUID, title, message, notifType string, data map[string]string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
 	defer cancel()
 
+	dataJSON, _ := json.Marshal(data)
+	if data == nil {
+		dataJSON = []byte("{}")
+	}
+
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO notifications (user_id, title, message) VALUES ($1, $2, $3)`,
-		userID, title, message,
+		`INSERT INTO notifications (user_id, title, message, notification_type, data) VALUES ($1, $2, $3, $4, $5)`,
+		userID, title, message, notifType, dataJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("create notification: %w", err)
@@ -72,7 +85,7 @@ func (s *Service) ListByUserID(userID uuid.UUID) ([]Notification, error) {
 	defer cancel()
 
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, user_id, title, message, is_read, created_at
+		`SELECT id, user_id, title, message, notification_type, data, is_read, created_at
 		 FROM notifications WHERE user_id = $1
 		 ORDER BY created_at DESC LIMIT 50`,
 		userID,
@@ -85,8 +98,15 @@ func (s *Service) ListByUserID(userID uuid.UUID) ([]Notification, error) {
 	var notifications []Notification
 	for rows.Next() {
 		var n Notification
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Message, &n.IsRead, &n.CreatedAt); err != nil {
+		var dataJSON []byte
+		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Message, &n.NotificationType, &dataJSON, &n.IsRead, &n.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan notification: %w", err)
+		}
+		if len(dataJSON) > 0 {
+			_ = json.Unmarshal(dataJSON, &n.Data)
+		}
+		if n.Data == nil {
+			n.Data = map[string]string{}
 		}
 		notifications = append(notifications, n)
 	}

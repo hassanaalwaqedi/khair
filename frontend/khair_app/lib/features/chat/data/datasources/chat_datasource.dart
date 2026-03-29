@@ -45,6 +45,13 @@ class ChatDatasource {
 
   // ── Conversations ──
 
+  Future<Map<String, dynamic>> createOrGetConversation(String sheikhId) async {
+    final res = await _api.post('/conversations', data: {
+      'sheikh_id': sheikhId,
+    });
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
   Future<List<Conversation>> getConversations() async {
     final res = await _api.get('/conversations');
     final list = (res.data['data'] as List?) ?? [];

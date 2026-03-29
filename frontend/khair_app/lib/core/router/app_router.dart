@@ -39,6 +39,9 @@ import '../../features/chat/presentation/pages/conversations_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
 import '../../features/sheikh_dashboard/presentation/pages/sheikh_dashboard_page.dart';
+import '../../features/booking/presentation/bloc/booking_bloc.dart';
+import '../../features/booking/presentation/pages/booking_page.dart';
+import '../../features/booking/presentation/pages/availability_editor_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -274,6 +277,26 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<SheikhDashboardBloc>(),
         child: const SheikhDashboardPage(),
+      ),
+    ),
+    // Booking: Student books a lesson with a sheikh
+    GoRoute(
+      path: '/sheikhs/:id/book',
+      builder: (context, state) {
+        final sheikhId = state.pathParameters['id']!;
+        final sheikhName = state.uri.queryParameters['name'] ?? 'Sheikh';
+        return BlocProvider(
+          create: (_) => getIt<BookingBloc>(),
+          child: BookingPage(sheikhId: sheikhId, sheikhName: sheikhName),
+        );
+      },
+    ),
+    // Sheikh: Availability & Schedule editor
+    GoRoute(
+      path: '/sheikh/availability',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<BookingBloc>(),
+        child: const AvailabilityEditorPage(),
       ),
     ),
   ],

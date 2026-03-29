@@ -108,6 +108,7 @@ class CreateEventFormData extends Equatable {
   final String? coverImageUrl;
   final int capacity;
   final double price;
+  final String currency;
   final DateTime? registrationDeadline;
   final bool autoApproval;
 
@@ -140,6 +141,7 @@ class CreateEventFormData extends Equatable {
     this.coverImageUrl,
     this.capacity = 100,
     this.price = 0,
+    this.currency = 'USD',
     this.registrationDeadline,
     this.autoApproval = false,
     this.finalConfirmed = false,
@@ -171,6 +173,7 @@ class CreateEventFormData extends Equatable {
     String? coverImageUrl,
     int? capacity,
     double? price,
+    String? currency,
     DateTime? registrationDeadline,
     bool? autoApproval,
     bool? finalConfirmed,
@@ -201,6 +204,7 @@ class CreateEventFormData extends Equatable {
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       capacity: capacity ?? this.capacity,
       price: price ?? this.price,
+      currency: currency ?? this.currency,
       registrationDeadline: registrationDeadline ?? this.registrationDeadline,
       autoApproval: autoApproval ?? this.autoApproval,
       finalConfirmed: finalConfirmed ?? this.finalConfirmed,
@@ -225,7 +229,7 @@ class CreateEventFormData extends Equatable {
         startDate, startTime, endDate, endTime, ageMin, ageMax,
         countryCode, countryName, city, address, latitude, longitude,
         onlinePlatform, onlineLink, onlinePassword,
-        compliance, coverImageUrl, capacity, price,
+        compliance, coverImageUrl, capacity, price, currency,
         registrationDeadline, autoApproval, finalConfirmed,
       ];
 }

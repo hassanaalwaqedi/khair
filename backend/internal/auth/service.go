@@ -224,6 +224,16 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 	// Clear failed attempt counter on successful login
 	s.clearLoginAttempts(req.Email)
 
+	// Check account status — block deleted, suspended, banned users
+	switch user.Status {
+	case "deleted":
+		return nil, errors.New("this account has been deleted")
+	case "suspended":
+		return nil, errors.New("your account has been suspended, please contact support")
+	case "banned":
+		return nil, errors.New("your account has been banned")
+	}
+
 	// Check if email is verified
 	if !user.IsVerified {
 		return nil, errors.New("email not verified, please check your inbox for the verification code")

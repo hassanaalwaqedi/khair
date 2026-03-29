@@ -139,6 +139,8 @@ type Event struct {
 	GenderRestriction *string    `json:"gender_restriction,omitempty"`
 	AgeMin            *int       `json:"age_min,omitempty"`
 	AgeMax            *int       `json:"age_max,omitempty"`
+	TicketPrice       *float64   `json:"ticket_price,omitempty"`
+	Currency          *string    `json:"currency,omitempty"`
 	Status                       string     `json:"status"`
 	IsPublished                  bool       `json:"is_published"`
 	IsOnline                     bool       `json:"is_online"`

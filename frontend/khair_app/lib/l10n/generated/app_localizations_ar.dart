@@ -1184,10 +1184,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventUploading => 'جاري الرفع...';
 
   @override
-  String get createEventUploadPlaceholder => 'انقر لرفع صورة الغلاف';
+  String get createEventUploadPlaceholder => 'اضغط لرفع صورة الغلاف';
 
   @override
-  String get createEventUploadLimits => 'JPG, PNG • الحد الأقصى 5 ميغابايت';
+  String get createEventUploadLimits => 'JPG, PNG • حد أقصى 5 ميغابايت';
 
   @override
   String get createEventMaxAttendees => 'الحد الأقصى للحضور';
@@ -1205,13 +1205,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventSelectDeadline => 'اختر الموعد النهائي';
 
   @override
-  String get createEventAutoApproval => 'موافقة تلقائية';
+  String get createEventAutoApproval => 'الموافقة التلقائية';
 
   @override
-  String get createEventAutoApprovalDesc => 'الموافقة التلقائية على المسجلين';
+  String get createEventAutoApprovalDesc => 'الموافقة التلقائية على التسجيلات';
 
   @override
-  String get createEventReviewSubmit => 'المراجعة والتقديم';
+  String get createEventReviewSubmit => 'مراجعة وإرسال';
 
   @override
   String get createEventEventSummary => 'ملخص الفعالية';
@@ -1227,20 +1227,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get createEventTrustImpactDesc =>
-      'الاستضافة الناجحة لهذه الفعالية ستزيد من نقاط الثقة الخاصة بك. الفعاليات المخالفة قد تقللها.';
+      'استضافة هذه الفعالية بنجاح سيزيد من درجة ثقتك. الفعاليات المُبلَّغ عنها قد تقللها.';
 
   @override
   String get createEventFinalConfirm =>
-      'أؤكد أن جميع المعلومات دقيقة. وأتفهم أن الفعاليات تخضع للمراجعة قبل النشر.';
+      'أؤكد أن جميع المعلومات صحيحة. أفهم أن الفعاليات تُراجع قبل النشر.';
 
   @override
-  String get createEventRiskLow => 'خطر منخفض — يُرجح الموافقة التلقائية';
+  String get createEventRiskLow =>
+      'مخاطر منخفضة — من المحتمل الموافقة التلقائية';
 
   @override
-  String get createEventRiskMedium => 'خطر متوسط — يتطلب مراجعة يدوية';
+  String get createEventRiskMedium => 'مخاطر متوسطة — مراجعة يدوية مطلوبة';
 
   @override
-  String get createEventRiskHigh => 'خطر مرتفع — يتطلب مراجعة إضافية';
+  String get createEventRiskHigh => 'مخاطر عالية — مراجعة إضافية مطلوبة';
 
   @override
   String get createEventReviewConfirmed => 'مؤكد';
@@ -2261,4 +2262,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountError => 'فشل في حذف الحساب. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get createEventSelectCurrency => 'اختر العملة';
+
+  @override
+  String get eventDetailsPaymentInfo => 'معلومات الدفع';
+
+  @override
+  String get eventDetailsTicketPrice => 'سعر التذكرة';
+
+  @override
+  String get eventDetailsPayAtLocation =>
+      'يتم الدفع في موقع الفعالية نقداً. يرجى إحضار المبلغ المحدد.';
+
+  @override
+  String get eventDetailsFree => 'فعالية مجانية';
 }

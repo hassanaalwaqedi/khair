@@ -22,6 +22,8 @@ abstract class AdminRemoteDataSource {
   Future<void> verifyUser(String userId);
   Future<int> sendNotification({required String title, required String message, required String target, String? userId});
   Future<List<Map<String, dynamic>>> searchUsersForNotification(String query);
+  Future<List<VerificationRequest>> getPendingVerifications();
+  Future<void> reviewVerification(String id, String status, {String? reviewNotes});
 }
 
 /// Implementation of admin remote data source
@@ -204,5 +206,20 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     final response = await _apiClient.get('/admin/users/search', queryParameters: {'q': query});
     final List<dynamic> list = response.data['data'] ?? [];
     return list.map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  @override
+  Future<List<VerificationRequest>> getPendingVerifications() async {
+    final response = await _apiClient.get('/admin/verification/pending');
+    final List<dynamic> list = response.data['data'] ?? [];
+    return list.map((json) => VerificationRequest.fromJson(json)).toList();
+  }
+
+  @override
+  Future<void> reviewVerification(String id, String status, {String? reviewNotes}) async {
+    await _apiClient.post('/admin/verification/$id/review', data: {
+      'status': status,
+      if (reviewNotes != null) 'review_notes': reviewNotes,
+    });
   }
 }

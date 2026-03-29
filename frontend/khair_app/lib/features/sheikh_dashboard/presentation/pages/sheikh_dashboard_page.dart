@@ -22,7 +22,7 @@ class _SheikhDashboardPageState extends State<SheikhDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     context.read<SheikhDashboardBloc>().add(const LoadLessonRequests());
   }
 
@@ -49,11 +49,12 @@ class _SheikhDashboardPageState extends State<SheikhDashboardPage>
           unselectedLabelColor:
               isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary,
           indicatorColor: KhairColors.primary,
-          isScrollable: false,
+          isScrollable: true,
           labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           tabs: const [
             Tab(icon: Icon(Icons.dashboard_rounded, size: 20), text: 'Overview'),
             Tab(icon: Icon(Icons.school_rounded, size: 20), text: 'Requests'),
+            Tab(icon: Icon(Icons.calendar_month_rounded, size: 20), text: 'Schedule'),
             Tab(icon: Icon(Icons.people_rounded, size: 20), text: 'Students'),
             Tab(icon: Icon(Icons.chat_rounded, size: 20), text: 'Messages'),
           ],
@@ -99,6 +100,7 @@ class _SheikhDashboardPageState extends State<SheikhDashboardPage>
             children: [
               _buildOverviewTab(state, isDark),
               _buildRequestsTab(state, isDark),
+              _buildScheduleTab(isDark),
               _buildStudentsTab(state, isDark),
               _buildMessagesTab(isDark),
             ],
@@ -490,6 +492,102 @@ class _SheikhDashboardPageState extends State<SheikhDashboardPage>
     context
         .read<SheikhDashboardBloc>()
         .add(RespondToRequest(requestId: id, status: status));
+  }
+
+  // ─── Schedule Tab ──────────────────────────────────
+
+  Widget _buildScheduleTab(bool isDark) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Availability Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  KhairColors.primary.withAlpha(30),
+                  KhairColors.primary.withAlpha(10),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KhairColors.primary.withAlpha(50)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.calendar_month_rounded, color: KhairColors.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Availability & Schedule',
+                      style: KhairTypography.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Set your weekly schedule, slot duration, prayer time blocking, and meeting preferences.',
+                  style: KhairTypography.bodyMedium.copyWith(
+                    color: isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push('/sheikh/availability'),
+                    icon: const Icon(Icons.edit_calendar_rounded, size: 20),
+                    label: const Text('Manage Availability',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KhairColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Upcoming Bookings
+          Row(
+            children: [
+              Icon(Icons.upcoming_rounded, size: 20,
+                  color: isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary),
+              const SizedBox(width: 8),
+              Text(
+                'Upcoming Bookings',
+                style: KhairTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildEmptyState(
+            icon: Icons.event_available_rounded,
+            title: 'No Bookings Yet',
+            subtitle: 'Once students book lessons, they will appear here.',
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildEmptyState({

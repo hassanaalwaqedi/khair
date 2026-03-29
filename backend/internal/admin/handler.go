@@ -50,6 +50,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 
 		// User management (admin-only)
 		admin.GET("/users", h.ListUsers)
+		admin.GET("/users/:id", h.GetUserDetail)
 		admin.PUT("/users/:id/role", h.UpdateUserRole)
 		admin.PUT("/users/:id/status", h.UpdateUserStatus)
 		admin.PUT("/users/:id/suspend", h.SuspendUser)
@@ -398,7 +399,7 @@ func (h *Handler) UpdateUserStatus(c *gin.Context) {
 	response.SuccessWithMessage(c, "User status updated to "+req.Status, nil)
 }
 
-// DeleteUser removes a user account
+// DeleteUser soft-deletes a user account (sets status to 'deleted')
 func (h *Handler) DeleteUser(c *gin.Context) {
 	targetID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -406,12 +407,12 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	_, err = h.db.Exec(`DELETE FROM users WHERE id = $1`, targetID)
+	_, err = h.db.Exec(`UPDATE users SET status = 'deleted', updated_at = NOW() WHERE id = $1`, targetID)
 	if err != nil {
 		response.InternalServerError(c, "Failed to delete user")
 		return
 	}
-	response.SuccessWithMessage(c, "User deleted", nil)
+	response.SuccessWithMessage(c, "User deleted successfully", nil)
 }
 
 // VerifyUser sets a user's is_verified flag to true
@@ -428,6 +429,22 @@ func (h *Handler) VerifyUser(c *gin.Context) {
 		return
 	}
 	response.SuccessWithMessage(c, "User verified successfully", nil)
+}
+
+// GetUserDetail returns full user profile + verification data
+func (h *Handler) GetUserDetail(c *gin.Context) {
+	targetID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	user, err := h.service.GetUserDetail(targetID)
+	if err != nil {
+		response.NotFound(c, "User not found")
+		return
+	}
+	response.Success(c, user)
 }
 
 // ── Stats ──

@@ -34,6 +34,8 @@ class CreateEventParams {
   final DateTime startDate;
   final DateTime? endDate;
   final String? imageUrl;
+  final double? ticketPrice;
+  final String? currency;
 
   const CreateEventParams({
     required this.title,
@@ -48,6 +50,8 @@ class CreateEventParams {
     required this.startDate,
     this.endDate,
     this.imageUrl,
+    this.ticketPrice,
+    this.currency,
   });
 
   Map<String, dynamic> toJson() {
@@ -64,6 +68,8 @@ class CreateEventParams {
       'start_date': startDate.toUtc().toIso8601String(),
       'end_date': endDate?.toUtc().toIso8601String(),
       'image_url': imageUrl,
+      'ticket_price': ticketPrice,
+      'currency': currency,
     };
   }
 }
@@ -81,6 +87,8 @@ class UpdateEventParams {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? imageUrl;
+  final double? ticketPrice;
+  final String? currency;
 
   const UpdateEventParams({
     this.title,
@@ -95,6 +103,8 @@ class UpdateEventParams {
     this.startDate,
     this.endDate,
     this.imageUrl,
+    this.ticketPrice,
+    this.currency,
   });
 
   Map<String, dynamic> toJson() {
@@ -111,6 +121,8 @@ class UpdateEventParams {
     if (startDate != null) json['start_date'] = startDate!.toUtc().toIso8601String();
     if (endDate != null) json['end_date'] = endDate!.toUtc().toIso8601String();
     if (imageUrl != null) json['image_url'] = imageUrl;
+    if (ticketPrice != null) json['ticket_price'] = ticketPrice;
+    if (currency != null) json['currency'] = currency;
     return json;
   }
 }

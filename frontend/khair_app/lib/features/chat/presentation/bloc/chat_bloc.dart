@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/services/websocket_service.dart';
 import '../../data/datasources/chat_datasource.dart';
 import '../../domain/entities/lesson_request.dart';
 import '../../domain/entities/conversation.dart';
@@ -80,6 +81,22 @@ class MarkMessagesAsRead extends ChatEvent {
   List<Object?> get props => [conversationId];
 }
 
+/// Event fired when a WebSocket message arrives for the active conversation
+class _WsMessageReceived extends ChatEvent {
+  final ChatMessage message;
+  const _WsMessageReceived(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+/// Event to create or get a conversation with a sheikh (for "Message" button)
+class CreateOrGetConversation extends ChatEvent {
+  final String sheikhId;
+  const CreateOrGetConversation(this.sheikhId);
+  @override
+  List<Object?> get props => [sheikhId];
+}
+
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
@@ -95,6 +112,7 @@ class ChatState extends Equatable {
   final List<LessonRequest> lessonRequests;
   final String? activeConversationId;
   final String? errorMessage;
+  final String? createdConversationId;
 
   const ChatState({
     this.conversationsStatus = ChatStatus.initial,
@@ -105,6 +123,7 @@ class ChatState extends Equatable {
     this.lessonRequests = const [],
     this.activeConversationId,
     this.errorMessage,
+    this.createdConversationId,
   });
 
   ChatState copyWith({
@@ -116,6 +135,7 @@ class ChatState extends Equatable {
     List<LessonRequest>? lessonRequests,
     String? activeConversationId,
     String? errorMessage,
+    String? createdConversationId,
   }) {
     return ChatState(
       conversationsStatus: conversationsStatus ?? this.conversationsStatus,
@@ -126,6 +146,7 @@ class ChatState extends Equatable {
       lessonRequests: lessonRequests ?? this.lessonRequests,
       activeConversationId: activeConversationId ?? this.activeConversationId,
       errorMessage: errorMessage,
+      createdConversationId: createdConversationId,
     );
   }
 
@@ -133,7 +154,7 @@ class ChatState extends Equatable {
   List<Object?> get props => [
         conversationsStatus, messagesStatus, requestsStatus,
         conversations, messages, lessonRequests,
-        activeConversationId, errorMessage,
+        activeConversationId, errorMessage, createdConversationId,
       ];
 }
 
@@ -144,6 +165,7 @@ class ChatState extends Equatable {
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatDatasource _datasource;
   Timer? _pollTimer;
+  StreamSubscription? _wsSubscription;
 
   ChatBloc(this._datasource) : super(const ChatState()) {
     on<LoadConversations>(_onLoadConversations);
@@ -155,6 +177,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LoadSheikhLessonRequests>(_onLoadSheikhRequests);
     on<RespondToLessonRequest>(_onRespondToRequest);
     on<MarkMessagesAsRead>(_onMarkAsRead);
+    on<_WsMessageReceived>(_onWsMessageReceived);
+    on<CreateOrGetConversation>(_onCreateOrGetConversation);
+
+    // Listen to WebSocket messages
+    _wsSubscription = WebSocketService.instance.messages.listen((msg) {
+      final type = msg['type'] as String?;
+      if (type == 'chat_message') {
+        final data = msg['data'] as Map<String, dynamic>?;
+        if (data != null) {
+          try {
+            final chatMsg = ChatMessage.fromJson(data);
+            add(_WsMessageReceived(chatMsg));
+          } catch (_) {}
+        }
+      }
+    });
   }
 
   Future<void> _onLoadConversations(LoadConversations event, Emitter<ChatState> emit) async {
@@ -172,7 +210,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       final msgs = await _datasource.getMessages(event.conversationId);
       emit(state.copyWith(messagesStatus: ChatStatus.success, messages: msgs));
-      // Start polling
+      // Start polling as WS fallback (web or unstable connections)
       _startPolling(event.conversationId);
       // Mark as read
       add(MarkMessagesAsRead(event.conversationId));
@@ -184,9 +222,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     try {
       final msg = await _datasource.sendMessage(event.conversationId, event.message);
-      emit(state.copyWith(messages: [...state.messages, msg]));
+      // Only add if not already present (WS might have delivered it first)
+      final exists = state.messages.any((m) => m.id == msg.id);
+      if (!exists) {
+        emit(state.copyWith(messages: [...state.messages, msg]));
+      }
     } catch (e) {
       emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> _onWsMessageReceived(_WsMessageReceived event, Emitter<ChatState> emit) async {
+    final msg = event.message;
+    // Only append if it's for the active conversation
+    if (state.activeConversationId == msg.conversationId) {
+      final exists = state.messages.any((m) => m.id == msg.id);
+      if (!exists) {
+        emit(state.copyWith(messages: [...state.messages, msg]));
+      }
     }
   }
 
@@ -251,9 +304,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+  Future<void> _onCreateOrGetConversation(CreateOrGetConversation event, Emitter<ChatState> emit) async {
+    emit(state.copyWith(conversationsStatus: ChatStatus.loading));
+    try {
+      final convData = await _datasource.createOrGetConversation(event.sheikhId);
+      final convId = convData['id'] as String;
+      emit(state.copyWith(
+        conversationsStatus: ChatStatus.success,
+        createdConversationId: convId,
+      ));
+    } catch (e) {
+      emit(state.copyWith(conversationsStatus: ChatStatus.failure, errorMessage: e.toString()));
+    }
+  }
+
   void _startPolling(String conversationId) {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    // Poll every 5 seconds as fallback (WS handles real-time)
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       add(PollMessages(conversationId));
     });
   }
@@ -266,6 +334,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   @override
   Future<void> close() {
     _pollTimer?.cancel();
+    _wsSubscription?.cancel();
     return super.close();
   }
 }

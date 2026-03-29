@@ -2,6 +2,7 @@ package verification
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/pkg/response"
 )
 
@@ -24,12 +27,14 @@ func NewRepository(db *sql.DB) *Repository {
 
 // Handler handles verification HTTP requests
 type Handler struct {
-	repo *Repository
+	repo     *Repository
+	notifSvc *notification.Service
+	pushSvc  *push.Service
 }
 
 // NewHandler creates a new verification handler
-func NewHandler(repo *Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repository, notifSvc *notification.Service, pushSvc *push.Service) *Handler {
+	return &Handler{repo: repo, notifSvc: notifSvc, pushSvc: pushSvc}
 }
 
 // RegisterRoutes registers verification routes
@@ -46,6 +51,8 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMw gin.HandlerFunc, ad
 	adminVerify.Use(authMw, adminMw)
 	{
 		adminVerify.GET("/pending", h.ListPending)
+		adminVerify.GET("/all", h.ListAll)
+		adminVerify.GET("/:id", h.GetRequest)
 		adminVerify.POST("/:id/review", h.Review)
 	}
 }
@@ -197,6 +204,10 @@ func (h *Handler) Review(c *gin.Context) {
 	switch req.Status {
 	case "approved":
 		userStatus = models.VerificationVerified
+		// Also set user.is_verified = true
+		h.repo.db.Exec(`UPDATE users SET is_verified = true, verified_at = NOW(), updated_at = NOW() WHERE id = $1`, vr.UserID)
+		// Update sheikh verification_status if applicable
+		h.repo.db.Exec(`UPDATE sheikhs SET verification_status = 'verified', updated_at = NOW() WHERE user_id = $1`, vr.UserID)
 	case "rejected":
 		userStatus = models.VerificationRejected
 	case "more_info_needed":
@@ -204,18 +215,108 @@ func (h *Handler) Review(c *gin.Context) {
 	}
 	h.repo.UpdateUserVerificationStatus(vr.UserID, userStatus)
 
+	// Send notification to user
+	h.sendReviewNotification(vr.UserID, req.Status, req.ReviewNotes)
+
 	response.Success(c, vr)
 }
 
-// ListPending returns all pending verification requests (admin only)
+// sendReviewNotification sends in-app + push notification based on review status
+func (h *Handler) sendReviewNotification(userID uuid.UUID, status, notes string) {
+	var title, message string
+	switch status {
+	case "approved":
+		title = "✅ Account Verified"
+		message = "Your account has been verified! You can now start teaching and creating events."
+	case "rejected":
+		title = "❌ Verification Rejected"
+		message = "Your verification request was rejected."
+		if notes != "" {
+			message += " Reason: " + notes
+		}
+	case "more_info_needed":
+		title = "⚠️ Additional Info Required"
+		message = "Please update your verification documents."
+		if notes != "" {
+			message += " Note: " + notes
+		}
+	}
+
+	// In-app notification
+	if h.notifSvc != nil {
+		if err := h.notifSvc.Create(userID, title, message); err != nil {
+			log.Printf("[VERIFICATION] Failed to create notification: %v", err)
+		}
+	}
+
+	// Push notification
+	if h.pushSvc != nil {
+		h.pushSvc.SendToUser(userID, title, message, map[string]string{
+			"type":   "verification_review",
+			"status": status,
+		})
+	}
+}
+
+// ListPending returns all pending verification requests with user info (admin only)
 // GET /api/v1/admin/verification/pending
 func (h *Handler) ListPending(c *gin.Context) {
-	requests, err := h.repo.ListByStatus(models.VerificationPendingReview)
+	requests, err := h.repo.ListByStatusWithUser(models.VerificationPendingReview)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to load requests")
 		return
 	}
 	response.Success(c, requests)
+}
+
+// ListAll returns all verification requests with user info (admin only)
+// GET /api/v1/admin/verification/all
+func (h *Handler) ListAll(c *gin.Context) {
+	requests, err := h.repo.ListAllWithUser()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to load requests")
+		return
+	}
+	response.Success(c, requests)
+}
+
+// GetRequest returns a single verification request with full user details
+// GET /api/v1/admin/verification/:id
+func (h *Handler) GetRequest(c *gin.Context) {
+	requestID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request ID")
+		return
+	}
+
+	vr, err := h.repo.GetByIDWithUser(requestID)
+	if err != nil {
+		response.NotFound(c, "Verification request not found")
+		return
+	}
+
+	response.Success(c, vr)
+}
+
+// ── Enriched Response Models ──
+
+// VerificationWithUser is a verification request with joined user info
+type VerificationWithUser struct {
+	ID               uuid.UUID  `json:"id"`
+	UserID           uuid.UUID  `json:"user_id"`
+	UserName         string     `json:"user_name"`
+	UserEmail        string     `json:"user_email"`
+	UserRole         string     `json:"user_role"`
+	ProfileImagePath *string    `json:"profile_image_path,omitempty"`
+	DocumentPath     *string    `json:"document_path,omitempty"`
+	DocumentType     string     `json:"document_type"`
+	Notes            *string    `json:"notes,omitempty"`
+	Status           string     `json:"status"`
+	ReviewedBy       *uuid.UUID `json:"reviewed_by,omitempty"`
+	ReviewedAt       *time.Time `json:"reviewed_at,omitempty"`
+	ReviewNotes      *string    `json:"review_notes,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 // ─── Repository Methods ───
@@ -267,6 +368,25 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.VerificationRequest, error) 
 	return &vr, nil
 }
 
+// GetByIDWithUser returns a verification request with joined user info
+func (r *Repository) GetByIDWithUser(id uuid.UUID) (*VerificationWithUser, error) {
+	var vr VerificationWithUser
+	err := r.db.QueryRow(`
+		SELECT vr.id, vr.user_id, COALESCE(u.display_name, u.email), u.email, u.role,
+			   vr.profile_image_path, vr.document_path, vr.document_type, vr.notes,
+			   vr.status, vr.reviewed_by, vr.reviewed_at, vr.review_notes, vr.created_at, vr.updated_at
+		FROM verification_requests vr
+		JOIN users u ON u.id = vr.user_id
+		WHERE vr.id = $1
+	`, id).Scan(&vr.ID, &vr.UserID, &vr.UserName, &vr.UserEmail, &vr.UserRole,
+		&vr.ProfileImagePath, &vr.DocumentPath, &vr.DocumentType, &vr.Notes,
+		&vr.Status, &vr.ReviewedBy, &vr.ReviewedAt, &vr.ReviewNotes, &vr.CreatedAt, &vr.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &vr, nil
+}
+
 // Update updates a verification request
 func (r *Repository) Update(vr *models.VerificationRequest) error {
 	_, err := r.db.Exec(`
@@ -300,6 +420,69 @@ func (r *Repository) ListByStatus(status string) ([]models.VerificationRequest, 
 			return nil, err
 		}
 		requests = append(requests, vr)
+	}
+	return requests, rows.Err()
+}
+
+// ListByStatusWithUser returns verification requests with joined user info
+func (r *Repository) ListByStatusWithUser(status string) ([]VerificationWithUser, error) {
+	rows, err := r.db.Query(`
+		SELECT vr.id, vr.user_id, COALESCE(u.display_name, u.email), u.email, u.role,
+			   vr.profile_image_path, vr.document_path, vr.document_type, vr.notes,
+			   vr.status, vr.reviewed_by, vr.reviewed_at, vr.review_notes, vr.created_at, vr.updated_at
+		FROM verification_requests vr
+		JOIN users u ON u.id = vr.user_id
+		WHERE vr.status = $1
+		ORDER BY vr.created_at ASC
+	`, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var requests []VerificationWithUser
+	for rows.Next() {
+		var vr VerificationWithUser
+		if err := rows.Scan(&vr.ID, &vr.UserID, &vr.UserName, &vr.UserEmail, &vr.UserRole,
+			&vr.ProfileImagePath, &vr.DocumentPath, &vr.DocumentType, &vr.Notes,
+			&vr.Status, &vr.ReviewedBy, &vr.ReviewedAt, &vr.ReviewNotes, &vr.CreatedAt, &vr.UpdatedAt); err != nil {
+			return nil, err
+		}
+		requests = append(requests, vr)
+	}
+	if requests == nil {
+		requests = []VerificationWithUser{}
+	}
+	return requests, rows.Err()
+}
+
+// ListAllWithUser returns all verification requests with user info
+func (r *Repository) ListAllWithUser() ([]VerificationWithUser, error) {
+	rows, err := r.db.Query(`
+		SELECT vr.id, vr.user_id, COALESCE(u.display_name, u.email), u.email, u.role,
+			   vr.profile_image_path, vr.document_path, vr.document_type, vr.notes,
+			   vr.status, vr.reviewed_by, vr.reviewed_at, vr.review_notes, vr.created_at, vr.updated_at
+		FROM verification_requests vr
+		JOIN users u ON u.id = vr.user_id
+		ORDER BY vr.created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var requests []VerificationWithUser
+	for rows.Next() {
+		var vr VerificationWithUser
+		if err := rows.Scan(&vr.ID, &vr.UserID, &vr.UserName, &vr.UserEmail, &vr.UserRole,
+			&vr.ProfileImagePath, &vr.DocumentPath, &vr.DocumentType, &vr.Notes,
+			&vr.Status, &vr.ReviewedBy, &vr.ReviewedAt, &vr.ReviewNotes, &vr.CreatedAt, &vr.UpdatedAt); err != nil {
+			return nil, err
+		}
+		requests = append(requests, vr)
+	}
+	if requests == nil {
+		requests = []VerificationWithUser{}
 	}
 	return requests, rows.Err()
 }

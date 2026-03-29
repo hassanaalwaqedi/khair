@@ -25,11 +25,40 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	protected := r.Group("")
 	protected.Use(authMiddleware)
 	{
+		protected.POST("/conversations", h.CreateOrGetConversation)
 		protected.GET("/conversations", h.GetConversations)
 		protected.GET("/conversations/:id/messages", h.GetMessages)
 		protected.POST("/conversations/:id/messages", h.SendMessage)
 		protected.POST("/conversations/:id/read", h.MarkAsRead)
 	}
+}
+
+// CreateConversationBody is the request body for creating a conversation
+type CreateConversationBody struct {
+	SheikhID string `json:"sheikh_id" binding:"required"`
+}
+
+// CreateOrGetConversation handles POST /conversations
+func (h *Handler) CreateOrGetConversation(c *gin.Context) {
+	var body CreateConversationBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.BadRequest(c, "sheikh_id is required")
+		return
+	}
+
+	sheikhID, err := uuid.Parse(body.SheikhID)
+	if err != nil {
+		response.BadRequest(c, "Invalid sheikh ID")
+		return
+	}
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+	conv, err := h.service.GetOrCreateConversation(userID, sheikhID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to create conversation")
+		return
+	}
+	response.Success(c, conv)
 }
 
 // GetConversations handles GET /conversations

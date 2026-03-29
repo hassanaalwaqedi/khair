@@ -6,6 +6,8 @@ class AppNotification extends Equatable {
   final String userId;
   final String title;
   final String message;
+  final String notificationType;
+  final Map<String, dynamic> data;
   final bool isRead;
   final DateTime createdAt;
 
@@ -14,6 +16,8 @@ class AppNotification extends Equatable {
     required this.userId,
     required this.title,
     required this.message,
+    this.notificationType = 'general',
+    this.data = const {},
     required this.isRead,
     required this.createdAt,
   });
@@ -24,6 +28,8 @@ class AppNotification extends Equatable {
       userId: json['user_id'],
       title: json['title'],
       message: json['message'],
+      notificationType: json['notification_type'] ?? 'general',
+      data: (json['data'] as Map<String, dynamic>?) ?? {},
       isRead: json['is_read'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
     );
@@ -40,6 +46,26 @@ class AppNotification extends Equatable {
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
   }
 
+  /// Route path for deep-linking on notification tap
+  String? get routePath {
+    switch (notificationType) {
+      case 'chat_message':
+        final convId = data['conversation_id'];
+        if (convId != null) return '/conversations/$convId';
+        return '/conversations';
+      case 'lesson_request':
+        return '/sheikh-dashboard';
+      case 'lesson_response':
+        return '/conversations';
+      case 'lesson_scheduled':
+        final convId = data['conversation_id'];
+        if (convId != null) return '/conversations/$convId';
+        return '/conversations';
+      default:
+        return null;
+    }
+  }
+
   @override
-  List<Object?> get props => [id, userId, title, message, isRead, createdAt];
+  List<Object?> get props => [id, userId, title, message, notificationType, data, isRead, createdAt];
 }

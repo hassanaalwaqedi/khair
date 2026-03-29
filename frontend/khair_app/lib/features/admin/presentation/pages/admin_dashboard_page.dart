@@ -28,7 +28,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
     // Load stats and users on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminBloc>().add(const LoadStats());
@@ -124,6 +124,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             Tab(text: context.l10n.adminAuditLogsTab),
             Tab(text: context.l10n.adminQuotesTab),
             Tab(text: context.l10n.adminUsersTab),
+            BlocBuilder<AdminBloc, AdminState>(
+              buildWhen: (prev, curr) =>
+                  prev.pendingVerificationCount != curr.pendingVerificationCount,
+              builder: (context, state) => Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.verified_user, size: 18),
+                    const SizedBox(width: 4),
+                    const Text('Verification'),
+                    if (state.pendingVerificationCount > 0) ...[
+                      const SizedBox(width: 6),
+                      _BadgeCount(count: state.pendingVerificationCount),
+                    ],
+                  ],
+                ),
+              ),
+            ),
             const Tab(icon: Icon(Icons.notifications_active), text: 'Notifications'),
           ],
         ),
@@ -176,6 +194,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   _buildAuditLogsTab(isDark),
                   _QuotesTab(isDark: isDark),
                   _UsersTab(isDark: isDark),
+                  _VerificationsTab(isDark: isDark),
                   _NotificationsTab(isDark: isDark),
                 ],
               ),
@@ -2127,6 +2146,533 @@ class _NotificationsTabState extends State<_NotificationsTab> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Verification Requests Tab ──
+
+class _VerificationsTab extends StatefulWidget {
+  final bool isDark;
+  const _VerificationsTab({required this.isDark});
+
+  @override
+  State<_VerificationsTab> createState() => _VerificationsTabState();
+}
+
+class _VerificationsTabState extends State<_VerificationsTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminBloc>().add(const LoadVerifications());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AdminBloc, AdminState>(
+      buildWhen: (prev, curr) =>
+          prev.verificationsStatus != curr.verificationsStatus ||
+          prev.verificationRequests != curr.verificationRequests,
+      builder: (context, state) {
+        if (state.verificationsStatus == AdminStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final requests = state.verificationRequests;
+
+        if (requests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.verified, size: 64, color: KhairColors.textTertiary),
+                const SizedBox(height: 16),
+                Text(
+                  'No Pending Verification Requests',
+                  style: KhairTypography.headlineSmall.copyWith(
+                    color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'All verification requests have been reviewed',
+                  style: KhairTypography.bodyMedium.copyWith(color: KhairColors.textTertiary),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => context.read<AdminBloc>().add(const LoadVerifications()),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<AdminBloc>().add(const LoadVerifications());
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: requests.length,
+            itemBuilder: (context, index) {
+              final req = requests[index];
+              return _VerificationCard(
+                request: req,
+                isDark: widget.isDark,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _VerificationCard extends StatelessWidget {
+  final VerificationRequest request;
+  final bool isDark;
+
+  const _VerificationCard({required this.request, required this.isDark});
+
+  Color _statusColor() {
+    switch (request.status) {
+      case 'approved':
+        return KhairColors.success;
+      case 'rejected':
+        return KhairColors.error;
+      case 'more_info_needed':
+        return Colors.orange;
+      default:
+        return Colors.amber;
+    }
+  }
+
+  String _statusLabel() {
+    switch (request.status) {
+      case 'approved':
+        return '✅ Approved';
+      case 'rejected':
+        return '❌ Rejected';
+      case 'more_info_needed':
+        return '⚠️ Needs Info';
+      default:
+        return '🟡 Pending';
+    }
+  }
+
+  String _roleLabel() {
+    switch (request.userRole) {
+      case 'sheikh':
+        return '🕌 Sheikh';
+      case 'organizer':
+        return '📋 Organizer';
+      case 'admin':
+        return '👑 Admin';
+      default:
+        return '👤 User';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormatter = DateFormat('MMM d, yyyy • hh:mm a');
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: User info + status
+            Row(
+              children: [
+                // User avatar
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: KhairColors.primary.withOpacity(0.15),
+                  backgroundImage: request.profileImagePath != null
+                      ? NetworkImage(request.profileImagePath!)
+                      : null,
+                  child: request.profileImagePath == null
+                      ? Icon(Icons.person, color: KhairColors.primary, size: 28)
+                      : null,
+                ),
+                const SizedBox(width: 14),
+                // Name & email
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.userName,
+                        style: KhairTypography.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        request.userEmail,
+                        style: KhairTypography.bodySmall.copyWith(color: KhairColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _statusColor().withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _statusColor().withOpacity(0.4)),
+                  ),
+                  child: Text(
+                    _statusLabel(),
+                    style: KhairTypography.labelSmall.copyWith(
+                      color: _statusColor(),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+
+            // Info row: role + doc type + date
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _InfoChip(icon: Icons.badge, label: _roleLabel()),
+                _InfoChip(icon: Icons.description, label: 'Doc: ${request.documentType}'),
+                _InfoChip(icon: Icons.calendar_today, label: dateFormatter.format(request.createdAt)),
+              ],
+            ),
+
+            // Notes from user (if any)
+            if (request.notes != null && request.notes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('User Notes:', style: KhairTypography.labelSmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: KhairColors.textTertiary,
+                    )),
+                    const SizedBox(height: 4),
+                    Text(request.notes!, style: KhairTypography.bodySmall),
+                  ],
+                ),
+              ),
+            ],
+
+            // Document view buttons
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (request.documentPath != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _viewDocument(context, request.documentPath!, 'Certificate'),
+                      icon: const Icon(Icons.file_present, size: 18),
+                      label: const Text('View Certificate'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                if (request.documentPath != null && request.profileImagePath != null)
+                  const SizedBox(width: 12),
+                if (request.profileImagePath != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _viewDocument(context, request.profileImagePath!, 'Photo'),
+                      icon: const Icon(Icons.photo, size: 18),
+                      label: const Text('View Photo'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Action buttons (only for pending)
+            if (request.isPending) ...[
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  // Approve
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _confirmAction(
+                        context,
+                        'Approve Verification',
+                        'Are you sure you want to verify ${request.userName}?',
+                        () => context.read<AdminBloc>().add(
+                          ReviewVerificationEvent(request.id, 'approved'),
+                        ),
+                      ),
+                      icon: const Icon(Icons.check_circle, size: 18),
+                      label: const Text('Approve'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KhairColors.success,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Reject
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showReasonDialog(
+                        context,
+                        'Reject Verification',
+                        'Provide a reason for rejection:',
+                        'rejected',
+                      ),
+                      icon: const Icon(Icons.cancel, size: 18),
+                      label: const Text('Reject'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KhairColors.error,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Request Changes
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showReasonDialog(
+                        context,
+                        'Request Changes',
+                        'What changes are needed?',
+                        'more_info_needed',
+                      ),
+                      icon: const Icon(Icons.edit_note, size: 18),
+                      label: const Text('Changes'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: const BorderSide(color: Colors.orange),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // Review notes (for already reviewed)
+            if (request.reviewNotes != null && request.reviewNotes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _statusColor().withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _statusColor().withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Admin Review Notes:', style: KhairTypography.labelSmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: _statusColor(),
+                    )),
+                    const SizedBox(height: 4),
+                    Text(request.reviewNotes!, style: KhairTypography.bodySmall),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _viewDocument(BuildContext context, String url, String title) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text(title, style: KhairTypography.headlineSmall.copyWith(fontWeight: FontWeight.w700)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400, maxWidth: 500),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) => const SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text('Failed to load image'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmAction(BuildContext context, String title, String message, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onConfirm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhairColors.success,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReasonDialog(BuildContext context, String title, String hint, String status) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: hint,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final notes = controller.text.trim();
+              if (notes.isEmpty && status == 'rejected') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a reason'), backgroundColor: Colors.orange),
+                );
+                return;
+              }
+              Navigator.pop(ctx);
+              context.read<AdminBloc>().add(
+                ReviewVerificationEvent(request.id, status, reviewNotes: notes.isNotEmpty ? notes : null),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: status == 'rejected' ? KhairColors.error : Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(status == 'rejected' ? 'Reject' : 'Send'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: KhairColors.textTertiary),
+        const SizedBox(width: 4),
+        Text(label, style: KhairTypography.labelSmall.copyWith(color: KhairColors.textTertiary)),
+      ],
     );
   }
 }

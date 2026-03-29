@@ -229,6 +229,71 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           : _inPersonActionCard(event, isDark, cardBg, bdr, tp, ts, tt),
                     ),
 
+                    // ═══ PAYMENT INFO ═══
+                    if (event.ticketPrice != null && event.ticketPrice! > 0) ...[
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _sectionCard(isDark, cardBg, bdr, child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _sectionHeader(Icons.payments_rounded, context.l10n.eventDetailsPaymentInfo, tp),
+                            const SizedBox(height: 14),
+                            // Price display
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: KhairColors.primarySurface,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(children: [
+                                Container(
+                                  width: 44, height: 44,
+                                  decoration: BoxDecoration(
+                                    color: KhairColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.attach_money_rounded,
+                                      color: KhairColors.primary, size: 24),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(context.l10n.eventDetailsTicketPrice,
+                                        style: TextStyle(color: tt, fontSize: 11, fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${event.ticketPrice!.toStringAsFixed(event.ticketPrice! % 1 == 0 ? 0 : 2)} ${event.currency ?? 'USD'}',
+                                      style: TextStyle(color: tp, fontSize: 22, fontWeight: FontWeight.w700),
+                                    ),
+                                  ],
+                                )),
+                              ]),
+                            ),
+                            const SizedBox(height: 12),
+                            // Pay at location note
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.amber.withValues(alpha: 0.1) : const Color(0xFFFFF8E1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(children: [
+                                Icon(Icons.info_outline_rounded, color: Colors.amber[700], size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(child: Text(
+                                  context.l10n.eventDetailsPayAtLocation,
+                                  style: TextStyle(color: Colors.amber[800], fontSize: 13, height: 1.4),
+                                )),
+                              ]),
+                            ),
+                          ],
+                        )),
+                      ),
+                    ],
+
                     // ═══ 4. ABOUT ═══
                     if (event.description != null && event.description!.isNotEmpty) ...[
                       const SizedBox(height: 20),

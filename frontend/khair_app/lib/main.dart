@@ -8,7 +8,9 @@ import 'core/crash/crash_reporter.dart';
 import 'core/di/injection.dart';
 import 'core/locale/locale_bloc.dart';
 import 'core/network/connectivity_service.dart';
+import 'core/push/local_notification_service.dart';
 import 'core/router/app_router.dart';
+import 'core/services/websocket_service.dart';
 import 'core/theme/app_theme_builder.dart';
 import 'core/theme/theme_bloc.dart';
 import 'core/widgets/offline_indicator.dart';
@@ -35,8 +37,17 @@ void main() {
 
       // Push notifications only on mobile (uses dart:io + Firebase which aren't configured for web)
       if (!kIsWeb) {
+        // Init local notifications with deep-link routing
+        await LocalNotificationService.instance.init();
+        LocalNotificationService.instance.setOnNotificationTap((route) {
+          appRouter.go(route);
+        });
+
         await PushNotificationService.instance.initialize();
       }
+
+      // Connect WebSocket for real-time updates
+      WebSocketService.instance.connect();
 
       runApp(const KhairApp());
     },

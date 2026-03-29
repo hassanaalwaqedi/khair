@@ -31,6 +31,8 @@ class Event extends Equatable {
   final bool isLinkUnlocked;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double? ticketPrice;
+  final String? currency;
 
   const Event({
     required this.id,
@@ -63,6 +65,8 @@ class Event extends Equatable {
     this.isLinkUnlocked = false,
     required this.createdAt,
     required this.updatedAt,
+    this.ticketPrice,
+    this.currency,
   });
 
   @override
@@ -97,6 +101,8 @@ class Event extends Equatable {
         isLinkUnlocked,
         createdAt,
         updatedAt,
+        ticketPrice,
+        currency,
       ];
 }
 

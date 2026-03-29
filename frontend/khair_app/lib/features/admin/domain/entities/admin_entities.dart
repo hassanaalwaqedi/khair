@@ -144,3 +144,68 @@ class AdminUser extends Equatable {
   @override
   List<Object?> get props => [id, name, email, role, status, isVerified, createdAt];
 }
+
+/// Verification request entity for admin review
+class VerificationRequest extends Equatable {
+  final String id;
+  final String userId;
+  final String userName;
+  final String userEmail;
+  final String userRole;
+  final String? profileImagePath;
+  final String? documentPath;
+  final String documentType;
+  final String? notes;
+  final String status;
+  final String? reviewedBy;
+  final DateTime? reviewedAt;
+  final String? reviewNotes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const VerificationRequest({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    required this.userEmail,
+    required this.userRole,
+    this.profileImagePath,
+    this.documentPath,
+    required this.documentType,
+    this.notes,
+    required this.status,
+    this.reviewedBy,
+    this.reviewedAt,
+    this.reviewNotes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory VerificationRequest.fromJson(Map<String, dynamic> json) {
+    return VerificationRequest(
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? '',
+      userName: json['user_name'] ?? '',
+      userEmail: json['user_email'] ?? '',
+      userRole: json['user_role'] ?? '',
+      profileImagePath: json['profile_image_path'],
+      documentPath: json['document_path'],
+      documentType: json['document_type'] ?? 'general',
+      notes: json['notes'],
+      status: json['status'] ?? 'pending_review',
+      reviewedBy: json['reviewed_by'],
+      reviewedAt: json['reviewed_at'] != null ? DateTime.parse(json['reviewed_at']) : null,
+      reviewNotes: json['review_notes'],
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
+  bool get isPending => status == 'pending_review';
+  bool get isApproved => status == 'approved';
+  bool get isRejected => status == 'rejected';
+  bool get needsMoreInfo => status == 'more_info_needed';
+
+  @override
+  List<Object?> get props => [id, userId, status, createdAt];
+}

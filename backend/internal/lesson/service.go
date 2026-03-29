@@ -129,7 +129,9 @@ func (s *Service) notifyNewRequest(req *LessonRequest) {
 	body := fmt.Sprintf("A student has requested a lesson: %s", truncate(req.Message, 80))
 
 	if s.notifSvc != nil {
-		_ = s.notifSvc.Create(sheikhUserID, title, body)
+		_ = s.notifSvc.CreateTyped(sheikhUserID, title, body, "lesson_request", map[string]string{
+			"request_id": req.ID.String(),
+		})
 	}
 	if s.pushSvc != nil {
 		s.pushSvc.SendToUser(sheikhUserID, title, body, map[string]string{
@@ -150,7 +152,10 @@ func (s *Service) notifyResponse(req *LessonRequest) {
 	}
 
 	if s.notifSvc != nil {
-		_ = s.notifSvc.Create(req.StudentID, title, body)
+		_ = s.notifSvc.CreateTyped(req.StudentID, title, body, "lesson_response", map[string]string{
+			"request_id": req.ID.String(),
+			"status":     req.Status,
+		})
 	}
 	if s.pushSvc != nil {
 		s.pushSvc.SendToUser(req.StudentID, title, body, map[string]string{
@@ -185,7 +190,9 @@ func (s *Service) ScheduleLesson(userID, reqID uuid.UUID, meetingLink, meetingPl
 	title := "Lesson Scheduled! 📅"
 	body := fmt.Sprintf("Your lesson has been scheduled via %s", meetingPlatform)
 	if s.notifSvc != nil {
-		_ = s.notifSvc.Create(req.StudentID, title, body)
+		_ = s.notifSvc.CreateTyped(req.StudentID, title, body, "lesson_scheduled", map[string]string{
+			"request_id": reqID.String(),
+		})
 	}
 	if s.pushSvc != nil {
 		s.pushSvc.SendToUser(req.StudentID, title, body, map[string]string{

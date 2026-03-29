@@ -49,6 +49,8 @@ import '../../features/chat/data/datasources/chat_datasource.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
 import '../../features/sheikh_dashboard/data/sheikh_dashboard_datasource.dart';
 import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
+import '../../features/booking/data/booking_datasource.dart';
+import '../../features/booking/presentation/bloc/booking_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -229,5 +231,13 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<SheikhDashboardBloc>(
     () => SheikhDashboardBloc(getIt<SheikhDashboardDatasource>()),
+  );
+
+  // Booking Calendar Feature
+  getIt.registerLazySingleton<BookingDatasource>(
+    () => BookingDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<BookingBloc>(
+    () => BookingBloc(getIt<BookingDatasource>()),
   );
 }

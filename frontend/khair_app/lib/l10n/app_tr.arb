@@ -714,6 +714,7 @@
   "navMap": "Harita",
   "navDashboard": "Panel",
   "navProfile": "Profil",
+  "navChat": "Sohbet",
   "catTrending": "Popüler",
   "catNearYou": "Yakınında",
   "catGlobal": "Küresel",
@@ -875,5 +876,11 @@
   "deleteAccountWarning": "Bu işlem kalıcıdır. Tüm verileriniz, etkinlikleriniz ve aktiviteleriniz silinecektir. Bu geri alınamaz.",
   "deleteAccountConfirm": "Hesabımı Sil",
   "deleteAccountSuccess": "Hesabınız silindi.",
-  "deleteAccountError": "Hesap silinemedi. Lütfen tekrar deneyin."
+  "deleteAccountError": "Hesap silinemedi. Lütfen tekrar deneyin.",
+
+  "createEventSelectCurrency": "Para Birimi Seçin",
+  "eventDetailsPaymentInfo": "Ödeme Bilgisi",
+  "eventDetailsTicketPrice": "BİLET FİYATI",
+  "eventDetailsPayAtLocation": "Ödeme etkinlik yerinde nakit olarak yapılır. Lütfen tam tutarı getirin.",
+  "eventDetailsFree": "Ücretsiz Etkinlik"
 }

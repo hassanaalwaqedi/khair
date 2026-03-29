@@ -237,6 +237,30 @@ class AdminRepositoryImpl implements AdminRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, List<VerificationRequest>>> getPendingVerifications() async {
+    try {
+      final requests = await _remoteDataSource.getPendingVerifications();
+      return Right(requests);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> reviewVerification(String id, String status, {String? reviewNotes}) async {
+    try {
+      await _remoteDataSource.reviewVerification(id, status, reviewNotes: reviewNotes);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   String _getErrorMessage(DioException e) {
     if (e.response?.data != null && e.response!.data is Map) {
       return e.response!.data['error'] ?? 'An error occurred';

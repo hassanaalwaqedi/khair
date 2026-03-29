@@ -32,6 +32,8 @@ class EventModel extends Event {
     super.isLinkUnlocked,
     required super.createdAt,
     required super.updatedAt,
+    super.ticketPrice,
+    super.currency,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +71,8 @@ class EventModel extends Event {
       isLinkUnlocked: json['is_link_unlocked'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      ticketPrice: (json['ticket_price'] as num?)?.toDouble(),
+      currency: json['currency'] as String?,
     );
   }
 
@@ -104,6 +108,8 @@ class EventModel extends Event {
       'is_link_unlocked': isLinkUnlocked,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'ticket_price': ticketPrice,
+      'currency': currency,
     };
   }
 }

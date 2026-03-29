@@ -408,15 +408,17 @@ class SheikhProfilePage extends StatelessWidget {
   Widget _buildCTAButtons(BuildContext context) {
     return Column(
       children: [
-        // Primary: Request Lesson
+        // Primary: Book Lesson (Calendar)
         SizedBox(
           width: double.infinity,
           height: 52,
           child: ElevatedButton.icon(
-            onPressed: () => _showRequestLessonModal(context),
-            icon: const Icon(Icons.school_rounded, size: 20),
+            onPressed: () => context.push(
+              '/sheikhs/${sheikh.id}/book?name=${Uri.encodeComponent(sheikh.name)}',
+            ),
+            icon: const Icon(Icons.calendar_month_rounded, size: 20),
             label: Text(
-              context.l10n.sheikhRequestLesson,
+              '📅 ${context.l10n.sheikhRequestLesson}',
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
             ),
             style: ElevatedButton.styleFrom(
@@ -429,13 +431,13 @@ class SheikhProfilePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        // Secondary: Contact
+        // Secondary: Quick Request (old modal)
         SizedBox(
           width: double.infinity,
           height: 48,
           child: OutlinedButton.icon(
-            onPressed: () => _showContactInfo(context),
-            icon: Icon(Icons.mail_outline_rounded,
+            onPressed: () => _showRequestLessonModal(context),
+            icon: Icon(Icons.school_rounded,
                 size: 18, color: AppColors.primaryLight),
             label: Text(
               context.l10n.sheikhContact,

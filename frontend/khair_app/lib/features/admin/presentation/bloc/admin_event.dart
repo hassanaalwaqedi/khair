@@ -162,3 +162,20 @@ class SearchUsersForNotification extends AdminEvent {
   @override
   List<Object?> get props => [query];
 }
+
+/// Load pending verification requests
+class LoadVerifications extends AdminEvent {
+  const LoadVerifications();
+}
+
+/// Review a verification request (approve/reject/request changes)
+class ReviewVerificationEvent extends AdminEvent {
+  final String requestId;
+  final String status; // approved, rejected, more_info_needed
+  final String? reviewNotes;
+
+  const ReviewVerificationEvent(this.requestId, this.status, {this.reviewNotes});
+
+  @override
+  List<Object?> get props => [requestId, status, reviewNotes];
+}

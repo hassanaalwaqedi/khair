@@ -70,6 +70,8 @@ type CreateEventRequest struct {
 	OnlineLink                   *string  `json:"online_link"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
+	TicketPrice                  *float64 `json:"ticket_price"`
+	Currency                     *string  `json:"currency"`
 }
 
 // UpdateEventRequest represents a request to update an event
@@ -90,6 +92,8 @@ type UpdateEventRequest struct {
 	OnlineLink                   *string  `json:"online_link"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
+	TicketPrice                  *float64 `json:"ticket_price"`
+	Currency                     *string  `json:"currency"`
 }
 
 // Create creates a new event
@@ -175,6 +179,8 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		OnlineLink:                   req.OnlineLink,
 		JoinInstructions:             req.JoinInstructions,
 		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
+		TicketPrice:                  req.TicketPrice,
+		Currency:                     req.Currency,
 		Status:                       "pending",
 		CreatedAt:                    time.Now(),
 		UpdatedAt:                    time.Now(),
@@ -307,6 +313,12 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	}
 	if req.JoinLinkVisibleBeforeMinutes != nil {
 		event.JoinLinkVisibleBeforeMinutes = *req.JoinLinkVisibleBeforeMinutes
+	}
+	if req.TicketPrice != nil {
+		event.TicketPrice = req.TicketPrice
+	}
+	if req.Currency != nil {
+		event.Currency = req.Currency
 	}
 
 	if err := s.repo.Update(event); err != nil {

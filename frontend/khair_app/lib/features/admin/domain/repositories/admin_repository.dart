@@ -71,6 +71,12 @@ abstract class AdminRepository {
 
   /// Search users for notification user picker
   Future<Either<Failure, List<Map<String, dynamic>>>> searchUsersForNotification(String query);
+
+  /// Get pending verification requests
+  Future<Either<Failure, List<VerificationRequest>>> getPendingVerifications();
+
+  /// Review a verification request (approve/reject/more_info_needed)
+  Future<Either<Failure, void>> reviewVerification(String id, String status, {String? reviewNotes});
 }
 
 /// Parameters for status update

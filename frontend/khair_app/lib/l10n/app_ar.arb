@@ -821,7 +821,39 @@
   "deleteAccountWarning": "هذا الإجراء نهائي. سيتم حذف جميع بياناتك وفعالياتك ونشاطك. لا يمكن التراجع عن هذا.",
   "deleteAccountConfirm": "حذف حسابي",
   "deleteAccountSuccess": "تم حذف حسابك.",
-  "deleteAccountError": "فشل في حذف الحساب. يرجى المحاولة مرة أخرى."
+  "deleteAccountError": "فشل في حذف الحساب. يرجى المحاولة مرة أخرى.",
+
+  "createEventMediaDetails": "الوسائط والتفاصيل",
+  "createEventUploading": "جاري الرفع...",
+  "createEventUploadPlaceholder": "اضغط لرفع صورة الغلاف",
+  "createEventUploadLimits": "JPG, PNG • حد أقصى 5 ميغابايت",
+  "createEventMaxAttendees": "الحد الأقصى للحضور",
+  "createEventTicketPrice": "سعر التذكرة",
+  "createEventTicketPriceHint": "0 = مجاني",
+  "createEventSelectCurrency": "اختر العملة",
+  "createEventRegistrationDeadline": "آخر موعد للتسجيل",
+  "createEventSelectDeadline": "اختر الموعد النهائي",
+  "createEventAutoApproval": "الموافقة التلقائية",
+  "createEventAutoApprovalDesc": "الموافقة التلقائية على التسجيلات",
+  "createEventReviewSubmit": "مراجعة وإرسال",
+  "createEventEventSummary": "ملخص الفعالية",
+  "createEventReviewCompliance": "الامتثال",
+  "createEventReviewRiskAssessment": "تقييم المخاطر",
+  "createEventReviewTrustImpact": "تأثير الثقة",
+  "createEventTrustImpactDesc": "استضافة هذه الفعالية بنجاح سيزيد من درجة ثقتك. الفعاليات المُبلَّغ عنها قد تقللها.",
+  "createEventFinalConfirm": "أؤكد أن جميع المعلومات صحيحة. أفهم أن الفعاليات تُراجع قبل النشر.",
+  "createEventRiskLow": "مخاطر منخفضة — من المحتمل الموافقة التلقائية",
+  "createEventRiskMedium": "مخاطر متوسطة — مراجعة يدوية مطلوبة",
+  "createEventRiskHigh": "مخاطر عالية — مراجعة إضافية مطلوبة",
+  "createEventReviewConfirmed": "مؤكد",
+  "createEventReviewIncluded": "مشمول",
+  "createEventReviewYes": "نعم",
+  "createEventReviewNo": "لا",
+
+  "eventDetailsPaymentInfo": "معلومات الدفع",
+  "eventDetailsTicketPrice": "سعر التذكرة",
+  "eventDetailsPayAtLocation": "يتم الدفع في موقع الفعالية نقداً. يرجى إحضار المبلغ المحدد.",
+  "eventDetailsFree": "فعالية مجانية"
 }
 
 

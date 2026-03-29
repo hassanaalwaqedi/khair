@@ -31,6 +31,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<VerifyUserEvent>(_onVerifyUser);
     on<SendAdminNotification>(_onSendNotification);
     on<SearchUsersForNotification>(_onSearchUsers);
+    on<LoadVerifications>(_onLoadVerifications);
+    on<ReviewVerificationEvent>(_onReviewVerification);
   }
 
   Future<void> _onLoadData(
@@ -44,15 +46,18 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       _adminRepository.getPendingOrganizers(),
       _adminRepository.getPendingEvents(),
       _adminRepository.getPendingReports(),
+      _adminRepository.getPendingVerifications(),
     ]);
 
     final organizersResult = results[0];
     final eventsResult = results[1];
     final reportsResult = results[2];
+    final verificationsResult = results[3];
 
     List<Organizer> organizers = [];
     List<Event> events = [];
     List<Report> reports = [];
+    List<VerificationRequest> verifications = [];
     String? error;
 
     organizersResult.fold(
@@ -70,6 +75,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       (data) => reports = data as List<Report>,
     );
 
+    verificationsResult.fold(
+      (failure) => error ??= failure.message,
+      (data) => verifications = data as List<VerificationRequest>,
+    );
+
     if (error != null) {
       emit(state.copyWith(
         status: AdminStatus.failure,
@@ -81,6 +91,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         pendingOrganizers: organizers,
         pendingEvents: events,
         pendingReports: reports,
+        verificationRequests: verifications,
       ));
     }
   }
@@ -445,6 +456,55 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     result.fold(
       (failure) => emit(state.copyWith(searchedUsers: const [])),
       (users) => emit(state.copyWith(searchedUsers: users)),
+    );
+  }
+
+  Future<void> _onLoadVerifications(
+    LoadVerifications event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(verificationsStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.getPendingVerifications();
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        verificationsStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (requests) => emit(state.copyWith(
+        verificationsStatus: AdminStatus.success,
+        verificationRequests: requests,
+      )),
+    );
+  }
+
+  Future<void> _onReviewVerification(
+    ReviewVerificationEvent event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.reviewVerification(
+      event.requestId,
+      event.status,
+      reviewNotes: event.reviewNotes,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        final updated = state.verificationRequests
+            .where((r) => r.id != event.requestId)
+            .toList();
+        emit(state.copyWith(
+          actionStatus: AdminStatus.success,
+          verificationRequests: updated,
+        ));
+      },
     );
   }
 }

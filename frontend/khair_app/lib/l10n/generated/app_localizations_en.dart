@@ -1259,7 +1259,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createEventRiskMedium => 'Medium Risk — Manual review required';
 
   @override
-  String get createEventRiskHigh => 'High Risk — Additional review needed';
+  String get createEventRiskHigh => 'High Risk — Additional review required';
 
   @override
   String get createEventReviewConfirmed => 'Confirmed';
@@ -2298,4 +2298,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Failed to delete account. Please try again.';
+
+  @override
+  String get createEventSelectCurrency => 'Select Currency';
+
+  @override
+  String get eventDetailsPaymentInfo => 'Payment Information';
+
+  @override
+  String get eventDetailsTicketPrice => 'TICKET PRICE';
+
+  @override
+  String get eventDetailsPayAtLocation =>
+      'Payment is collected at the event location in cash. Please bring the exact amount.';
+
+  @override
+  String get eventDetailsFree => 'Free Event';
 }

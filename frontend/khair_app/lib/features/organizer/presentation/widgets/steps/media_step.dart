@@ -181,6 +181,60 @@ class _MediaStepState extends State<MediaStep> {
                       ),
                     ],
                   ),
+                  if (fd.price > 0) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Text(context.l10n.createEventSelectCurrency,
+                        style: AppTypography.label),
+                    const SizedBox(height: AppSpacing.xs),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        'USD', 'EUR', 'TRY', 'SAR', 'AED', 'EGP',
+                        'QAR', 'KWD', 'GBP', 'MYR', 'IDR', 'PKR',
+                      ].map((code) {
+                        final isSelected = fd.currency == code;
+                        final symbols = {
+                          'USD': '\$', 'EUR': '€', 'TRY': '₺',
+                          'SAR': '﷼', 'AED': 'د.إ', 'EGP': 'E£',
+                          'QAR': 'ر.ق', 'KWD': 'د.ك', 'GBP': '£',
+                          'MYR': 'RM', 'IDR': 'Rp', 'PKR': '₨',
+                        };
+                        return GestureDetector(
+                          onTap: () => cubit.updateFormData(
+                              fd.copyWith(currency: code)),
+                          child: AnimatedContainer(
+                            duration: AppAnimations.fast,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : AppColors.whiteAlpha(0.04),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.goldAccent.withValues(alpha: 0.5)
+                                    : AppColors.whiteAlpha(0.08),
+                              ),
+                            ),
+                            child: Text(
+                              '${symbols[code] ?? code} $code',
+                              style: TextStyle(
+                                color: isSelected
+                                    ? AppColors.goldAccent
+                                    : AppColors.whiteAlpha(0.6),
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
 
                   // Registration deadline

@@ -375,3 +375,73 @@ func (s *Service) SearchUsers(query string) ([]AdminUserBasic, error) {
 	}
 	return users, nil
 }
+
+// AdminUserDetail is a full user record for admin viewing
+type AdminUserDetail struct {
+	ID                 string  `json:"id"`
+	Email              string  `json:"email"`
+	DisplayName        *string `json:"display_name"`
+	Role               string  `json:"role"`
+	Status             string  `json:"status"`
+	IsVerified         bool    `json:"is_verified"`
+	VerificationStatus *string `json:"verification_status"`
+	Gender             *string `json:"gender"`
+	Age                *int    `json:"age"`
+	Bio                *string `json:"bio"`
+	Location           *string `json:"location"`
+	City               *string `json:"city"`
+	Country            *string `json:"country"`
+	AvatarURL          *string `json:"avatar_url"`
+	CreatedAt          string  `json:"created_at"`
+	// Verification request info (if any)
+	VerificationRequestID  *string `json:"verification_request_id,omitempty"`
+	VerificationDocURL     *string `json:"verification_document_url,omitempty"`
+	VerificationPhotoURL   *string `json:"verification_photo_url,omitempty"`
+	VerificationDocType    *string `json:"verification_document_type,omitempty"`
+	VerificationNotes      *string `json:"verification_notes,omitempty"`
+	VerificationReviewNotes *string `json:"verification_review_notes,omitempty"`
+	VerificationSubmittedAt *string `json:"verification_submitted_at,omitempty"`
+}
+
+// GetUserDetail returns full user details including profile and verification info
+func (s *Service) GetUserDetail(userID uuid.UUID) (*AdminUserDetail, error) {
+	var u AdminUserDetail
+	err := s.db.QueryRow(`
+		SELECT u.id, u.email, u.display_name, u.role, u.status, u.is_verified,
+		       u.verification_status, u.gender, u.age,
+		       p.bio, p.location, p.city, p.country, p.avatar_url,
+		       u.created_at
+		FROM users u
+		LEFT JOIN profiles p ON p.user_id = u.id
+		WHERE u.id = $1
+	`, userID).Scan(
+		&u.ID, &u.Email, &u.DisplayName, &u.Role, &u.Status, &u.IsVerified,
+		&u.VerificationStatus, &u.Gender, &u.Age,
+		&u.Bio, &u.Location, &u.City, &u.Country, &u.AvatarURL,
+		&u.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get user detail: %w", err)
+	}
+
+	// Get latest verification request if any
+	var vrID, docURL, photoURL, docType, notes, reviewNotes, submittedAt sql.NullString
+	err = s.db.QueryRow(`
+		SELECT id, document_path, profile_image_path, document_type, notes, review_notes, created_at
+		FROM verification_requests
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1
+	`, userID).Scan(&vrID, &docURL, &photoURL, &docType, &notes, &reviewNotes, &submittedAt)
+	if err == nil {
+		if vrID.Valid { u.VerificationRequestID = &vrID.String }
+		if docURL.Valid { u.VerificationDocURL = &docURL.String }
+		if photoURL.Valid { u.VerificationPhotoURL = &photoURL.String }
+		if docType.Valid { u.VerificationDocType = &docType.String }
+		if notes.Valid { u.VerificationNotes = &notes.String }
+		if reviewNotes.Valid { u.VerificationReviewNotes = &reviewNotes.String }
+		if submittedAt.Valid { u.VerificationSubmittedAt = &submittedAt.String }
+	}
+
+	return &u, nil
+}

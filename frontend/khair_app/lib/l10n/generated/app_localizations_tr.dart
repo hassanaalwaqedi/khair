@@ -1912,7 +1912,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navMap => 'Harita';
 
   @override
-  String get navChat => 'Chat';
+  String get navChat => 'Sohbet';
 
   @override
   String get navDashboard => 'Panel';
@@ -2311,4 +2311,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deleteAccountError => 'Hesap silinemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get createEventSelectCurrency => 'Para Birimi Seçin';
+
+  @override
+  String get eventDetailsPaymentInfo => 'Ödeme Bilgisi';
+
+  @override
+  String get eventDetailsTicketPrice => 'BİLET FİYATI';
+
+  @override
+  String get eventDetailsPayAtLocation =>
+      'Ödeme etkinlik yerinde nakit olarak yapılır. Lütfen tam tutarı getirin.';
+
+  @override
+  String get eventDetailsFree => 'Ücretsiz Etkinlik';
 }

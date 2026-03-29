@@ -2473,7 +2473,7 @@ abstract class AppLocalizations {
   /// No description provided for @createEventRiskHigh.
   ///
   /// In en, this message translates to:
-  /// **'High Risk — Additional review needed'**
+  /// **'High Risk — Additional review required'**
   String get createEventRiskHigh;
 
   /// No description provided for @createEventReviewConfirmed.
@@ -4419,6 +4419,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to delete account. Please try again.'**
   String get deleteAccountError;
+
+  /// No description provided for @createEventSelectCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Currency'**
+  String get createEventSelectCurrency;
+
+  /// No description provided for @eventDetailsPaymentInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Information'**
+  String get eventDetailsPaymentInfo;
+
+  /// No description provided for @eventDetailsTicketPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'TICKET PRICE'**
+  String get eventDetailsTicketPrice;
+
+  /// No description provided for @eventDetailsPayAtLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment is collected at the event location in cash. Please bring the exact amount.'**
+  String get eventDetailsPayAtLocation;
+
+  /// No description provided for @eventDetailsFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Event'**
+  String get eventDetailsFree;
 }
 
 class _AppLocalizationsDelegate

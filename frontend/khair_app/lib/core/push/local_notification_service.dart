@@ -5,6 +5,12 @@ class LocalNotificationService {
   static final LocalNotificationService instance = LocalNotificationService._();
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  void Function(String route)? _onNotificationTap;
+
+  /// Set a callback to navigate when a notification is tapped.
+  void setOnNotificationTap(void Function(String route) callback) {
+    _onNotificationTap = callback;
+  }
 
   Future<void> init() async {
     const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -16,7 +22,10 @@ class LocalNotificationService {
     await _flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap if needed
+        // Navigate on notification tap
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          _onNotificationTap?.call(response.payload!);
+        }
       },
     );
     // Create high importance channel
@@ -32,7 +41,7 @@ class LocalNotificationService {
         ?.createNotificationChannel(channel);
   }
 
-  Future<void> showNotification({String? title, String? body}) async {
+  Future<void> showNotification({String? title, String? body, String? payload}) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'khair_high',
       'Khair Notifications',
@@ -48,11 +57,11 @@ class LocalNotificationService {
       iOS: iOSPlatformChannelSpecifics,
     );
     await _flutterLocalNotificationsPlugin.show(
-      id: 0,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
       body: body,
       notificationDetails: platformChannelSpecifics,
-      payload: null,
+      payload: payload,
     );
   }
 }

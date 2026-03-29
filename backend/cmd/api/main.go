@@ -18,6 +18,7 @@ import (
 	"github.com/khair/backend/internal/analytics"
 	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
+	"github.com/khair/backend/internal/booking"
 	"github.com/khair/backend/internal/calendar"
 	"github.com/khair/backend/internal/chat"
 	"github.com/khair/backend/internal/countries"
@@ -349,7 +350,7 @@ func main() {
 
 	// Verification API (auth + admin)
 	verificationRepo := verification.NewRepository(db)
-	verificationHandler := verification.NewHandler(verificationRepo)
+	verificationHandler := verification.NewHandler(verificationRepo, notificationService, pushService)
 	verificationHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 
 	// Payment API
@@ -385,12 +386,17 @@ func main() {
 	lessonHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Chat API
-	chatService := chat.NewService(db, notificationService, pushService)
+	chatService := chat.NewService(db, notificationService, pushService, wsHub)
 	chatHandler := chat.NewHandler(chatService)
 	chatHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Connect lesson → chat (auto-create conversation on accept)
 	lessonService.SetChatService(chatService)
+
+	// Booking Calendar API
+	bookingService := booking.NewService(db, notificationService, pushService)
+	bookingHandler := booking.NewHandler(bookingService)
+	bookingHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Spiritual Quotes API (public)
 	quoteRepo := spiritualquote.NewRepository(db)

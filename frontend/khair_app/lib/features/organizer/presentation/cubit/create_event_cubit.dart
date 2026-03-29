@@ -139,6 +139,8 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       startDate: fd.startDateTime,
       endDate: fd.endDateTime,
       imageUrl: fd.coverImageUrl,
+      ticketPrice: fd.price > 0 ? fd.price : null,
+      currency: fd.price > 0 ? fd.currency : null,
     );
 
     final result = await _eventsRepository.createEvent(params);
