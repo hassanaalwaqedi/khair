@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../config/api_config.dart';
 import '../di/injection.dart';
 
 /// Resolves a relative URL (like `/api/v1/files/images/abc.jpg`)
@@ -10,12 +11,12 @@ String resolveMediaUrl(String? url) {
 
   try {
     final dio = getIt<Dio>();
-    final base = dio.options.baseUrl; // e.g. https://khair.it.com/api/v1
+    final base = dio.options.baseUrl;
     final uri = Uri.parse(base);
     final origin =
         '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
     return '$origin$url';
   } catch (_) {
-    return 'https://khair.it.com$url';
+    return '${ApiConfig.serverOrigin}$url';
   }
 }

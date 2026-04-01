@@ -42,6 +42,10 @@ import '../../features/sheikh_dashboard/presentation/pages/sheikh_dashboard_page
 import '../../features/booking/presentation/bloc/booking_bloc.dart';
 import '../../features/booking/presentation/pages/booking_page.dart';
 import '../../features/booking/presentation/pages/availability_editor_page.dart';
+import '../../features/student_dashboard/presentation/bloc/student_dashboard_bloc.dart';
+import '../../features/student_dashboard/presentation/pages/student_dashboard_page.dart';
+import '../../features/sheikh/presentation/pages/sheikh_profile_load_page.dart';
+import '../theme/khair_theme.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -108,6 +112,15 @@ final GoRouter appRouter = GoRouter(
           path: '/conversations',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ConversationsPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/my-learning',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: BlocProvider(
+              create: (_) => getIt<StudentDashboardBloc>(),
+              child: const StudentDashboardPage(),
+            ),
           ),
         ),
       ],
@@ -279,6 +292,15 @@ final GoRouter appRouter = GoRouter(
         child: const SheikhDashboardPage(),
       ),
     ),
+    // Sheikh profile (deep linking: /sheikhs/:id)
+    GoRoute(
+      path: '/sheikhs/:id',
+      builder: (context, state) {
+        final sheikhId = state.pathParameters['id']!;
+        // If the path is /sheikhs/:id/book, let the sub-route handle it
+        return SheikhProfileLoadPage(sheikhId: sheikhId);
+      },
+    ),
     // Booking: Student books a lesson with a sheikh
     GoRoute(
       path: '/sheikhs/:id/book',
@@ -301,22 +323,83 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
   errorBuilder: (context, state) => Scaffold(
+    backgroundColor: const Color(0xFF0D1117),
     body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Page not found',
-            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.go('/'),
-            child: const Text('Go Home'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: KhairColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.explore_off_rounded,
+                size: 48,
+                color: KhairColors.primary.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 28),
+            const Text(
+              'Page Not Found',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'The page you\'re looking for doesn\'t exist\nor has been moved.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 36),
+            SizedBox(
+              width: 200,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => context.go('/'),
+                icon: const Icon(Icons.explore_rounded, size: 20),
+                label: const Text(
+                  'Discover Events',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KhairColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => context.go('/'),
+              child: Text(
+                'Go to Home',
+                style: TextStyle(
+                  color: KhairColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   ),

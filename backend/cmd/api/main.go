@@ -330,6 +330,10 @@ func main() {
 	sharingHandler := sharing.NewHandler(sharingService)
 	sharingHandler.RegisterRoutes(v1)
 
+	// Register root-level routes for OG tag rendering (shared links)
+	// These MUST be before NoRoute so /events/:id and /sheikhs/:id resolve here
+	sharingHandler.RegisterPublicRoutes(router)
+
 	// Growth analytics (admin-only)
 	growthService := growthanalytics.NewService(db)
 	growthHandler := growthanalytics.NewHandler(growthService)

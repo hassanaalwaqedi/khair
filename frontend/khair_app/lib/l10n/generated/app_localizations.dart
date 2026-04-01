@@ -4449,6 +4449,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free Event'**
   String get eventDetailsFree;
+
+  /// No description provided for @myLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'My Learning'**
+  String get myLearning;
+
+  /// No description provided for @myLearningGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Assalamu Alaikum'**
+  String get myLearningGreeting;
+
+  /// No description provided for @myLearningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your learning journey at a glance'**
+  String get myLearningSubtitle;
+
+  /// No description provided for @lessonsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get lessonsCompleted;
+
+  /// No description provided for @upcomingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcomingCount;
+
+  /// No description provided for @pendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pendingCount;
+
+  /// No description provided for @upcomingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcomingTab;
+
+  /// No description provided for @requestsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get requestsTab;
+
+  /// No description provided for @historyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTab;
+
+  /// No description provided for @sheikhsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheikhs'**
+  String get sheikhsTab;
+
+  /// No description provided for @joinLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Lesson'**
+  String get joinLesson;
+
+  /// No description provided for @cancelLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Lesson'**
+  String get cancelLesson;
+
+  /// No description provided for @cancelLessonConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this lesson?'**
+  String get cancelLessonConfirm;
+
+  /// No description provided for @rateSheikh.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Sheikh'**
+  String get rateSheikh;
+
+  /// No description provided for @writeReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your review...'**
+  String get writeReview;
+
+  /// No description provided for @bookAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Again'**
+  String get bookAgain;
+
+  /// No description provided for @sendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get sendMessage;
+
+  /// No description provided for @lessonsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'lessons'**
+  String get lessonsLabel;
+
+  /// No description provided for @noUpcomingLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming lessons'**
+  String get noUpcomingLessons;
+
+  /// No description provided for @noRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No lesson requests yet'**
+  String get noRequests;
+
+  /// No description provided for @noHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No past lessons yet'**
+  String get noHistory;
+
+  /// No description provided for @noSheikhs.
+  ///
+  /// In en, this message translates to:
+  /// **'No sheikhs yet'**
+  String get noSheikhs;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get statusRejected;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get statusAccepted;
+
+  /// No description provided for @statusScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get statusScheduled;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
 }
 
 class _AppLocalizationsDelegate

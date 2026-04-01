@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/config/api_config.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -1057,7 +1058,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   }
 
   Future<void> _shareEvent(BuildContext ctx, Event event) async {
-    const baseUrl = 'https://khair.it.com';
+    final baseUrl = ApiConfig.serverOrigin;
     try {
       final apiClient = getIt<ApiClient>();
       final response = await apiClient.get('/events/${event.id}/share');

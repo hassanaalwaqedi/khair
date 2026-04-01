@@ -63,10 +63,15 @@ type GeminiConfig struct {
 	Enabled   bool
 }
 
-// EmailConfig holds SendGrid email configuration
+// EmailConfig holds email provider configuration.
+// Supports Resend (preferred) and SendGrid (fallback).
 type EmailConfig struct {
+	Provider     string // "resend" or "sendgrid"
+	ResendKey    string
 	SendGridKey  string
 	SendGridFrom string
+	FromEmail    string
+	FromName     string
 }
 
 // Load loads configuration from environment variables
@@ -101,14 +106,11 @@ func Load() *Config {
 		},
 		Gemini: GeminiConfig{
 			APIKey:    getEnv("GEMINI_API_KEY", ""),
-			Model:     getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
+			Model:     getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
 			MaxTokens: getEnvAsInt("GEMINI_MAX_TOKENS", 1024),
 			Enabled:   getEnv("GEMINI_API_KEY", "") != "",
 		},
-		Email: EmailConfig{
-			SendGridKey:  strings.TrimSpace(getEnv("SENDGRID_API_KEY", "")),
-			SendGridFrom: strings.TrimSpace(getEnv("SENDGRID_FROM", "no-reply@khair.it.com")),
-		},
+		Email: buildEmailConfig(),
 	}
 
 	// Validate JWT secret security — refuse to start with a weak secret
@@ -144,4 +146,30 @@ func requireEnv(key string) string {
 		log.Fatalf("FATAL: required environment variable %s is not set", key)
 	}
 	return value
+}
+
+// buildEmailConfig configures the email provider.
+// Priority: RESEND_API_KEY → SENDGRID_API_KEY → disabled.
+func buildEmailConfig() EmailConfig {
+	fromEmail := strings.TrimSpace(getEnv("EMAIL_FROM", getEnv("SENDGRID_FROM", "no-reply@khair.it.com")))
+	fromName := strings.TrimSpace(getEnv("EMAIL_FROM_NAME", "Khair Platform"))
+
+	resendKey := strings.TrimSpace(getEnv("RESEND_API_KEY", ""))
+	if resendKey != "" {
+		return EmailConfig{
+			Provider:  "resend",
+			ResendKey: resendKey,
+			FromEmail: fromEmail,
+			FromName:  fromName,
+		}
+	}
+
+	sgKey := strings.TrimSpace(getEnv("SENDGRID_API_KEY", ""))
+	return EmailConfig{
+		Provider:     "sendgrid",
+		SendGridKey:  sgKey,
+		SendGridFrom: fromEmail,
+		FromEmail:    fromEmail,
+		FromName:     fromName,
+	}
 }

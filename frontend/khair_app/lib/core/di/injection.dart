@@ -51,6 +51,8 @@ import '../../features/sheikh_dashboard/data/sheikh_dashboard_datasource.dart';
 import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
 import '../../features/booking/data/booking_datasource.dart';
 import '../../features/booking/presentation/bloc/booking_bloc.dart';
+import '../../features/student_dashboard/data/student_dashboard_datasource.dart';
+import '../../features/student_dashboard/presentation/bloc/student_dashboard_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -239,5 +241,13 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<BookingBloc>(
     () => BookingBloc(getIt<BookingDatasource>()),
+  );
+
+  // Student Dashboard Feature
+  getIt.registerLazySingleton<StudentDashboardDatasource>(
+    () => StudentDashboardDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<StudentDashboardBloc>(
+    () => StudentDashboardBloc(getIt<StudentDashboardDatasource>()),
   );
 }

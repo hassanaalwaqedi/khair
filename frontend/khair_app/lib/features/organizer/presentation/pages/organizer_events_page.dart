@@ -411,7 +411,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                 try {
                                   final api = getIt<ApiClient>();
                                   await api.post(
-                                    '/api/v1/events/${event.id}/notify-attendees',
+                                    '/events/${event.id}/notify-attendees',
                                     data: {
                                       'message': messageController.text.trim(),
                                       'include_link': includeLink,

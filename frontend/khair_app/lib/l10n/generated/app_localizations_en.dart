@@ -2314,4 +2314,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventDetailsFree => 'Free Event';
+
+  @override
+  String get myLearning => 'My Learning';
+
+  @override
+  String get myLearningGreeting => 'Assalamu Alaikum';
+
+  @override
+  String get myLearningSubtitle => 'Your learning journey at a glance';
+
+  @override
+  String get lessonsCompleted => 'Completed';
+
+  @override
+  String get upcomingCount => 'Upcoming';
+
+  @override
+  String get pendingCount => 'Pending';
+
+  @override
+  String get upcomingTab => 'Upcoming';
+
+  @override
+  String get requestsTab => 'Requests';
+
+  @override
+  String get historyTab => 'History';
+
+  @override
+  String get sheikhsTab => 'Sheikhs';
+
+  @override
+  String get joinLesson => 'Join Lesson';
+
+  @override
+  String get cancelLesson => 'Cancel Lesson';
+
+  @override
+  String get cancelLessonConfirm =>
+      'Are you sure you want to cancel this lesson?';
+
+  @override
+  String get rateSheikh => 'Rate Sheikh';
+
+  @override
+  String get writeReview => 'Write your review...';
+
+  @override
+  String get bookAgain => 'Book Again';
+
+  @override
+  String get sendMessage => 'Message';
+
+  @override
+  String get lessonsLabel => 'lessons';
+
+  @override
+  String get noUpcomingLessons => 'No upcoming lessons';
+
+  @override
+  String get noRequests => 'No lesson requests yet';
+
+  @override
+  String get noHistory => 'No past lessons yet';
+
+  @override
+  String get noSheikhs => 'No sheikhs yet';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusAccepted => 'Accepted';
+
+  @override
+  String get statusScheduled => 'Scheduled';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
 }

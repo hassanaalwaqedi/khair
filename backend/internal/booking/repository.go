@@ -440,3 +440,91 @@ func (r *Repository) GetSheikhIDByUserID(userID uuid.UUID) (uuid.UUID, error) {
 		`SELECT id FROM sheikhs WHERE user_id = $1`, userID).Scan(&sheikhID)
 	return sheikhID, err
 }
+
+// StudentSheikh represents a sheikh the student has interacted with.
+type StudentSheikh struct {
+	SheikhID       uuid.UUID  `json:"sheikh_id"`
+	UserID         uuid.UUID  `json:"user_id"`
+	DisplayName    *string    `json:"display_name"`
+	Email          string     `json:"email"`
+	AvatarURL      *string    `json:"avatar_url"`
+	Specialization *string    `json:"specialization"`
+	LastLessonDate time.Time  `json:"last_lesson_date"`
+	TotalLessons   int        `json:"total_lessons"`
+}
+
+// StudentStats holds aggregated learning statistics for a student.
+type StudentStats struct {
+	LessonsCompleted int `json:"lessons_completed"`
+	UpcomingCount    int `json:"upcoming_count"`
+	PendingRequests  int `json:"pending_requests"`
+	TotalSheikhs     int `json:"total_sheikhs"`
+}
+
+// GetStudentSheikhs returns distinct sheikhs the student has booked lessons with.
+func (r *Repository) GetStudentSheikhs(studentID uuid.UUID) ([]StudentSheikh, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
+	defer cancel()
+
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT s.id, s.user_id, s.display_name, u.email, s.avatar_url, s.specialization,
+			MAX(b.start_time) as last_lesson_date,
+			COUNT(b.id) as total_lessons
+		FROM bookings b
+		JOIN sheikhs s ON s.id = b.sheikh_id
+		JOIN users u ON u.id = s.user_id
+		WHERE b.student_id = $1
+		  AND b.status NOT IN ('cancelled')
+		GROUP BY s.id, s.user_id, s.display_name, u.email, s.avatar_url, s.specialization
+		ORDER BY last_lesson_date DESC`, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sheikhs []StudentSheikh
+	for rows.Next() {
+		var ss StudentSheikh
+		if err := rows.Scan(&ss.SheikhID, &ss.UserID, &ss.DisplayName, &ss.Email,
+			&ss.AvatarURL, &ss.Specialization, &ss.LastLessonDate, &ss.TotalLessons); err != nil {
+			return nil, err
+		}
+		sheikhs = append(sheikhs, ss)
+	}
+	if sheikhs == nil {
+		sheikhs = []StudentSheikh{}
+	}
+	return sheikhs, nil
+}
+
+// GetStudentStats returns aggregated learning stats for a student.
+func (r *Repository) GetStudentStats(studentID uuid.UUID) (*StudentStats, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
+	defer cancel()
+
+	stats := &StudentStats{}
+
+	// Completed lessons (past + confirmed/completed)
+	r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM bookings
+		WHERE student_id = $1 AND status IN ('confirmed', 'completed')
+		  AND end_time < NOW()`, studentID).Scan(&stats.LessonsCompleted)
+
+	// Upcoming lessons (future + confirmed/pending)
+	r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM bookings
+		WHERE student_id = $1 AND status IN ('confirmed', 'pending')
+		  AND start_time > NOW()`, studentID).Scan(&stats.UpcomingCount)
+
+	// Pending lesson requests
+	r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM lesson_requests
+		WHERE student_id = $1 AND status = 'pending'`, studentID).Scan(&stats.PendingRequests)
+
+	// Distinct sheikhs
+	r.db.QueryRowContext(ctx, `
+		SELECT COUNT(DISTINCT sheikh_id) FROM bookings
+		WHERE student_id = $1 AND status NOT IN ('cancelled')`, studentID).Scan(&stats.TotalSheikhs)
+
+	return stats, nil
+}

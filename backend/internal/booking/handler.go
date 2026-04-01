@@ -50,6 +50,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		protected.POST("/bookings", h.CreateBooking)
 		protected.GET("/my/bookings", h.GetMyBookings)
 		protected.POST("/bookings/:id/cancel", h.CancelBooking)
+
+		// Student: dashboard
+		protected.GET("/student/sheikhs", h.GetStudentSheikhs)
+		protected.GET("/student/stats", h.GetStudentStats)
 	}
 }
 
@@ -429,4 +433,28 @@ func (h *Handler) CancelBooking(c *gin.Context) {
 func (h *Handler) resolveSheikhID(c *gin.Context) (uuid.UUID, error) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 	return h.service.repo.GetSheikhIDByUserID(userID)
+}
+
+// ── Student Dashboard Endpoints ──
+
+func (h *Handler) GetStudentSheikhs(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	sheikhs, err := h.service.GetStudentSheikhs(userID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to load sheikhs")
+		return
+	}
+	response.Success(c, sheikhs)
+}
+
+func (h *Handler) GetStudentStats(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	stats, err := h.service.GetStudentStats(userID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to load stats")
+		return
+	}
+	response.Success(c, stats)
 }

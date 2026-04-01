@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/config/api_config.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/theme/app_design_system.dart';
@@ -17,11 +18,7 @@ class SheikhProfilePage extends StatelessWidget {
   final SheikhProfile sheikh;
   const SheikhProfilePage({super.key, required this.sheikh});
 
-  String _resolveUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    return 'https://khair.it.com$url';
-  }
+  String _resolveUrl(String? url) => ApiConfig.resolveUrl(url);
 
   @override
   Widget build(BuildContext context) {
@@ -1021,7 +1018,7 @@ class SheikhProfilePage extends StatelessWidget {
     if (sheikh.isVerified) shareText.writeln('✅ Verified Sheikh');
     shareText.writeln();
     shareText.write(
-        'Discover on Khair: https://khair.it.com/api/v1/sheikhs/${sheikh.id}');
+        'Discover on Khair: ${ApiConfig.serverOrigin}/sheikhs/${sheikh.id}');
     ShareHelper.share(context, shareText.toString());
   }
 

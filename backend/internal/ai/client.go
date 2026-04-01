@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -83,7 +84,8 @@ type GeminiCandidate struct {
 
 // ---------- Core method ----------
 
-// Generate sends a structured prompt to Gemini and returns the text response
+// Generate sends a structured prompt to Gemini and returns the text response.
+// Includes automatic retry with exponential backoff for 429 rate-limit errors.
 func (c *Client) Generate(ctx context.Context, prompt string, temperature float64) (string, error) {
 	if !c.IsEnabled() {
 		return "", fmt.Errorf("gemini AI is not enabled (missing API key)")
@@ -110,37 +112,60 @@ func (c *Client) Generate(ctx context.Context, prompt string, temperature float6
 		return "", fmt.Errorf("marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
+	// Retry up to 3 times for rate-limit (429) errors
+	maxRetries := 3
+	backoff := 2 * time.Second
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("gemini request failed: %w", err)
-	}
-	defer resp.Body.Close()
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			return "", fmt.Errorf("create request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("read response: %w", err)
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("gemini request failed: %w", err)
+		}
+
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return "", fmt.Errorf("read response: %w", err)
+		}
+
+		// Handle rate limiting with retry
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if attempt < maxRetries {
+				log.Printf("[AI] Rate limited (429), retrying in %v (attempt %d/%d)", backoff, attempt+1, maxRetries)
+				select {
+				case <-time.After(backoff):
+					backoff *= 2 // exponential backoff
+					continue
+				case <-ctx.Done():
+					return "", fmt.Errorf("request cancelled during rate-limit backoff")
+				}
+			}
+			return "", fmt.Errorf("gemini API rate limited after %d retries", maxRetries)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("gemini API error %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		var geminiResp GeminiResponse
+		if err := json.Unmarshal(respBody, &geminiResp); err != nil {
+			return "", fmt.Errorf("unmarshal response: %w", err)
+		}
+
+		if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+			return "", fmt.Errorf("empty response from gemini")
+		}
+
+		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("gemini API error %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var geminiResp GeminiResponse
-	if err := json.Unmarshal(respBody, &geminiResp); err != nil {
-		return "", fmt.Errorf("unmarshal response: %w", err)
-	}
-
-	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("empty response from gemini")
-	}
-
-	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
+	return "", fmt.Errorf("gemini API: exhausted retries")
 }
 
 // GenerateJSON sends a prompt and parses the JSON response into the target struct

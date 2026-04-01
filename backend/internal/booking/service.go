@@ -292,6 +292,16 @@ func (s *Service) GetBlockedTimes(sheikhID uuid.UUID) ([]BlockedTime, error) {
 	return s.repo.ListSheikhBlockedTimes(sheikhID)
 }
 
+// ── Student Dashboard ──
+
+func (s *Service) GetStudentSheikhs(studentID uuid.UUID) ([]StudentSheikh, error) {
+	return s.repo.GetStudentSheikhs(studentID)
+}
+
+func (s *Service) GetStudentStats(studentID uuid.UUID) (*StudentStats, error) {
+	return s.repo.GetStudentStats(studentID)
+}
+
 // ── Notifications ──
 
 func (s *Service) notifyBookingCreated(b *Booking) {

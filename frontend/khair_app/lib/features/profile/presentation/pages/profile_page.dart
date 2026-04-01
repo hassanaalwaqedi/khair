@@ -1,3 +1,4 @@
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -88,208 +89,13 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Signed-Out State ────────────────────────────────
+  // â”€â”€â”€ Signed-Out State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildSignedOutState(BuildContext context, bool isDark) {
-    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
-    final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
-    final border = isDark ? KhairColors.darkBorder : KhairColors.border;
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-
-                // ── HEADER: Logo + Language ──
-                Row(
-                  children: [
-                    Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: KhairColors.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.mosque, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Text('Khair', style: TextStyle(
-                      fontSize: 20, color: tp, fontWeight: FontWeight.w800,
-                    )),
-                    const Spacer(),
-                    const LanguageSwitcher(showLabel: false),
-                  ],
-                ),
-
-                const SizedBox(height: 48),
-
-                // ── HERO ILLUSTRATION ──
-                Container(
-                  width: 88, height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        KhairColors.primary.withValues(alpha: 0.15),
-                        KhairColors.secondary.withValues(alpha: 0.1),
-                      ],
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.explore_rounded,
-                    size: 42,
-                    color: KhairColors.primary,
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // ── HERO TEXT ──
-                Text(
-                  context.l10n.guestHeroTitle,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: tp,
-                    height: 1.25,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.l10n.guestHeroSubtitle,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: ts,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 40),
-
-                // ── BENEFITS SECTION ──
-                _BenefitCard(
-                  icon: Icons.location_on_rounded,
-                  emoji: '📍',
-                  text: context.l10n.guestBenefitEvents,
-                  color: KhairColors.primary,
-                  cardBg: cardBg,
-                  border: border,
-                  tp: tp,
-                ),
-                const SizedBox(height: 10),
-                _BenefitCard(
-                  icon: Icons.school_rounded,
-                  emoji: '🎓',
-                  text: context.l10n.guestBenefitTeachers,
-                  color: KhairColors.info,
-                  cardBg: cardBg,
-                  border: border,
-                  tp: tp,
-                ),
-                const SizedBox(height: 10),
-                _BenefitCard(
-                  icon: Icons.people_rounded,
-                  emoji: '🤝',
-                  text: context.l10n.guestBenefitCommunity,
-                  color: KhairColors.secondary,
-                  cardBg: cardBg,
-                  border: border,
-                  tp: tp,
-                ),
-
-                const SizedBox(height: 40),
-
-                // ── CTA: Get Started ──
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: () => context.go('/register'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: KhairColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      context.l10n.guestGetStarted,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // ── CTA: Already have account ──
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: () => context.go('/login'),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: KhairColors.primary.withValues(alpha: 0.4),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      context.l10n.guestAlreadyHaveAccount,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: KhairColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // ── Bottom prompt ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.lock_open_rounded, size: 14, color: ts),
-                    const SizedBox(width: 6),
-                    Text(
-                      context.l10n.guestSignUpToExplore,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ts,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 80),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return _AnimatedGuestLanding(isDark: isDark);
   }
 
-  // ─── Profile Header ──────────────────────────────────
+  // â”€â”€â”€ Profile Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildProfileHeader(
       BuildContext context, AuthState state, bool isDark) {
@@ -415,7 +221,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Stats Row ───────────────────────────────────────
+  // â”€â”€â”€ Stats Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildStatsRow(BuildContext context, AuthState state, bool isDark) {
     final user = state.user!;
@@ -488,7 +294,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Quick Actions ───────────────────────────────────
+  // â”€â”€â”€ Quick Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildQuickActions(
       BuildContext context, AuthState state, bool isDark) {
@@ -537,6 +343,14 @@ class ProfilePage extends StatelessWidget {
                   isDark: isDark,
                   onTap: () => context.go('/organizer/apply'),
                 ),
+              if (!state.isOrganizer && !state.isSheikh && !state.isAdmin)
+                _QuickActionCard(
+                  icon: Icons.menu_book_rounded,
+                  label: context.l10n.myLearning,
+                  color: KhairColors.info,
+                  isDark: isDark,
+                  onTap: () => context.go('/my-learning'),
+                ),
               if (state.isSheikh)
                 _QuickActionCard(
                   icon: Icons.school_rounded,
@@ -575,7 +389,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Account Section ─────────────────────────────────
+  // â”€â”€â”€ Account Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildAccountSection(
       BuildContext context, AuthState state, bool isDark) {
@@ -606,7 +420,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Organizer Section ───────────────────────────────
+  // â”€â”€â”€ Organizer Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildOrganizerSection(
       BuildContext context, AuthState state, bool isDark) {
@@ -651,7 +465,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Verification Banner ──────────────────────────────
+  // â”€â”€â”€ Verification Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildVerificationBanner(BuildContext context, bool isDark) {
     return Padding(
@@ -728,7 +542,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Sign Out ────────────────────────────────────────
+  // â”€â”€â”€ Sign Out â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildSignOutButton(BuildContext context, bool isDark) {
     return Padding(
@@ -852,7 +666,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // ─── Helpers ─────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   IconData _roleIcon(String role) {
     switch (role.toLowerCase()) {
@@ -866,7 +680,7 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
-// ─── Reusable Widgets ────────────────────────────────
+// â”€â”€â”€ Reusable Widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _BenefitCard extends StatelessWidget {
   final IconData icon;
@@ -1148,5 +962,162 @@ class _InfoRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// --- Animated Guest Landing ---
+
+class _AnimatedGuestLanding extends StatefulWidget {
+  final bool isDark;
+  const _AnimatedGuestLanding({required this.isDark});
+
+  @override
+  State<_AnimatedGuestLanding> createState() => _AnimatedGuestLandingState();
+}
+
+class _AnimatedGuestLandingState extends State<_AnimatedGuestLanding>
+    with TickerProviderStateMixin {
+  late final AnimationController _orbitController;
+  late final AnimationController _pulseController;
+  late final AnimationController _floatController;
+  late final AnimationController _fadeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _orbitController = AnimationController(vsync: this, duration: const Duration(seconds: 12))..repeat();
+    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
+    _floatController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000))..repeat(reverse: true);
+    _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..forward();
+  }
+
+  @override
+  void dispose() {
+    _orbitController.dispose();
+    _pulseController.dispose();
+    _floatController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+
+    return SafeArea(
+      child: FadeTransition(
+        opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(color: KhairColors.primary, borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.mosque, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('Khair', style: TextStyle(fontSize: 20, color: tp, fontWeight: FontWeight.w800)),
+                  const Spacer(),
+                  const LanguageSwitcher(showLabel: false),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  width: 280, height: 280,
+                  child: AnimatedBuilder(
+                    animation: Listenable.merge([_orbitController, _pulseController, _floatController]),
+                    builder: (context, _) {
+                      final ps = 1.0 + (_pulseController.value * 0.08);
+                      final po = (0.15 - (_pulseController.value * 0.08)).clamp(0.03, 0.15);
+                      final rs = 1.0 + ((1.0 - _pulseController.value) * 0.06);
+                      final fy = -8.0 + (_floatController.value * 16.0);
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Transform.scale(scale: ps, child: Container(width: 220, height: 220, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: KhairColors.primary.withValues(alpha: po), width: 1.5)))),
+                          Transform.scale(scale: rs, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: KhairColors.secondary.withValues(alpha: 0.08), width: 1)))),
+                          ..._buildDots(),
+                          Transform.translate(
+                            offset: Offset(0, fy),
+                            child: Container(
+                              width: 110, height: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B5F50), Color(0xFF1C7A66), Color(0xFF2D8E75)]),
+                                boxShadow: [BoxShadow(color: KhairColors.primary.withValues(alpha: 0.3), blurRadius: 30, spreadRadius: 5)],
+                              ),
+                              child: const Icon(Icons.mosque_rounded, size: 48, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(32, 0, 32, 0),
+              child: Column(
+                children: [
+                  Text('Khair', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tp, letterSpacing: -0.5)),
+                  const SizedBox(height: 8),
+                  Text(context.l10n.guestHeroSubtitle, style: TextStyle(fontSize: 15, color: ts, height: 1.5), textAlign: TextAlign.center),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity, height: 54,
+                    child: ElevatedButton(
+                      onPressed: () => context.go('/register'),
+                      style: ElevatedButton.styleFrom(backgroundColor: KhairColors.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      child: Text(context.l10n.guestGetStarted, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.2)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity, height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => context.go('/login'),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: KhairColors.primary.withValues(alpha: 0.4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      child: Text(context.l10n.guestAlreadyHaveAccount, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: KhairColors.primary)),
+                    ),
+                  ),
+                  const SizedBox(height: 90),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDots() {
+    const offsets = [0.0, 0.33, 0.66, 0.5, 0.83];
+    const radii = [120.0, 120.0, 120.0, 90.0, 90.0];
+    const sizes = [10.0, 7.0, 8.0, 6.0, 5.0];
+    final colors = [KhairColors.primary, KhairColors.secondary, KhairColors.accent, KhairColors.info, KhairColors.primary];
+    return List.generate(5, (i) {
+      final angle = (_orbitController.value + offsets[i]) * 2 * math.pi;
+      final x = radii[i] * math.cos(angle);
+      final y = radii[i] * math.sin(angle) * 0.4;
+      return Transform.translate(
+        offset: Offset(x, y),
+        child: Container(
+          width: sizes[i], height: sizes[i],
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: colors[i].withValues(alpha: 0.6),
+            boxShadow: [BoxShadow(color: colors[i].withValues(alpha: 0.3), blurRadius: 8)],
+          ),
+        ),
+      );
+    });
   }
 }

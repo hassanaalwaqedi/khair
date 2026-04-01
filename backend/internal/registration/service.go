@@ -116,19 +116,25 @@ func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*StepRespon
 		return nil, errors.New("invalid role selection")
 	}
 
-	// Check if email already exists
+	// Check if email already exists as verified user
 	existing, _ := s.repo.GetUserByEmail(req.Email)
 	if existing != nil {
 		if existing.VerifiedAt != nil {
 			// Verified user — reject
 			return nil, errors.New("this email is already registered")
 		}
-		// Unverified user — delete so they can re-register
+		// Legacy: unverified user in DB — delete so they can re-register
 		if err := s.repo.DeleteUnverifiedUser(existing.ID); err != nil {
 			log.Printf("[WARN] Failed to delete unverified user %s: %v", req.Email, err)
 			return nil, errors.New("this email is already registered")
 		}
 		log.Printf("[INFO] Deleted unverified user %s to allow re-registration", req.Email)
+	}
+
+	// Clean up any existing draft for this email (allows re-registration)
+	if oldDraft, err := s.repo.LoadDraftByEmail(req.Email); err == nil && oldDraft != nil {
+		s.repo.DeleteDraft(oldDraft.ID)
+		log.Printf("[INFO] Deleted old draft for %s to allow re-registration", req.Email)
 	}
 
 	// Validate password strength
@@ -265,7 +271,8 @@ func (s *Service) ProcessStep3(req *Step3Request, ipAddress string) (*StepRespon
 	}, nil
 }
 
-// ProcessStep4 finalizes registration and triggers email verification
+// ProcessStep4 stores the verification code in the draft and sends the email.
+// The user is NOT created in the database until the code is verified.
 func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*RegistrationCompleteResponse, error) {
 	draft, err := s.loadAndValidateDraft(req.DraftID)
 	if err != nil {
@@ -278,6 +285,100 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 	// Generate 6-digit verification code
 	code := generateVerificationCode()
 	verificationExpires := time.Now().Add(10 * time.Minute)
+	otpHash := hashOTP(code)
+
+	// Store OTP hash + expiry in the draft's form_data (NOT in the users table)
+	formData["otp_hash"] = otpHash
+	formData["otp_expires"] = verificationExpires.Format(time.RFC3339)
+	formData["otp_attempts"] = float64(0)
+	formDataJSON, _ := json.Marshal(formData)
+
+	draft.FormData = formDataJSON
+	draft.CurrentStep = 5 // Mark as "awaiting verification"
+	draft.UpdatedAt = time.Now()
+
+	if err := s.repo.SaveDraft(draft); err != nil {
+		return nil, errors.New("failed to save registration progress")
+	}
+
+	role := ""
+	if draft.Role != nil {
+		role = *draft.Role
+	}
+
+	lang := getString(formData, "preferred_language")
+	if lang == "" {
+		lang = "en"
+	}
+
+	// Send verification email
+	if s.emailSvc != nil && s.emailSvc.IsEnabled() {
+		if err := s.emailSvc.SendVerificationEmail(draft.Email, code, lang); err != nil {
+			log.Printf("[WARN] Failed to send verification email to %s: %v", draft.Email, err)
+		}
+	}
+
+	// Audit log
+	s.logAudit(nil, &draft.Email, intPtr(4), "verification_code_sent", ipAddress, "")
+
+	// Build a placeholder response (no user created yet)
+	displayName := getString(formData, "display_name")
+	return &RegistrationCompleteResponse{
+		User: &models.User{
+			Email:       draft.Email,
+			Role:        role,
+			Status:      "pending_verification",
+			DisplayName: strPtr(displayName),
+		},
+		CompletionScore: CalculateProfileCompletion(role, formData),
+		Suggestions:     GetSuggestionsForRole(role, formData),
+		WelcomeMessage:  fmt.Sprintf("A verification code has been sent to %s. Please check your email.", draft.Email),
+	}, nil
+}
+
+// VerifyCode verifies email with a 6-digit code.
+// On success, it creates the user + profile + role records from the draft.
+func (s *Service) VerifyCode(req *VerifyCodeRequest) (*models.User, error) {
+	otpHash := hashOTP(req.Code)
+
+	// Load the draft for this email
+	draft, err := s.repo.LoadDraftByEmail(req.Email)
+	if err != nil {
+		log.Printf("[WARN] Verification attempt failed for %s: no draft found", req.Email)
+		return nil, errors.New("invalid or expired verification code")
+	}
+
+	var formData map[string]interface{}
+	json.Unmarshal(draft.FormData, &formData)
+
+	// Check OTP attempts (prevent brute-force)
+	attempts := int(getFloat(formData, "otp_attempts"))
+	if attempts >= 5 {
+		return nil, errors.New("too many attempts, please request a new code")
+	}
+
+	// Increment attempts
+	formData["otp_attempts"] = float64(attempts + 1)
+	formDataJSON, _ := json.Marshal(formData)
+	draft.FormData = formDataJSON
+	draft.UpdatedAt = time.Now()
+	s.repo.SaveDraft(draft)
+
+	// Verify OTP hash
+	storedHash := getString(formData, "otp_hash")
+	if storedHash == "" || storedHash != otpHash {
+		log.Printf("[WARN] Verification code mismatch for %s (attempt %d)", req.Email, attempts+1)
+		return nil, errors.New("invalid or expired verification code")
+	}
+
+	// Check expiry
+	expiresStr := getString(formData, "otp_expires")
+	expires, parseErr := time.Parse(time.RFC3339, expiresStr)
+	if parseErr != nil || time.Now().After(expires) {
+		return nil, errors.New("verification code has expired, please request a new one")
+	}
+
+	// ── OTP is valid — NOW create the user ──
 
 	role := ""
 	if draft.Role != nil {
@@ -287,15 +388,16 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 	displayName := getString(formData, "display_name")
 	passwordHash := getString(formData, "password_hash")
 
-	// Create user
 	now := time.Now()
 	user := &models.User{
 		ID:           uuid.New(),
 		Email:        draft.Email,
 		PasswordHash: passwordHash,
 		Role:         role,
-		Status:       "pending_verification",
+		Status:       "active",
 		DisplayName:  strPtr(displayName),
+		IsVerified:   true,
+		VerifiedAt:   &now,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -323,72 +425,73 @@ func (s *Service) ProcessStep4(req *Step4Request, ipAddress string) (*Registrati
 		UpdatedAt:              now,
 	}
 
-	if err := s.repo.CreateUserWithProfile(user, profile); err != nil {
-		log.Printf("[ERROR] CreateUserWithProfile failed for %s: %v", draft.Email, err)
+	if err := s.repo.CreateUserVerified(user, profile); err != nil {
+		log.Printf("[ERROR] CreateUserVerified failed for %s: %v", draft.Email, err)
 		return nil, errors.New("failed to create account")
-	}
-
-	// Store hashed OTP in email_verifications table
-	otpHash := hashOTP(code)
-	if err := s.repo.CreateVerification(user.ID, otpHash, verificationExpires); err != nil {
-		log.Printf("[ERROR] Failed to create verification record for %s: %v", draft.Email, err)
 	}
 
 	// Create role-specific records
 	if err := s.createRoleSpecificRecords(user, formData, role); err != nil {
-		// Non-fatal — profile still created
+		log.Printf("[WARN] Failed to create role-specific records for %s: %v", draft.Email, err)
 	}
 
 	// Delete draft
 	s.repo.DeleteDraft(draft.ID)
 
-	// Send verification email
-	if s.emailSvc != nil && s.emailSvc.IsEnabled() {
-		if err := s.emailSvc.SendVerificationEmail(draft.Email, code, lang); err != nil {
-			log.Printf("[WARN] Failed to send verification email to %s: %v", draft.Email, err)
-		}
-	}
-
 	// Audit log
 	userID := user.ID
-	s.logAudit(&userID, &user.Email, intPtr(4), "registration_complete_pending_verification", ipAddress, "")
+	s.logAudit(&userID, &user.Email, intPtr(5), "email_verified_account_created", "", "")
 
-	// ── Auto welcome notification ────────────────────────────────
+	// Send welcome notification
 	go s.sendWelcomeNotification(user.ID, role, displayName)
 
-	return &RegistrationCompleteResponse{
-		User:            user,
-		Profile:         profile,
-		CompletionScore: profile.ProfileCompletionScore,
-		Suggestions:     GetSuggestionsForRole(role, formData),
-		WelcomeMessage:  fmt.Sprintf("A verification code has been sent to %s. Please check your email.", draft.Email),
-	}, nil
-}
-
-// VerifyCode verifies a user's email with a 6-digit code
-func (s *Service) VerifyCode(req *VerifyCodeRequest) (*models.User, error) {
-	// Hash the submitted code before comparing
-	otpHash := hashOTP(req.Code)
-	user, err := s.repo.VerifyByCode(req.Email, otpHash)
-	if err != nil {
-		log.Printf("[WARN] Verification attempt failed for %s", req.Email)
-		return nil, errors.New("invalid or expired verification code")
-	}
-	log.Printf("[INFO] Email verified successfully for %s", user.Email)
+	log.Printf("[INFO] Email verified and account created for %s", user.Email)
 	return user, nil
 }
 
-// ResendCode generates a new verification code and sends it
+// ResendCode generates a new verification code and sends it.
+// Works with drafts — no user in DB yet.
 func (s *Service) ResendCode(req *ResendCodeRequest) error {
-	user, err := s.repo.GetUserByEmail(req.Email)
-	if err != nil || user == nil {
-		// Generic response to prevent email enumeration
+	// First check if there's a draft (new flow — user not in DB yet)
+	draft, err := s.repo.LoadDraftByEmail(req.Email)
+	if err == nil && draft != nil {
+		// Draft exists — update the OTP in the draft
+		var formData map[string]interface{}
+		json.Unmarshal(draft.FormData, &formData)
+
+		code := generateVerificationCode()
+		otpHash := hashOTP(code)
+		expires := time.Now().Add(10 * time.Minute)
+
+		formData["otp_hash"] = otpHash
+		formData["otp_expires"] = expires.Format(time.RFC3339)
+		formData["otp_attempts"] = float64(0)
+		formDataJSON, _ := json.Marshal(formData)
+
+		draft.FormData = formDataJSON
+		draft.UpdatedAt = time.Now()
+		s.repo.SaveDraft(draft)
+
+		lang := getString(formData, "preferred_language")
+		if lang == "" {
+			lang = "en"
+		}
+
+		if s.emailSvc != nil && s.emailSvc.IsEnabled() {
+			if err := s.emailSvc.SendVerificationEmail(req.Email, code, lang); err != nil {
+				log.Printf("[WARN] Failed to resend verification email to %s: %v", req.Email, err)
+			}
+		}
 		return nil
 	}
 
-	// Already verified
+	// Legacy fallback: user might be in DB from old flow
+	user, err := s.repo.GetUserByEmail(req.Email)
+	if err != nil || user == nil {
+		return nil // Generic to prevent email enumeration
+	}
 	if user.VerifiedAt != nil {
-		return nil
+		return nil // Already verified
 	}
 
 	code := generateVerificationCode()
@@ -582,6 +685,15 @@ func getString(m map[string]interface{}, key string) string {
 		}
 	}
 	return ""
+}
+
+func getFloat(m map[string]interface{}, key string) float64 {
+	if val, ok := m[key]; ok {
+		if f, ok := val.(float64); ok {
+			return f
+		}
+	}
+	return 0
 }
 
 func strPtr(s string) *string {

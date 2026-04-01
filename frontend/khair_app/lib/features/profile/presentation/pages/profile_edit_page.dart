@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/locale/l10n_extension.dart';
@@ -454,7 +455,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             : _avatarUrl != null && _avatarUrl!.startsWith('/')
                                 ? ClipOval(
                                     child: Image.network(
-                                        '${const String.fromEnvironment('API_URL', defaultValue: 'https://khair.it.com/api/v1').replaceAll('/api/v1', '')}$_avatarUrl',
+                                        '${ApiConfig.serverOrigin}$_avatarUrl',
                                         fit: BoxFit.cover,
                                         width: 100,
                                         height: 100))

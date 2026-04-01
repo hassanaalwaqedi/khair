@@ -93,6 +93,42 @@ func (r *Repository) CreateUserWithProfile(user *models.User, profile *models.Pr
 	return tx.Commit()
 }
 
+// CreateUserVerified creates a user (already verified) and their profile in a single transaction.
+// Used when the user has verified their email code — account is created as active+verified.
+func (r *Repository) CreateUserVerified(user *models.User, profile *models.Profile) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Create user (already verified)
+	_, err = tx.Exec(`
+		INSERT INTO users (id, email, password_hash, role, status, display_name, is_verified, verified_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, $9)`,
+		user.ID, user.Email, user.PasswordHash, user.Role, user.Status,
+		user.DisplayName, user.VerifiedAt,
+		user.CreatedAt, user.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Create profile
+	_, err = tx.Exec(`
+		INSERT INTO profiles (id, user_id, bio, location, city, country, avatar_url, preferred_language, profile_completion_score, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		profile.ID, profile.UserID, profile.Bio, profile.Location, profile.City,
+		profile.Country, profile.AvatarURL, profile.PreferredLanguage,
+		profile.ProfileCompletionScore, profile.CreatedAt, profile.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // CreateOrganizer creates an organizer record
 func (r *Repository) CreateOrganizer(org *models.Organizer) error {
 	_, err := r.db.Exec(`

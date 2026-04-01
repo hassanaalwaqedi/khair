@@ -2327,4 +2327,95 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get eventDetailsFree => 'Ücretsiz Etkinlik';
+
+  @override
+  String get myLearning => 'Öğrenmem';
+
+  @override
+  String get myLearningGreeting => 'Esselamu Aleyküm';
+
+  @override
+  String get myLearningSubtitle => 'Öğrenme yolculuğunuz bir bakışta';
+
+  @override
+  String get lessonsCompleted => 'Tamamlanan';
+
+  @override
+  String get upcomingCount => 'Yaklaşan';
+
+  @override
+  String get pendingCount => 'Bekleyen';
+
+  @override
+  String get upcomingTab => 'Yaklaşan';
+
+  @override
+  String get requestsTab => 'Talepler';
+
+  @override
+  String get historyTab => 'Geçmiş';
+
+  @override
+  String get sheikhsTab => 'Hocalar';
+
+  @override
+  String get joinLesson => 'Derse Katıl';
+
+  @override
+  String get cancelLesson => 'Dersi İptal Et';
+
+  @override
+  String get cancelLessonConfirm =>
+      'Bu dersi iptal etmek istediğinizden emin misiniz?';
+
+  @override
+  String get rateSheikh => 'Hocayı Değerlendir';
+
+  @override
+  String get writeReview => 'Değerlendirmenizi yazın...';
+
+  @override
+  String get bookAgain => 'Tekrar Rezerve Et';
+
+  @override
+  String get sendMessage => 'Mesaj';
+
+  @override
+  String get lessonsLabel => 'ders';
+
+  @override
+  String get noUpcomingLessons => 'Yaklaşan ders yok';
+
+  @override
+  String get noRequests => 'Henüz ders talebi yok';
+
+  @override
+  String get noHistory => 'Henüz geçmiş ders yok';
+
+  @override
+  String get noSheikhs => 'Henüz hoca yok';
+
+  @override
+  String get statusConfirmed => 'Onaylandı';
+
+  @override
+  String get statusPending => 'Beklemede';
+
+  @override
+  String get statusRejected => 'Reddedildi';
+
+  @override
+  String get statusCompleted => 'Tamamlandı';
+
+  @override
+  String get statusAccepted => 'Kabul Edildi';
+
+  @override
+  String get statusScheduled => 'Planlandı';
+
+  @override
+  String get yes => 'Evet';
+
+  @override
+  String get no => 'Hayır';
 }

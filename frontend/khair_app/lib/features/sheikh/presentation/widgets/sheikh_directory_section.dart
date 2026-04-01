@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/api_config.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../domain/entities/sheikh_profile.dart';
@@ -60,13 +61,7 @@ class _ScholarCard extends StatelessWidget {
     required this.tp, required this.ts, required this.isDark,
   });
 
-  static const _baseUrl = 'https://khair.it.com';
-
-  String _resolveUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    return '$_baseUrl$url';
-  }
+  String _resolveUrl(String? url) => ApiConfig.resolveUrl(url);
 
   @override
   Widget build(BuildContext context) {

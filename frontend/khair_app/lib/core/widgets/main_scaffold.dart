@@ -116,7 +116,8 @@ class MainScaffold extends StatelessWidget {
     if (location.startsWith('/conversations')) return 2;
     if (location.startsWith('/organizer') ||
         location.startsWith('/admin') ||
-        location.startsWith('/sheikh-dashboard')) return 3;
+        location.startsWith('/sheikh-dashboard') ||
+        location.startsWith('/my-learning')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
   }
@@ -148,53 +149,8 @@ class MainScaffold extends StatelessWidget {
       return;
     }
 
-    // Regular user → show become organizer dialog
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.business_rounded,
-                  color: AppColors.primary, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(context.l10n.becomeOrganizerTitle,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        content: Text(
-          context.l10n.becomeOrganizerDesc,
-          style: const TextStyle(fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.go('/organizer/apply');
-            },
-            icon: const Icon(Icons.add_business_rounded, size: 18),
-            label: Text(context.l10n.register),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
+    // Regular user → go to student dashboard (My Learning)
+    context.go('/my-learning');
   }
 }
 

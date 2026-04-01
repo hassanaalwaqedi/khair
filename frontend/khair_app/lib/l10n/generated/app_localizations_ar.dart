@@ -2278,4 +2278,94 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get eventDetailsFree => 'فعالية مجانية';
+
+  @override
+  String get myLearning => 'تعلّمي';
+
+  @override
+  String get myLearningGreeting => 'السلام عليكم';
+
+  @override
+  String get myLearningSubtitle => 'رحلتك التعليمية في نظرة واحدة';
+
+  @override
+  String get lessonsCompleted => 'مكتملة';
+
+  @override
+  String get upcomingCount => 'قادمة';
+
+  @override
+  String get pendingCount => 'معلّقة';
+
+  @override
+  String get upcomingTab => 'القادمة';
+
+  @override
+  String get requestsTab => 'الطلبات';
+
+  @override
+  String get historyTab => 'السجل';
+
+  @override
+  String get sheikhsTab => 'المشايخ';
+
+  @override
+  String get joinLesson => 'انضم للدرس';
+
+  @override
+  String get cancelLesson => 'إلغاء الدرس';
+
+  @override
+  String get cancelLessonConfirm => 'هل أنت متأكد من إلغاء هذا الدرس؟';
+
+  @override
+  String get rateSheikh => 'قيّم الشيخ';
+
+  @override
+  String get writeReview => 'اكتب تقييمك...';
+
+  @override
+  String get bookAgain => 'احجز مرة أخرى';
+
+  @override
+  String get sendMessage => 'رسالة';
+
+  @override
+  String get lessonsLabel => 'دروس';
+
+  @override
+  String get noUpcomingLessons => 'لا توجد دروس قادمة';
+
+  @override
+  String get noRequests => 'لا توجد طلبات دروس بعد';
+
+  @override
+  String get noHistory => 'لا توجد دروس سابقة بعد';
+
+  @override
+  String get noSheikhs => 'لا يوجد مشايخ بعد';
+
+  @override
+  String get statusConfirmed => 'مؤكد';
+
+  @override
+  String get statusPending => 'معلّق';
+
+  @override
+  String get statusRejected => 'مرفوض';
+
+  @override
+  String get statusCompleted => 'مكتمل';
+
+  @override
+  String get statusAccepted => 'مقبول';
+
+  @override
+  String get statusScheduled => 'مجدول';
+
+  @override
+  String get yes => 'نعم';
+
+  @override
+  String get no => 'لا';
 }

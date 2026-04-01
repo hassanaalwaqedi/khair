@@ -293,33 +293,78 @@ class _PolicyViewDialog extends StatelessWidget {
   }
 
   String _getPlaceholderText(String type) {
-    // Placeholder - actual legal text would be loaded from API/assets
-    return '''
-$type for Khair Platform
+    if (type == 'Privacy Policy') {
+      return '''Privacy Policy for Khair Platform
 
-Last updated: February 2026
+Last updated: March 2026
 Version: $version
 
 1. Introduction
-Welcome to Khair. By using our platform, you agree to these terms.
+Khair ("we", "our", or "us") operates the Khair mobile application and website. This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information.
 
-2. User Responsibilities
-Users must provide accurate information and use the platform responsibly.
+2. Information We Collect
+• Account info: Name, email, password (hashed)
+• Location data: Precise and approximate (with your permission)
+• Device info: Device type, OS version, FCM token for notifications
+• Usage data: Events viewed, searches, pages visited
+• Chat messages: Stored to facilitate communication
+• Crash data: Via Sentry (no PII collected)
 
-3. Content Guidelines
-All content must comply with our community guidelines and local laws.
+3. How We Use Your Information
+We use your data to provide the Service, send notifications, facilitate bookings and chat, improve user experience, and comply with legal obligations.
 
-4. Privacy
-Your privacy is important to us. See our Privacy Policy for details.
+4. Information Sharing
+We do NOT sell your personal information. We share data only with service providers (Firebase, Sentry), event organizers (when you register), sheikhs (when you book), and law enforcement (when legally required).
 
-5. Limitation of Liability
-The platform is provided "as is" without warranties.
+5. Data Security
+Passwords are hashed with bcrypt. Auth tokens use encrypted secure storage. All data is transmitted over HTTPS. JWT tokens expire after 24 hours.
 
-6. Changes to Terms
-We may update these terms. Continued use constitutes acceptance.
+6. Your Rights
+You can access, correct, or delete your data. You can revoke permissions via device settings. Contact privacy@khair.app for requests.
 
-7. Contact
-For questions, contact support@khair.app
+7. Children's Privacy
+Khair is not intended for children under 13.
+
+8. Contact
+Email: privacy@khair.app
+''';
+    }
+    return '''Terms of Use for Khair Platform
+
+Last updated: March 2026
+Version: $version
+
+1. Acceptance
+By using Khair, you agree to these Terms. If you don't agree, please don't use the Service.
+
+2. Eligibility
+You must be at least 13 years old. Users under 18 need parental consent.
+
+3. Account Responsibilities
+Provide accurate information. Keep your credentials secure. You are responsible for all activity under your account.
+
+4. User Roles
+• Users: Browse events, book lessons, chat
+• Organizers: Must be approved before publishing events
+• Sheikhs: Must be verified before offering lessons
+
+5. Acceptable Use
+Do not post false or misleading content, harass users, attempt unauthorized access, or use the Service for illegal purposes.
+
+6. Content & IP
+You retain ownership of your content. By posting, you grant Khair a license to display it. Khair's brand and software are protected by IP laws.
+
+7. Bookings
+Khair facilitates bookings but is not a party to lesson arrangements. We don't guarantee lesson quality.
+
+8. Disclaimer
+The Service is provided "as is" without warranties.
+
+9. Limitation of Liability
+Khair is not liable for indirect, incidental, or consequential damages.
+
+10. Contact
+Email: legal@khair.app
 ''';
   }
 }
