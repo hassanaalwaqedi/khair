@@ -30,7 +30,6 @@ RUN apk --no-cache add ca-certificates tzdata curl
 COPY --from=builder /app/khair-api .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/templates ./templates
-COPY --from=builder /app/firebase-service-account.json ./firebase-service-account.json
 
 # Set ownership
 RUN chown -R khair:khair /app
