@@ -21,6 +21,8 @@ CREATE INDEX idx_moderation_scans_ai_decision ON moderation_scans(ai_decision);
 CREATE INDEX idx_moderation_scans_risk_score ON moderation_scans(ai_risk_score DESC);
 CREATE INDEX idx_moderation_scans_scanned_at ON moderation_scans(scanned_at DESC);
 
+-- organizer_trust_scores was created in 002_trust_safety without user_id.
+-- Add new columns if not yet present, and create the new version if table doesn't exist.
 CREATE TABLE IF NOT EXISTS organizer_trust_scores (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -32,13 +34,22 @@ CREATE TABLE IF NOT EXISTS organizer_trust_scores (
     high_risk_count INT NOT NULL DEFAULT 0,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id),
     UNIQUE(organizer_id)
 );
 
-CREATE INDEX idx_organizer_trust_scores_user_id ON organizer_trust_scores(user_id);
-CREATE INDEX idx_organizer_trust_scores_organizer_id ON organizer_trust_scores(organizer_id);
-CREATE INDEX idx_organizer_trust_scores_score ON organizer_trust_scores(trust_score);
+-- Add user_id column if it does not already exist (handles upgrade from 002 schema)
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS trust_score DOUBLE PRECISION NOT NULL DEFAULT 75;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS violations_count INT NOT NULL DEFAULT 0;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS approved_events_count INT NOT NULL DEFAULT 0;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS rejected_events_count INT NOT NULL DEFAULT 0;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS high_risk_count INT NOT NULL DEFAULT 0;
+ALTER TABLE organizer_trust_scores ADD COLUMN IF NOT EXISTS last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+CREATE INDEX IF NOT EXISTS idx_organizer_trust_scores_user_id ON organizer_trust_scores(user_id);
+CREATE INDEX IF NOT EXISTS idx_organizer_trust_scores_organizer_id ON organizer_trust_scores(organizer_id);
+CREATE INDEX IF NOT EXISTS idx_organizer_trust_scores_score ON organizer_trust_scores(trust_score);
+
 
 CREATE TABLE IF NOT EXISTS abuse_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

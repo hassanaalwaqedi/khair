@@ -8,7 +8,7 @@ class ApiConfig {
   /// The base API URL including the `/api/v1` path prefix.
   static const apiBaseUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://khair.it.com/api/v1',
+    defaultValue: 'https://khair-evdzcxfucuh4g2c9.swedencentral-01.azurewebsites.net/api/v1',
   );
 
   /// The server origin (scheme + host), without any path.
@@ -27,7 +27,7 @@ class ApiConfig {
       final uri = Uri.parse(url);
       return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
     } catch (_) {
-      return 'https://khair.it.com';
+      return 'https://khair-evdzcxfucuh4g2c9.swedencentral-01.azurewebsites.net';
     }
   }
 }

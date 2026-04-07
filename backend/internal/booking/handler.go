@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	protected.Use(authMiddleware)
 	{
 		// Sheikh: manage availability
+		protected.GET("/sheikh/availability", h.GetMyAvailability)
 		protected.PUT("/sheikh/availability", h.SetAvailability)
 		protected.DELETE("/sheikh/availability/:day", h.DeleteAvailability)
 
@@ -111,6 +112,21 @@ type setAvailabilityBody struct {
 		BreakMinutes        int    `json:"break_minutes"`
 		IsActive            bool   `json:"is_active"`
 	} `json:"rules" binding:"required"`
+}
+
+func (h *Handler) GetMyAvailability(c *gin.Context) {
+	sheikhID, err := h.resolveSheikhID(c)
+	if err != nil {
+		response.Unauthorized(c, "Not a sheikh")
+		return
+	}
+
+	rules, err := h.service.GetAvailability(sheikhID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to load availability")
+		return
+	}
+	response.Success(c, rules)
 }
 
 func (h *Handler) SetAvailability(c *gin.Context) {

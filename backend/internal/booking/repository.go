@@ -505,24 +505,24 @@ func (r *Repository) GetStudentStats(studentID uuid.UUID) (*StudentStats, error)
 	stats := &StudentStats{}
 
 	// Completed lessons (past + confirmed/completed)
-	r.db.QueryRowContext(ctx, `
+	_ = r.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM bookings
 		WHERE student_id = $1 AND status IN ('confirmed', 'completed')
 		  AND end_time < NOW()`, studentID).Scan(&stats.LessonsCompleted)
 
 	// Upcoming lessons (future + confirmed/pending)
-	r.db.QueryRowContext(ctx, `
+	_ = r.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM bookings
 		WHERE student_id = $1 AND status IN ('confirmed', 'pending')
 		  AND start_time > NOW()`, studentID).Scan(&stats.UpcomingCount)
 
-	// Pending lesson requests
-	r.db.QueryRowContext(ctx, `
+	// Pending lesson requests - graceful fallback if table doesn't exist
+	_ = r.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM lesson_requests
 		WHERE student_id = $1 AND status = 'pending'`, studentID).Scan(&stats.PendingRequests)
 
 	// Distinct sheikhs
-	r.db.QueryRowContext(ctx, `
+	_ = r.db.QueryRowContext(ctx, `
 		SELECT COUNT(DISTINCT sheikh_id) FROM bookings
 		WHERE student_id = $1 AND status NOT IN ('cancelled')`, studentID).Scan(&stats.TotalSheikhs)
 

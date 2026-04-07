@@ -14,8 +14,10 @@ class SheikhCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localeName = Localizations.localeOf(context).toString();
     final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final ts =
+        isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
     final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
     final borderColor = isDark ? KhairColors.darkBorder : KhairColors.border;
 
@@ -27,7 +29,11 @@ class SheikhCard extends StatelessWidget {
     final totalLessons = sheikh['total_lessons'] as int? ?? 0;
     final lastLessonStr = sheikh['last_lesson_date'] as String?;
 
-    final name = displayName ?? email.split('@').first;
+    final fallbackName = context.l10n.sheikhDefaultName;
+    final emailName = email.split('@').first.trim();
+    final name = (displayName?.trim().isNotEmpty ?? false)
+        ? displayName!.trim()
+        : (emailName.isNotEmpty ? emailName : fallbackName);
     DateTime? lastLesson;
     if (lastLessonStr != null) lastLesson = DateTime.tryParse(lastLessonStr);
 
@@ -85,13 +91,17 @@ class SheikhCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '$totalLessons ${context.l10n.lessonsLabel}',
-                          style: KhairTypography.bodySmall.copyWith(color: ts, fontSize: 11),
+                          style: KhairTypography.bodySmall
+                              .copyWith(color: ts, fontSize: 11),
                         ),
                         if (lastLesson != null) ...[
-                          Text(' · ', style: TextStyle(color: ts, fontSize: 11)),
+                          Text(' · ',
+                              style: TextStyle(color: ts, fontSize: 11)),
                           Text(
-                            DateFormat('MMM d').format(lastLesson.toLocal()),
-                            style: KhairTypography.bodySmall.copyWith(color: ts, fontSize: 11),
+                            DateFormat.MMMd(localeName)
+                                .format(lastLesson.toLocal()),
+                            style: KhairTypography.bodySmall
+                                .copyWith(color: ts, fontSize: 11),
                           ),
                         ],
                       ],

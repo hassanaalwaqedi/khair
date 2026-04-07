@@ -100,14 +100,22 @@ class StudentDashboardState extends Equatable {
       mySheikhs: mySheikhs ?? this.mySheikhs,
       stats: stats ?? this.stats,
       errorMessage: errorMessage,
-      reviewMessage: clearReviewMessage ? null : (reviewMessage ?? this.reviewMessage),
+      reviewMessage:
+          clearReviewMessage ? null : (reviewMessage ?? this.reviewMessage),
     );
   }
 
   @override
   List<Object?> get props => [
-        status, selectedTab, upcomingLessons, pastLessons,
-        lessonRequests, mySheikhs, stats, errorMessage, reviewMessage,
+        status,
+        selectedTab,
+        upcomingLessons,
+        pastLessons,
+        lessonRequests,
+        mySheikhs,
+        stats,
+        errorMessage,
+        reviewMessage,
       ];
 }
 
@@ -131,17 +139,24 @@ class StudentDashboardBloc
       LoadDashboard event, Emitter<StudentDashboardState> emit) async {
     emit(state.copyWith(status: DashboardStatus.loading));
     try {
-      final results = await Future.wait([
-        _datasource.getMyBookings(),
-        _datasource.getMyLessonRequests(),
-        _datasource.getMySheikhs(),
-        _datasource.getMyStats(),
-      ]);
+      // Fetch each independently so one failure doesn't break all
+      List<Map<String, dynamic>> allBookings = [];
+      List<Map<String, dynamic>> requests = [];
+      List<Map<String, dynamic>> sheikhs = [];
+      Map<String, dynamic> stats = {};
 
-      final allBookings = results[0] as List<Map<String, dynamic>>;
-      final requests = results[1] as List<Map<String, dynamic>>;
-      final sheikhs = results[2] as List<Map<String, dynamic>>;
-      final stats = results[3] as Map<String, dynamic>;
+      try {
+        allBookings = await _datasource.getMyBookings();
+      } catch (_) {}
+      try {
+        requests = await _datasource.getMyLessonRequests();
+      } catch (_) {}
+      try {
+        sheikhs = await _datasource.getMySheikhs();
+      } catch (_) {}
+      try {
+        stats = await _datasource.getMyStats();
+      } catch (_) {}
 
       final now = DateTime.now();
 
@@ -195,8 +210,7 @@ class StudentDashboardBloc
     }
   }
 
-  void _onChangeTab(
-      ChangeTab event, Emitter<StudentDashboardState> emit) {
+  void _onChangeTab(ChangeTab event, Emitter<StudentDashboardState> emit) {
     emit(state.copyWith(selectedTab: event.tabIndex));
   }
 
@@ -219,7 +233,7 @@ class StudentDashboardBloc
         comment: event.comment,
         lessonRequestId: event.lessonRequestId,
       );
-      emit(state.copyWith(reviewMessage: 'Review submitted!'));
+      emit(state.copyWith(reviewMessage: 'sheikhReviewSubmitted'));
     } catch (e) {
       emit(state.copyWith(errorMessage: e.toString()));
     }

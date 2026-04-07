@@ -1,88 +1,27 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../domain/entities/notification_entity.dart';
+import '../bloc/notification_bloc.dart';
 
-class NotificationCenterPage extends StatefulWidget {
+class NotificationCenterPage extends StatelessWidget {
   const NotificationCenterPage({super.key});
 
   @override
-  State<NotificationCenterPage> createState() => _NotificationCenterPageState();
-}
-
-class _NotificationCenterPageState extends State<NotificationCenterPage> {
-  List<Map<String, dynamic>> _notifications = [];
-  bool _loading = true;
-  int _unreadCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchNotifications();
-  }
-
-  Future<void> _fetchNotifications() async {
-    setState(() => _loading = true);
-    try {
-      final dio = getIt<Dio>();
-      final responses = await Future.wait([
-        dio.get('/notifications'),
-        dio.get('/notifications/unread-count'),
-      ]);
-
-      final list = responses[0].data['data'];
-      final countData = responses[1].data['data'];
-
-      setState(() {
-        _notifications = list is List
-            ? List<Map<String, dynamic>>.from(list)
-            : [];
-        _unreadCount = countData?['unread_count'] ?? 0;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _markAsRead(String id, int index) async {
-    try {
-      final dio = getIt<Dio>();
-      await dio.put('/notifications/$id/read');
-      setState(() {
-        _notifications[index]['is_read'] = true;
-        _unreadCount = (_unreadCount - 1).clamp(0, 999);
-      });
-    } catch (_) {}
-  }
-
-  Future<void> _markAllRead() async {
-    try {
-      final dio = getIt<Dio>();
-      await dio.put('/notifications/read-all');
-      setState(() {
-        for (final n in _notifications) {
-          n['is_read'] = true;
-        }
-        _unreadCount = 0;
-      });
-    } catch (_) {}
-  }
-
-  void _openNotification(Map<String, dynamic> notif, int index) {
-    final isRead = notif['is_read'] == true;
-    final id = notif['id']?.toString() ?? '';
-    if (!isRead) _markAsRead(id, index);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _NotificationDetailSheet(notif: notif),
+  Widget build(BuildContext context) {
+    // Provide the singleton NotificationBloc for this page
+    return BlocProvider.value(
+      value: getIt<NotificationBloc>()..add(const LoadNotifications()),
+      child: const _NotificationCenterView(),
     );
   }
+}
+
+class _NotificationCenterView extends StatelessWidget {
+  const _NotificationCenterView();
 
   @override
   Widget build(BuildContext context) {
@@ -93,49 +32,83 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         elevation: 0,
-        title: Row(
-          children: [
-            Icon(Icons.notifications_rounded,
-                color: KhairColors.primary, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              _unreadCount > 0
-                  ? 'Notifications ($_unreadCount)'
-                  : 'Notifications',
-              style: KhairTypography.headlineSmall.copyWith(
-                color: isDark ? Colors.white : KhairColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          if (_unreadCount > 0)
-            TextButton.icon(
-              onPressed: _markAllRead,
-              icon: const Icon(Icons.done_all_rounded, size: 18),
-              label: const Text('Read all'),
-              style: TextButton.styleFrom(
-                foregroundColor: KhairColors.primary,
-              ),
-            ),
-        ],
-      ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: KhairColors.primary))
-          : _notifications.isEmpty
-              ? _buildEmptyState(isDark)
-              : RefreshIndicator(
-                  color: KhairColors.primary,
-                  onRefresh: _fetchNotifications,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                    itemCount: _notifications.length,
-                    itemBuilder: (context, index) =>
-                        _buildNotificationCard(_notifications[index], index, isDark),
+        title: BlocBuilder<NotificationBloc, NotificationState>(
+          buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
+          builder: (context, state) {
+            return Row(
+              children: [
+                Icon(Icons.notifications_rounded,
+                    color: KhairColors.primary, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  state.unreadCount > 0
+                      ? 'Notifications (${state.unreadCount})'
+                      : 'Notifications',
+                  style: KhairTypography.headlineSmall.copyWith(
+                    color: isDark ? Colors.white : KhairColors.textPrimary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          BlocBuilder<NotificationBloc, NotificationState>(
+            buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
+            builder: (context, state) {
+              if (state.unreadCount == 0) return const SizedBox.shrink();
+              return TextButton.icon(
+                onPressed: () =>
+                    context.read<NotificationBloc>().add(const MarkAllNotificationsRead()),
+                icon: const Icon(Icons.done_all_rounded, size: 18),
+                label: const Text('Read all'),
+                style: TextButton.styleFrom(
+                  foregroundColor: KhairColors.primary,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: BlocBuilder<NotificationBloc, NotificationState>(
+        builder: (context, state) {
+          if (state.status == NotificationStatus.loading &&
+              state.notifications.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(color: KhairColors.primary),
+            );
+          }
+
+          if (state.status == NotificationStatus.failure &&
+              state.notifications.isEmpty) {
+            return _buildErrorState(context, isDark, state.errorMessage);
+          }
+
+          if (state.notifications.isEmpty) {
+            return _buildEmptyState(isDark);
+          }
+
+          return RefreshIndicator(
+            color: KhairColors.primary,
+            onRefresh: () async {
+              context.read<NotificationBloc>().add(const LoadNotifications());
+              await context.read<NotificationBloc>().stream.firstWhere(
+                    (s) => s.status != NotificationStatus.loading,
+                  );
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              itemCount: state.notifications.length,
+              itemBuilder: (context, index) => _buildNotificationCard(
+                context,
+                state.notifications[index],
+                isDark,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -173,29 +146,76 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     );
   }
 
-  Widget _buildNotificationCard(
-      Map<String, dynamic> notif, int index, bool isDark) {
-    final isRead = notif['is_read'] == true;
-    final title = notif['title'] ?? '';
-    final message = notif['message'] ?? '';
-    final createdAt =
-        DateTime.tryParse(notif['created_at'] ?? '') ?? DateTime.now();
+  Widget _buildErrorState(BuildContext context, bool isDark, String? error) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.error_outline_rounded,
+                size: 40, color: Colors.red.withValues(alpha: 0.5)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load notifications',
+            style: KhairTypography.labelLarge.copyWith(
+              color: isDark ? Colors.white70 : KhairColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            error ?? 'Please try again',
+            style: KhairTypography.bodySmall.copyWith(
+              color: KhairColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () =>
+                context.read<NotificationBloc>().add(const LoadNotifications()),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhairColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildNotificationCard(
+    BuildContext context,
+    AppNotification notif,
+    bool isDark,
+  ) {
     return GestureDetector(
-      onTap: () => _openNotification(notif, index),
+      onTap: () => _openNotification(context, notif, isDark),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark
-              ? (isRead ? const Color(0xFF1A1A2E) : const Color(0xFF1E2A3A))
-              : (isRead ? Colors.white : KhairColors.primary.withValues(alpha: 0.04)),
+              ? (notif.isRead ? const Color(0xFF1A1A2E) : const Color(0xFF1E2A3A))
+              : (notif.isRead
+                  ? Colors.white
+                  : KhairColors.primary.withValues(alpha: 0.04)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isRead
-                ? (isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.15))
+            color: notif.isRead
+                ? (isDark
+                    ? Colors.white10
+                    : Colors.grey.withValues(alpha: 0.15))
                 : KhairColors.primary.withValues(alpha: 0.2),
-            width: isRead ? 0.5 : 1,
+            width: notif.isRead ? 0.5 : 1,
           ),
           boxShadow: [
             if (!isDark)
@@ -210,7 +230,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Khair logo avatar
-            _KhairAvatar(isRead: isRead),
+            _KhairAvatar(isRead: notif.isRead),
             const SizedBox(width: 12),
             // Content
             Expanded(
@@ -229,17 +249,18 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    title,
+                    notif.title,
                     style: KhairTypography.labelMedium.copyWith(
-                      fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight: notif.isRead ? FontWeight.w500 : FontWeight.w700,
                       color: isDark ? Colors.white : KhairColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    message,
+                    notif.message,
                     style: KhairTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white60 : KhairColors.textSecondary,
+                      color:
+                          isDark ? Colors.white60 : KhairColors.textSecondary,
                       height: 1.3,
                     ),
                     maxLines: 2,
@@ -252,7 +273,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                           size: 12, color: KhairColors.textTertiary),
                       const SizedBox(width: 4),
                       Text(
-                        DateFormat('MMM d, y • HH:mm').format(createdAt),
+                        DateFormat('MMM d, y • HH:mm').format(notif.createdAt),
                         style: KhairTypography.labelSmall.copyWith(
                           color: KhairColors.textTertiary,
                           fontSize: 11,
@@ -270,7 +291,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
               ),
             ),
             // Unread dot
-            if (!isRead) ...[
+            if (!notif.isRead) ...[
               const SizedBox(width: 8),
               Container(
                 margin: const EdgeInsets.only(top: 4),
@@ -291,6 +312,23 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _openNotification(
+    BuildContext context,
+    AppNotification notif,
+    bool isDark,
+  ) {
+    if (!notif.isRead) {
+      context.read<NotificationBloc>().add(MarkNotificationRead(notif.id));
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _NotificationDetailSheet(notif: notif),
     );
   }
 }
@@ -343,16 +381,12 @@ class _KhairAvatar extends StatelessWidget {
 // ─── Notification Detail Sheet ──────────────────
 
 class _NotificationDetailSheet extends StatelessWidget {
-  final Map<String, dynamic> notif;
+  final AppNotification notif;
   const _NotificationDetailSheet({required this.notif});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title = notif['title'] ?? '';
-    final message = notif['message'] ?? '';
-    final createdAt =
-        DateTime.tryParse(notif['created_at'] ?? '') ?? DateTime.now();
 
     return Container(
       constraints: BoxConstraints(
@@ -435,7 +469,7 @@ class _NotificationDetailSheet extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               DateFormat('EEEE, MMM d, y • HH:mm')
-                                  .format(createdAt),
+                                  .format(notif.createdAt),
                               style: KhairTypography.labelSmall.copyWith(
                                 color: KhairColors.textTertiary,
                                 fontSize: 12,
@@ -463,7 +497,7 @@ class _NotificationDetailSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               child: Text(
-                title,
+                notif.title,
                 style: KhairTypography.h2.copyWith(
                   color: isDark ? Colors.white : KhairColors.textPrimary,
                   fontWeight: FontWeight.w700,
@@ -477,7 +511,7 @@ class _NotificationDetailSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
               child: Text(
-                message,
+                notif.message,
                 style: KhairTypography.bodyLarge.copyWith(
                   color: isDark ? Colors.white70 : KhairColors.textSecondary,
                   height: 1.7,

@@ -4252,6 +4252,30 @@ abstract class AppLocalizations {
   /// **'Preferred time (optional)'**
   String get sheikhPreferredTime;
 
+  /// No description provided for @sheikhDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheikh'**
+  String get sheikhDefaultName;
+
+  /// No description provided for @sheikhDefaultSpecialization.
+  ///
+  /// In en, this message translates to:
+  /// **'Islamic Studies'**
+  String get sheikhDefaultSpecialization;
+
+  /// No description provided for @sheikhRequestMessageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a message'**
+  String get sheikhRequestMessageRequired;
+
+  /// No description provided for @sheikhRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send request'**
+  String get sheikhRequestFailed;
+
   /// No description provided for @sheikhSelectDateTime.
   ///
   /// In en, this message translates to:
@@ -4323,6 +4347,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review submitted! It will appear after moderation.'**
   String get sheikhReviewSubmitted;
+
+  /// No description provided for @sheikhReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit report'**
+  String get sheikhReportFailed;
+
+  /// No description provided for @sheikhProfileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Scholar Not Found'**
+  String get sheikhProfileNotFound;
+
+  /// No description provided for @sheikhProfileUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile may have been removed or the link is incorrect.'**
+  String get sheikhProfileUnavailableMessage;
 
   /// No description provided for @sheikhAllCities.
   ///

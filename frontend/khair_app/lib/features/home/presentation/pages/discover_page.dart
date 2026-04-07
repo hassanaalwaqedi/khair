@@ -9,6 +9,7 @@ import '../../../../core/utils/media_url_helper.dart';
 import '../../../events/domain/entities/event.dart';
 import '../../../events/presentation/bloc/events_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/widgets/loading_states.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/category_scroller.dart';
 import '../widgets/featured_carousel.dart';
@@ -189,29 +190,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
   //  SKELETON LOADER
   // ═══════════════════════════════════════
   Widget _buildSkeletonLoader(bool isDark, Color cardBg, Color bdr) {
-    final shimBase = isDark ? KhairColors.darkSurfaceVariant : KhairColors.surfaceVariant;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(children: [
-        // Featured skeleton
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            color: shimBase, borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        const SizedBox(height: 20),
-        // Cards skeleton
-        ...List.generate(3, (i) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            height: 90,
+    return ShimmerLoading(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(children: [
+          // Featured section skeleton
+          Container(
+            height: 200,
             decoration: BoxDecoration(
-              color: shimBase, borderRadius: BorderRadius.circular(14),
+              color: isDark ? const Color(0xFF1E2433) : const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
-        )),
-      ]),
+          const SizedBox(height: 20),
+          // Cards skeleton
+          ...List.generate(3, (i) => const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: EventCardSkeleton(),
+          )),
+        ]),
+      ),
     );
   }
 

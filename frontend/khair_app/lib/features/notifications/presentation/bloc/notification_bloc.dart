@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -104,11 +105,15 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final result = await _repository.getNotifications();
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: NotificationStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) {
+        dev.log('[NotifBloc] LoadNotifications FAILED: ${failure.message}');
+        emit(state.copyWith(
+          status: NotificationStatus.failure,
+          errorMessage: failure.message,
+        ));
+      },
       (notifications) {
+        dev.log('[NotifBloc] LoadNotifications OK: ${notifications.length} items');
         final unread = notifications.where((n) => !n.isRead).length;
         emit(state.copyWith(
           status: NotificationStatus.success,

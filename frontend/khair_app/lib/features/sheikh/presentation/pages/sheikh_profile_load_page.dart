@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/widgets/loading_states.dart';
 import '../../domain/entities/sheikh_profile.dart';
 import 'sheikh_profile_page.dart';
 
@@ -52,24 +54,9 @@ class _SheikhProfileLoadPageState extends State<SheikhProfileLoadPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFF0D1117),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: KhairColors.primary),
-              const SizedBox(height: 16),
-              Text(
-                'Loading profile...',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return const Scaffold(
+        backgroundColor: Color(0xFF0D1117),
+        body: SheikhProfileSkeleton(),
       );
     }
 
@@ -95,7 +82,7 @@ class _SheikhProfileLoadPageState extends State<SheikhProfileLoadPage> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Scholar Not Found',
+                context.l10n.sheikhProfileNotFound,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 20,
@@ -104,7 +91,7 @@ class _SheikhProfileLoadPageState extends State<SheikhProfileLoadPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'This profile may have been removed\nor the link is incorrect.',
+                context.l10n.sheikhProfileUnavailableMessage,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.4),
@@ -116,11 +103,12 @@ class _SheikhProfileLoadPageState extends State<SheikhProfileLoadPage> {
               ElevatedButton.icon(
                 onPressed: () => context.go('/'),
                 icon: const Icon(Icons.explore_rounded, size: 18),
-                label: const Text('Discover Events'),
+                label: Text(context.l10n.browseEvents),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhairColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),

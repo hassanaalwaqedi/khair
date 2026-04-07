@@ -74,12 +74,27 @@ func RunMigrations(db *sql.DB, migrationsPath string) error {
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		// Auto-recover from dirty state (happens when a previous migration failed mid-way)
+		version, dirty, vErr := m.Version()
+		if vErr == nil && dirty {
+			log.Printf("Dirty migration state detected at version %d — forcing clean state and retrying", version)
+			if forceErr := m.Force(int(version)); forceErr != nil {
+				return fmt.Errorf("failed to force migration version: %w", forceErr)
+			}
+			// Retry after forcing clean
+			if retryErr := m.Up(); retryErr != nil && retryErr != migrate.ErrNoChange {
+				return fmt.Errorf("failed to run migrations after dirty-state recovery: %w", retryErr)
+			}
+			log.Println("Database migrations completed (recovered from dirty state)")
+			return nil
+		}
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	log.Println("Database migrations completed")
 	return nil
 }
+
 
 // Close closes the database connection
 func Close() error {

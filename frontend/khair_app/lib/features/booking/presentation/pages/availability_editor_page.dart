@@ -29,6 +29,7 @@ class _AvailabilityEditorPageState extends State<AvailabilityEditorPage> {
   String _timezone = 'UTC';
 
   bool _loaded = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -87,13 +88,21 @@ class _AvailabilityEditorPageState extends State<AvailabilityEditorPage> {
       ),
       body: BlocConsumer<BookingBloc, BookingState>(
         listener: (context, state) {
-          if (state.settingsStatus == BookingStatus.success && _loaded) {
+          if (!_loaded && state.settingsStatus == BookingStatus.success) {
+            setState(() => _applyLoadedData(state));
+          } else if (_loaded && state.settingsStatus == BookingStatus.success && _saving) {
+            _saving = false;
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Settings saved ✓'), backgroundColor: Colors.green),
             );
-          }
-          if (!_loaded && state.settingsStatus == BookingStatus.success) {
-            setState(() => _applyLoadedData(state));
+          } else if (_loaded && state.settingsStatus == BookingStatus.failure && _saving) {
+            _saving = false;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to save: ${state.errorMessage ?? "Unknown error"}'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         builder: (context, state) {
@@ -321,6 +330,7 @@ class _AvailabilityEditorPageState extends State<AvailabilityEditorPage> {
   }
 
   void _saveAll() {
+    _saving = true;
     // Build availability rules
     final List<Map<String, dynamic>> rules = [];
     for (int day = 0; day < 7; day++) {

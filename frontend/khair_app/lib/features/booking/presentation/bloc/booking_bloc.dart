@@ -271,8 +271,18 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
   Future<void> _onLoadSettings(LoadBookingSettings event, Emitter<BookingState> emit) async {
     emit(state.copyWith(settingsStatus: BookingStatus.loading));
     try {
-      final settings = await _datasource.getBookingSettings();
-      emit(state.copyWith(settingsStatus: BookingStatus.success, bookingSettings: settings));
+      // Load both settings and availability rules together
+      final results = await Future.wait([
+        _datasource.getBookingSettings(),
+        _datasource.getMyAvailability(),
+      ]);
+      final settings = results[0] as Map<String, dynamic>;
+      final rules = results[1] as List<Map<String, dynamic>>;
+      emit(state.copyWith(
+        settingsStatus: BookingStatus.success,
+        bookingSettings: settings,
+        availabilityRules: rules,
+      ));
     } catch (e) {
       emit(state.copyWith(settingsStatus: BookingStatus.failure, errorMessage: e.toString()));
     }

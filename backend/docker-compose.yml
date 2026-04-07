@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: khair-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Server
+      SERVER_PORT: "8080"
+      GIN_MODE: release
+
+      # Database — AWS Aurora RDS (external)
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE:-require}
+
+      # Redis (local container)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}
+
+      # Email
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
+
+      # AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+
+      # Uploads
+      UPLOAD_DIR: ./uploads
+      MAX_UPLOAD_SIZE_MB: "10"
+      AZURE_STORAGE_CONNECTION: ${AZURE_STORAGE_CONNECTION}
+      AZURE_STORAGE_CONTAINER: ${AZURE_STORAGE_CONTAINER:-uploads}
+
+      # Sentry
+      SENTRY_DSN: ${SENTRY_DSN}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_PRETTY: ${LOG_PRETTY:-false}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - khair-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: khair-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - khair-net
+
+networks:
+  khair-net:
+    driver: bridge

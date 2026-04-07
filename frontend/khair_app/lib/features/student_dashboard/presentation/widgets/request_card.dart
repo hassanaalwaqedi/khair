@@ -13,12 +13,17 @@ class RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localeName = Localizations.localeOf(context).toString();
     final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final ts =
+        isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
     final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
     final borderColor = isDark ? KhairColors.darkBorder : KhairColors.border;
 
-    final sheikhName = request['sheikh_name'] as String? ?? 'Sheikh';
+    final sheikhName =
+        (request['sheikh_name'] as String?)?.trim().isNotEmpty == true
+            ? (request['sheikh_name'] as String).trim()
+            : context.l10n.sheikhDefaultName;
     final status = (request['status'] as String?) ?? 'pending';
     final message = request['message'] as String? ?? '';
     final rejectionReason = request['rejection_reason'] as String?;
@@ -29,7 +34,9 @@ class RequestCard extends StatelessWidget {
     if (createdStr != null) createdAt = DateTime.tryParse(createdStr);
 
     DateTime? preferredTime;
-    if (preferredTimeStr != null) preferredTime = DateTime.tryParse(preferredTimeStr);
+    if (preferredTimeStr != null) {
+      preferredTime = DateTime.tryParse(preferredTimeStr);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -71,7 +78,8 @@ class RequestCard extends StatelessWidget {
                     ),
                     if (createdAt != null)
                       Text(
-                        DateFormat('MMM d, yyyy').format(createdAt.toLocal()),
+                        DateFormat.yMMMd(localeName)
+                            .format(createdAt.toLocal()),
                         style: KhairTypography.bodySmall.copyWith(color: ts),
                       ),
                   ],
@@ -100,7 +108,9 @@ class RequestCard extends StatelessWidget {
                 Icon(Icons.access_time_rounded, size: 14, color: ts),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormat('EEE, MMM d · h:mm a').format(preferredTime.toLocal()),
+                  DateFormat.MMMEd(localeName)
+                      .add_jm()
+                      .format(preferredTime.toLocal()),
                   style: KhairTypography.bodySmall.copyWith(color: ts),
                 ),
               ],
@@ -108,7 +118,9 @@ class RequestCard extends StatelessWidget {
           ],
 
           // Rejection reason
-          if (status == 'rejected' && rejectionReason != null && rejectionReason.isNotEmpty) ...[
+          if (status == 'rejected' &&
+              rejectionReason != null &&
+              rejectionReason.isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -120,8 +132,8 @@ class RequestCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 14,
-                      color: KhairColors.errorDark),
+                  Icon(Icons.info_outline_rounded,
+                      size: 14, color: KhairColors.errorDark),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(

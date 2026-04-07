@@ -781,6 +781,10 @@
   "sheikhWhatToLearn": "ماذا تريد أن تتعلم؟",
   "sheikhWhatToLearnHint": "مثال: أريد تعلم التفسير...",
   "sheikhPreferredTime": "الوقت المفضل (اختياري)",
+  "sheikhDefaultName": "شيخ",
+  "sheikhDefaultSpecialization": "الدراسات الإسلامية",
+  "sheikhRequestMessageRequired": "يرجى إدخال رسالة",
+  "sheikhRequestFailed": "فشل في إرسال الطلب",
   "sheikhSelectDateTime": "اختر التاريخ والوقت",
   "sheikhSendRequest": "إرسال الطلب",
   "sheikhRequestSent": "تم إرسال طلب الدرس! سيراجعه الشيخ.",
@@ -798,6 +802,9 @@
   "sheikhShareExperience": "شارك تجربتك...",
   "sheikhSubmitReview": "إرسال التقييم",
   "sheikhReviewSubmitted": "تم إرسال التقييم! سيظهر بعد المراجعة.",
+  "sheikhReportFailed": "فشل في إرسال البلاغ",
+  "sheikhProfileNotFound": "تعذر العثور على العالم",
+  "sheikhProfileUnavailableMessage": "ربما تمت إزالة هذا الملف أو أن الرابط غير صحيح.",
   "sheikhAllCities": "جميع المدن",
   "catLectures": "محاضرات",
   "catCommunity": "مجتمع",
@@ -886,5 +893,4 @@
   "yes": "نعم",
   "no": "لا"
 }
-
 

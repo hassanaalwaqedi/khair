@@ -26,6 +26,13 @@ class BookingDatasource {
     await _api.put('/sheikh/availability', data: {'rules': rules});
   }
 
+  /// Get the sheikh's own availability (authenticated).
+  Future<List<Map<String, dynamic>>> getMyAvailability() async {
+    final res = await _api.get('/sheikh/availability');
+    final data = res.data['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
   Future<void> deleteAvailability(int dayOfWeek) async {
     await _api.delete('/sheikh/availability/$dayOfWeek');
   }

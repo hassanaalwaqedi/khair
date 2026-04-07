@@ -34,7 +34,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         listener: (context, state) {
           if (state.reviewMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.reviewMessage!)),
+              SnackBar(
+                content: Text(_localizeMessage(context, state.reviewMessage!)),
+              ),
             );
           }
           if (state.errorMessage != null) {
@@ -68,12 +70,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     final authState = context.watch<AuthBloc>().state;
     final email = authState.user?.email ?? '';
 
-    final lessonsCompleted =
-        (state.stats['lessons_completed'] as int?) ?? 0;
-    final upcomingCount =
-        (state.stats['upcoming_count'] as int?) ?? 0;
-    final pendingRequests =
-        (state.stats['pending_requests'] as int?) ?? 0;
+    final lessonsCompleted = (state.stats['lessons_completed'] as int?) ?? 0;
+    final upcomingCount = (state.stats['upcoming_count'] as int?) ?? 0;
+    final pendingRequests = (state.stats['pending_requests'] as int?) ?? 0;
 
     final tabs = [
       context.l10n.upcomingTab,
@@ -282,7 +281,10 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   void _showRateDialog(BuildContext context, Map<String, dynamic> booking) {
     final sheikhId = booking['sheikh_id'] as String?;
     if (sheikhId == null) return;
-    final sheikhName = booking['sheikh_name'] as String? ?? 'Sheikh';
+    final sheikhName =
+        (booking['sheikh_name'] as String?)?.trim().isNotEmpty == true
+            ? (booking['sheikh_name'] as String).trim()
+            : context.l10n.sheikhDefaultName;
 
     int rating = 0;
     final commentController = TextEditingController();
@@ -305,7 +307,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                   return IconButton(
                     onPressed: () => setDialogState(() => rating = i + 1),
                     icon: Icon(
-                      i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      i < rating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
                       color: KhairColors.warning,
                       size: 32,
                     ),
@@ -363,20 +367,30 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
             Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              message ?? 'Something went wrong',
+              message ?? context.l10n.discoverSomethingWentWrong,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () =>
-                  context.read<StudentDashboardBloc>().add(const LoadDashboard()),
-              child: const Text('Retry'),
+              onPressed: () => context
+                  .read<StudentDashboardBloc>()
+                  .add(const LoadDashboard()),
+              child: Text(context.l10n.retry),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _localizeMessage(BuildContext context, String message) {
+    switch (message) {
+      case 'sheikhReviewSubmitted':
+        return context.l10n.sheikhReviewSubmitted;
+      default:
+        return message;
+    }
   }
 }
 
@@ -484,9 +498,8 @@ class _EmptyTab extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: isDark
-                    ? KhairColors.darkCard
-                    : KhairColors.surfaceVariant,
+                color:
+                    isDark ? KhairColors.darkCard : KhairColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(36),
               ),
               child: Icon(icon, size: 32, color: KhairColors.neutral400),

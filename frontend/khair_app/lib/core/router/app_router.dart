@@ -73,8 +73,8 @@ final GoRouter appRouter = GoRouter(
             BlocProvider(
               create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts()),
             ),
-            BlocProvider(
-              create: (_) => getIt<NotificationBloc>()..add(const LoadUnreadCount()),
+            BlocProvider.value(
+              value: getIt<NotificationBloc>()..add(const LoadUnreadCount()),
             ),
             BlocProvider(
               create: (_) => getIt<LocationBloc>(),

@@ -85,13 +85,41 @@ func (s *Service) ListByUserID(userID uuid.UUID) ([]Notification, error) {
 	defer cancel()
 
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, user_id, title, message, notification_type, data, is_read, created_at
+		`SELECT id, user_id, title, message,
+		        COALESCE(notification_type, 'general'),
+		        COALESCE(data, '{}'),
+		        is_read, created_at
 		 FROM notifications WHERE user_id = $1
 		 ORDER BY created_at DESC LIMIT 50`,
 		userID,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("list notifications: %w", err)
+		// Fallback: try without notification_type and data columns (pre-migration)
+		rows, err = s.db.QueryContext(ctx,
+			`SELECT id, user_id, title, message, is_read, created_at
+			 FROM notifications WHERE user_id = $1
+			 ORDER BY created_at DESC LIMIT 50`,
+			userID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("list notifications: %w", err)
+		}
+		defer rows.Close()
+
+		var notifications []Notification
+		for rows.Next() {
+			var n Notification
+			if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Message, &n.IsRead, &n.CreatedAt); err != nil {
+				return nil, fmt.Errorf("scan notification: %w", err)
+			}
+			n.NotificationType = "general"
+			n.Data = map[string]string{}
+			notifications = append(notifications, n)
+		}
+		if notifications == nil {
+			notifications = []Notification{}
+		}
+		return notifications, nil
 	}
 	defer rows.Close()
 
@@ -187,12 +215,16 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 // List returns user's notifications
 func (h *Handler) List(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	uid, _ := userID.(uuid.UUID)
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		response.Unauthorized(c, "Invalid user session")
+		return
+	}
 
 	notifications, err := h.service.ListByUserID(uid)
 	if err != nil {
-		// Graceful degradation – return empty list if table doesn't exist yet
-		response.Success(c, []interface{}{})
+		fmt.Printf("[NOTIFICATION] Error listing notifications for user %s: %v\n", uid, err)
+		response.InternalServerError(c, "Failed to load notifications")
 		return
 	}
 	response.Success(c, notifications)
@@ -201,11 +233,15 @@ func (h *Handler) List(c *gin.Context) {
 // UnreadCount returns unread notification count
 func (h *Handler) UnreadCount(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	uid, _ := userID.(uuid.UUID)
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		response.Success(c, gin.H{"unread_count": 0})
+		return
+	}
 
 	count, err := h.service.GetUnreadCount(uid)
 	if err != nil {
-		// Graceful degradation – return 0 if notifications table doesn't exist yet
+		fmt.Printf("[NOTIFICATION] Error getting unread count for user %s: %v\n", uid, err)
 		response.Success(c, gin.H{"unread_count": 0})
 		return
 	}

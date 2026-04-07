@@ -2209,6 +2209,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sheikhPreferredTime => 'Preferred time (optional)';
 
   @override
+  String get sheikhDefaultName => 'Sheikh';
+
+  @override
+  String get sheikhDefaultSpecialization => 'Islamic Studies';
+
+  @override
+  String get sheikhRequestMessageRequired => 'Please enter a message';
+
+  @override
+  String get sheikhRequestFailed => 'Failed to send request';
+
+  @override
   String get sheikhSelectDateTime => 'Select date & time';
 
   @override
@@ -2247,6 +2259,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sheikhReviewSubmitted =>
       'Review submitted! It will appear after moderation.';
+
+  @override
+  String get sheikhReportFailed => 'Failed to submit report';
+
+  @override
+  String get sheikhProfileNotFound => 'Scholar Not Found';
+
+  @override
+  String get sheikhProfileUnavailableMessage =>
+      'This profile may have been removed or the link is incorrect.';
 
   @override
   String get sheikhAllCities => 'All Cities';

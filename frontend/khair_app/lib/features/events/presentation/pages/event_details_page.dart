@@ -18,6 +18,7 @@ import '../../data/datasources/join_datasource.dart';
 import '../../domain/entities/event.dart';
 import '../bloc/events_bloc.dart';
 import '../widgets/join_event_modal.dart';
+import '../../../../core/widgets/loading_states.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
@@ -94,7 +95,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       body: BlocBuilder<EventsBloc, EventsState>(
         builder: (context, state) {
           if (state.detailsStatus == EventsStatus.loading) {
-            return Center(child: CircularProgressIndicator(color: KhairColors.primary));
+            return const EventDetailsSkeleton();
           }
           if (state.detailsStatus == EventsStatus.failure || state.selectedEvent == null) {
             return Center(child: Column(
@@ -1086,7 +1087,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   void _handleJoinTap(BuildContext ctx, String eventId, String title) {
     final authState = ctx.read<AuthBloc>().state;
     if (authState.status != AuthStatus.authenticated || authState.user == null) {
-      showJoinEventModal(ctx, eventId, title);
+      // Navigate to registration page for unauthenticated users
+      GoRouter.of(ctx).push('/register');
       return;
     }
     _joinDirectly(ctx, eventId, title);

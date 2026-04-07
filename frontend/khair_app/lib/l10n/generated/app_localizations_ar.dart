@@ -2176,6 +2176,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sheikhPreferredTime => 'الوقت المفضل (اختياري)';
 
   @override
+  String get sheikhDefaultName => 'شيخ';
+
+  @override
+  String get sheikhDefaultSpecialization => 'الدراسات الإسلامية';
+
+  @override
+  String get sheikhRequestMessageRequired => 'يرجى إدخال رسالة';
+
+  @override
+  String get sheikhRequestFailed => 'فشل في إرسال الطلب';
+
+  @override
   String get sheikhSelectDateTime => 'اختر التاريخ والوقت';
 
   @override
@@ -2212,6 +2224,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sheikhReviewSubmitted => 'تم إرسال التقييم! سيظهر بعد المراجعة.';
+
+  @override
+  String get sheikhReportFailed => 'فشل في إرسال البلاغ';
+
+  @override
+  String get sheikhProfileNotFound => 'تعذر العثور على العالم';
+
+  @override
+  String get sheikhProfileUnavailableMessage =>
+      'ربما تمت إزالة هذا الملف أو أن الرابط غير صحيح.';
 
   @override
   String get sheikhAllCities => 'جميع المدن';

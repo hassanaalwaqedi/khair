@@ -207,7 +207,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<NotificationRepository>(
     () => NotificationRepositoryImpl(getIt<NotificationRemoteDataSource>()),
   );
-  getIt.registerFactory<NotificationBloc>(
+  getIt.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
   );
 

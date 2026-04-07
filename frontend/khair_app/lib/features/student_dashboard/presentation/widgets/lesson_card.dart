@@ -23,12 +23,17 @@ class LessonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localeName = Localizations.localeOf(context).toString();
     final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final ts =
+        isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
     final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
     final borderColor = isDark ? KhairColors.darkBorder : KhairColors.border;
 
-    final sheikhName = booking['sheikh_name'] as String? ?? 'Sheikh';
+    final sheikhName =
+        (booking['sheikh_name'] as String?)?.trim().isNotEmpty == true
+            ? (booking['sheikh_name'] as String).trim()
+            : context.l10n.sheikhDefaultName;
     final status = (booking['status'] as String?) ?? 'pending';
     final startStr = booking['start_time'] as String?;
     final meetingLink = booking['meeting_link'] as String?;
@@ -40,10 +45,10 @@ class LessonCard extends StatelessWidget {
     }
 
     final dateStr = startTime != null
-        ? DateFormat('EEE, MMM d').format(startTime.toLocal())
-        : '—';
+        ? DateFormat.MMMEd(localeName).format(startTime.toLocal())
+        : '-';
     final timeStr = startTime != null
-        ? DateFormat('h:mm a').format(startTime.toLocal())
+        ? DateFormat.jm(localeName).format(startTime.toLocal())
         : '';
 
     return Container(
@@ -86,7 +91,7 @@ class LessonCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$dateStr · $timeStr',
+                      timeStr.isNotEmpty ? '$dateStr - $timeStr' : dateStr,
                       style: KhairTypography.bodySmall.copyWith(color: ts),
                     ),
                   ],
@@ -243,7 +248,8 @@ class _ActionButton extends StatelessWidget {
         icon: Icon(icon, size: 14, color: color),
         label: Text(
           label,
-          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              fontSize: 12, color: color, fontWeight: FontWeight.w600),
         ),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -258,7 +264,8 @@ class _ActionButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 14),
-      label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+      label: Text(label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,

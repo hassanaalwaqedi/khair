@@ -22,13 +22,16 @@ class StatsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final ts =
+        isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
     final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
     final borderColor = isDark ? KhairColors.darkBorder : KhairColors.border;
 
     // Extract name from email
-    final name = userEmail.split('@').first;
-    final displayName = name[0].toUpperCase() + name.substring(1);
+    final name = userEmail.split('@').first.trim();
+    final displayName = name.isNotEmpty
+        ? name[0].toUpperCase() + name.substring(1)
+        : context.l10n.registrationRoleStudent;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -128,7 +131,9 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: KhairTypography.h3.copyWith(
-              color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+              color: isDark
+                  ? KhairColors.darkTextPrimary
+                  : KhairColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -136,7 +141,9 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: KhairTypography.labelSmall.copyWith(
-              color: isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary,
+              color: isDark
+                  ? KhairColors.darkTextSecondary
+                  : KhairColors.textSecondary,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,

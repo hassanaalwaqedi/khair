@@ -217,8 +217,8 @@ class SheikhProfilePage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xFF0B0F14),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                          color: const Color(0xFF0B0F14), width: 2),
+                      border:
+                          Border.all(color: const Color(0xFF0B0F14), width: 2),
                     ),
                     child: Icon(Icons.verified_rounded,
                         size: 20, color: AppColors.primary),
@@ -243,8 +243,7 @@ class SheikhProfilePage extends StatelessWidget {
           if (sheikh.specialization != null &&
               sheikh.specialization!.isNotEmpty)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
@@ -279,7 +278,7 @@ class SheikhProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                    '(${context.l10n.sheikhReviewsCount(sheikh.totalReviews)})',
+                  '(${context.l10n.sheikhReviewsCount(sheikh.totalReviews)})',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 13,
@@ -295,8 +294,7 @@ class SheikhProfilePage extends StatelessWidget {
                     color: const Color(0xFF10B981).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color:
-                            const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     '🆕 ${context.l10n.sheikhNew}',
@@ -336,11 +334,12 @@ class SheikhProfilePage extends StatelessWidget {
       ));
     }
     stats.add(_StatItem(
-      icon: sheikh.isVerified
-          ? Icons.verified_outlined
-          : Icons.pending_outlined,
+      icon:
+          sheikh.isVerified ? Icons.verified_outlined : Icons.pending_outlined,
       label: context.l10n.sheikhStatus,
-      value: sheikh.isVerified ? context.l10n.sheikhVerified : context.l10n.sheikhPending,
+      value: sheikh.isVerified
+          ? context.l10n.sheikhVerified
+          : context.l10n.sheikhPending,
       valueColor:
           sheikh.isVerified ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
     ));
@@ -444,8 +443,7 @@ class SheikhProfilePage extends StatelessWidget {
                   fontSize: 14),
             ),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.3)),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
@@ -455,12 +453,14 @@ class SheikhProfilePage extends StatelessWidget {
     );
   }
 
+  // ignore: unused_element
   void _showContactInfo(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(ctx).padding.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(ctx).padding.bottom + 24),
         decoration: const BoxDecoration(
           color: Color(0xFF1A1F2E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -469,7 +469,8 @@ class SheikhProfilePage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
@@ -483,7 +484,9 @@ class SheikhProfilePage extends StatelessWidget {
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             _ContactRow(
-                icon: Icons.email_outlined, label: context.l10n.email, value: sheikh.email),
+                icon: Icons.email_outlined,
+                label: context.l10n.email,
+                value: sheikh.email),
             const SizedBox(height: 24),
           ],
         ),
@@ -661,11 +664,15 @@ class SheikhProfilePage extends StatelessWidget {
           builder: (ctx, setModalState) {
             return Container(
               padding: EdgeInsets.fromLTRB(
-                  24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom + 24),
+                  24,
+                  24,
+                  24,
+                  MediaQuery.of(ctx).viewInsets.bottom +
+                      MediaQuery.of(ctx).padding.bottom +
+                      24),
               decoration: const BoxDecoration(
                 color: Color(0xFF1A1F2E),
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -673,10 +680,11 @@ class SheikhProfilePage extends StatelessWidget {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(2)),
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -686,8 +694,7 @@ class SheikhProfilePage extends StatelessWidget {
                           fontSize: 20,
                           fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
-                  Text(
-                      context.l10n.sheikhReportDesc,
+                  Text(context.l10n.sheikhReportDesc,
                       style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.5))),
@@ -698,8 +705,8 @@ class SheikhProfilePage extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: context.l10n.sheikhReportHint,
-                      hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.06),
                       border: OutlineInputBorder(
@@ -712,8 +719,7 @@ class SheikhProfilePage extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.1))),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: AppColors.primary)),
+                          borderSide: BorderSide(color: AppColors.primary)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -728,8 +734,7 @@ class SheikhProfilePage extends StatelessWidget {
                               setModalState(() => isLoading = true);
                               try {
                                 final api = getIt<ApiClient>();
-                                await api.post(
-                                    '/sheikhs/${sheikh.id}/report',
+                                await api.post('/sheikhs/${sheikh.id}/report',
                                     data: {
                                       'reason': reasonController.text.trim()
                                     });
@@ -737,15 +742,18 @@ class SheikhProfilePage extends StatelessWidget {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content: Text(
-                                            context.l10n.sheikhReportSubmitted)),
+                                        content: Text(context
+                                            .l10n.sheikhReportSubmitted)),
                                   );
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
                                 if (ctx.mounted) {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(content: Text('Failed: $e')),
+                                    SnackBar(
+                                      content:
+                                          Text(context.l10n.sheikhReportFailed),
+                                    ),
                                   );
                                 }
                               }
@@ -763,8 +771,7 @@ class SheikhProfilePage extends StatelessWidget {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white))
                           : Text(context.l10n.sheikhSubmitReport,
-                              style:
-                                  TextStyle(fontWeight: FontWeight.w700)),
+                              style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -778,6 +785,9 @@ class SheikhProfilePage extends StatelessWidget {
 
   void _showRequestLessonModal(BuildContext context) {
     final msgController = TextEditingController();
+    final localeName = Localizations.localeOf(context).toString();
+    final requestMessageRequired = context.l10n.sheikhRequestMessageRequired;
+    final requestFailedMessage = context.l10n.sheikhRequestFailed;
     DateTime? selectedTime;
     bool isLoading = false;
 
@@ -790,11 +800,15 @@ class SheikhProfilePage extends StatelessWidget {
           builder: (ctx, setModalState) {
             return Container(
               padding: EdgeInsets.fromLTRB(
-                  24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom + 24),
+                  24,
+                  24,
+                  24,
+                  MediaQuery.of(ctx).viewInsets.bottom +
+                      MediaQuery.of(ctx).padding.bottom +
+                      24),
               decoration: const BoxDecoration(
                 color: Color(0xFF1A1F2E),
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -817,8 +831,7 @@ class SheikhProfilePage extends StatelessWidget {
                           fontSize: 20,
                           fontWeight: FontWeight.w800)),
                   const SizedBox(height: 4),
-                  Text(
-                      context.l10n.sheikhSendLessonRequest(sheikh.name),
+                  Text(context.l10n.sheikhSendLessonRequest(sheikh.name),
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 13)),
@@ -831,15 +844,15 @@ class SheikhProfilePage extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: context.l10n.sheikhWhatToLearn,
-                      labelStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5)),
+                      labelStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                       hintText: context.l10n.sheikhWhatToLearnHint,
-                      hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.06),
-                      counterStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3)),
+                      counterStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
@@ -850,8 +863,7 @@ class SheikhProfilePage extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.1))),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: AppColors.primary)),
+                          borderSide: BorderSide(color: AppColors.primary)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -863,8 +875,7 @@ class SheikhProfilePage extends StatelessWidget {
                         initialDate:
                             DateTime.now().add(const Duration(days: 1)),
                         firstDate: DateTime.now(),
-                        lastDate:
-                            DateTime.now().add(const Duration(days: 90)),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
                       );
                       if (date != null && ctx.mounted) {
                         final time = await showTimePicker(
@@ -891,8 +902,7 @@ class SheikhProfilePage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.04),
                         border: Border.all(
-                            color:
-                                Colors.white.withValues(alpha: 0.1)),
+                            color: Colors.white.withValues(alpha: 0.1)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -903,14 +913,14 @@ class SheikhProfilePage extends StatelessWidget {
                           Expanded(
                             child: Text(
                               selectedTime != null
-                                  ? DateFormat('EEE, MMM d • h:mm a')
+                                  ? DateFormat.yMMMEd(localeName)
+                                      .add_jm()
                                       .format(selectedTime!)
                                   : context.l10n.sheikhPreferredTime,
                               style: TextStyle(
                                 color: selectedTime != null
                                     ? Colors.white
-                                    : Colors.white
-                                        .withValues(alpha: 0.35),
+                                    : Colors.white.withValues(alpha: 0.35),
                                 fontSize: 14,
                               ),
                             ),
@@ -931,47 +941,56 @@ class SheikhProfilePage extends StatelessWidget {
                               final msg = msgController.text.trim();
                               if (msg.isEmpty) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Please enter a message')),
+                                  SnackBar(
+                                    content: Text(requestMessageRequired),
+                                  ),
                                 );
                                 return;
                               }
                               setModalState(() => isLoading = true);
                               try {
                                 final api = getIt<ApiClient>();
-                                await api
-                                    .post('/lesson-requests', data: {
+                                await api.post('/lesson-requests', data: {
                                   'sheikh_id': sheikh.id,
                                   'message': msg,
                                   if (selectedTime != null)
-                                    'preferred_time': selectedTime!
-                                        .toUtc()
-                                        .toIso8601String(),
+                                    'preferred_time':
+                                        selectedTime!.toUtc().toIso8601String(),
                                 });
                                 if (ctx.mounted) Navigator.pop(ctx);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(
-                                          context.l10n.sheikhRequestSent),
+                                      content:
+                                          Text(context.l10n.sheikhRequestSent),
                                       backgroundColor: KhairColors.success,
                                     ),
                                   );
                                 }
                               } on DioException catch (e) {
                                 setModalState(() => isLoading = false);
-                                final errMsg = e.response?.data?['message'] ??
-                                    'Failed to send request';
+                                final serverMessage = e
+                                    .response?.data?['message']
+                                    ?.toString()
+                                    .trim();
+                                final errMsg = (serverMessage != null &&
+                                        serverMessage.isNotEmpty)
+                                    ? serverMessage
+                                    : requestFailedMessage;
                                 if (ctx.mounted) {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text(errMsg.toString())),
+                                    SnackBar(content: Text(errMsg.toString())),
                                   );
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
+                                if (ctx.mounted) {
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    SnackBar(
+                                      content: Text(requestFailedMessage),
+                                    ),
+                                  );
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(
@@ -988,8 +1007,7 @@ class SheikhProfilePage extends StatelessWidget {
                                   color: Colors.white, strokeWidth: 2))
                           : Text(context.l10n.sheikhSendRequest,
                               style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16)),
+                                  fontWeight: FontWeight.w700, fontSize: 16)),
                     ),
                   ),
                 ],
@@ -1002,23 +1020,29 @@ class SheikhProfilePage extends StatelessWidget {
   }
 
   void _shareSheikh(BuildContext context) {
+    final l10n = context.l10n;
     final shareText = StringBuffer();
-    shareText.writeln('🕌 Sheikh ${sheikh.name}');
+    shareText.writeln(sheikh.name);
     if (sheikh.specialization != null && sheikh.specialization!.isNotEmpty) {
-      shareText.writeln('📚 ${sheikh.specialization}');
+      shareText.writeln(sheikh.specialization);
     }
     final location = [sheikh.city, sheikh.country]
         .where((e) => e != null && e.isNotEmpty)
         .join(', ');
-    if (location.isNotEmpty) shareText.writeln('📍 $location');
-    if (sheikh.yearsOfExperience != null) {
-      shareText
-          .writeln('⭐ ${sheikh.yearsOfExperience} years experience');
+    if (location.isNotEmpty) {
+      shareText.writeln('${l10n.sheikhLocation}: $location');
     }
-    if (sheikh.isVerified) shareText.writeln('✅ Verified Sheikh');
+    if (sheikh.yearsOfExperience != null) {
+      shareText.writeln(
+        '${l10n.sheikhExperience}: '
+        '${l10n.sheikhYearsExperience(sheikh.yearsOfExperience!)}',
+      );
+    }
+    if (sheikh.isVerified) {
+      shareText.writeln('${l10n.sheikhStatus}: ${l10n.sheikhVerified}');
+    }
     shareText.writeln();
-    shareText.write(
-        'Discover on Khair: ${ApiConfig.serverOrigin}/sheikhs/${sheikh.id}');
+    shareText.write('Khair: ${ApiConfig.serverOrigin}/sheikhs/${sheikh.id}');
     ShareHelper.share(context, shareText.toString());
   }
 
@@ -1127,8 +1151,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
   Future<void> _loadReviews() async {
     try {
       final api = getIt<ApiClient>();
-      final res =
-          await api.get('/sheikhs/${widget.sheikhId}/reviews');
+      final res = await api.get('/sheikhs/${widget.sheikhId}/reviews');
       if (mounted) {
         setState(() {
           _reviews = (res.data['data'] as List?) ?? [];
@@ -1142,6 +1165,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final localeName = Localizations.localeOf(context).toString();
     // Rating summary bar
     final summaryBar = Container(
       padding: const EdgeInsets.all(16),
@@ -1274,10 +1298,11 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
         const SizedBox(height: 16),
         ..._reviews!.map<Widget>((r) {
           final rating = (r['rating'] as num?)?.toInt() ?? 5;
-          final name = r['student_name'] as String? ?? 'Student';
+          final name = (r['student_name'] as String?)?.trim().isNotEmpty == true
+              ? (r['student_name'] as String).trim()
+              : context.l10n.registrationRoleStudent;
           final comment = r['comment'] as String? ?? '';
-          final date =
-              DateTime.tryParse(r['created_at'] as String? ?? '');
+          final date = DateTime.tryParse(r['created_at'] as String? ?? '');
 
           return Container(
             width: double.infinity,
@@ -1286,8 +1311,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1331,11 +1355,10 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                               if (date != null) ...[
                                 const SizedBox(width: 8),
                                 Text(
-                                  DateFormat('MMM d, y').format(date),
+                                  DateFormat.yMMMd(localeName).format(date),
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.white
-                                        .withValues(alpha: 0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                   ),
                                 ),
                               ],

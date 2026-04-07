@@ -2222,6 +2222,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sheikhPreferredTime => 'Tercih edilen zaman (isteğe bağlı)';
 
   @override
+  String get sheikhDefaultName => 'Hoca';
+
+  @override
+  String get sheikhDefaultSpecialization => 'İslami İlimler';
+
+  @override
+  String get sheikhRequestMessageRequired => 'Lütfen bir mesaj girin';
+
+  @override
+  String get sheikhRequestFailed => 'Talep gönderilemedi';
+
+  @override
   String get sheikhSelectDateTime => 'Tarih ve saat seçin';
 
   @override
@@ -2260,6 +2272,16 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get sheikhReviewSubmitted =>
       'Değerlendirme gönderildi! Moderasyondan sonra görünecektir.';
+
+  @override
+  String get sheikhReportFailed => 'Bildirim gönderilemedi';
+
+  @override
+  String get sheikhProfileNotFound => 'Alim bulunamadı';
+
+  @override
+  String get sheikhProfileUnavailableMessage =>
+      'Bu profil kaldırılmış olabilir veya bağlantı hatalı olabilir.';
 
   @override
   String get sheikhAllCities => 'Tüm Şehirler';
