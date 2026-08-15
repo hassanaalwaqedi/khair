@@ -28,6 +28,9 @@ type UpdateProfileRequest struct {
 	Website     *string `json:"website"`
 	Phone       *string `json:"phone"`
 	LogoURL     *string `json:"logo_url"`
+	City        *string `json:"city"`
+	Country     *string `json:"country"`
+	Email       *string `json:"email"`
 }
 
 // GetRepository returns the repository for use by other services
@@ -72,6 +75,15 @@ func (s *Service) UpdateProfile(userID uuid.UUID, req *UpdateProfileRequest) (*m
 	if req.LogoURL != nil {
 		org.LogoURL = req.LogoURL
 	}
+	if req.City != nil {
+		org.City = req.City
+	}
+	if req.Country != nil {
+		org.Country = req.Country
+	}
+	if req.Email != nil {
+		org.ContactEmail = req.Email
+	}
 
 	if err := s.repo.Update(org); err != nil {
 		return nil, errors.New("failed to update profile")
@@ -85,6 +97,20 @@ func (s *Service) RegisterAsOrganizer(userID uuid.UUID, name, description, count
 	// Check if user already has an organizer profile
 	existing, err := s.repo.GetByUserID(userID)
 	if err == nil && existing != nil {
+		if existing.Status == "rejected" {
+			existing.Name = name
+			existing.Description = stringPtr(description)
+			existing.Country = stringPtr(country)
+			existing.City = stringPtr(city)
+			existing.ContactEmail = stringPtr(contactEmail)
+			existing.Website = stringPtr(website)
+			if err := s.repo.Resubmit(existing); err != nil {
+				return nil, errors.New("failed to resubmit organizer application")
+			}
+			existing.Status = "pending"
+			existing.RejectionReason = nil
+			return existing, nil
+		}
 		return nil, errors.New("you already have an organizer profile")
 	}
 
@@ -115,4 +141,11 @@ func (s *Service) RegisterAsOrganizer(userID uuid.UUID, name, description, count
 	}
 
 	return org, nil
+}
+
+func stringPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }

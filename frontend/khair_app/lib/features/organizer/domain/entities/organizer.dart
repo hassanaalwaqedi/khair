@@ -15,6 +15,7 @@ class Organizer extends Equatable {
   final String? phone;
   final String? email;
   final String? website;
+  final String? logoUrl;
   final String status; // pending, approved, rejected
   final String? rejectionReason;
   final bool isVerified;
@@ -35,6 +36,7 @@ class Organizer extends Equatable {
     this.phone,
     this.email,
     this.website,
+    this.logoUrl,
     required this.status,
     this.rejectionReason,
     this.isVerified = false,
@@ -57,6 +59,7 @@ class Organizer extends Equatable {
       phone: json['phone'],
       email: json['email'],
       website: json['website'],
+      logoUrl: json['logo_url'],
       status: json['status'] ?? 'pending',
       rejectionReason: json['rejection_reason'],
       isVerified: json['is_verified'] ?? false,
@@ -84,6 +87,7 @@ class Organizer extends Equatable {
       'phone': phone,
       'email': email,
       'website': website,
+      'logo_url': logoUrl,
       'status': status,
       'rejection_reason': rejectionReason,
       'is_verified': isVerified,
@@ -111,6 +115,7 @@ class Organizer extends Equatable {
         phone,
         email,
         website,
+        logoUrl,
         status,
         rejectionReason,
         isVerified,
@@ -149,5 +154,6 @@ class AdminMessage extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, organizerId, subject, message, isRead, createdAt];
+  List<Object?> get props =>
+      [id, organizerId, subject, message, isRead, createdAt];
 }

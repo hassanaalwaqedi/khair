@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/khair/backend/internal/admin"
@@ -18,9 +20,7 @@ import (
 	"github.com/khair/backend/internal/analytics"
 	"github.com/khair/backend/internal/attendee"
 	"github.com/khair/backend/internal/auth"
-	"github.com/khair/backend/internal/booking"
 	"github.com/khair/backend/internal/calendar"
-	"github.com/khair/backend/internal/chat"
 	"github.com/khair/backend/internal/countries"
 	"github.com/khair/backend/internal/discovery"
 	"github.com/khair/backend/internal/event"
@@ -28,16 +28,16 @@ import (
 	"github.com/khair/backend/internal/joinreg"
 	"github.com/khair/backend/internal/launch"
 	"github.com/khair/backend/internal/legal"
-	"github.com/khair/backend/internal/lesson"
 	"github.com/khair/backend/internal/location"
 	"github.com/khair/backend/internal/mapservice"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/organizer"
-	"github.com/khair/backend/internal/profile"
+	"github.com/khair/backend/internal/organizerapplication"
 	"github.com/khair/backend/internal/orgdash"
 	"github.com/khair/backend/internal/ownerposts"
 	"github.com/khair/backend/internal/payment"
+	"github.com/khair/backend/internal/profile"
 	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/internal/rbac"
 	"github.com/khair/backend/internal/referral"
@@ -45,7 +45,6 @@ import (
 	"github.com/khair/backend/internal/reputation"
 	"github.com/khair/backend/internal/reservation"
 	"github.com/khair/backend/internal/review"
-	"github.com/khair/backend/internal/sheikh"
 	"github.com/khair/backend/internal/sharing"
 	"github.com/khair/backend/internal/spiritualquote"
 	"github.com/khair/backend/internal/sse"
@@ -58,6 +57,7 @@ import (
 	"github.com/khair/backend/internal/verification"
 	"github.com/khair/backend/internal/waitlist"
 	"github.com/khair/backend/internal/ws"
+	"github.com/khair/backend/pkg/brand"
 	"github.com/khair/backend/pkg/cache"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/database"
@@ -71,11 +71,15 @@ import (
 	"github.com/khair/backend/pkg/response"
 	"github.com/khair/backend/pkg/security"
 	khairsentry "github.com/khair/backend/pkg/sentry"
+	"github.com/khair/backend/pkg/storage"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
+	// Try to load .env file (ignore error if it doesn't exist, to support production environments)
+	_ = godotenv.Load()
+
 	// Load configuration
 	cfg := config.Load()
 
@@ -109,9 +113,13 @@ func main() {
 	// Apply production-ready connection pool settings
 	lifecycle.ApplyPoolConfig(db, lifecycle.DefaultPoolConfig())
 
-	// Run migrations
+	// Run migrations before accepting traffic. Starting production with an old
+	// schema can corrupt data or produce partial user-facing failures.
 	if err := database.RunMigrations(db, "migrations"); err != nil {
-		appLogger.Warn("Failed to run migrations", logger.String("error", err.Error()))
+		if cfg.Server.Mode == "release" || strings.EqualFold(os.Getenv("ENV"), "production") {
+			appLogger.Fatal("Failed to run production migrations", err)
+		}
+		appLogger.Warn("Failed to run development migrations", logger.String("error", err.Error()))
 	} else {
 		appLogger.Info("Database migrations completed")
 	}
@@ -185,9 +193,18 @@ func main() {
 		c.File("templates/terms.html")
 	})
 
+	// Public, immutable source for the approved logo used by system emails.
+	router.GET("/brand/khair-logo.png", brand.ServeEmailLogo)
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
-	v1.Use(rateLimiter.Middleware("default")) // Global: 100 req/hr per IP, 200 req/hr per user
+	// Keep production protected without making local development share a stale
+	// Redis/IP bucket across repeated hot-reload requests.
+	if cfg.Server.Mode == "release" {
+		v1.Use(rateLimiter.Middleware("default")) // 100 req/hr per IP, 200 req/hr per user
+	} else {
+		appLogger.Info("Global API rate limiting disabled in non-release mode")
+	}
 
 	// Auth middleware
 	authMiddleware := middleware.AuthMiddleware(cfg)
@@ -218,6 +235,7 @@ func main() {
 	// FCM push notifications (moved before admin service which depends on it)
 	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
 	pushService := push.NewService(db, fcmClient)
+	organizerApplicationService := organizerapplication.NewService(db, notificationService, pushService, emailSvc)
 
 	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService, notificationService, pushService, cacheService, sseHub)
 
@@ -251,6 +269,7 @@ func main() {
 	trustHandler := trust.NewHandler(auditService, moderationService, reportingService, scoreService)
 	registrationHandler := registration.NewHandler(registrationService)
 	uploadHandler := upload.NewHandler(upload.DefaultConfig())
+	organizerApplicationHandler := organizerapplication.NewHandler(organizerApplicationService)
 
 	// Initialize AI services
 	geminiClient := ai.NewClient(cfg.Gemini)
@@ -286,6 +305,7 @@ func main() {
 	aiHandler.RegisterRoutes(v1, authMiddleware)
 	registrationHandler.RegisterRoutes(v1, registerRL, verifyRL, resendRL)
 	uploadHandler.RegisterRoutes(v1, authMiddleware)
+	organizerApplicationHandler.RegisterRoutes(v1, authMiddleware)
 
 	// WebSocket endpoint (JWT via query param)
 	v1.GET("/ws", wsHub.HandleUpgrade)
@@ -331,7 +351,7 @@ func main() {
 	sharingHandler.RegisterRoutes(v1)
 
 	// Register root-level routes for OG tag rendering (shared links)
-	// These MUST be before NoRoute so /events/:id and /sheikhs/:id resolve here
+	// This MUST be before NoRoute so shared event links resolve here.
 	sharingHandler.RegisterPublicRoutes(router)
 
 	// Growth analytics (admin-only)
@@ -344,7 +364,7 @@ func main() {
 	notificationHandler.RegisterRoutes(v1, authMiddleware)
 
 	// Profile API (auth required, with AI moderation)
-	profileHandler := profile.NewHandler(db, geminiClient)
+	profileHandler := profile.NewHandler(db, geminiClient, storage.NewProvider(upload.DefaultConfig().UploadDir, upload.DefaultConfig().BaseURL))
 	profileHandler.RegisterRoutes(v1, router, authMiddleware)
 
 	// Countries API (public, no auth)
@@ -377,31 +397,6 @@ func main() {
 	joinRegHandler := joinreg.NewHandler(joinRegService)
 	joinRegHandler.RegisterRoutes(v1, rateLimiter.Middleware("default"))
 
-	// Sheikh Directory API (public + auth + admin)
-	sheikhService := sheikh.NewService(db)
-	sheikhHandler := sheikh.NewHandler(sheikhService)
-	sheikhHandler.RegisterRoutes(v1)
-	sheikhHandler.RegisterAuthRoutes(v1, authMiddleware)
-	sheikhHandler.RegisterAdminRoutes(v1, authMiddleware, adminMiddleware)
-
-	// Lesson Request API
-	lessonService := lesson.NewService(db, notificationService, pushService)
-	lessonHandler := lesson.NewHandler(lessonService)
-	lessonHandler.RegisterRoutes(v1, authMiddleware)
-
-	// Chat API
-	chatService := chat.NewService(db, notificationService, pushService, wsHub)
-	chatHandler := chat.NewHandler(chatService)
-	chatHandler.RegisterRoutes(v1, authMiddleware)
-
-	// Connect lesson → chat (auto-create conversation on accept)
-	lessonService.SetChatService(chatService)
-
-	// Booking Calendar API
-	bookingService := booking.NewService(db, notificationService, pushService)
-	bookingHandler := booking.NewHandler(bookingService)
-	bookingHandler.RegisterRoutes(v1, authMiddleware)
-
 	// Spiritual Quotes API (public)
 	quoteRepo := spiritualquote.NewRepository(db)
 	quoteService := spiritualquote.NewService(quoteRepo)
@@ -417,6 +412,11 @@ func main() {
 	// Organization Dashboard API
 	orgdashService := orgdash.NewService(db)
 	orgdashHandler := orgdash.NewHandler(orgdashService)
+	organizerHubRoutes := v1.Group("/organizer")
+	organizerHubRoutes.Use(authMiddleware)
+	{
+		organizerHubRoutes.GET("/dashboard", orgdashHandler.GetHubDashboard)
+	}
 
 	orgRoutes := v1.Group("/org/:orgId")
 	orgRoutes.Use(authMiddleware)
@@ -428,6 +428,21 @@ func main() {
 			return
 		}
 		c.Set("org_id", orgID)
+		userID, ok := c.Get("user_id")
+		if !ok {
+			response.Unauthorized(c, "Authentication required")
+			c.Abort()
+			return
+		}
+		role, err := orgdashService.AuthorizeOrganization(
+			userID.(uuid.UUID), orgID, c.GetString("role"),
+		)
+		if err != nil {
+			response.Forbidden(c, "You do not have access to this organization")
+			c.Abort()
+			return
+		}
+		c.Set("org_role", role)
 		c.Next()
 	})
 	{

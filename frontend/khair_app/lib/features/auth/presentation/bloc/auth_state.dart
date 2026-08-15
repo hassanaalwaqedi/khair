@@ -15,10 +15,13 @@ class AuthState extends Equatable {
     this.errorMessage,
   });
 
-  bool get isOrganizer => user?.role == 'organizer';
-  bool get isSheikh => user?.role == 'sheikh';
+  bool get isAuthenticated =>
+      status == AuthStatus.authenticated && user != null;
+  bool get hasOrganizerApplication => organizer != null;
+  bool get isOrganizer => user?.role == 'organizer' || organizer != null;
   bool get isAdmin => user?.role == 'admin';
-  bool get isApprovedOrganizer => organizer?.isApproved ?? false;
+  bool get isApprovedOrganizer =>
+      (organizer?.isApproved ?? false) || user?.role == 'organizer';
 
   AuthState copyWith({
     AuthStatus? status,

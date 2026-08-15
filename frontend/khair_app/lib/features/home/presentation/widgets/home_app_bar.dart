@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/widgets/khair_brand.dart';
 import '../../../notifications/presentation/bloc/notification_bloc.dart';
 import '../../../notifications/presentation/widgets/notification_dropdown.dart';
 
@@ -26,33 +27,11 @@ class HomeAppBar extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(16, topPadding + 12, 16, 12),
-      color: const Color(0xFF0A1E14),
+      color: KhairColors.darkSurface,
       child: Row(
         children: [
           // ── Logo ──
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              'icon.jpeg',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                decoration: BoxDecoration(
-                  gradient: KhairColors.islamicGradient,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.spa_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
+          const KhairBrandMark(size: 34, decorative: true),
 
           const SizedBox(width: 10),
 
@@ -150,7 +129,7 @@ class _NotificationBell extends StatelessWidget {
                         color: KhairColors.error,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF0A1E14),
+                          color: KhairColors.darkSurface,
                           width: 1.5,
                         ),
                       ),

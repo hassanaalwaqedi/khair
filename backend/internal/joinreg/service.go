@@ -19,16 +19,16 @@ import (
 
 // Service handles minimal join registration logic
 type Service struct {
-	repo *Repository
-	cfg  *config.Config
+	repo         *Repository
+	cfg          *config.Config
 	notification *notification.Service
 }
 
 // NewService creates a new join registration service
 func NewService(db *sql.DB, cfg *config.Config) *Service {
 	return &Service{
-		repo: NewRepository(db),
-		cfg:  cfg,
+		repo:         NewRepository(db),
+		cfg:          cfg,
 		notification: notification.NewService(db),
 	}
 }
@@ -105,7 +105,7 @@ func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*Step1Respo
 	formData, _ := json.Marshal(map[string]interface{}{
 		"name": name, "email": email, "event_id": req.EventID,
 	})
-	role := models.RoleMember
+	role := models.RoleUser
 	ip := ipAddress
 	draft := &models.RegistrationDraft{
 		ID:          uuid.New(),

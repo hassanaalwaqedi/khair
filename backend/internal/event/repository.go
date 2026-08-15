@@ -2,10 +2,13 @@ package event
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
 	"github.com/khair/backend/internal/models"
 )
@@ -20,6 +23,76 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
+func (r *Repository) IsSaved(userID, eventID uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM saved_events WHERE user_id = $1 AND event_id = $2)`, userID, eventID).Scan(&exists)
+	return exists, err
+}
+
+func (r *Repository) SaveForUser(userID, eventID uuid.UUID) error {
+	_, err := r.db.Exec(`INSERT INTO saved_events (user_id, event_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, userID, eventID)
+	return err
+}
+
+func (r *Repository) UnsaveForUser(userID, eventID uuid.UUID) error {
+	_, err := r.db.Exec(`DELETE FROM saved_events WHERE user_id = $1 AND event_id = $2`, userID, eventID)
+	return err
+}
+
+// RecordView stores a visit only when the target remains publicly viewable.
+func (r *Repository) RecordView(eventID uuid.UUID, sessionID string) error {
+	result, err := r.db.Exec(`INSERT INTO event_views (event_id, session_id, source)
+		SELECT e.id, $2, 'event_detail'
+		FROM events e
+		WHERE e.id=$1 AND e.status IN ('approved', 'published')
+		  AND NOT EXISTS (
+			SELECT 1 FROM event_views existing
+			WHERE existing.event_id = e.id
+			  AND existing.session_id = $2
+			  AND existing.created_at >= NOW() - INTERVAL '30 minutes'
+		  )`, eventID, sessionID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+
+type SavedEventSummary struct {
+	ID        uuid.UUID `json:"id"`
+	Title     string    `json:"title"`
+	StartDate time.Time `json:"start_date"`
+	ImageURL  *string   `json:"image_url,omitempty"`
+	City      *string   `json:"city,omitempty"`
+	Country   *string   `json:"country,omitempty"`
+	EventType string    `json:"event_type"`
+	IsOnline  bool      `json:"is_online"`
+}
+
+func (r *Repository) GetSavedEvents(userID uuid.UUID) ([]SavedEventSummary, error) {
+	rows, err := r.db.Query(`
+		SELECT e.id, e.title, e.start_date, e.image_url, e.city, e.country, e.event_type, e.is_online
+		FROM saved_events s JOIN events e ON e.id = s.event_id
+		WHERE s.user_id = $1 AND e.status = 'approved'
+		ORDER BY s.created_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SavedEventSummary{}
+	for rows.Next() {
+		var item SavedEventSummary
+		if err := rows.Scan(&item.ID, &item.Title, &item.StartDate, &item.ImageURL, &item.City, &item.Country, &item.EventType, &item.IsOnline); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
 // EventFilter represents filters for listing events
 type EventFilter struct {
 	Country     *string
@@ -31,6 +104,8 @@ type EventFilter struct {
 	Status      *string
 	IsPublished *bool
 	Search      *string
+	IsOnline    *bool
+	FreeOnly    bool
 	Trending    bool
 	Page        int
 	PageSize    int
@@ -38,49 +113,65 @@ type EventFilter struct {
 
 // ── Column lists used across queries ──
 
-const eventCols = `e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
+const eventCols = `e.id, e.organizer_id, e.title, e.description, e.event_type, e.category, e.language,
        e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
        e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
        e.ticket_price, e.currency,
        e.status, e.is_published, e.is_online, e.online_link, e.join_instructions,
        e.join_link_visible_before_minutes, e.rejection_reason, e.approved_at,
-       e.created_at, e.updated_at`
+       e.created_at, e.updated_at, e.venue_name, e.online_platform,
+       e.registration_deadline, e.registration_mode, e.timezone,
+       e.organizer_guidelines,
+       COALESCE((SELECT array_agg(et.tag ORDER BY et.created_at)
+                 FROM event_tags et WHERE et.event_id = e.id), ARRAY[]::text[])`
 
 const eventWithOrgCols = eventCols + `, o.name as organizer_name`
 
-const bareEventCols = `id, organizer_id, title, description, event_type, language,
+const bareEventCols = `id, organizer_id, title, description, event_type, category, language,
        country, city, address, latitude, longitude, start_date, end_date,
        image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
        ticket_price, currency,
        status, is_published, is_online, online_link, join_instructions,
        join_link_visible_before_minutes, rejection_reason, approved_at,
-       created_at, updated_at`
+       created_at, updated_at, venue_name, online_platform,
+       registration_deadline, registration_mode, timezone,
+       organizer_guidelines,
+       COALESCE((SELECT array_agg(et.tag ORDER BY et.created_at)
+                 FROM event_tags et WHERE et.event_id = events.id), ARRAY[]::text[])`
 
 // scanEvent scans a row into an Event struct
-func scanEvent(scanner interface{ Scan(dest ...interface{}) error }, event *models.Event) error {
+func scanEvent(scanner interface {
+	Scan(dest ...interface{}) error
+}, event *models.Event) error {
 	return scanner.Scan(
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
-		&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
+		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
 		&event.TicketPrice, &event.Currency,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
-		&event.CreatedAt, &event.UpdatedAt,
+		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
+		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
+		&event.OrganizerGuidelines, pq.Array(&event.Tags),
 	)
 }
 
 // scanEventWithOrg scans a row into an EventWithOrganizer struct
-func scanEventWithOrg(scanner interface{ Scan(dest ...interface{}) error }, event *models.EventWithOrganizer) error {
+func scanEventWithOrg(scanner interface {
+	Scan(dest ...interface{}) error
+}, event *models.EventWithOrganizer) error {
 	return scanner.Scan(
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
-		&event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
+		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
 		&event.TicketPrice, &event.Currency,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
-		&event.CreatedAt, &event.UpdatedAt, &event.OrganizerName,
+		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
+		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
+		&event.OrganizerGuidelines, pq.Array(&event.Tags), &event.OrganizerName,
 	)
 }
 
@@ -103,6 +194,82 @@ func (r *Repository) Create(event *models.Event) error {
 		event.CreatedAt, event.UpdatedAt,
 	)
 	return err
+}
+
+// SaveEditorMetadata persists fields introduced by the premium event editor
+// without forcing the legacy Event read model to change all at once.
+func (r *Repository) SaveEditorMetadata(eventID uuid.UUID, category string, tags []string, venueName, onlinePlatform *string, registrationDeadline *time.Time, registrationMode, timezone string, guidelines *string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`UPDATE events SET category=$2, venue_name=$3, online_platform=$4, registration_deadline=$5, registration_mode=$6, timezone=$7, organizer_guidelines=$8 WHERE id=$1`, eventID, category, venueName, onlinePlatform, registrationDeadline, registrationMode, timezone, guidelines); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM event_tags WHERE event_id=$1`, eventID); err != nil {
+		return err
+	}
+	for _, tag := range normalizeTags(tags) {
+		if _, err := tx.Exec(`INSERT INTO event_tags (event_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING`, eventID, tag); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *Repository) UpdateEditorMetadata(eventID uuid.UUID, category *string, tags *[]string, venueName, onlinePlatform *string, registrationDeadline *time.Time, registrationMode, timezone *string, guidelines *string) error {
+	if _, err := r.db.Exec(`
+		UPDATE events SET
+			category=COALESCE($2, category),
+			venue_name=COALESCE($3, venue_name),
+			online_platform=COALESCE($4, online_platform),
+			registration_deadline=COALESCE($5, registration_deadline),
+			registration_mode=COALESCE($6, registration_mode),
+			timezone=COALESCE($7, timezone),
+			organizer_guidelines=COALESCE($8, organizer_guidelines)
+		WHERE id=$1`, eventID, category, venueName, onlinePlatform, registrationDeadline, registrationMode, timezone, guidelines); err != nil {
+		return err
+	}
+	if tags != nil {
+		if _, err := r.db.Exec(`DELETE FROM event_tags WHERE event_id=$1`, eventID); err != nil {
+			return err
+		}
+		for _, tag := range normalizeTags(*tags) {
+			if _, err := r.db.Exec(`INSERT INTO event_tags (event_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING`, eventID, tag); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func normalizeTags(tags []string) []string {
+	seen := make(map[string]struct{}, len(tags))
+	result := make([]string, 0, minInt(len(tags), 8))
+	for _, raw := range tags {
+		tag := strings.TrimSpace(strings.TrimPrefix(raw, "#"))
+		if tag == "" || len([]rune(tag)) > 32 {
+			continue
+		}
+		key := strings.ToLower(tag)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, tag)
+		if len(result) == 8 {
+			break
+		}
+	}
+	return result
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // GetByID retrieves an event by ID
@@ -180,6 +347,20 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		argIndex++
 	}
 
+	if filter.IsOnline != nil {
+		query += ` AND e.is_online = $` + strconv.Itoa(argIndex)
+		countQuery += ` AND e.is_online = $` + strconv.Itoa(argIndex)
+		args = append(args, *filter.IsOnline)
+		countArgs = append(countArgs, *filter.IsOnline)
+		argIndex++
+	}
+
+	if filter.FreeOnly {
+		const freeClause = ` AND COALESCE(e.ticket_price, 0) = 0`
+		query += freeClause
+		countQuery += freeClause
+	}
+
 	if filter.StartDate != nil {
 		clause := ` AND COALESCE(e.end_date, e.start_date) >= $` + strconv.Itoa(argIndex)
 		query += clause
@@ -198,12 +379,35 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
-		searchClause := ` AND search_vector @@ plainto_tsquery('simple', $` + strconv.Itoa(argIndex) + `)`
+		// Search should be forgiving: full-text matching handles topics and
+		// multiple words, ILIKE handles partial terms, and trigram similarity
+		// catches small spelling differences such as "Hackathon" / "Hakathon".
+		// The same predicate is used for the total so pagination stays accurate.
+		termIndex := strconv.Itoa(argIndex)
+		patternIndex := strconv.Itoa(argIndex + 1)
+		searchClause := ` AND (
+			search_vector @@ websearch_to_tsquery('simple', $` + termIndex + `)
+			OR e.title ILIKE $` + patternIndex + `
+			OR e.description ILIKE $` + patternIndex + `
+			OR e.city ILIKE $` + patternIndex + `
+			OR e.country ILIKE $` + patternIndex + `
+			OR e.event_type ILIKE $` + patternIndex + `
+			OR similarity(LOWER(COALESCE(e.title, '')), LOWER($` + termIndex + `)) >= 0.32
+			OR (
+				CHAR_LENGTH($` + termIndex + `) >= 3
+				AND word_similarity(
+					LOWER($` + termIndex + `),
+					LOWER(CONCAT_WS(' ', e.title, e.description, e.event_type, e.city, e.country))
+				) >= 0.38
+			)
+		)`
 		query += searchClause
 		countQuery += searchClause
 		args = append(args, *filter.Search)
+		args = append(args, "%"+*filter.Search+"%")
 		countArgs = append(countArgs, *filter.Search)
-		argIndex++
+		countArgs = append(countArgs, "%"+*filter.Search+"%")
+		argIndex += 2
 	}
 
 	// Get total count

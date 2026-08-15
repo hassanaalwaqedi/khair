@@ -84,6 +84,70 @@ func (r *Repository) GetUserByID(id uuid.UUID) (*models.User, error) {
 	return user, nil
 }
 
+// CreateGoogleUser creates an already-verified attendee and its initial
+// profile atomically. Google has already verified control of the email.
+func (r *Repository) CreateGoogleUser(user *models.User, profile *models.Profile) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`
+		INSERT INTO users (id, email, password_hash, role, status, display_name, is_verified, verified_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, TRUE, $7, $8, $9)
+	`, user.ID, user.Email, user.PasswordHash, user.Role, user.Status, user.DisplayName, user.VerifiedAt, user.CreatedAt, user.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(`
+		INSERT INTO profiles (id, user_id, avatar_url, preferred_language, profile_completion_score, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, profile.ID, profile.UserID, profile.AvatarURL, profile.PreferredLanguage, profile.ProfileCompletionScore, profile.CreatedAt, profile.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// LinkGoogleIdentity prevents a Google subject from ever being attached to
+// two Khair users. Existing verified email accounts are safely linked.
+func (r *Repository) LinkGoogleIdentity(userID uuid.UUID, subject string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var existingUserID uuid.UUID
+	err = tx.QueryRow(`SELECT user_id FROM oauth_identities WHERE provider = 'google' AND provider_subject = $1`, subject).Scan(&existingUserID)
+	if err == nil {
+		if existingUserID != userID {
+			return errors.New("google identity is linked to another account")
+		}
+		return tx.Commit()
+	}
+	if err != sql.ErrNoRows {
+		return err
+	}
+	_, err = tx.Exec(`
+		INSERT INTO oauth_identities (id, user_id, provider, provider_subject, created_at, updated_at)
+		VALUES ($1, $2, 'google', $3, NOW(), NOW())
+	`, uuid.New(), userID, subject)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *Repository) ActivateGoogleEmail(userID uuid.UUID) error {
+	_, err := r.db.Exec(`
+		UPDATE users SET is_verified = TRUE, verified_at = COALESCE(verified_at, NOW()), status = 'active', updated_at = NOW()
+		WHERE id = $1
+	`, userID)
+	return err
+}
+
 // MarkEmailVerified sets is_verified = true, status = 'active', clears verification record
 func (r *Repository) MarkEmailVerified(email string) error {
 	tx, err := r.db.Begin()

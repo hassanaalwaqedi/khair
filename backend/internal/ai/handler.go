@@ -1,8 +1,10 @@
 package ai
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -119,6 +121,11 @@ func (h *Handler) EnhanceDescription(c *gin.Context) {
 	var req struct {
 		Title       string   `json:"title" binding:"required"`
 		Description string   `json:"description"`
+		Category    string   `json:"category"`
+		EventType   string   `json:"event_type"`
+		Language    string   `json:"language"`
+		City        string   `json:"city"`
+		Audience    string   `json:"audience"`
 		Tags        []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -126,7 +133,19 @@ func (h *Handler) EnhanceDescription(c *gin.Context) {
 		return
 	}
 
-	result, err := h.description.EnhanceDescription(c.Request.Context(), req.Title, req.Description, req.Tags)
+	opts := EnhanceOptions{
+		Category:  req.Category,
+		EventType: req.EventType,
+		Language:  req.Language,
+		City:      req.City,
+		Audience:  req.Audience,
+		Tags:      req.Tags,
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
+	defer cancel()
+
+	result, err := h.description.EnhanceDescription(ctx, req.Title, req.Description, opts)
 	if err != nil {
 		log.Printf("[ERROR] AI enhance-description failed: %v", err)
 		response.ServiceUnavailable(c, "AI description enhancement temporarily unavailable")
@@ -156,14 +175,17 @@ func (h *Handler) DetectCategory(c *gin.Context) {
 		return
 	}
 
-	result, err := h.description.DetectCategory(c.Request.Context(), req.Title, req.Description)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
+	defer cancel()
+
+	result, err := h.description.DetectCategory(ctx, req.Title, req.Description)
 	if err != nil {
 		log.Printf("[ERROR] AI detect-category failed: %v", err)
 		response.ServiceUnavailable(c, "AI category detection temporarily unavailable")
 		return
 	}
 
-	response.Success(c, gin.H{"category": result.Category})
+	response.Success(c, gin.H{"category": result.Category, "reason": result.Reasoning})
 }
 
 // ── GET /ai/status ──

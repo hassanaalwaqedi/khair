@@ -26,6 +26,7 @@ type NearbyFilter struct {
 	FreeOnly   bool
 	AlmostFull bool
 	Search     string
+	EventType  string
 
 	SortBy       string
 	Page         int
@@ -41,6 +42,12 @@ type NearbyEvent struct {
 	Title               string     `json:"title"`
 	Organization        string     `json:"organization"`
 	Category            string     `json:"category"`
+	EventType           string     `json:"event_type"`
+	ImageURL            *string    `json:"image_url,omitempty"`
+	City                *string    `json:"city,omitempty"`
+	Address             *string    `json:"address,omitempty"`
+	IsOnline            bool       `json:"is_online"`
+	PriceCents          int        `json:"price_cents"`
 	Latitude            float64    `json:"latitude"`
 	Longitude           float64    `json:"longitude"`
 	StartsAt            time.Time  `json:"starts_at"`

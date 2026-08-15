@@ -13,6 +13,7 @@ import (
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/pkg/response"
+	"github.com/khair/backend/pkg/storage"
 )
 
 // Repository handles verification database operations
@@ -27,14 +28,16 @@ func NewRepository(db *sql.DB) *Repository {
 
 // Handler handles verification HTTP requests
 type Handler struct {
-	repo     *Repository
-	notifSvc *notification.Service
-	pushSvc  *push.Service
+	repo             *Repository
+	notifSvc         *notification.Service
+	pushSvc          *push.Service
+	privateDocuments *storage.PrivateR2Store
 }
 
 // NewHandler creates a new verification handler
 func NewHandler(repo *Repository, notifSvc *notification.Service, pushSvc *push.Service) *Handler {
-	return &Handler{repo: repo, notifSvc: notifSvc, pushSvc: pushSvc}
+	privateDocuments, _ := storage.NewPrivateR2StoreFromEnv()
+	return &Handler{repo: repo, notifSvc: notifSvc, pushSvc: pushSvc, privateDocuments: privateDocuments}
 }
 
 // RegisterRoutes registers verification routes
@@ -53,8 +56,33 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMw gin.HandlerFunc, ad
 		adminVerify.GET("/pending", h.ListPending)
 		adminVerify.GET("/all", h.ListAll)
 		adminVerify.GET("/:id", h.GetRequest)
+		adminVerify.GET("/:id/document", h.GetDocument)
 		adminVerify.POST("/:id/review", h.Review)
 	}
+}
+
+// GetDocument redirects an authorized reviewer to a short-lived private R2 URL.
+func (h *Handler) GetDocument(c *gin.Context) {
+	requestID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request ID")
+		return
+	}
+	if h.privateDocuments == nil {
+		response.Error(c, http.StatusServiceUnavailable, "Private document storage is not configured")
+		return
+	}
+	vr, err := h.repo.GetByID(requestID)
+	if err != nil || vr.DocumentPath == nil {
+		response.NotFound(c, "Verification document not found")
+		return
+	}
+	signedURL, err := h.privateDocuments.SignedURL(*vr.DocumentPath, 10*time.Minute)
+	if err != nil {
+		response.NotFound(c, "Private verification document is unavailable")
+		return
+	}
+	c.Redirect(http.StatusFound, signedURL)
 }
 
 // SubmitRequest is the request body for submitting a verification
@@ -206,8 +234,6 @@ func (h *Handler) Review(c *gin.Context) {
 		userStatus = models.VerificationVerified
 		// Also set user.is_verified = true
 		h.repo.db.Exec(`UPDATE users SET is_verified = true, verified_at = NOW(), updated_at = NOW() WHERE id = $1`, vr.UserID)
-		// Update sheikh verification_status if applicable
-		h.repo.db.Exec(`UPDATE sheikhs SET verification_status = 'verified', updated_at = NOW() WHERE user_id = $1`, vr.UserID)
 	case "rejected":
 		userStatus = models.VerificationRejected
 	case "more_info_needed":

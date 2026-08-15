@@ -6,6 +6,8 @@ class Event extends Equatable {
   final String title;
   final String? description;
   final String eventType;
+  final String? category;
+  final List<String> tags;
   final String? language;
   final String? country;
   final String? city;
@@ -27,6 +29,12 @@ class Event extends Equatable {
   final String? onlineLink;
   final String? joinInstructions;
   final int joinLinkVisibleBeforeMinutes;
+  final String? venueName;
+  final String? onlinePlatform;
+  final DateTime? registrationDeadline;
+  final String? registrationMode;
+  final String? timezone;
+  final String? genderRestriction;
   final bool isUserJoined;
   final bool isLinkUnlocked;
   final DateTime createdAt;
@@ -40,6 +48,8 @@ class Event extends Equatable {
     required this.title,
     this.description,
     required this.eventType,
+    this.category,
+    this.tags = const [],
     this.language,
     this.country,
     this.city,
@@ -61,6 +71,12 @@ class Event extends Equatable {
     this.onlineLink,
     this.joinInstructions,
     this.joinLinkVisibleBeforeMinutes = 15,
+    this.venueName,
+    this.onlinePlatform,
+    this.registrationDeadline,
+    this.registrationMode,
+    this.timezone,
+    this.genderRestriction,
     this.isUserJoined = false,
     this.isLinkUnlocked = false,
     required this.createdAt,
@@ -76,6 +92,8 @@ class Event extends Equatable {
         title,
         description,
         eventType,
+        category,
+        tags,
         language,
         country,
         city,
@@ -97,6 +115,12 @@ class Event extends Equatable {
         onlineLink,
         joinInstructions,
         joinLinkVisibleBeforeMinutes,
+        venueName,
+        onlinePlatform,
+        registrationDeadline,
+        registrationMode,
+        timezone,
+        genderRestriction,
         isUserJoined,
         isLinkUnlocked,
         createdAt,
@@ -117,6 +141,8 @@ class EventFilter extends Equatable {
   final DateTime? endDate;
   final String? searchQuery;
   final DateFilter? dateFilter;
+  final bool onlineOnly;
+  final bool freeOnly;
   final bool trending;
   final int page;
   final int pageSize;
@@ -130,6 +156,8 @@ class EventFilter extends Equatable {
     this.endDate,
     this.searchQuery,
     this.dateFilter,
+    this.onlineOnly = false,
+    this.freeOnly = false,
     this.trending = false,
     this.page = 1,
     this.pageSize = 20,
@@ -144,19 +172,31 @@ class EventFilter extends Equatable {
     DateTime? endDate,
     String? searchQuery,
     DateFilter? dateFilter,
+    bool? onlineOnly,
+    bool? freeOnly,
     bool? trending,
     int? page,
     int? pageSize,
+    bool clearCountry = false,
+    bool clearCity = false,
+    bool clearEventType = false,
+    bool clearLanguage = false,
+    bool clearStartDate = false,
+    bool clearEndDate = false,
+    bool clearSearchQuery = false,
+    bool clearDateFilter = false,
   }) {
     return EventFilter(
-      country: country ?? this.country,
-      city: city ?? this.city,
-      eventType: eventType ?? this.eventType,
-      language: language ?? this.language,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      searchQuery: searchQuery ?? this.searchQuery,
-      dateFilter: dateFilter ?? this.dateFilter,
+      country: clearCountry ? null : country ?? this.country,
+      city: clearCity ? null : city ?? this.city,
+      eventType: clearEventType ? null : eventType ?? this.eventType,
+      language: clearLanguage ? null : language ?? this.language,
+      startDate: clearStartDate ? null : startDate ?? this.startDate,
+      endDate: clearEndDate ? null : endDate ?? this.endDate,
+      searchQuery: clearSearchQuery ? null : searchQuery ?? this.searchQuery,
+      dateFilter: clearDateFilter ? null : dateFilter ?? this.dateFilter,
+      onlineOnly: onlineOnly ?? this.onlineOnly,
+      freeOnly: freeOnly ?? this.freeOnly,
       trending: trending ?? this.trending,
       page: page ?? this.page,
       pageSize: pageSize ?? this.pageSize,
@@ -179,6 +219,8 @@ class EventFilter extends Equatable {
       language != null ||
       dateFilter != null ||
       searchQuery != null ||
+      onlineOnly ||
+      freeOnly ||
       trending;
 
   Map<String, dynamic> toQueryParameters() {
@@ -195,37 +237,56 @@ class EventFilter extends Equatable {
       params['search'] = searchQuery;
     }
     if (trending) params['trending'] = 'true';
+    if (onlineOnly) params['is_online'] = 'true';
+    if (freeOnly) params['free'] = 'true';
 
     // Compute date range from DateFilter enum
     if (dateFilter != null) {
       final now = DateTime.now();
       switch (dateFilter!) {
         case DateFilter.today:
-          params['start_date'] = DateTime(now.year, now.month, now.day).toIso8601String();
-          params['end_date'] = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
+          params['start_date'] =
+              DateTime(now.year, now.month, now.day).toIso8601String();
+          params['end_date'] =
+              DateTime(now.year, now.month, now.day, 23, 59, 59)
+                  .toIso8601String();
           break;
         case DateFilter.thisWeek:
           // Start from now, not beginning of week, to exclude past days
           final weekStart = now.subtract(Duration(days: now.weekday - 1));
           final weekEnd = weekStart.add(const Duration(days: 6));
           params['start_date'] = now.toIso8601String();
-          params['end_date'] = DateTime(weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59).toIso8601String();
+          params['end_date'] =
+              DateTime(weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59)
+                  .toIso8601String();
           break;
         case DateFilter.thisWeekend:
           final daysToSaturday = (6 - now.weekday) % 7;
-          final saturday = now.add(Duration(days: daysToSaturday == 0 && now.weekday != 6 ? 7 : daysToSaturday));
-          params['start_date'] = DateTime(saturday.year, saturday.month, saturday.day).toIso8601String();
-          params['end_date'] = DateTime(saturday.year, saturday.month, saturday.day + 1, 23, 59, 59).toIso8601String();
+          final saturday = now.add(Duration(
+              days: daysToSaturday == 0 && now.weekday != 6
+                  ? 7
+                  : daysToSaturday));
+          params['start_date'] =
+              DateTime(saturday.year, saturday.month, saturday.day)
+                  .toIso8601String();
+          params['end_date'] = DateTime(
+                  saturday.year, saturday.month, saturday.day + 1, 23, 59, 59)
+              .toIso8601String();
           break;
         case DateFilter.thisMonth:
           // Start from now, not beginning of month, to exclude past days
           params['start_date'] = now.toIso8601String();
-          params['end_date'] = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toIso8601String();
+          params['end_date'] = DateTime(now.year, now.month + 1, 0, 23, 59, 59)
+              .toIso8601String();
           break;
       }
     } else {
-      if (startDate != null) params['start_date'] = startDate!.toIso8601String();
-      if (endDate != null) params['end_date'] = endDate!.toIso8601String();
+      if (startDate != null) {
+        params['start_date'] = startDate!.toIso8601String();
+      }
+      if (endDate != null) {
+        params['end_date'] = endDate!.toIso8601String();
+      }
     }
 
     return params;
@@ -241,6 +302,8 @@ class EventFilter extends Equatable {
         endDate,
         searchQuery,
         dateFilter,
+        onlineOnly,
+        freeOnly,
         trending,
         page,
         pageSize,

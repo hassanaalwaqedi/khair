@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"github.com/khair/backend/internal/models"
 )
@@ -37,8 +36,6 @@ func (r *Repository) DeleteUnverifiedUser(userID uuid.UUID) error {
 	_, _ = tx.Exec(`DELETE FROM profiles WHERE user_id = $1`, userID)
 	// Delete organizer profile
 	_, _ = tx.Exec(`DELETE FROM organizers WHERE user_id = $1`, userID)
-	// Delete sheikh profile
-	_, _ = tx.Exec(`DELETE FROM sheikhs WHERE user_id = $1`, userID)
 	// Delete notifications
 	_, _ = tx.Exec(`DELETE FROM notifications WHERE user_id = $1`, userID)
 	// Delete refresh tokens
@@ -137,18 +134,6 @@ func (r *Repository) CreateOrganizer(org *models.Organizer) error {
 		org.ID, org.UserID, org.Name, org.Description, org.Website, org.Phone,
 		org.LogoURL, org.Status, org.RegistrationNumber, org.OrganizationType,
 		org.City, org.Country, org.CreatedAt, org.UpdatedAt,
-	)
-	return err
-}
-
-// CreateSheikh creates a sheikh record
-func (r *Repository) CreateSheikh(sheikh *models.Sheikh) error {
-	_, err := r.db.Exec(`
-		INSERT INTO sheikhs (id, user_id, specialization, ijazah_info, certifications, years_of_experience, verification_status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		sheikh.ID, sheikh.UserID, sheikh.Specialization, sheikh.IjazahInfo,
-		pq.Array(sheikh.Certifications), sheikh.YearsOfExperience,
-		sheikh.VerificationStatus, sheikh.CreatedAt, sheikh.UpdatedAt,
 	)
 	return err
 }

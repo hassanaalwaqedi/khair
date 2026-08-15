@@ -7,12 +7,16 @@ class MapFilters extends Equatable {
   final Set<String> categories; // quran, lecture, charity, etc.
   final String eventType; // 'all', 'online', 'in_person'
   final String search;
+  final String when; // any, today, tomorrow, weekend
+  final bool freeOnly;
 
   const MapFilters({
     this.radiusKm = 10,
     this.categories = const {},
     this.eventType = 'all',
     this.search = '',
+    this.when = 'any',
+    this.freeOnly = false,
   });
 
   MapFilters copyWith({
@@ -20,17 +24,45 @@ class MapFilters extends Equatable {
     Set<String>? categories,
     String? eventType,
     String? search,
+    String? when,
+    bool? freeOnly,
   }) {
     return MapFilters(
       radiusKm: radiusKm ?? this.radiusKm,
       categories: categories ?? this.categories,
       eventType: eventType ?? this.eventType,
       search: search ?? this.search,
+      when: when ?? this.when,
+      freeOnly: freeOnly ?? this.freeOnly,
     );
   }
 
   @override
-  List<Object?> get props => [radiusKm, categories, eventType, search];
+  List<Object?> get props =>
+      [radiusKm, categories, eventType, search, when, freeOnly];
+}
+
+/// A category from Khair's canonical event-category catalogue.
+///
+/// The map keeps the stable slug for API filters while showing the database's
+/// display name to people in the filter sheet.
+class MapCategory extends Equatable {
+  const MapCategory({required this.slug, required this.displayName});
+
+  factory MapCategory.fromJson(Map<String, dynamic> json) {
+    final slug = (json['slug'] ?? json['name'] ?? '').toString().trim();
+    final displayName = (json['display_name'] ?? '').toString().trim();
+    return MapCategory(
+      slug: slug,
+      displayName: displayName.isEmpty ? _titleCase(slug) : displayName,
+    );
+  }
+
+  final String slug;
+  final String displayName;
+
+  @override
+  List<Object?> get props => [slug, displayName];
 }
 
 class MapEvent extends Equatable {
@@ -39,6 +71,12 @@ class MapEvent extends Equatable {
   final String title;
   final String organization;
   final String category;
+  final String eventType;
+  final String? imageUrl;
+  final String? city;
+  final String? address;
+  final bool isOnlineEvent;
+  final int priceCents;
   final double latitude;
   final double longitude;
   final DateTime startsAt;
@@ -62,6 +100,12 @@ class MapEvent extends Equatable {
     required this.title,
     required this.organization,
     required this.category,
+    required this.eventType,
+    this.imageUrl,
+    this.city,
+    this.address,
+    required this.isOnlineEvent,
+    required this.priceCents,
     required this.latitude,
     required this.longitude,
     required this.startsAt,
@@ -82,7 +126,15 @@ class MapEvent extends Equatable {
 
   LatLng get point => LatLng(latitude, longitude);
 
-  bool get isOnline => latitude == 0 && longitude == 0;
+  bool get isOnline => isOnlineEvent || latitude == 0 && longitude == 0;
+
+  String get locationLabel {
+    if (isOnline) return 'Online event';
+    return [address, city]
+        .whereType<String>()
+        .where((part) => part.isNotEmpty)
+        .join(', ');
+  }
 
   factory MapEvent.fromJson(Map<String, dynamic> json) {
     return MapEvent(
@@ -91,6 +143,12 @@ class MapEvent extends Equatable {
       title: json['title'] as String,
       organization: json['organization'] as String? ?? 'Organization',
       category: json['category'] as String? ?? 'general',
+      eventType: json['event_type'] as String? ?? 'in_person',
+      imageUrl: json['image_url'] as String?,
+      city: json['city'] as String?,
+      address: json['address'] as String?,
+      isOnlineEvent: json['is_online'] as bool? ?? false,
+      priceCents: json['price_cents'] as int? ?? 0,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       startsAt: DateTime.parse(json['starts_at'] as String),
@@ -120,6 +178,12 @@ class MapEvent extends Equatable {
         title,
         organization,
         category,
+        eventType,
+        imageUrl,
+        city,
+        address,
+        isOnlineEvent,
+        priceCents,
         latitude,
         longitude,
         startsAt,
@@ -189,3 +253,9 @@ class MapClusterNode extends Equatable {
   @override
   List<Object?> get props => [key, center, events];
 }
+
+String _titleCase(String value) => value
+    .split(RegExp(r'[_\s-]+'))
+    .where((part) => part.isNotEmpty)
+    .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+    .join(' ');

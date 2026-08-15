@@ -114,6 +114,11 @@ class GeoService {
     if (filters.search.isNotEmpty) {
       query['search'] = filters.search;
     }
+    if (filters.eventType != 'all') query['event_type'] = filters.eventType;
+    if (filters.freeOnly) query['free_only'] = 'true';
+    final dates = _dateRange(filters.when);
+    if (dates.$1 != null) query['date_from'] = dates.$1!.toIso8601String();
+    if (dates.$2 != null) query['date_to'] = dates.$2!.toIso8601String();
 
     for (final category in filters.categories) {
       query.putIfAbsent('categories[]', () => <String>[]);
@@ -124,6 +129,21 @@ class GeoService {
         await _apiClient.get('/map/nearby', queryParameters: query);
     final payload = response.data['data'] as Map<String, dynamic>;
     return NearbyMapResult.fromJson(payload);
+  }
+
+  /// Reads the same category catalogue used by discovery and event creation.
+  /// This prevents map filters from drifting away from the database.
+  Future<List<MapCategory>> fetchCategories() async {
+    final response = await _apiClient.get('/discover/categories');
+    final payload = response.data;
+    final entries = payload is Map<String, dynamic>
+        ? payload['data'] as List? ?? const []
+        : const [];
+    return entries
+        .whereType<Map>()
+        .map((entry) => MapCategory.fromJson(Map<String, dynamic>.from(entry)))
+        .where((category) => category.slug.isNotEmpty)
+        .toList(growable: false);
   }
 
   Future<void> trackInteraction({
@@ -161,6 +181,24 @@ class GeoService {
       return LatLng(lat, lng);
     } catch (_) {
       return null;
+    }
+  }
+
+  (DateTime?, DateTime?) _dateRange(String when) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    switch (when) {
+      case 'today':
+        return (startOfToday, startOfToday.add(const Duration(days: 1)));
+      case 'tomorrow':
+        final tomorrow = startOfToday.add(const Duration(days: 1));
+        return (tomorrow, tomorrow.add(const Duration(days: 1)));
+      case 'weekend':
+        final daysToSaturday = (DateTime.saturday - now.weekday) % 7;
+        final saturday = startOfToday.add(Duration(days: daysToSaturday));
+        return (saturday, saturday.add(const Duration(days: 2)));
+      default:
+        return (null, null);
     }
   }
 }

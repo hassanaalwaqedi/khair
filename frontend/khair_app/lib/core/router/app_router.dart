@@ -1,406 +1,300 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../di/injection.dart';
 import '../widgets/main_scaffold.dart';
+import '../../features/admin/presentation/bloc/admin_bloc.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/audit_logs_page.dart';
+import '../../features/admin/presentation/pages/organizer_application_list_page.dart';
+import '../../features/admin/presentation/pages/organizer_application_review_page.dart';
+import '../../features/admin/presentation/pages/organizer_trust_page.dart';
+import '../../features/admin/presentation/pages/reports_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/events/presentation/pages/event_details_page.dart';
+import '../../features/events/presentation/pages/my_events_page.dart';
+import '../../features/events/presentation/pages/saved_events_page.dart';
+import '../../features/home/presentation/pages/discover_page.dart';
 import '../../features/landing/presentation/pages/landing_page.dart';
+import '../../features/location/presentation/bloc/location_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
-import '../../features/organizer/presentation/pages/organizer_dashboard_page.dart';
-import '../../features/organizer/presentation/pages/organizer_events_page.dart';
-import '../../features/organizer/presentation/pages/organizer_profile_edit_page.dart';
-import '../../features/organizer/presentation/pages/organizer_analytics_page.dart';
-import '../../features/organizer/presentation/pages/create_event_page.dart';
-import '../../features/profile/presentation/pages/profile_page.dart';
-import '../../features/profile/presentation/pages/profile_edit_page.dart';
-import '../../features/admin/presentation/bloc/admin_bloc.dart';
-import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
-import '../../features/admin/presentation/pages/reports_page.dart';
-import '../../features/admin/presentation/pages/audit_logs_page.dart';
-import '../../features/admin/presentation/pages/organizer_trust_page.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../features/notifications/presentation/pages/notification_center_page.dart';
 import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
+import '../../features/organizer/presentation/pages/create_event_page.dart';
+import '../../features/organizer/presentation/pages/organizer_access_page.dart';
+import '../../features/organizer/presentation/pages/organizer_analytics_page.dart';
+import '../../features/organizer/presentation/pages/organizer_hub_page.dart';
+import '../../features/organizer/presentation/pages/organizer_events_page.dart';
+import '../../features/organizer/presentation/pages/organizer_event_status_page.dart';
+import '../../features/organizer/presentation/pages/organizer_profile_edit_page.dart';
+import '../../features/organizer/presentation/pages/organizer_public_profile_page.dart';
+import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
+import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart'
+    as owner;
+import '../../features/profile/presentation/pages/profile_edit_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/static/presentation/pages/static_page.dart';
 import '../../features/verification/presentation/pages/verification_page.dart';
-import '../../features/home/presentation/pages/discover_page.dart';
-import '../../features/notifications/presentation/pages/notification_center_page.dart';
 
-import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
-import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart' as owner;
-import '../../features/notifications/presentation/bloc/notification_bloc.dart';
-import '../../features/location/presentation/bloc/location_bloc.dart';
-import '../../features/sheikh/presentation/bloc/sheikh_bloc.dart';
-import '../../features/chat/presentation/bloc/chat_bloc.dart';
-import '../../features/chat/presentation/pages/conversations_page.dart';
-import '../../features/chat/presentation/pages/chat_page.dart';
-import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
-import '../../features/sheikh_dashboard/presentation/pages/sheikh_dashboard_page.dart';
-import '../../features/booking/presentation/bloc/booking_bloc.dart';
-import '../../features/booking/presentation/pages/booking_page.dart';
-import '../../features/booking/presentation/pages/availability_editor_page.dart';
-import '../../features/student_dashboard/presentation/bloc/student_dashboard_bloc.dart';
-import '../../features/student_dashboard/presentation/pages/student_dashboard_page.dart';
-import '../../features/sheikh/presentation/pages/sheikh_profile_load_page.dart';
-import '../theme/khair_theme.dart';
-
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
     GlobalKey<NavigatorState>();
+final AuthBloc _authBloc = getIt<AuthBloc>();
+
+/// Bridges AuthBloc changes to GoRouter. The router, not individual screens,
+/// owns all access decisions including manual URL entry and deep links.
+class _AuthRefresh extends ChangeNotifier {
+  _AuthRefresh(Stream<AuthState> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+  late final StreamSubscription<AuthState> _subscription;
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 final GoRouter appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
+  refreshListenable: _AuthRefresh(_authBloc.stream),
+  redirect: _guardRoute,
   routes: [
-    // Landing page (public marketing page)
     GoRoute(
-      path: '/landing',
-      builder: (context, state) => const LandingPage(),
-    ),
-    // Shell route for pages with bottom navigation
+        path: '/auth-loading', builder: (_, __) => const _AuthLoadingPage()),
+    GoRoute(path: '/landing', builder: (_, __) => const LandingPage()),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) {
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<EventsBloc>()),
-            BlocProvider(
-              create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus()),
-            ),
-            BlocProvider(
-              create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts()),
-            ),
-            BlocProvider.value(
-              value: getIt<NotificationBloc>()..add(const LoadUnreadCount()),
-            ),
-            BlocProvider(
-              create: (_) => getIt<LocationBloc>(),
-            ),
-            BlocProvider(
-              create: (_) => getIt<SheikhBloc>()..add(const LoadSheikhs()),
-            ),
-            BlocProvider(
-              create: (_) => getIt<ChatBloc>()..add(const LoadConversations()),
-            ),
-          ],
-          child: MainScaffold(child: child),
-        );
-      },
+      builder: (context, state, child) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<EventsBloc>()),
+          BlocProvider(
+              create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts())),
+          BlocProvider.value(
+              value: getIt<NotificationBloc>()..add(const LoadUnreadCount())),
+          BlocProvider(
+              create: (_) =>
+                  getIt<LocationBloc>()..add(LoadCachedLocationEvent())),
+        ],
+        child: MainScaffold(child: child),
+      ),
       routes: [
         GoRoute(
-          path: '/',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: DiscoverPage(),
-          ),
-        ),
+            path: '/',
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: DiscoverPage())),
         GoRoute(
-          path: '/map',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: MapPage(),
-          ),
-        ),
+            path: '/map',
+            pageBuilder: (_, __) => const NoTransitionPage(child: MapPage())),
         GoRoute(
-          path: '/profile',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ProfilePage(),
-          ),
-        ),
+            path: '/profile',
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: ProfilePage())),
         GoRoute(
-          path: '/conversations',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ConversationsPage(),
-          ),
-        ),
+            path: '/my-events',
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: MyEventsPage())),
         GoRoute(
-          path: '/my-learning',
-          pageBuilder: (context, state) => NoTransitionPage(
-            child: BlocProvider(
-              create: (_) => getIt<StudentDashboardBloc>(),
-              child: const StudentDashboardPage(),
-            ),
-          ),
-        ),
+            path: '/saved',
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: SavedEventsPage())),
       ],
     ),
-    // Event details (without bottom nav)
     GoRoute(
       path: '/events/:id',
-      builder: (context, state) {
-        final eventId = state.pathParameters['id']!;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<EventsBloc>()),
-            BlocProvider(
-              create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus()),
-            ),
-          ],
-          child: EventDetailsPage(eventId: eventId),
-        );
-      },
-    ),
-    // Auth routes
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
-    GoRoute(
-      path: '/register',
-      builder: (context, state) => const RegisterPage(),
-    ),
-    GoRoute(
-      path: '/verification',
-      builder: (context, state) => const VerificationPage(),
-    ),
-    // Organizer routes
-    GoRoute(
-      path: '/organizer',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<OrganizerBloc>(),
-        child: const OrganizerDashboardPage(),
+        create: (_) => getIt<EventsBloc>(),
+        child: EventDetailsPage(eventId: state.pathParameters['id']!),
       ),
-      routes: [
-        GoRoute(
-          path: 'events/create',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<EventsBloc>(),
-            child: const CreateEventPage(),
-          ),
-        ),
-        GoRoute(
-          path: 'events',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<OrganizerBloc>(),
-            child: const OrganizerEventsPage(),
-          ),
-        ),
-        GoRoute(
-          path: 'profile',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<OrganizerBloc>()..add(const LoadOrganizerProfile()),
-            child: const OrganizerProfileEditPage(),
-          ),
-        ),
-        GoRoute(
-          path: 'analytics',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
-            child: const OrganizerAnalyticsPage(),
-          ),
-        ),
-      ],
     ),
-    // /organizer/apply redirects to /register (organizer onboarding handled by registration wizard)
+    GoRoute(
+      path: '/organizers/:id',
+      builder: (_, state) => OrganizerPublicProfilePage(
+        organizerId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+    GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+    GoRoute(
+        path: '/register/verify',
+        builder: (_, __) => const EmailVerificationPage()),
+    GoRoute(
+        path: '/verification', builder: (_, __) => const VerificationPage()),
     GoRoute(
       path: '/organizer/apply',
-      redirect: (context, state) => '/register',
+      builder: (_, __) => const OrganizerAccessPage(),
     ),
-    // Admin routes
     GoRoute(
-      path: '/admin',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AdminBloc>()..add(const LoadAdminData()),
-        child: const AdminDashboardPage(),
-      ),
+      path: '/create-event',
+      redirect: (_, __) => '/organizer/events/create',
+    ),
+    GoRoute(
+      path: '/organizer',
+      builder: (_, __) => const OrganizerHubPage(),
       routes: [
         GoRoute(
-          path: 'reports',
-          builder: (context, state) => const ReportsPage(),
-        ),
+            path: 'events/create',
+            builder: (_, __) => BlocProvider(
+                create: (_) => getIt<EventsBloc>(),
+                child: const CreateEventPage())),
         GoRoute(
-          path: 'audit-logs',
-          builder: (context, state) => const AuditLogsPage(),
-        ),
+            path: 'events',
+            builder: (_, __) => BlocProvider(
+                create: (_) => getIt<OrganizerBloc>(),
+                child: const OrganizerEventsPage())),
         GoRoute(
-          path: 'organizers/:id/trust',
-          builder: (context, state) {
-            final organizerId = state.pathParameters['id']!;
-            return OrganizerTrustPage(organizerId: organizerId);
-          },
-        ),
+            path: 'events/:id',
+            builder: (_, state) => BlocProvider(
+                create: (_) =>
+                    getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
+                child: OrganizerEventStatusPage(
+                    eventId: state.pathParameters['id']!))),
+        GoRoute(
+            path: 'profile',
+            builder: (_, __) => BlocProvider(
+                create: (_) =>
+                    getIt<OrganizerBloc>()..add(const LoadOrganizerProfile()),
+                child: const OrganizerProfileEditPage())),
+        GoRoute(
+            path: 'analytics',
+            builder: (_, __) => BlocProvider(
+                create: (_) =>
+                    getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
+                child: const OrganizerAnalyticsPage())),
       ],
     ),
-    // Static pages
     GoRoute(
-      path: '/about',
-      builder: (context, state) => const StaticPage(pageType: 'about'),
-    ),
-    GoRoute(
-      path: '/privacy',
-      builder: (context, state) => const StaticPage(pageType: 'privacy'),
-    ),
-    GoRoute(
-      path: '/terms',
-      builder: (context, state) => const StaticPage(pageType: 'terms'),
-    ),
-    GoRoute(
-      path: '/content-policy',
-      builder: (context, state) => const StaticPage(pageType: 'content'),
-    ),
-    GoRoute(
-      path: '/verification-policy',
-      builder: (context, state) =>
-          const StaticPage(pageType: 'verification'),
-    ),
-    // Owner Dashboard (admin-only)
-    GoRoute(
-      path: '/owner-dashboard',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<OwnerPostsBloc>(),
-        child: const owner.OwnerDashboardPage(),
-      ),
-    ),
-    // Notification Center
-    GoRoute(
-      path: '/notifications',
-      builder: (context, state) => const NotificationCenterPage(),
-    ),
-    // Profile Edit
-    GoRoute(
-      path: '/profile/edit',
-      builder: (context, state) => const ProfileEditPage(),
-    ),
-    // Conversations list
-    GoRoute(
-      path: '/conversations',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ChatBloc>(),
-        child: const ConversationsPage(),
-      ),
-    ),
-    // Chat page
-    GoRoute(
-      path: '/conversations/:id',
-      builder: (context, state) {
-        final convId = state.pathParameters['id']!;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<ChatBloc>()..add(const LoadConversations())),
-            BlocProvider(create: (_) => getIt<AuthBloc>()..add(CheckAuthStatus())),
-          ],
-          child: ChatPage(conversationId: convId),
-        );
-      },
-    ),
-    // Sheikh Dashboard
-    GoRoute(
-      path: '/sheikh-dashboard',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<SheikhDashboardBloc>(),
-        child: const SheikhDashboardPage(),
-      ),
-    ),
-    // Sheikh profile (deep linking: /sheikhs/:id)
-    GoRoute(
-      path: '/sheikhs/:id',
-      builder: (context, state) {
-        final sheikhId = state.pathParameters['id']!;
-        // If the path is /sheikhs/:id/book, let the sub-route handle it
-        return SheikhProfileLoadPage(sheikhId: sheikhId);
-      },
-    ),
-    // Booking: Student books a lesson with a sheikh
-    GoRoute(
-      path: '/sheikhs/:id/book',
-      builder: (context, state) {
-        final sheikhId = state.pathParameters['id']!;
-        final sheikhName = state.uri.queryParameters['name'] ?? 'Sheikh';
-        return BlocProvider(
-          create: (_) => getIt<BookingBloc>(),
-          child: BookingPage(sheikhId: sheikhId, sheikhName: sheikhName),
-        );
-      },
-    ),
-    // Sheikh: Availability & Schedule editor
-    GoRoute(
-      path: '/sheikh/availability',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<BookingBloc>(),
-        child: const AvailabilityEditorPage(),
-      ),
-    ),
-  ],
-  errorBuilder: (context, state) => Scaffold(
-    backgroundColor: const Color(0xFF0D1117),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: KhairColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.explore_off_rounded,
-                size: 48,
-                color: KhairColors.primary.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Page Not Found',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'The page you\'re looking for doesn\'t exist\nor has been moved.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.4),
-                fontSize: 15,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 36),
-            SizedBox(
-              width: 200,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () => context.go('/'),
-                icon: const Icon(Icons.explore_rounded, size: 20),
-                label: const Text(
-                  'Discover Events',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: KhairColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => context.go('/'),
-              child: Text(
-                'Go to Home',
-                style: TextStyle(
-                  color: KhairColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+      path: '/admin',
+      builder: (_, __) => BlocProvider(
+          create: (_) => getIt<AdminBloc>()..add(const LoadAdminData()),
+          child: const AdminDashboardPage()),
+      routes: [
+        GoRoute(
+          path: 'organizer-applications',
+          builder: (_, __) => const OrganizerApplicationListPage(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (_, state) => OrganizerApplicationReviewPage(
+                applicationId: state.pathParameters['id']!,
               ),
             ),
           ],
         ),
-      ),
+        GoRoute(path: 'reports', builder: (_, __) => const ReportsPage()),
+        GoRoute(path: 'audit-logs', builder: (_, __) => const AuditLogsPage()),
+        GoRoute(
+            path: 'organizers/:id/trust',
+            builder: (_, state) =>
+                OrganizerTrustPage(organizerId: state.pathParameters['id']!)),
+      ],
     ),
-  ),
+    GoRoute(
+        path: '/owner-dashboard',
+        builder: (_, __) => BlocProvider(
+            create: (_) => getIt<OwnerPostsBloc>(),
+            child: const owner.OwnerDashboardPage())),
+    GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationCenterPage()),
+    GoRoute(path: '/profile/edit', builder: (_, __) => const ProfileEditPage()),
+    GoRoute(
+        path: '/about',
+        builder: (_, __) => const StaticPage(pageType: 'about')),
+    GoRoute(
+        path: '/privacy',
+        builder: (_, __) => const StaticPage(pageType: 'privacy')),
+    GoRoute(
+        path: '/terms',
+        builder: (_, __) => const StaticPage(pageType: 'terms')),
+    GoRoute(
+        path: '/content-policy',
+        builder: (_, __) => const StaticPage(pageType: 'content')),
+    GoRoute(
+        path: '/verification-policy',
+        builder: (_, __) => const StaticPage(pageType: 'verification')),
+  ],
+  errorBuilder: (context, state) =>
+      _NotFoundPage(message: state.error?.toString()),
 );
+
+String? _guardRoute(BuildContext context, GoRouterState routerState) {
+  final path = routerState.uri.path;
+  final state = _authBloc.state;
+  final isLoadingPage = path == '/auth-loading';
+  if (state.status == AuthStatus.initial) {
+    return isLoadingPage ? null : '/auth-loading';
+  }
+  if (isLoadingPage) return state.isAuthenticated ? '/' : '/';
+
+  final publicPath = path == '/' ||
+      path == '/landing' ||
+      path == '/map' ||
+      path.startsWith('/events/') ||
+      path.startsWith('/organizers/') ||
+      path == '/login' ||
+      path == '/register' ||
+      path.startsWith('/register/') ||
+      path == '/verification' ||
+      path == '/about' ||
+      path == '/privacy' ||
+      path == '/terms' ||
+      path == '/content-policy' ||
+      path == '/verification-policy';
+  final authPath = path == '/login' || path == '/register';
+  if (!state.isAuthenticated) {
+    if (publicPath) return null;
+    return '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+  }
+
+  if (authPath) {
+    final next = routerState.uri.queryParameters['next'];
+    return _safeNext(next) ?? '/';
+  }
+  if (path == '/admin' ||
+      path.startsWith('/admin/') ||
+      path == '/owner-dashboard') {
+    return state.isAdmin ? null : '/';
+  }
+  if (path.startsWith('/organizer/') && path != '/organizer/apply') {
+    return state.isAuthenticated ? null : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+  }
+  if (path == '/organizer') {
+    return state.isAuthenticated ? null : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+  }
+  return null;
+}
+
+String? _safeNext(String? next) =>
+    next != null && next.startsWith('/') && !next.startsWith('//')
+        ? next
+        : null;
+
+class _AuthLoadingPage extends StatelessWidget {
+  const _AuthLoadingPage();
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
+}
+
+class _NotFoundPage extends StatelessWidget {
+  final String? message;
+  const _NotFoundPage({this.message});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+            child: FilledButton.icon(
+                onPressed: () => context.go('/'),
+                icon: const Icon(Icons.explore_outlined),
+                label: const Text('Discover events'))),
+      );
+}

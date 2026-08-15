@@ -45,8 +45,14 @@ type DiscoveryEvent struct {
 
 // Category is an event type with count.
 type Category struct {
-	Name  string `json:"name"`
-	Count int64  `json:"count"`
+	// Name is retained for backwards compatibility and is always the slug.
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	DisplayName   string `json:"display_name"`
+	DisplayNameAr string `json:"display_name_ar"`
+	DisplayNameTr string `json:"display_name_tr"`
+	SortOrder     int    `json:"sort_order"`
+	Count         int64  `json:"count"`
 }
 
 // ── Cached queries ──
@@ -138,13 +144,23 @@ func (s *Service) GetNearby(ctx context.Context, lat, lng float64, radiusKm int)
 // GetCategories returns event types with counts.
 func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
 	var categories []Category
-	err := s.cachedQuery(ctx, "discover:categories", &categories, func() (interface{}, error) {
+	err := s.cachedQuery(ctx, "discover:categories:v2", &categories, func() (interface{}, error) {
 		rows, err := s.db.QueryContext(ctx, `
-			SELECT event_type, COUNT(*)
-			FROM events
-			WHERE status = 'approved' AND is_published = true AND start_date > NOW()
-			GROUP BY event_type
-			ORDER BY COUNT(*) DESC
+			SELECT c.slug,
+			       c.display_name,
+			       COALESCE(c.display_name_ar, ''),
+			       COALESCE(c.display_name_tr, ''),
+			       c.sort_order,
+			       COUNT(e.id)
+			FROM event_categories c
+			LEFT JOIN events e
+				ON e.event_type = c.slug
+				AND e.status = 'approved'
+				AND e.is_published = true
+				AND e.start_date > NOW()
+			WHERE c.is_active = true
+			GROUP BY c.slug, c.display_name, c.display_name_ar, c.display_name_tr, c.sort_order
+			ORDER BY c.sort_order ASC
 		`)
 		if err != nil {
 			return nil, err
@@ -154,8 +170,21 @@ func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
 		var cats []Category
 		for rows.Next() {
 			var c Category
-			rows.Scan(&c.Name, &c.Count)
+			if err := rows.Scan(
+				&c.Name,
+				&c.DisplayName,
+				&c.DisplayNameAr,
+				&c.DisplayNameTr,
+				&c.SortOrder,
+				&c.Count,
+			); err != nil {
+				return nil, err
+			}
+			c.Slug = c.Name
 			cats = append(cats, c)
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 		if cats == nil {
 			cats = []Category{}

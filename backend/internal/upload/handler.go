@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -36,8 +37,10 @@ func DefaultConfig() Config {
 
 // Handler handles file upload HTTP requests
 type Handler struct {
-	config   Config
-	provider storage.Provider
+	config          Config
+	provider        storage.Provider
+	privateDocument *storage.PrivateR2Store
+	production      bool
 }
 
 // NewHandler creates a new upload handler
@@ -45,9 +48,10 @@ func NewHandler(config Config) *Handler {
 	// Use storage.NewProvider which auto-selects Azure Blob or local
 	provider := storage.NewProvider(config.UploadDir, config.BaseURL)
 
+	privateDocument, _ := storage.NewPrivateR2StoreFromEnv()
 	return &Handler{
-		config:   config,
-		provider: provider,
+		config: config, provider: provider, privateDocument: privateDocument,
+		production: strings.EqualFold(os.Getenv("ENV"), "production") || strings.EqualFold(os.Getenv("GIN_MODE"), "release"),
 	}
 }
 
@@ -125,7 +129,22 @@ func (h *Handler) UploadDocument(c *gin.Context) {
 		return
 	}
 
-	url, err := h.provider.Upload(file, header, "documents")
+	var url string
+	if h.privateDocument != nil {
+		userID, exists := c.Get("user_id")
+		if !exists {
+			response.Error(c, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		url, err = h.privateDocument.Upload(c.Request.Context(), file, "verification/"+strings.TrimSpace(fmt.Sprint(userID)))
+	} else if h.production {
+		response.Error(c, http.StatusServiceUnavailable, "Private document storage is not configured")
+		return
+	} else {
+		// Local disk is allowed only for development. Production storage.NewProvider
+		// already refuses to fall back if R2 is incomplete.
+		url, err = h.provider.Upload(file, header, "documents")
+	}
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to upload file")
 		return
@@ -164,4 +183,3 @@ func (h *Handler) validateFile(header *multipart.FileHeader, allowedTypes map[st
 
 	return nil
 }
-

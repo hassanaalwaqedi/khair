@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/widgets/khair_brand.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../bloc/notification_bloc.dart';
 
@@ -204,30 +205,9 @@ class _NotificationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Khair branded avatar
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: notification.isRead
-                      ? [Colors.grey[400]!, Colors.grey[500]!]
-                      : [KhairColors.primary, const Color(0xFF2E7D32)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Text(
-                  'K',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
+            Opacity(
+              opacity: notification.isRead ? .56 : 1,
+              child: const KhairBrandMark(size: 38, decorative: true),
             ),
             const SizedBox(width: 12),
             // Content
@@ -251,8 +231,9 @@ class _NotificationTile extends StatelessWidget {
                       color: isDark
                           ? KhairColors.darkTextPrimary
                           : KhairColors.textPrimary,
-                      fontWeight:
-                          notification.isRead ? FontWeight.w400 : FontWeight.w600,
+                      fontWeight: notification.isRead
+                          ? FontWeight.w400
+                          : FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -340,35 +321,7 @@ class _NotificationDetailDialog extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [KhairColors.primary, Color(0xFF2E7D32)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: KhairColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'K',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 22,
-                          ),
-                        ),
-                      ),
-                    ),
+                    const KhairBrandMark(size: 48, decorative: true),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(

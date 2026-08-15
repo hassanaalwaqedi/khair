@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
@@ -27,6 +28,7 @@ class MapStateManager extends Cubit<MapState> {
   final Set<String> _inFlightKeys = {};
   StreamSubscription<bool>? _connectivitySub;
   String _sessionHash = '';
+  DateTime? _rateLimitedUntil;
 
   LatLng? _northEast;
   LatLng? _southWest;
@@ -37,6 +39,7 @@ class MapStateManager extends Cubit<MapState> {
     _sessionHash = _geoService.buildSessionHash();
     _trackInteraction('map_open');
     _bindConnectivity();
+    unawaited(_loadCategories());
 
     emit(state.copyWith(isLocating: true, errorMessage: null));
     final detection = await _geoService.detectUserLocation();
@@ -62,17 +65,23 @@ class MapStateManager extends Cubit<MapState> {
   Future<void> refreshUserLocation() async {
     emit(state.copyWith(isLocating: true));
     final detection = await _geoService.detectUserLocation();
-    emit(state.copyWith(
-      isLocating: false,
-      locationPermissionDenied:
-          detection.permissionDenied && detection.coordinates == null,
-    ));
-    if (detection.coordinates == null) return;
+    if (detection.coordinates == null) {
+      emit(state.copyWith(
+        isLocating: false,
+        locationPermissionDenied: detection.permissionDenied,
+      ));
+      return;
+    }
 
-    final bounds =
-        _defaultBounds(detection.coordinates!, state.filters.radiusKm);
+    final center = detection.coordinates!;
+    emit(state.copyWith(
+      center: center,
+      isLocating: false,
+      locationPermissionDenied: false,
+    ));
+    final bounds = _defaultBounds(center, state.filters.radiusKm);
     await fetchViewport(
-      center: detection.coordinates!,
+      center: center,
       northEast: bounds.$1,
       southWest: bounds.$2,
       zoom: state.zoom,
@@ -153,11 +162,18 @@ class MapStateManager extends Cubit<MapState> {
     }
 
     if (_inFlightKeys.contains(cacheKey)) return;
+    if (_rateLimitedUntil != null &&
+        DateTime.now().isBefore(_rateLimitedUntil!)) {
+      emit(state.copyWith(
+        status: MapLoadStatus.failure,
+        errorMessage:
+            'We’re refreshing events too quickly. Try again in a moment.',
+      ));
+      return;
+    }
     _inFlightKeys.add(cacheKey);
     emit(state.copyWith(
-        status: MapLoadStatus.loading,
-        errorMessage: null,
-        isOffline: false));
+        status: MapLoadStatus.loading, errorMessage: null, isOffline: false));
 
     try {
       final result = await _geoService.fetchNearby(
@@ -170,10 +186,18 @@ class MapStateManager extends Cubit<MapState> {
       );
       _pushCache(cacheKey, result);
       _consumeNearbyResult(result, zoom: zoom, isOffline: false);
-    } catch (e) {
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 429) {
+        _rateLimitedUntil = DateTime.now().add(const Duration(seconds: 12));
+      }
       emit(state.copyWith(
         status: MapLoadStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(error),
+      ));
+    } catch (_) {
+      emit(state.copyWith(
+        status: MapLoadStatus.failure,
+        errorMessage: 'We couldn’t load events right now.',
       ));
     } finally {
       _inFlightKeys.remove(cacheKey);
@@ -246,8 +270,7 @@ class MapStateManager extends Cubit<MapState> {
   }) {
     final limited =
         result.events.take(_maxVisibleMarkers).toList(growable: false);
-    final clusters =
-        _clusterManager.buildClusters(events: limited, zoom: zoom);
+    final clusters = _clusterManager.buildClusters(events: limited, zoom: zoom);
     emit(state.copyWith(
       status: MapLoadStatus.success,
       zoom: zoom,
@@ -287,6 +310,8 @@ class MapStateManager extends Cubit<MapState> {
       filters.eventType,
       categoryKey.join('|'),
       filters.search,
+      filters.when,
+      filters.freeOnly,
     ].join('::');
   }
 
@@ -314,6 +339,28 @@ class MapStateManager extends Cubit<MapState> {
         );
       }
     });
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await _geoService.fetchCategories();
+      if (!isClosed) emit(state.copyWith(categories: categories));
+    } catch (_) {
+      // Categories are an enhancement to discovery. Event search stays usable
+      // if the catalogue request is temporarily unavailable.
+    }
+  }
+
+  String _friendlyError(DioException error) {
+    if (error.response?.statusCode == 429) {
+      return 'We’re refreshing events too quickly. Try again in a moment.';
+    }
+    if (error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return 'You’re offline. Reconnect to discover nearby events.';
+    }
+    return 'We couldn’t load events right now.';
   }
 
   void _trackInteraction(

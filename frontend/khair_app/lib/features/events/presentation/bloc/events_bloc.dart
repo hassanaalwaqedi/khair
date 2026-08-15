@@ -13,7 +13,8 @@ part 'events_state.dart';
 
 const _pollInterval = Duration(seconds: 60);
 
-class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObserver {
+class EventsBloc extends Bloc<EventsEvent, EventsState>
+    with WidgetsBindingObserver {
   final EventsRepository _eventsRepository;
   LocationEntity? _currentLocation;
   Timer? _searchDebounce;
@@ -59,7 +60,8 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
       _startPolling();
       // Also do an immediate refresh when returning to foreground
       if (!isClosed) add(RefreshEvents());
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _stopPolling();
     }
   }
@@ -87,6 +89,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
   ) {
     final newFilter = state.filter.copyWith(
       eventType: event.category,
+      clearEventType: event.category == null,
       page: 1,
     );
     emit(state.copyWith(
@@ -109,6 +112,8 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
       language: state.filter.language,
       searchQuery: state.filter.searchQuery,
       dateFilter: event.dateFilter,
+      onlineOnly: state.filter.onlineOnly,
+      freeOnly: state.filter.freeOnly,
       trending: state.filter.trending,
       page: 1,
       pageSize: state.filter.pageSize,
@@ -145,6 +150,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
     _searchDebounce = Timer(const Duration(milliseconds: 400), () {
       add(UpdateFilter(state.filter.copyWith(
         searchQuery: event.query.isEmpty ? null : event.query,
+        clearSearchQuery: event.query.isEmpty,
         page: 1,
       )));
     });
@@ -200,7 +206,9 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
   ) async {
     // Only refresh if we've loaded successfully at least once
     if (state.status != EventsStatus.success &&
-        state.status != EventsStatus.loadingMore) return;
+        state.status != EventsStatus.loadingMore) {
+      return;
+    }
 
     var filter = state.filter.copyWith(page: 1);
     if (_currentLocation != null) {
@@ -218,8 +226,8 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
         // Only update UI if the events actually changed
         if (freshEvents.length != state.events.length ||
             (freshEvents.isNotEmpty &&
-             state.events.isNotEmpty &&
-             freshEvents.first.id != state.events.first.id)) {
+                state.events.isNotEmpty &&
+                freshEvents.first.id != state.events.first.id)) {
           emit(state.copyWith(
             events: freshEvents,
             hasReachedMax: freshEvents.length < state.filter.pageSize,
@@ -238,7 +246,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> with WidgetsBindingObser
     emit(state.copyWith(status: EventsStatus.loadingMore));
 
     var newFilter = state.filter.copyWith(page: state.filter.page + 1);
-    
+
     // Inject location into pagination too
     if (_currentLocation != null) {
       newFilter = newFilter.copyWith(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../tokens/tokens.dart';
 import '../../domain/entities/spiritual_quote.dart';
@@ -38,6 +39,20 @@ class _SpiritualQuoteStartupModalState
     }
     _checked = true;
 
+    // Give deep links and auth redirects a moment to settle before deciding
+    // whether the startup surface belongs on the current route.
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) {
+      return;
+    }
+
+    // Event details is a focused conversion surface. Do not cover the hero,
+    // join CTA, or location with a global startup dialog.
+    final currentPath = appRouter.routerDelegate.currentConfiguration.uri.path;
+    if (currentPath.startsWith('/events/')) {
+      return;
+    }
+
     if (_repository.startupShownThisSession) {
       return;
     }
@@ -54,8 +69,22 @@ class _SpiritualQuoteStartupModalState
       return;
     }
 
+    // Routing/authentication may finish while the quote request is in flight.
+    // Re-check immediately before presenting so a deep-linked event page is
+    // never covered by the startup surface.
+    final latestPath = appRouter.routerDelegate.currentConfiguration.uri.path;
+    if (latestPath.startsWith('/events/')) {
+      return;
+    }
+
+    // The MaterialApp builder sits above the Navigator, so this state context
+    // cannot present a route itself. Use GoRouter's root navigator context.
+    final dialogContext = rootNavigatorKey.currentContext;
+    if (dialogContext == null) return;
+    if (!dialogContext.mounted) return;
     await showGeneralDialog<void>(
-      context: context,
+      context: dialogContext,
+      useRootNavigator: true,
       barrierDismissible: true,
       barrierLabel: 'spiritual_quote',
       barrierColor: Colors.black.withValues(alpha: 0.38),

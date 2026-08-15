@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/widgets/khair_brand.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../bloc/notification_bloc.dart';
 
@@ -28,7 +29,8 @@ class _NotificationCenterView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F0F1E) : const Color(0xFFF5F5F8),
+      backgroundColor:
+          isDark ? const Color(0xFF0F0F1E) : const Color(0xFFF5F5F8),
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         elevation: 0,
@@ -59,8 +61,9 @@ class _NotificationCenterView extends StatelessWidget {
             builder: (context, state) {
               if (state.unreadCount == 0) return const SizedBox.shrink();
               return TextButton.icon(
-                onPressed: () =>
-                    context.read<NotificationBloc>().add(const MarkAllNotificationsRead()),
+                onPressed: () => context
+                    .read<NotificationBloc>()
+                    .add(const MarkAllNotificationsRead()),
                 icon: const Icon(Icons.done_all_rounded, size: 18),
                 label: const Text('Read all'),
                 style: TextButton.styleFrom(
@@ -204,7 +207,9 @@ class _NotificationCenterView extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark
-              ? (notif.isRead ? const Color(0xFF1A1A2E) : const Color(0xFF1E2A3A))
+              ? (notif.isRead
+                  ? const Color(0xFF1A1A2E)
+                  : const Color(0xFF1E2A3A))
               : (notif.isRead
                   ? Colors.white
                   : KhairColors.primary.withValues(alpha: 0.04)),
@@ -251,7 +256,8 @@ class _NotificationCenterView extends StatelessWidget {
                   Text(
                     notif.title,
                     style: KhairTypography.labelMedium.copyWith(
-                      fontWeight: notif.isRead ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight:
+                          notif.isRead ? FontWeight.w500 : FontWeight.w700,
                       color: isDark ? Colors.white : KhairColors.textPrimary,
                     ),
                   ),
@@ -341,39 +347,9 @@ class _KhairAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isRead
-              ? [Colors.grey[400]!, Colors.grey[500]!]
-              : [KhairColors.primary, const Color(0xFF2E7D32)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: isRead
-            ? null
-            : [
-                BoxShadow(
-                  color: KhairColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-      ),
-      child: const Center(
-        child: Text(
-          'K',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
+    return Opacity(
+      opacity: isRead ? .56 : 1,
+      child: const KhairBrandMark(size: 42, decorative: true),
     );
   }
 }
@@ -417,37 +393,7 @@ class _NotificationDetailSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               child: Row(
                 children: [
-                  // Khair logo
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [KhairColors.primary, Color(0xFF2E7D32)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: KhairColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'K',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 22,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const KhairBrandMark(size: 48, decorative: true),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(

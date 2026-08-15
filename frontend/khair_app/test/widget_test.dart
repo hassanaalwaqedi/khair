@@ -1,20 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:khair_app/main.dart';
+import 'package:khair_app/features/profile/data/profile_overview_datasource.dart';
 
 void main() {
-  testWidgets('App smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const KhairApp());
-    // Verify that the app builds without crashing
-    expect(find.byType(KhairApp), findsOneWidget);
+  test('profile overview maps persisted profile data', () {
+    final overview = ProfileOverview.fromJson({
+      'user': {
+        'email': 'amina@example.com',
+        'account_type': 'Member',
+        'created_at': '2026-08-13T10:00:00Z',
+        'preferred_language': 'tr',
+        'display_name': 'Amina Kaya',
+      },
+      'stats': {
+        'saved_events': 2,
+        'joined_events': 1,
+        'upcoming_events': 1,
+        'profile_completion': 60,
+      },
+      'organizer': {'status': 'pending'},
+      'preferences': {
+        'push_notifications': true,
+        'email_notifications': false,
+        'profile_visibility': 'private',
+        'language': 'tr',
+        'location_label': 'Istanbul, Turkey',
+      },
+      'upcoming_events': const [],
+    });
+
+    expect(overview.user.initials, 'AK');
+    expect(overview.stats.savedEvents, 2);
+    expect(overview.organizer.status, 'pending');
+    expect(overview.preferences.locationLabel, 'Istanbul, Turkey');
   });
 }

@@ -3,6 +3,7 @@ package event
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +43,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	{
 		events.GET("", h.ListPublic)
 		events.GET("/:id", h.GetByID)
+		events.POST("/:id/view", h.RecordView)
 	}
 
 	// Protected routes — auth-aware event details (shows join status + online link)
@@ -49,7 +51,13 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	authEvents.Use(authMiddleware)
 	{
 		authEvents.GET("/:id/details", h.GetByIDAuth)
+		authEvents.GET("/:id/saved", h.GetSavedStatus)
+		authEvents.POST("/:id/save", h.SaveEvent)
+		authEvents.DELETE("/:id/save", h.UnsaveEvent)
 	}
+	me := r.Group("/me")
+	me.Use(authMiddleware)
+	me.GET("/saved-events", h.GetSavedEvents)
 
 	// Protected routes for organizers
 	protected := r.Group("/events")
@@ -57,6 +65,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	protected.Use(middleware.OrganizerOnly())
 	{
 		protected.POST("", h.Create)
+		protected.POST("/draft", h.CreateDraft)
 		protected.PUT("/:id", h.Update)
 		protected.DELETE("/:id", h.Delete)
 		protected.POST("/:id/submit", h.SubmitForReview)
@@ -69,6 +78,87 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	{
 		my.GET("/events", h.GetMyEvents)
 	}
+}
+
+type recordViewRequest struct {
+	SessionID string `json:"session_id" binding:"required,max=128"`
+}
+
+// RecordView stores a genuine event-detail view. The client-generated session
+// id avoids needing browser cookies and is used only for aggregate analytics.
+func (h *Handler) RecordView(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	var req recordViewRequest
+	if err := c.ShouldBindJSON(&req); err != nil || strings.TrimSpace(req.SessionID) == "" {
+		response.BadRequest(c, "A valid session ID is required")
+		return
+	}
+	if err := h.service.RecordView(id, strings.TrimSpace(req.SessionID)); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			response.NotFound(c, "Event not found")
+			return
+		}
+		response.InternalServerError(c, "Failed to record event view")
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// GetSavedStatus returns the authenticated user's saved state for an event.
+func (h *Handler) GetSavedStatus(c *gin.Context) {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	saved, err := h.service.IsSaved(c.MustGet("user_id").(uuid.UUID), eventID)
+	if err != nil {
+		response.InternalServerError(c, "Could not check saved event")
+		return
+	}
+	response.Success(c, gin.H{"saved": saved})
+}
+
+// SaveEvent persists an event in the current user's saved list.
+func (h *Handler) SaveEvent(c *gin.Context) {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	if err := h.service.SaveEvent(c.MustGet("user_id").(uuid.UUID), eventID); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"saved": true})
+}
+
+// UnsaveEvent removes an event from the current user's saved list.
+func (h *Handler) UnsaveEvent(c *gin.Context) {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	if err := h.service.UnsaveEvent(c.MustGet("user_id").(uuid.UUID), eventID); err != nil {
+		response.InternalServerError(c, "Could not remove saved event")
+		return
+	}
+	response.Success(c, gin.H{"saved": false})
+}
+
+// GetSavedEvents lists real saved events for the authenticated member.
+func (h *Handler) GetSavedEvents(c *gin.Context) {
+	items, err := h.service.GetSavedEvents(c.MustGet("user_id").(uuid.UUID))
+	if err != nil {
+		response.InternalServerError(c, "Could not load saved events")
+		return
+	}
+	response.Success(c, items)
 }
 
 // ListPublic lists approved events
@@ -134,6 +224,8 @@ type EventDetailResponse struct {
 	Title                        string     `json:"title"`
 	Description                  *string    `json:"description,omitempty"`
 	EventType                    string     `json:"event_type"`
+	Category                     string     `json:"category"`
+	Tags                         []string   `json:"tags,omitempty"`
 	Language                     *string    `json:"language,omitempty"`
 	Country                      *string    `json:"country,omitempty"`
 	City                         *string    `json:"city,omitempty"`
@@ -156,13 +248,18 @@ type EventDetailResponse struct {
 	OnlineLink                   *string    `json:"online_link,omitempty"`
 	JoinInstructions             *string    `json:"join_instructions,omitempty"`
 	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
+	VenueName                    *string    `json:"venue_name,omitempty"`
+	OnlinePlatform               *string    `json:"online_platform,omitempty"`
+	RegistrationDeadline         *time.Time `json:"registration_deadline,omitempty"`
+	RegistrationMode             string     `json:"registration_mode"`
+	Timezone                     string     `json:"timezone"`
 	RejectionReason              *string    `json:"rejection_reason,omitempty"`
 	ApprovedAt                   *time.Time `json:"approved_at,omitempty"`
 	CreatedAt                    time.Time  `json:"created_at"`
 	UpdatedAt                    time.Time  `json:"updated_at"`
 	OrganizerName                string     `json:"organizer_name"`
 	// User-specific fields
-	IsUserJoined  bool `json:"is_user_joined"`
+	IsUserJoined   bool `json:"is_user_joined"`
 	IsLinkUnlocked bool `json:"is_link_unlocked"`
 }
 
@@ -208,6 +305,8 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 		Title:                        event.Title,
 		Description:                  event.Description,
 		EventType:                    event.EventType,
+		Category:                     event.Category,
+		Tags:                         event.Tags,
 		Language:                     event.Language,
 		Country:                      event.Country,
 		City:                         event.City,
@@ -230,6 +329,11 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 		OnlineLink:                   onlineLink,
 		JoinInstructions:             event.JoinInstructions,
 		JoinLinkVisibleBeforeMinutes: event.JoinLinkVisibleBeforeMinutes,
+		VenueName:                    event.VenueName,
+		OnlinePlatform:               event.OnlinePlatform,
+		RegistrationDeadline:         event.RegistrationDeadline,
+		RegistrationMode:             event.RegistrationMode,
+		Timezone:                     event.Timezone,
 		RejectionReason:              event.RejectionReason,
 		ApprovedAt:                   event.ApprovedAt,
 		CreatedAt:                    event.CreatedAt,
@@ -253,6 +357,30 @@ func (h *Handler) Create(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	event, err := h.service.Create(userID, &req)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Created(c, event)
+}
+
+// CreateDraft creates an authenticated organizer-owned draft. It uses a
+// relaxed request struct so that partially-filled forms can be auto-saved
+// without validation failures.
+func (h *Handler) CreateDraft(c *gin.Context) {
+	var draft DraftEventRequest
+	if err := c.ShouldBindJSON(&draft); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	// Convert the relaxed draft request into a CreateEventRequest with safe
+	// defaults so the downstream service logic works unchanged.
+	req := draft.toCreateRequest()
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+	event, err := h.service.CreateDraft(userID, &req)
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -369,6 +497,16 @@ func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
 
 	if language := c.Query("language"); language != "" {
 		filter.Language = &language
+	}
+
+	if online := c.Query("is_online"); online != "" {
+		if value, err := strconv.ParseBool(online); err == nil {
+			filter.IsOnline = &value
+		}
+	}
+
+	if c.Query("free") == "true" {
+		filter.FreeOnly = true
 	}
 
 	if startDate := c.Query("start_date"); startDate != "" {

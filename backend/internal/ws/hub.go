@@ -252,10 +252,16 @@ func (h *Hub) parseJWT(tokenStr string) (string, error) {
 		}
 	}
 
-	userID, ok := claims["sub"].(string)
-	if !ok {
-		return "", jwt.ErrTokenUnverifiable
+	// Khair access tokens are issued by auth.Service with a `user_id` claim.
+	// Accept the standard JWT `sub` claim as a backwards-compatible fallback
+	// for service-to-service tokens, but never treat a missing identifier as a
+	// valid WebSocket session.
+	if userID, ok := claims["user_id"].(string); ok && userID != "" {
+		return userID, nil
+	}
+	if subject, ok := claims["sub"].(string); ok && subject != "" {
+		return subject, nil
 	}
 
-	return userID, nil
+	return "", jwt.ErrTokenUnverifiable
 }

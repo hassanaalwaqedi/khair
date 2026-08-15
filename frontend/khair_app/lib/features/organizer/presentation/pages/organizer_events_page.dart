@@ -181,7 +181,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
 
   Widget _buildEventCard(BuildContext context, Event event, bool isDark) {
     return KhairCard(
-      onTap: () => context.go('/events/${event.id}'),
+      onTap: () => _openEvent(context, event),
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(
@@ -270,7 +270,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
               onSelected: (value) {
                 switch (value) {
                   case 'view':
-                    context.go('/events/${event.id}');
+                    _openEvent(context, event);
                     break;
                   case 'edit':
                     context.go('/organizer/events/${event.id}/edit');
@@ -285,6 +285,13 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
         ),
       ),
     );
+  }
+
+  void _openEvent(BuildContext context, Event event) {
+    final publicEvent = event.status == 'approved' || event.status == 'published';
+    context.go(publicEvent
+        ? '/events/${event.id}'
+        : '/organizer/events/${event.id}');
   }
 
   void _showNotifyAttendeesDialog(BuildContext ctx, Event event) {

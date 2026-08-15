@@ -64,6 +64,12 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 				e.title,
 				o.name AS organization,
 				COALESCE(e.category, e.event_type) AS category,
+				COALESCE(e.event_type, 'in_person') AS event_type,
+				e.image_url,
+				e.city,
+				e.address,
+				COALESCE(e.is_online, FALSE) AS is_online,
+				COALESCE(e.price_cents, 0) AS price_cents,
 				COALESCE(e.latitude, ST_Y(e.location_point::geometry)) AS latitude,
 				COALESCE(e.longitude, ST_X(e.location_point::geometry)) AS longitude,
 				COALESCE(e.starts_at, e.start_date) AS starts_at,
@@ -161,6 +167,7 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 					AND er.status IN ('pending', 'confirmed')
 			) tr ON TRUE
 			WHERE e.status = 'approved'
+				AND COALESCE(e.starts_at, e.start_date) >= NOW() - INTERVAL '2 hours'
 				AND e.location_point IS NOT NULL
 				-- Bounding-box optimization before precise radius check
 				AND e.location_point::geometry && ST_MakeEnvelope($4, $5, $6, $7, 4326)
@@ -203,11 +210,17 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 					)
 				)
 				-- Text search on title/organization
-				AND (
-					$23 = ''
-					OR e.title ILIKE '%' || $23 || '%'
-					OR o.name ILIKE '%' || $23 || '%'
-				)
+			AND (
+				$23 = ''
+				OR e.title ILIKE '%' || $23 || '%'
+				OR o.name ILIKE '%' || $23 || '%'
+			)
+			AND (
+				$24 = '' OR $24 = 'all'
+				OR COALESCE(e.event_type, 'in_person') = $24
+				OR ($24 = 'online' AND COALESCE(e.is_online, FALSE))
+				OR ($24 = 'in_person' AND NOT COALESCE(e.is_online, FALSE))
+			)
 		),
 		paged AS (
 			SELECT
@@ -223,6 +236,12 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 			title,
 			organization,
 			category,
+			event_type,
+			image_url,
+			city,
+			address,
+			is_online,
+			price_cents,
 			latitude,
 			longitude,
 			starts_at,
@@ -267,6 +286,7 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 		filter.PageSize,                     // $21
 		(filter.Page - 1) * filter.PageSize, // $22
 		filter.Search,                       // $23
+		filter.EventType,                    // $24
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -284,6 +304,9 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 		var capacity sql.NullInt64
 		var remainingSeats sql.NullInt64
 		var gender sql.NullString
+		var imageURL sql.NullString
+		var city sql.NullString
+		var address sql.NullString
 		var minAge sql.NullInt64
 		var maxAge sql.NullInt64
 
@@ -293,6 +316,12 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 			&ev.Title,
 			&ev.Organization,
 			&ev.Category,
+			&ev.EventType,
+			&imageURL,
+			&city,
+			&address,
+			&ev.IsOnline,
+			&ev.PriceCents,
 			&ev.Latitude,
 			&ev.Longitude,
 			&ev.StartsAt,
@@ -327,6 +356,15 @@ func (r *Repository) FindNearby(ctx context.Context, filter *NearbyFilter) ([]Ne
 		}
 		if gender.Valid {
 			ev.GenderRestriction = &gender.String
+		}
+		if imageURL.Valid {
+			ev.ImageURL = &imageURL.String
+		}
+		if city.Valid {
+			ev.City = &city.String
+		}
+		if address.Valid {
+			ev.Address = &address.String
 		}
 		if minAge.Valid {
 			v := int(minAge.Int64)

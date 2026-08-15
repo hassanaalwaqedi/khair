@@ -8,21 +8,20 @@ class RegistrationRemoteDataSource {
 
   RegistrationRemoteDataSource(this._apiClient);
 
-  /// Step 1: Role selection + credentials
+  /// Minimal attendee signup. Organizer access is always a later application.
   Future<Map<String, dynamic>> submitStep1({
-    required String role,
     required String email,
     required String password,
-    String? displayName,
+    required String displayName,
+    required String preferredLanguage,
   }) async {
     final data = <String, dynamic>{
-      'role': role,
+      'role': 'user',
       'email': email,
       'password': password,
+      'display_name': displayName,
+      'preferred_language': preferredLanguage,
     };
-    if (displayName != null && displayName.isNotEmpty) {
-      data['display_name'] = displayName;
-    }
     final response = await _apiClient.post('/register/step1', data: data);
     return response.data['data'] as Map<String, dynamic>;
   }
@@ -97,8 +96,8 @@ class RegistrationRemoteDataSource {
 
   /// Load saved draft
   Future<Map<String, dynamic>> loadDraft(String email) async {
-    final response =
-        await _apiClient.get('/register/draft', queryParameters: {'email': email});
+    final response = await _apiClient
+        .get('/register/draft', queryParameters: {'email': email});
     return response.data['data'] as Map<String, dynamic>;
   }
 

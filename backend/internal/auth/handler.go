@@ -28,8 +28,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, loginRL, registerRL, verify
 		}
 		if loginRL != nil {
 			auth.POST("/login", loginRL, h.Login)
+			auth.POST("/google", loginRL, h.GoogleSignIn)
 		} else {
 			auth.POST("/login", h.Login)
+			auth.POST("/google", h.GoogleSignIn)
 		}
 		if verifyRL != nil {
 			auth.POST("/verify-email", verifyRL, h.VerifyEmail)
@@ -91,6 +93,22 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	response.Success(c, result)
+}
+
+// GoogleSignIn verifies an opaque Google ID token with Google before creating
+// or linking an attendee account.
+func (h *Handler) GoogleSignIn(c *gin.Context) {
+	var req GoogleSignInRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid Google sign-in request")
+		return
+	}
+	result, err := h.service.GoogleSignIn(&req)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
 	response.Success(c, result)
 }
 

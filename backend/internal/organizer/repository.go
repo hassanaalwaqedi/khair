@@ -21,13 +21,14 @@ func NewRepository(db *sql.DB) *Repository {
 // GetByID retrieves an organizer by ID
 func (r *Repository) GetByID(id uuid.UUID) (*models.Organizer, error) {
 	query := `
-		SELECT id, user_id, name, description, website, phone, logo_url, status, rejection_reason, created_at, updated_at
+		SELECT id, user_id, name, description, website, phone, logo_url, country, city, contact_email, status, rejection_reason, created_at, updated_at
 		FROM organizers WHERE id = $1
 	`
 	org := &models.Organizer{}
 	err := r.db.QueryRow(query, id).Scan(
 		&org.ID, &org.UserID, &org.Name, &org.Description, &org.Website,
-		&org.Phone, &org.LogoURL, &org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
+		&org.Phone, &org.LogoURL, &org.Country, &org.City, &org.ContactEmail,
+		&org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -38,13 +39,14 @@ func (r *Repository) GetByID(id uuid.UUID) (*models.Organizer, error) {
 // GetByUserID retrieves an organizer by user ID
 func (r *Repository) GetByUserID(userID uuid.UUID) (*models.Organizer, error) {
 	query := `
-		SELECT id, user_id, name, description, website, phone, logo_url, status, rejection_reason, created_at, updated_at
+		SELECT id, user_id, name, description, website, phone, logo_url, country, city, contact_email, status, rejection_reason, created_at, updated_at
 		FROM organizers WHERE user_id = $1
 	`
 	org := &models.Organizer{}
 	err := r.db.QueryRow(query, userID).Scan(
 		&org.ID, &org.UserID, &org.Name, &org.Description, &org.Website,
-		&org.Phone, &org.LogoURL, &org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
+		&org.Phone, &org.LogoURL, &org.Country, &org.City, &org.ContactEmail,
+		&org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -56,10 +58,12 @@ func (r *Repository) GetByUserID(userID uuid.UUID) (*models.Organizer, error) {
 func (r *Repository) Update(org *models.Organizer) error {
 	query := `
 		UPDATE organizers SET
-			name = $2, description = $3, website = $4, phone = $5, logo_url = $6
+			name = $2, description = $3, website = $4, phone = $5, logo_url = $6,
+			country = $7, city = $8, contact_email = $9, updated_at = NOW()
 		WHERE id = $1
 	`
-	_, err := r.db.Exec(query, org.ID, org.Name, org.Description, org.Website, org.Phone, org.LogoURL)
+	_, err := r.db.Exec(query, org.ID, org.Name, org.Description, org.Website, org.Phone,
+		org.LogoURL, org.Country, org.City, org.ContactEmail)
 	return err
 }
 
@@ -80,10 +84,22 @@ func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *
 	return err
 }
 
+// Resubmit replaces applicant-provided details and returns a rejected
+// application to review. It intentionally never changes the user's role.
+func (r *Repository) Resubmit(org *models.Organizer) error {
+	_, err := r.db.Exec(`
+		UPDATE organizers SET name = $2, description = $3, website = $4,
+			country = $5, city = $6, contact_email = $7,
+			status = 'pending', rejection_reason = NULL, updated_at = NOW()
+		WHERE id = $1
+	`, org.ID, org.Name, org.Description, org.Website, org.Country, org.City, org.ContactEmail)
+	return err
+}
+
 // ListPending retrieves pending organizers for admin review
 func (r *Repository) ListPending() ([]models.Organizer, error) {
 	query := `
-		SELECT id, user_id, name, description, website, phone, logo_url, status, rejection_reason, created_at, updated_at
+		SELECT id, user_id, name, description, website, phone, logo_url, country, city, contact_email, status, rejection_reason, created_at, updated_at
 		FROM organizers
 		WHERE status = 'pending'
 		ORDER BY created_at ASC
@@ -99,7 +115,8 @@ func (r *Repository) ListPending() ([]models.Organizer, error) {
 		var org models.Organizer
 		err := rows.Scan(
 			&org.ID, &org.UserID, &org.Name, &org.Description, &org.Website,
-			&org.Phone, &org.LogoURL, &org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
+			&org.Phone, &org.LogoURL, &org.Country, &org.City, &org.ContactEmail,
+			&org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -113,7 +130,7 @@ func (r *Repository) ListPending() ([]models.Organizer, error) {
 // ListAll retrieves all organizers
 func (r *Repository) ListAll() ([]models.Organizer, error) {
 	query := `
-		SELECT id, user_id, name, description, website, phone, logo_url, status, rejection_reason, created_at, updated_at
+		SELECT id, user_id, name, description, website, phone, logo_url, country, city, contact_email, status, rejection_reason, created_at, updated_at
 		FROM organizers
 		ORDER BY created_at DESC
 	`
@@ -128,7 +145,8 @@ func (r *Repository) ListAll() ([]models.Organizer, error) {
 		var org models.Organizer
 		err := rows.Scan(
 			&org.ID, &org.UserID, &org.Name, &org.Description, &org.Website,
-			&org.Phone, &org.LogoURL, &org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
+			&org.Phone, &org.LogoURL, &org.Country, &org.City, &org.ContactEmail,
+			&org.Status, &org.RejectionReason, &org.CreatedAt, &org.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

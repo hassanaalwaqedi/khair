@@ -102,16 +102,14 @@ class PushNotificationService {
   String? _buildRouteFromData(Map<String, dynamic> data) {
     final type = data['type'] as String?;
     switch (type) {
-      case 'chat_message':
-        final convId = data['conversation_id'];
-        if (convId != null) return '/conversations/$convId';
-        return '/conversations';
-      case 'lesson_request':
-        return '/sheikh-dashboard';
-      case 'lesson_response':
-        return '/conversations';
-      case 'lesson_scheduled':
-        return '/conversations';
+      case 'event_joined':
+      case 'event_reminder':
+      case 'event_updated':
+      case 'event_cancelled':
+      case 'organizer_announcement':
+      case 'organizer_message':
+        final eventId = data['event_id'];
+        return eventId == null ? '/my-events' : '/events/$eventId';
       default:
         return null;
     }

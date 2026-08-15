@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/khair_theme.dart';
+import 'khair_brand.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  KHAIR LOADING SYSTEM — Premium, Modern, 60fps
@@ -252,7 +253,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
                   _buildGeometricPattern(),
                   const SizedBox(height: 40),
                   // Animated logo
-                  _buildPulsingLogo(),
+                  _buildApprovedPulsingLogo(),
                   const SizedBox(height: 48),
                   // Rotating message
                   _buildRotatingMessage(),
@@ -291,7 +292,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
     );
   }
 
-  Widget _buildPulsingLogo() {
+  Widget _buildApprovedPulsingLogo() {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, _) {
@@ -301,39 +302,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
           scale: scale,
           child: Opacity(
             opacity: opacity,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    KhairColors.primary,
-                    KhairColors.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: KhairColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 24 + (_pulseController.value * 12),
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Text(
-                  'خ',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-            ),
+            child: const KhairBrandMark(size: 80),
           ),
         );
       },
@@ -533,7 +502,8 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  widget.longLoadMessage ?? 'Still loading… optimizing your experience',
+                  widget.longLoadMessage ??
+                      'Still loading… optimizing your experience',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 13,
@@ -584,7 +554,9 @@ class EventCardSkeleton extends StatelessWidget {
         color: isDark ? const Color(0xFF151A26) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.05),
         ),
       ),
       child: const Column(
@@ -769,7 +741,8 @@ class SheikhProfileSkeleton extends StatelessWidget {
                   // Reviews section
                   const SkeletonBox(width: 100, height: 18),
                   const SizedBox(height: 12),
-                  SkeletonBox(width: double.infinity, height: 100, borderRadius: 14),
+                  SkeletonBox(
+                      width: double.infinity, height: 100, borderRadius: 14),
                 ],
               ),
             ),
@@ -790,7 +763,8 @@ class ChatMessageSkeleton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
             const SkeletonCircle(size: 32),
@@ -941,5 +915,3 @@ class KhairLoadingButton extends StatelessWidget {
     );
   }
 }
-
-

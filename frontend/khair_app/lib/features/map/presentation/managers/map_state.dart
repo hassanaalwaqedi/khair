@@ -10,6 +10,7 @@ class MapState extends Equatable {
     required this.events,
     required this.clusters,
     required this.filters,
+    required this.categories,
     required this.isLocating,
     required this.locationPermissionDenied,
     required this.isOffline,
@@ -26,6 +27,7 @@ class MapState extends Equatable {
       events: [],
       clusters: [],
       filters: MapFilters(),
+      categories: [],
       isLocating: false,
       locationPermissionDenied: false,
       isOffline: false,
@@ -39,6 +41,7 @@ class MapState extends Equatable {
   final List<MapEvent> events;
   final List<MapClusterNode> clusters;
   final MapFilters filters;
+  final List<MapCategory> categories;
   final bool isLocating;
   final bool locationPermissionDenied;
   final bool isOffline;
@@ -53,6 +56,7 @@ class MapState extends Equatable {
     List<MapEvent>? events,
     List<MapClusterNode>? clusters,
     MapFilters? filters,
+    List<MapCategory>? categories,
     bool? isLocating,
     bool? locationPermissionDenied,
     bool? isOffline,
@@ -69,12 +73,12 @@ class MapState extends Equatable {
       events: events ?? this.events,
       clusters: clusters ?? this.clusters,
       filters: filters ?? this.filters,
+      categories: categories ?? this.categories,
       isLocating: isLocating ?? this.isLocating,
       locationPermissionDenied:
           locationPermissionDenied ?? this.locationPermissionDenied,
       isOffline: isOffline ?? this.isOffline,
-      showSearchAreaButton:
-          showSearchAreaButton ?? this.showSearchAreaButton,
+      showSearchAreaButton: showSearchAreaButton ?? this.showSearchAreaButton,
       selectedEvent:
           clearSelectedEvent ? null : (selectedEvent ?? this.selectedEvent),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
@@ -89,6 +93,7 @@ class MapState extends Equatable {
         events,
         clusters,
         filters,
+        categories,
         isLocating,
         locationPermissionDenied,
         isOffline,

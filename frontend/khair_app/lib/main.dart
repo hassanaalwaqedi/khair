@@ -16,7 +16,7 @@ import 'core/theme/theme_bloc.dart';
 import 'core/widgets/offline_indicator.dart';
 import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
-import 'features/spiritual_quotes/presentation/widgets/spiritual_quote_startup_modal.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'core/push/push_notification_service_web.dart'
     if (dart.library.io) 'core/push/push_notification_service.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -46,9 +46,6 @@ void main() {
         await PushNotificationService.instance.initialize();
       }
 
-      // Connect WebSocket for real-time updates
-      WebSocketService.instance.connect();
-
       runApp(const KhairApp());
     },
   );
@@ -61,11 +58,16 @@ class KhairApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider.value(
+          value: getIt<AuthBloc>()..add(CheckAuthStatus()),
+        ),
         BlocProvider(
           create: (_) => LocaleBloc()..add(const LoadSavedLocale()),
         ),
         BlocProvider(
-          create: (_) => getIt<LocationBloc>()..add(ResolveLocationEvent()),
+          // Location is useful, but it must not ask for GPS permission every
+          // time Khair opens. The discovery header offers an explicit action.
+          create: (_) => getIt<LocationBloc>()..add(LoadCachedLocationEvent()),
         ),
         BlocProvider(
           create: (_) => ThemeBloc(),
@@ -74,58 +76,66 @@ class KhairApp extends StatelessWidget {
           create: (_) => getIt<AiBloc>(),
         ),
       ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, themeState) {
-          return BlocBuilder<LocaleBloc, LocaleState>(
-            builder: (context, localeState) {
-              final textDirection = localeState.locale.languageCode == 'ar'
-                  ? TextDirection.rtl
-                  : TextDirection.ltr;
+      child: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (previous, current) => previous.status != current.status,
+        listener: (context, authState) {
+          if (authState.isAuthenticated) {
+            WebSocketService.instance.connect();
+          } else {
+            WebSocketService.instance.disconnect();
+          }
+        },
+        child: BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, themeState) {
+            return BlocBuilder<LocaleBloc, LocaleState>(
+              builder: (context, localeState) {
+                final textDirection = localeState.locale.languageCode == 'ar'
+                    ? TextDirection.rtl
+                    : TextDirection.ltr;
 
-              return MaterialApp.router(
-                title: 'Khair',
-                debugShowCheckedModeBanner: false,
-                theme: buildAppTheme(
+                return MaterialApp.router(
+                  title: 'Khair',
+                  debugShowCheckedModeBanner: false,
+                  theme: buildAppTheme(
+                    locale: localeState.locale,
+                    brightness: Brightness.light,
+                  ),
+                  darkTheme: buildAppTheme(
+                    locale: localeState.locale,
+                    brightness: Brightness.dark,
+                  ),
+                  themeMode: themeState.themeMode,
+                  routerConfig: appRouter,
                   locale: localeState.locale,
-                  brightness: Brightness.light,
-                ),
-                darkTheme: buildAppTheme(
-                  locale: localeState.locale,
-                  brightness: Brightness.dark,
-                ),
-                themeMode: themeState.themeMode,
-                routerConfig: appRouter,
-                locale: localeState.locale,
-                localeResolutionCallback: (locale, supportedLocales) {
-                  if (locale == null) return const Locale('en');
-                  for (final supported in supportedLocales) {
-                    if (supported.languageCode == locale.languageCode) {
-                      return supported;
+                  localeResolutionCallback: (locale, supportedLocales) {
+                    if (locale == null) return const Locale('en');
+                    for (final supported in supportedLocales) {
+                      if (supported.languageCode == locale.languageCode) {
+                        return supported;
+                      }
                     }
-                  }
-                  return const Locale('en');
-                },
-                supportedLocales: AppLocalizations.supportedLocales,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                builder: (context, child) {
-                  return Directionality(
-                    textDirection: textDirection,
-                    child: SpiritualQuoteStartupModal(
+                    return const Locale('en');
+                  },
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  builder: (context, child) {
+                    return Directionality(
+                      textDirection: textDirection,
                       child: OfflineIndicator(
                         child: child ?? const SizedBox.shrink(),
                       ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

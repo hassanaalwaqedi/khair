@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,18 +15,22 @@ import (
 
 	"github.com/khair/backend/internal/ai"
 	"github.com/khair/backend/pkg/response"
+	"github.com/khair/backend/pkg/storage"
 )
 
 // ─── Request / Response types ─────────────────────
 
 type UpdateProfileRequest struct {
-	DisplayName       *string `json:"display_name"`
-	Bio               *string `json:"bio"`
-	City              *string `json:"city"`
-	Country           *string `json:"country"`
-	Location          *string `json:"location"`
-	PreferredLanguage *string `json:"preferred_language"`
-	AvatarURL         *string `json:"avatar_url"`
+	DisplayName        *string `json:"display_name"`
+	Bio                *string `json:"bio"`
+	City               *string `json:"city"`
+	Country            *string `json:"country"`
+	Location           *string `json:"location"`
+	PreferredLanguage  *string `json:"preferred_language"`
+	AvatarURL          *string `json:"avatar_url"`
+	PushNotifications  *bool   `json:"push_notifications"`
+	EmailNotifications *bool   `json:"email_notifications"`
+	ProfileVisibility  *string `json:"profile_visibility"`
 }
 
 type ProfileResponse struct {
@@ -51,10 +53,11 @@ type ProfileResponse struct {
 type Handler struct {
 	db       *sql.DB
 	aiClient *ai.Client
+	storage  storage.Provider
 }
 
-func NewHandler(db *sql.DB, aiClient *ai.Client) *Handler {
-	return &Handler{db: db, aiClient: aiClient}
+func NewHandler(db *sql.DB, aiClient *ai.Client, mediaStorage storage.Provider) *Handler {
+	return &Handler{db: db, aiClient: aiClient, storage: mediaStorage}
 }
 
 func (h *Handler) RegisterRoutes(v1 *gin.RouterGroup, engine *gin.Engine, authMiddleware gin.HandlerFunc) {
@@ -67,10 +70,9 @@ func (h *Handler) RegisterRoutes(v1 *gin.RouterGroup, engine *gin.Engine, authMi
 		profile.POST("/moderate-image", h.ModerateImage)
 		profile.POST("/upload-avatar", h.UploadAvatar)
 	}
-
-	// Serve uploaded files
-	os.MkdirAll("/app/uploads/avatars", 0755)
-	engine.Static("/uploads", "/app/uploads")
+	me := v1.Group("/me")
+	me.Use(authMiddleware)
+	me.GET("/profile-overview", h.GetOverview)
 }
 
 // ─── GET /profile ─────────────────────────────────
@@ -78,6 +80,12 @@ func (h *Handler) RegisterRoutes(v1 *gin.RouterGroup, engine *gin.Engine, authMi
 func (h *Handler) GetProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid, _ := userID.(uuid.UUID)
+	// Email registrations created before profile setup still receive a safe,
+	// empty profile rather than a 404 on their first edit.
+	if _, err := h.db.Exec(`INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, uid); err != nil {
+		response.InternalServerError(c, "Failed to load profile")
+		return
+	}
 
 	var p ProfileResponse
 	err := h.db.QueryRow(`
@@ -102,6 +110,165 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	response.Success(c, p)
 }
 
+// GetOverview returns the authenticated member's profile in one inexpensive
+// payload. Counts and upcoming events are derived from persisted saves and
+// confirmed reservations; callers never supply a user ID.
+func (h *Handler) GetOverview(c *gin.Context) {
+	uid := c.MustGet("user_id").(uuid.UUID)
+	var overview struct {
+		User struct {
+			ID                uuid.UUID `json:"id"`
+			DisplayName       *string   `json:"display_name,omitempty"`
+			Email             string    `json:"email"`
+			AvatarURL         *string   `json:"avatar_url,omitempty"`
+			AccountType       string    `json:"account_type"`
+			CreatedAt         time.Time `json:"created_at"`
+			Country           *string   `json:"country,omitempty"`
+			City              *string   `json:"city,omitempty"`
+			PreferredLanguage string    `json:"preferred_language"`
+		} `json:"user"`
+		Stats struct {
+			SavedEvents       int `json:"saved_events"`
+			JoinedEvents      int `json:"joined_events"`
+			UpcomingEvents    int `json:"upcoming_events"`
+			ProfileCompletion int `json:"profile_completion"`
+		} `json:"stats"`
+		Organizer struct {
+			Status          string  `json:"status"`
+			RejectionReason *string `json:"rejection_reason,omitempty"`
+		} `json:"organizer"`
+		Preferences struct {
+			PushNotifications  bool   `json:"push_notifications"`
+			EmailNotifications bool   `json:"email_notifications"`
+			ProfileVisibility  string `json:"profile_visibility"`
+			Language           string `json:"language"`
+			LocationLabel      string `json:"location_label"`
+		} `json:"preferences"`
+		Upcoming []struct {
+			EventID          uuid.UUID `json:"event_id"`
+			Title            string    `json:"title"`
+			StartDate        time.Time `json:"start_date"`
+			ImageURL         *string   `json:"image_url,omitempty"`
+			Location         string    `json:"location"`
+			AttendanceStatus string    `json:"attendance_status"`
+			IsOnline         bool      `json:"is_online"`
+		} `json:"upcoming_events"`
+	}
+
+	err := h.db.QueryRow(`
+		SELECT u.id, u.display_name, u.email, u.role, u.created_at,
+		       p.avatar_url, p.country, p.city, COALESCE(p.preferred_language, 'en')
+		FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = $1`, uid,
+	).Scan(&overview.User.ID, &overview.User.DisplayName, &overview.User.Email,
+		&overview.User.AccountType, &overview.User.CreatedAt, &overview.User.AvatarURL,
+		&overview.User.Country, &overview.User.City, &overview.User.PreferredLanguage)
+	if err != nil {
+		response.InternalServerError(c, "Failed to load profile")
+		return
+	}
+	overview.User.AccountType = accountTypeLabel(overview.User.AccountType)
+
+	if err := h.db.QueryRow(`SELECT COUNT(*) FROM saved_events WHERE user_id = $1`, uid).Scan(&overview.Stats.SavedEvents); err != nil {
+		response.InternalServerError(c, "Failed to load profile statistics")
+		return
+	}
+	if err := h.db.QueryRow(`SELECT COUNT(*) FROM event_registrations WHERE user_id = $1 AND status = 'confirmed'`, uid).Scan(&overview.Stats.JoinedEvents); err != nil {
+		response.InternalServerError(c, "Failed to load profile statistics")
+		return
+	}
+	if err := h.db.QueryRow(`SELECT COUNT(*) FROM event_registrations er JOIN events e ON e.id = er.event_id WHERE er.user_id = $1 AND er.status = 'confirmed' AND e.start_date >= NOW()`, uid).Scan(&overview.Stats.UpcomingEvents); err != nil {
+		response.InternalServerError(c, "Failed to load profile statistics")
+		return
+	}
+	overview.Stats.ProfileCompletion = profileCompletion(overview.User.DisplayName, overview.User.AvatarURL, overview.User.Country, overview.User.City, overview.User.PreferredLanguage)
+
+	overview.Organizer.Status = "none"
+	_ = h.db.QueryRow(`SELECT status, rejection_reason FROM organizers WHERE user_id = $1`, uid).Scan(&overview.Organizer.Status, &overview.Organizer.RejectionReason)
+	if overview.Organizer.Status == "" {
+		overview.Organizer.Status = "none"
+	}
+
+	overview.Preferences.PushNotifications = true
+	overview.Preferences.EmailNotifications = true
+	overview.Preferences.ProfileVisibility = "private"
+	_ = h.db.QueryRow(`SELECT push_notifications, email_notifications, profile_visibility FROM user_profile_preferences WHERE user_id = $1`, uid).Scan(&overview.Preferences.PushNotifications, &overview.Preferences.EmailNotifications, &overview.Preferences.ProfileVisibility)
+	overview.Preferences.Language = overview.User.PreferredLanguage
+	overview.Preferences.LocationLabel = locationLabel(overview.User.City, overview.User.Country)
+
+	rows, err := h.db.Query(`
+		SELECT e.id, e.title, e.start_date, e.image_url,
+		       COALESCE(NULLIF(e.city, ''), NULLIF(e.country, ''), CASE WHEN e.is_online THEN 'Online event' ELSE 'Location to be announced' END),
+		       er.status, e.is_online
+		FROM event_registrations er JOIN events e ON e.id = er.event_id
+		WHERE er.user_id = $1 AND er.status = 'confirmed' AND e.start_date >= NOW()
+		ORDER BY e.start_date ASC LIMIT 3`, uid)
+	if err != nil {
+		response.InternalServerError(c, "Failed to load upcoming events")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var item struct {
+			EventID          uuid.UUID `json:"event_id"`
+			Title            string    `json:"title"`
+			StartDate        time.Time `json:"start_date"`
+			ImageURL         *string   `json:"image_url,omitempty"`
+			Location         string    `json:"location"`
+			AttendanceStatus string    `json:"attendance_status"`
+			IsOnline         bool      `json:"is_online"`
+		}
+		if err := rows.Scan(&item.EventID, &item.Title, &item.StartDate, &item.ImageURL, &item.Location, &item.AttendanceStatus, &item.IsOnline); err == nil {
+			overview.Upcoming = append(overview.Upcoming, item)
+		}
+	}
+	response.Success(c, overview)
+}
+
+func profileCompletion(name, avatar, country, city *string, language string) int {
+	completed := 0
+	if name != nil && strings.TrimSpace(*name) != "" {
+		completed++
+	}
+	if avatar != nil && strings.TrimSpace(*avatar) != "" {
+		completed++
+	}
+	if country != nil && strings.TrimSpace(*country) != "" {
+		completed++
+	}
+	if city != nil && strings.TrimSpace(*city) != "" {
+		completed++
+	}
+	if strings.TrimSpace(language) != "" {
+		completed++
+	}
+	return completed * 20
+}
+
+func accountTypeLabel(role string) string {
+	switch role {
+	case "organizer":
+		return "Organizer"
+	case "admin":
+		return "Administrator"
+	default:
+		return "Member"
+	}
+}
+
+func locationLabel(city, country *string) string {
+	parts := []string{}
+	if city != nil && strings.TrimSpace(*city) != "" {
+		parts = append(parts, strings.TrimSpace(*city))
+	}
+	if country != nil && strings.TrimSpace(*country) != "" {
+		parts = append(parts, strings.TrimSpace(*country))
+	}
+	if len(parts) == 0 {
+		return "Not set"
+	}
+	return strings.Join(parts, ", ")
+}
+
 // ─── PUT /profile ─────────────────────────────────
 
 func (h *Handler) UpdateProfile(c *gin.Context) {
@@ -111,6 +278,18 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	var req UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request body")
+		return
+	}
+	if req.DisplayName != nil && len([]rune(strings.TrimSpace(*req.DisplayName))) > 80 {
+		response.BadRequest(c, "Display name must be 80 characters or fewer")
+		return
+	}
+	if req.PreferredLanguage != nil && *req.PreferredLanguage != "en" && *req.PreferredLanguage != "ar" && *req.PreferredLanguage != "tr" {
+		response.BadRequest(c, "Unsupported preferred language")
+		return
+	}
+	if req.ProfileVisibility != nil && *req.ProfileVisibility != "private" && *req.ProfileVisibility != "event_attendees" {
+		response.BadRequest(c, "Unsupported profile visibility")
 		return
 	}
 
@@ -241,6 +420,23 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 			log.Printf("[WARN] Failed to update display_name for %s: %v", uid, err)
 		}
 	}
+	if req.PushNotifications != nil || req.EmailNotifications != nil || req.ProfileVisibility != nil {
+		push, email, visibility := true, true, "private"
+		_ = h.db.QueryRow(`SELECT push_notifications, email_notifications, profile_visibility FROM user_profile_preferences WHERE user_id = $1`, uid).Scan(&push, &email, &visibility)
+		if req.PushNotifications != nil {
+			push = *req.PushNotifications
+		}
+		if req.EmailNotifications != nil {
+			email = *req.EmailNotifications
+		}
+		if req.ProfileVisibility != nil {
+			visibility = *req.ProfileVisibility
+		}
+		if _, err := h.db.Exec(`INSERT INTO user_profile_preferences (user_id, push_notifications, email_notifications, profile_visibility) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO UPDATE SET push_notifications = EXCLUDED.push_notifications, email_notifications = EXCLUDED.email_notifications, profile_visibility = EXCLUDED.profile_visibility, updated_at = NOW()`, uid, push, email, visibility); err != nil {
+			response.InternalServerError(c, "Failed to update preferences")
+			return
+		}
+	}
 
 	// Return updated profile
 	h.GetProfile(c)
@@ -259,6 +455,10 @@ func (h *Handler) ModerateText(c *gin.Context) {
 		return
 	}
 
+	if h.aiClient == nil {
+		response.Success(c, gin.H{"passed": true, "warning": ""})
+		return
+	}
 	result, err := h.aiClient.ModerateText(c.Request.Context(), req.Text)
 	if err != nil {
 		response.Success(c, gin.H{"passed": true, "warning": ""})
@@ -295,6 +495,11 @@ func (h *Handler) ModerateImage(c *gin.Context) {
 	mimeType := http.DetectContentType(data)
 	if !strings.HasPrefix(mimeType, "image/") {
 		response.BadRequest(c, "File must be an image")
+		return
+	}
+
+	if h.aiClient == nil {
+		response.Success(c, gin.H{"passed": true, "warning": ""})
 		return
 	}
 
@@ -343,27 +548,26 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// Determine file extension
-	ext := ".jpg"
-	if strings.Contains(mimeType, "png") {
-		ext = ".png"
-	} else if strings.Contains(mimeType, "gif") {
-		ext = ".gif"
-	} else if strings.Contains(mimeType, "webp") {
-		ext = ".webp"
+	if mimeType != "image/jpeg" && mimeType != "image/png" && mimeType != "image/webp" {
+		response.BadRequest(c, "Avatar must be a JPG, PNG, or WebP image")
+		return
 	}
-
-	// Save to disk
-	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	savePath := filepath.Join("/app/uploads/avatars", filename)
-	if err := os.WriteFile(savePath, data, 0644); err != nil {
-		log.Printf("[ERROR] Failed to save avatar for %s: %v", uid, err)
+	if h.storage == nil {
+		response.InternalServerError(c, "Image storage is unavailable")
+		return
+	}
+	// The shared storage provider resolves configured cloud storage in production
+	// and only uses its local fallback for local development.
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		response.InternalServerError(c, "Failed to prepare image")
+		return
+	}
+	avatarURL, err := h.storage.Upload(file, header, fmt.Sprintf("profiles/%s", uid.String()))
+	if err != nil {
+		log.Printf("[ERROR] Failed to upload avatar for %s: %v", uid, err)
 		response.InternalServerError(c, "Failed to save image")
 		return
 	}
-
-	// Build URL
-	avatarURL := fmt.Sprintf("/uploads/avatars/%s", filename)
 
 	// Update profile
 	_, err = h.db.Exec(`

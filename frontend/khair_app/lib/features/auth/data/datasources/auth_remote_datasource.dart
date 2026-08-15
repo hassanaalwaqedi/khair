@@ -3,7 +3,10 @@ import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AuthResponseModel> login(String email, String password);
-  Future<AuthResponseModel> register(String email, String password, String name);
+  Future<AuthResponseModel> register(
+      String email, String password, String name);
+  Future<AuthResponseModel> loginWithGoogle(
+      String idToken, String preferredLanguage);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -17,16 +20,30 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       'email': email,
       'password': password,
     });
-    return AuthResponseModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    return AuthResponseModel.fromJson(
+        response.data['data'] as Map<String, dynamic>);
   }
 
   @override
-  Future<AuthResponseModel> register(String email, String password, String name) async {
+  Future<AuthResponseModel> register(
+      String email, String password, String name) async {
     final response = await _apiClient.post('/auth/register', data: {
       'email': email,
       'password': password,
       'name': name,
     });
-    return AuthResponseModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    return AuthResponseModel.fromJson(
+        response.data['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<AuthResponseModel> loginWithGoogle(
+      String idToken, String preferredLanguage) async {
+    final response = await _apiClient.post('/auth/google', data: {
+      'id_token': idToken,
+      'preferred_language': preferredLanguage,
+    });
+    return AuthResponseModel.fromJson(
+        response.data['data'] as Map<String, dynamic>);
   }
 }

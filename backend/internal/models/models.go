@@ -6,24 +6,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 // Role constants
 const (
-	RoleOrganization       = "organization"
-	RoleSheikh             = "sheikh"
-	RoleNewMuslim          = "new_muslim"
-	RoleStudent            = "student"
-	RoleCommunityOrganizer = "community_organizer"
-	RoleAdmin              = "admin"
-	RoleOrganizer          = "organizer" // legacy
-	RoleMember             = "member"
+	RoleUser      = "user"
+	RoleAdmin     = "admin"
+	RoleOrganizer = "organizer"
 )
 
 // ValidRoles returns all valid user roles
 func ValidRoles() []string {
-	return []string{RoleOrganization, RoleSheikh, RoleNewMuslim, RoleStudent, RoleCommunityOrganizer, RoleAdmin, RoleOrganizer, RoleMember}
+	return []string{RoleUser, RoleOrganizer, RoleAdmin}
 }
 
 // User represents a user in the system
@@ -55,19 +49,6 @@ type Profile struct {
 	ProfileCompletionScore int       `json:"profile_completion_score"`
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
-}
-
-// Sheikh represents a sheikh/teacher profile
-type Sheikh struct {
-	ID                 uuid.UUID      `json:"id"`
-	UserID             uuid.UUID      `json:"user_id"`
-	Specialization     *string        `json:"specialization,omitempty"`
-	IjazahInfo         *string        `json:"ijazah_info,omitempty"`
-	Certifications     pq.StringArray `json:"certifications"`
-	YearsOfExperience  *int           `json:"years_of_experience,omitempty"`
-	VerificationStatus string         `json:"verification_status"`
-	CreatedAt          time.Time      `json:"created_at"`
-	UpdatedAt          time.Time      `json:"updated_at"`
 }
 
 // RegistrationDraft holds partial registration data for save-and-continue
@@ -120,33 +101,41 @@ type Organizer struct {
 
 // Event represents an event
 type Event struct {
-	ID                uuid.UUID  `json:"id"`
-	OrganizerID       uuid.UUID  `json:"organizer_id"`
-	Title             string     `json:"title"`
-	Description       *string    `json:"description,omitempty"`
-	EventType         string     `json:"event_type"`
-	Language          *string    `json:"language,omitempty"`
-	Country           *string    `json:"country,omitempty"`
-	City              *string    `json:"city,omitempty"`
-	Address           *string    `json:"address,omitempty"`
-	Latitude          *float64   `json:"latitude,omitempty"`
-	Longitude         *float64   `json:"longitude,omitempty"`
-	StartDate         time.Time  `json:"start_date"`
-	EndDate           *time.Time `json:"end_date,omitempty"`
-	ImageURL          *string    `json:"image_url,omitempty"`
-	Capacity          *int       `json:"capacity,omitempty"`
-	ReservedCount     int        `json:"reserved_count"`
-	GenderRestriction *string    `json:"gender_restriction,omitempty"`
-	AgeMin            *int       `json:"age_min,omitempty"`
-	AgeMax            *int       `json:"age_max,omitempty"`
-	TicketPrice       *float64   `json:"ticket_price,omitempty"`
-	Currency          *string    `json:"currency,omitempty"`
+	ID                           uuid.UUID  `json:"id"`
+	OrganizerID                  uuid.UUID  `json:"organizer_id"`
+	Title                        string     `json:"title"`
+	Description                  *string    `json:"description,omitempty"`
+	EventType                    string     `json:"event_type"`
+	Category                     string     `json:"category"`
+	Tags                         []string   `json:"tags,omitempty"`
+	Language                     *string    `json:"language,omitempty"`
+	Country                      *string    `json:"country,omitempty"`
+	City                         *string    `json:"city,omitempty"`
+	Address                      *string    `json:"address,omitempty"`
+	Latitude                     *float64   `json:"latitude,omitempty"`
+	Longitude                    *float64   `json:"longitude,omitempty"`
+	StartDate                    time.Time  `json:"start_date"`
+	EndDate                      *time.Time `json:"end_date,omitempty"`
+	ImageURL                     *string    `json:"image_url,omitempty"`
+	Capacity                     *int       `json:"capacity,omitempty"`
+	ReservedCount                int        `json:"reserved_count"`
+	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
+	AgeMin                       *int       `json:"age_min,omitempty"`
+	AgeMax                       *int       `json:"age_max,omitempty"`
+	TicketPrice                  *float64   `json:"ticket_price,omitempty"`
+	Currency                     *string    `json:"currency,omitempty"`
 	Status                       string     `json:"status"`
 	IsPublished                  bool       `json:"is_published"`
 	IsOnline                     bool       `json:"is_online"`
 	OnlineLink                   *string    `json:"online_link,omitempty"`
 	JoinInstructions             *string    `json:"join_instructions,omitempty"`
 	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
+	VenueName                    *string    `json:"venue_name,omitempty"`
+	OnlinePlatform               *string    `json:"online_platform,omitempty"`
+	RegistrationDeadline         *time.Time `json:"registration_deadline,omitempty"`
+	RegistrationMode             string     `json:"registration_mode"`
+	Timezone                     string     `json:"timezone"`
+	OrganizerGuidelines          *string    `json:"organizer_guidelines,omitempty"`
 	RejectionReason              *string    `json:"rejection_reason,omitempty"`
 	ReviewedBy                   *uuid.UUID `json:"reviewed_by,omitempty"`
 	ReviewedAt                   *time.Time `json:"reviewed_at,omitempty"`
@@ -297,7 +286,7 @@ const (
 // RoleRequiresVerification returns true if the role needs document verification
 func RoleRequiresVerification(role string) bool {
 	switch role {
-	case RoleOrganization, RoleSheikh, RoleCommunityOrganizer:
+	case RoleOrganizer:
 		return true
 	default:
 		return false

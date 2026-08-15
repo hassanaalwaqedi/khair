@@ -83,7 +83,7 @@ func (r *Repository) CreateMemberUser(name, email, passwordHash, gender string, 
 		ID:           uuid.New(),
 		Email:        email,
 		PasswordHash: passwordHash,
-		Role:         models.RoleMember,
+		Role:         models.RoleUser,
 		Status:       "pending_verification",
 		DisplayName:  &name,
 		Gender:       &gender,
@@ -119,7 +119,7 @@ func (r *Repository) CreateMemberUser(name, email, passwordHash, gender string, 
 
 	// Log audit event
 	details, _ := json.Marshal(map[string]interface{}{
-		"role": models.RoleMember, "gender": gender, "event_id": eventID,
+		"role": models.RoleUser, "gender": gender, "event_id": eventID,
 	})
 	tx.Exec(`
 		INSERT INTO registration_audit_log (id, user_id, email, step, action, details, created_at)

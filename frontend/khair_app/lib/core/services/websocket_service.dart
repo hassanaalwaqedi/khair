@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// WebSocket service for real-time updates (chat messages, notifications).
+/// WebSocket service for real-time event updates and notifications.
 ///
 /// Connects to the backend WS endpoint with JWT auth.
 /// Exposes a broadcast stream of typed messages.
@@ -17,6 +17,7 @@ class WebSocketService {
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
+  bool _isConnecting = false;
   static const _maxReconnectAttempts = 10;
   static const _baseUrl = String.fromEnvironment(
     'API_URL',
@@ -33,11 +34,13 @@ class WebSocketService {
 
   /// Connect to WebSocket using stored JWT token.
   Future<void> connect() async {
-    if (_channel != null) return;
+    if (_channel != null || _isConnecting) return;
+
+    _isConnecting = true;
 
     try {
       const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'access_token');
+      final token = await storage.read(key: 'auth_token');
       if (token == null) {
         debugPrint('[WS] No auth token, skipping connect');
         return;
@@ -51,9 +54,14 @@ class WebSocketService {
       final uri = Uri.parse('$wsUrl/ws?token=$token');
       debugPrint('[WS] Connecting to ${uri.host}...');
 
-      _channel = WebSocketChannel.connect(uri);
+      final channel = WebSocketChannel.connect(uri);
+      // `WebSocketChannel.connect` returns before the browser has finished the
+      // handshake. Awaiting `ready` keeps connection failures inside this
+      // recoverable path instead of letting them escape as uncaught errors.
+      await channel.ready;
+      _channel = channel;
 
-      _channel!.stream.listen(
+      channel.stream.listen(
         (data) {
           try {
             final message = jsonDecode(data as String) as Map<String, dynamic>;
@@ -80,7 +88,10 @@ class WebSocketService {
     } catch (e) {
       debugPrint('[WS] Connect error: $e');
       _channel = null;
+      _isConnecting = false;
       _scheduleReconnect();
+    } finally {
+      _isConnecting = false;
     }
   }
 
@@ -89,12 +100,14 @@ class WebSocketService {
     _reconnectTimer?.cancel();
     _channel?.sink.close();
     _channel = null;
+    _isConnecting = false;
     _reconnectAttempts = 0;
     debugPrint('[WS] Disconnected');
   }
 
   /// Schedule a reconnect with exponential backoff.
   void _scheduleReconnect() {
+    if (_channel != null || _isConnecting) return;
     if (_reconnectAttempts >= _maxReconnectAttempts) {
       debugPrint('[WS] Max reconnect attempts reached');
       return;

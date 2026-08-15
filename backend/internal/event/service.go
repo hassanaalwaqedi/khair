@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,24 +38,40 @@ func NewService(db *sql.DB, organizerRepo OrganizerRepository) *Service {
 	}
 }
 
-// getUserDisplayName fetches the user's display name from the database
-func (s *Service) getUserDisplayName(userID uuid.UUID) string {
-	var name sql.NullString
-	err := s.db.QueryRow(`SELECT display_name FROM users WHERE id = $1`, userID).Scan(&name)
-	if err == nil && name.Valid && name.String != "" {
-		return name.String
-	}
-	return "Organizer"
-}
-
 func (s *Service) SetModeration(m ModerationScanner) {
 	s.moderation = m
+}
+
+func (s *Service) IsSaved(userID, eventID uuid.UUID) (bool, error) {
+	return s.repo.IsSaved(userID, eventID)
+}
+
+func (s *Service) SaveEvent(userID, eventID uuid.UUID) error {
+	event, err := s.repo.GetByID(eventID)
+	if err != nil || event.Status != "approved" {
+		return errors.New("event not found")
+	}
+	return s.repo.SaveForUser(userID, eventID)
+}
+
+func (s *Service) UnsaveEvent(userID, eventID uuid.UUID) error {
+	return s.repo.UnsaveForUser(userID, eventID)
+}
+
+func (s *Service) GetSavedEvents(userID uuid.UUID) ([]SavedEventSummary, error) {
+	return s.repo.GetSavedEvents(userID)
+}
+
+func (s *Service) RecordView(eventID uuid.UUID, sessionID string) error {
+	return s.repo.RecordView(eventID, sessionID)
 }
 
 // CreateEventRequest represents a request to create an event
 type CreateEventRequest struct {
 	Title                        string   `json:"title" binding:"required"`
 	Description                  *string  `json:"description"`
+	Category                     string   `json:"category"`
+	Tags                         []string `json:"tags"`
 	EventType                    string   `json:"event_type" binding:"required"`
 	Language                     *string  `json:"language"`
 	Country                      *string  `json:"country"`
@@ -68,62 +84,169 @@ type CreateEventRequest struct {
 	ImageURL                     *string  `json:"image_url"`
 	IsOnline                     bool     `json:"is_online"`
 	OnlineLink                   *string  `json:"online_link"`
+	OnlinePlatform               *string  `json:"online_platform"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
 	TicketPrice                  *float64 `json:"ticket_price"`
 	Currency                     *string  `json:"currency"`
+	VenueName                    *string  `json:"venue_name"`
+	Capacity                     *int     `json:"capacity"`
+	GenderRestriction            *string  `json:"gender_restriction"`
+	AgeMin                       *int     `json:"age_min"`
+	RegistrationDeadline         *string  `json:"registration_deadline"`
+	RegistrationMode             string   `json:"registration_mode"`
+	Timezone                     string   `json:"timezone"`
+	Guidelines                   *string  `json:"guidelines"`
 }
 
-// UpdateEventRequest represents a request to update an event
-type UpdateEventRequest struct {
-	Title                        *string  `json:"title"`
+// DraftEventRequest is a relaxed version of CreateEventRequest used for
+// auto-saving partially-filled forms. Only Title is required.
+type DraftEventRequest struct {
+	Title                        string   `json:"title" binding:"required"`
 	Description                  *string  `json:"description"`
-	EventType                    *string  `json:"event_type"`
+	Category                     string   `json:"category"`
+	Tags                         []string `json:"tags"`
+	EventType                    string   `json:"event_type"`
 	Language                     *string  `json:"language"`
 	Country                      *string  `json:"country"`
 	City                         *string  `json:"city"`
 	Address                      *string  `json:"address"`
 	Latitude                     *float64 `json:"latitude"`
 	Longitude                    *float64 `json:"longitude"`
-	StartDate                    *string  `json:"start_date"`
+	StartDate                    string   `json:"start_date"`
 	EndDate                      *string  `json:"end_date"`
 	ImageURL                     *string  `json:"image_url"`
-	IsOnline                     *bool    `json:"is_online"`
+	IsOnline                     bool     `json:"is_online"`
 	OnlineLink                   *string  `json:"online_link"`
+	OnlinePlatform               *string  `json:"online_platform"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
 	TicketPrice                  *float64 `json:"ticket_price"`
 	Currency                     *string  `json:"currency"`
+	VenueName                    *string  `json:"venue_name"`
+	Capacity                     *int     `json:"capacity"`
+	GenderRestriction            *string  `json:"gender_restriction"`
+	AgeMin                       *int     `json:"age_min"`
+	RegistrationDeadline         *string  `json:"registration_deadline"`
+	RegistrationMode             string   `json:"registration_mode"`
+	Timezone                     string   `json:"timezone"`
+	Guidelines                   *string  `json:"guidelines"`
+}
+
+// toCreateRequest converts a DraftEventRequest into a CreateEventRequest,
+// filling in safe defaults for any missing required fields.
+func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
+	eventType := d.EventType
+	if eventType == "" {
+		eventType = "offline"
+	}
+	startDate := d.StartDate
+	if startDate == "" {
+		startDate = time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339)
+	}
+	return CreateEventRequest{
+		Title:                        d.Title,
+		Description:                  d.Description,
+		Category:                     d.Category,
+		Tags:                         d.Tags,
+		EventType:                    eventType,
+		Language:                     d.Language,
+		Country:                      d.Country,
+		City:                         d.City,
+		Address:                      d.Address,
+		Latitude:                     d.Latitude,
+		Longitude:                    d.Longitude,
+		StartDate:                    startDate,
+		EndDate:                      d.EndDate,
+		ImageURL:                     d.ImageURL,
+		IsOnline:                     d.IsOnline,
+		OnlineLink:                   d.OnlineLink,
+		OnlinePlatform:               d.OnlinePlatform,
+		JoinInstructions:             d.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes: d.JoinLinkVisibleBeforeMinutes,
+		TicketPrice:                  d.TicketPrice,
+		Currency:                     d.Currency,
+		VenueName:                    d.VenueName,
+		Capacity:                     d.Capacity,
+		GenderRestriction:            d.GenderRestriction,
+		AgeMin:                       d.AgeMin,
+		RegistrationDeadline:         d.RegistrationDeadline,
+		RegistrationMode:             d.RegistrationMode,
+		Timezone:                     d.Timezone,
+		Guidelines:                   d.Guidelines,
+	}
+}
+
+// UpdateEventRequest represents a request to update an event
+type UpdateEventRequest struct {
+	Title                        *string   `json:"title"`
+	Description                  *string   `json:"description"`
+	Category                     *string   `json:"category"`
+	Tags                         *[]string `json:"tags"`
+	EventType                    *string   `json:"event_type"`
+	Language                     *string   `json:"language"`
+	Country                      *string   `json:"country"`
+	City                         *string   `json:"city"`
+	Address                      *string   `json:"address"`
+	Latitude                     *float64  `json:"latitude"`
+	Longitude                    *float64  `json:"longitude"`
+	StartDate                    *string   `json:"start_date"`
+	EndDate                      *string   `json:"end_date"`
+	ImageURL                     *string   `json:"image_url"`
+	IsOnline                     *bool     `json:"is_online"`
+	OnlineLink                   *string   `json:"online_link"`
+	OnlinePlatform               *string   `json:"online_platform"`
+	JoinInstructions             *string   `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int      `json:"join_link_visible_before_minutes"`
+	TicketPrice                  *float64  `json:"ticket_price"`
+	Currency                     *string   `json:"currency"`
+	VenueName                    *string   `json:"venue_name"`
+	Capacity                     *int      `json:"capacity"`
+	GenderRestriction            *string   `json:"gender_restriction"`
+	AgeMin                       *int      `json:"age_min"`
+	RegistrationDeadline         *string   `json:"registration_deadline"`
+	RegistrationMode             *string   `json:"registration_mode"`
+	Timezone                     *string   `json:"timezone"`
+	Guidelines                   *string   `json:"guidelines"`
 }
 
 // Create creates a new event
 func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
-	// Get organizer profile
+	// Creating an event is an organizer privilege. Do not create or approve an
+	// organizer implicitly here: that would let any authenticated user bypass
+	// the organizer review workflow simply by calling this endpoint.
 	organizer, err := s.organizerRepo.GetByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// Auto-create organizer profile for users who don't have one
-			log.Printf("[INFO] Auto-creating organizer profile for user %s", userID)
-			orgName := s.getUserDisplayName(userID)
-			organizer = &models.Organizer{
-				ID:        uuid.New(),
-				UserID:    userID,
-				Name:      orgName,
-				Status:    "approved",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			}
-			if createErr := s.organizerRepo.Create(organizer); createErr != nil {
-				return nil, fmt.Errorf("auto-create organizer profile: %w", createErr)
-			}
-		} else {
-			return nil, fmt.Errorf("get organizer profile: %w", err)
+			return nil, errors.New("an approved organizer profile is required to create events")
 		}
+		return nil, fmt.Errorf("get organizer profile: %w", err)
 	}
 
 	// Check if organizer is approved
 	if organizer.Status != "approved" {
 		return nil, errors.New("your organization is not yet approved")
+	}
+	if title := strings.TrimSpace(req.Title); len([]rune(title)) < 3 || len([]rune(title)) > 120 {
+		return nil, errors.New("title must be between 3 and 120 characters")
+	}
+	if req.Description == nil || len([]rune(strings.TrimSpace(*req.Description))) < 50 {
+		return nil, errors.New("description must be at least 50 characters")
+	}
+	if req.Category == "" {
+		req.Category = req.EventType
+	}
+	if req.RegistrationMode == "" {
+		req.RegistrationMode = "instant"
+	}
+	if req.Timezone == "" {
+		req.Timezone = "UTC"
+	}
+	if req.RegistrationMode != "instant" && req.RegistrationMode != "approval_required" {
+		return nil, errors.New("invalid registration mode")
+	}
+	if req.Capacity != nil && *req.Capacity < 1 {
+		return nil, errors.New("capacity must be at least 1")
 	}
 
 	// Parse and validate dates
@@ -148,6 +271,14 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 			return nil, errors.New("event end date must be after start date")
 		}
 		endDate = &ed
+	}
+	var registrationDeadline *time.Time
+	if req.RegistrationDeadline != nil && strings.TrimSpace(*req.RegistrationDeadline) != "" {
+		deadline, err := time.Parse(time.RFC3339, *req.RegistrationDeadline)
+		if err != nil || !deadline.Before(startDate) {
+			return nil, errors.New("registration deadline must be before the event start")
+		}
+		registrationDeadline = &deadline
 	}
 
 	// Duplicate detection: same organizer + similar title + same date
@@ -181,6 +312,9 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
 		TicketPrice:                  req.TicketPrice,
 		Currency:                     req.Currency,
+		Capacity:                     req.Capacity,
+		GenderRestriction:            req.GenderRestriction,
+		AgeMin:                       req.AgeMin,
 		Status:                       "pending",
 		CreatedAt:                    time.Now(),
 		UpdatedAt:                    time.Now(),
@@ -188,6 +322,9 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 
 	if err := s.repo.Create(event); err != nil {
 		return nil, fmt.Errorf("create event: %w", err)
+	}
+	if err := s.repo.SaveEditorMetadata(event.ID, req.Category, req.Tags, req.VenueName, req.OnlinePlatform, registrationDeadline, req.RegistrationMode, req.Timezone, req.Guidelines); err != nil {
+		return nil, fmt.Errorf("save event editor data: %w", err)
 	}
 
 	if s.moderation != nil {
@@ -240,6 +377,9 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	organizer, err := s.organizerRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("get organizer profile: %w", err)
+	}
+	if organizer.Status != "approved" {
+		return nil, errors.New("your organization is not yet approved")
 	}
 
 	// Get existing event
@@ -320,9 +460,29 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	if req.Currency != nil {
 		event.Currency = req.Currency
 	}
+	if req.Title != nil {
+		title := strings.TrimSpace(*req.Title)
+		if len([]rune(title)) < 3 || len([]rune(title)) > 120 {
+			return nil, errors.New("title must be between 3 and 120 characters")
+		}
+	}
+	if req.Description != nil && event.Status != "draft" && len([]rune(strings.TrimSpace(*req.Description))) < 50 {
+		return nil, errors.New("description must be at least 50 characters")
+	}
 
 	if err := s.repo.Update(event); err != nil {
 		return nil, fmt.Errorf("update event: %w", err)
+	}
+	var registrationDeadline *time.Time
+	if req.RegistrationDeadline != nil && strings.TrimSpace(*req.RegistrationDeadline) != "" {
+		deadline, parseErr := time.Parse(time.RFC3339, *req.RegistrationDeadline)
+		if parseErr != nil || !deadline.Before(event.StartDate) {
+			return nil, errors.New("registration deadline must be before the event start")
+		}
+		registrationDeadline = &deadline
+	}
+	if err := s.repo.UpdateEditorMetadata(event.ID, req.Category, req.Tags, req.VenueName, req.OnlinePlatform, registrationDeadline, req.RegistrationMode, req.Timezone, req.Guidelines); err != nil {
+		return nil, fmt.Errorf("save event editor data: %w", err)
 	}
 
 	if s.moderation != nil {
@@ -385,6 +545,9 @@ func (s *Service) SubmitForReview(userID uuid.UUID, eventID uuid.UUID) (*models.
 	if existingEvent.OrganizerID != organizer.ID {
 		return nil, errors.New("you don't have permission to submit this event")
 	}
+	if err := validateCompleteEvent(&existingEvent.Event); err != nil {
+		return nil, err
+	}
 
 	// Enforce state machine transitions
 	if err := ValidateTransition(existingEvent.Status, "pending"); err != nil {
@@ -400,6 +563,33 @@ func (s *Service) SubmitForReview(userID uuid.UUID, eventID uuid.UUID) (*models.
 	return &existingEvent.Event, nil
 }
 
+func validateCompleteEvent(event *models.Event) error {
+	if len([]rune(strings.TrimSpace(event.Title))) < 3 {
+		return errors.New("title is required")
+	}
+	if event.Description == nil || len([]rune(strings.TrimSpace(*event.Description))) < 50 {
+		return errors.New("description must be at least 50 characters")
+	}
+	if event.ImageURL == nil || strings.TrimSpace(*event.ImageURL) == "" {
+		return errors.New("cover image is required")
+	}
+	if event.StartDate.Before(time.Now()) {
+		return errors.New("event start date must be in the future")
+	}
+	if event.IsOnline {
+		if event.OnlineLink == nil || strings.TrimSpace(*event.OnlineLink) == "" {
+			return errors.New("online meeting link is required")
+		}
+		return nil
+	}
+	if event.City == nil || strings.TrimSpace(*event.City) == "" ||
+		event.Address == nil || strings.TrimSpace(*event.Address) == "" ||
+		event.Latitude == nil || event.Longitude == nil {
+		return errors.New("location is required")
+	}
+	return nil
+}
+
 // GetMyEvents retrieves events for the current organizer
 func (s *Service) GetMyEvents(userID uuid.UUID) ([]models.Event, error) {
 	organizer, err := s.organizerRepo.GetByUserID(userID)
@@ -412,25 +602,17 @@ func (s *Service) GetMyEvents(userID uuid.UUID) ([]models.Event, error) {
 
 // CreateDraft saves an event as a draft (not submitted for approval)
 func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
-	// Get or auto-create organizer profile
+	// Drafts are also organizer-owned content. Keeping the same check prevents
+	// drafts from becoming a loophole around organizer approval.
 	organizer, err := s.organizerRepo.GetByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			orgName := s.getUserDisplayName(userID)
-			organizer = &models.Organizer{
-				ID:        uuid.New(),
-				UserID:    userID,
-				Name:      orgName,
-				Status:    "approved",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			}
-			if createErr := s.organizerRepo.Create(organizer); createErr != nil {
-				return nil, fmt.Errorf("auto-create organizer profile: %w", createErr)
-			}
-		} else {
-			return nil, fmt.Errorf("get organizer profile: %w", err)
+			return nil, errors.New("an approved organizer profile is required to save event drafts")
 		}
+		return nil, fmt.Errorf("get organizer profile: %w", err)
+	}
+	if organizer.Status != "approved" {
+		return nil, errors.New("your organizer application is not approved")
 	}
 
 	// Parse dates (lenient for drafts)
@@ -450,29 +632,50 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 			endDate = &ed
 		}
 	}
+	if req.Category == "" {
+		req.Category = req.EventType
+	}
+	if req.RegistrationMode == "" {
+		req.RegistrationMode = "instant"
+	}
+	if req.Timezone == "" {
+		req.Timezone = "UTC"
+	}
 
 	event := &models.Event{
-		ID:          uuid.New(),
-		OrganizerID: organizer.ID,
-		Title:       req.Title,
-		Description: req.Description,
-		EventType:   req.EventType,
-		Language:    req.Language,
-		Country:     req.Country,
-		City:        req.City,
-		Address:     req.Address,
-		Latitude:    req.Latitude,
-		Longitude:   req.Longitude,
-		StartDate:   startDate,
-		EndDate:     endDate,
-		ImageURL:    req.ImageURL,
-		Status:      "draft",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:                uuid.New(),
+		OrganizerID:       organizer.ID,
+		Title:             req.Title,
+		Description:       req.Description,
+		EventType:         req.EventType,
+		Language:          req.Language,
+		Country:           req.Country,
+		City:              req.City,
+		Address:           req.Address,
+		Latitude:          req.Latitude,
+		Longitude:         req.Longitude,
+		StartDate:         startDate,
+		EndDate:           endDate,
+		ImageURL:          req.ImageURL,
+		Capacity:          req.Capacity,
+		GenderRestriction: req.GenderRestriction,
+		AgeMin:            req.AgeMin,
+		Status:            "draft",
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 	}
 
 	if err := s.repo.Create(event); err != nil {
 		return nil, fmt.Errorf("save draft event: %w", err)
+	}
+	var registrationDeadline *time.Time
+	if req.RegistrationDeadline != nil && strings.TrimSpace(*req.RegistrationDeadline) != "" {
+		if deadline, parseErr := time.Parse(time.RFC3339, *req.RegistrationDeadline); parseErr == nil {
+			registrationDeadline = &deadline
+		}
+	}
+	if err := s.repo.SaveEditorMetadata(event.ID, req.Category, req.Tags, req.VenueName, req.OnlinePlatform, registrationDeadline, req.RegistrationMode, req.Timezone, req.Guidelines); err != nil {
+		return nil, fmt.Errorf("save draft editor data: %w", err)
 	}
 
 	return event, nil

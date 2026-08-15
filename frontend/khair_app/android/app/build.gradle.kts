@@ -18,7 +18,8 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.khair.khair_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Use the highest NDK revision required by the Android plugins.
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

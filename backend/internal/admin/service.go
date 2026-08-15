@@ -88,6 +88,22 @@ func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) 
 		return nil, fmt.Errorf("update organizer status: %w", err)
 	}
 
+	// Keep the authorization role synchronized with the reviewed application.
+	// Event handlers enforce both role and organizer status, so approval must
+	// grant the organizer role and a later rejection must revoke it.
+	switch req.Status {
+	case "approved":
+		if _, err := s.db.Exec(`UPDATE users SET role = 'organizer', updated_at = NOW() WHERE id = $1 AND role = 'user'`, org.UserID); err != nil {
+			return nil, fmt.Errorf("grant organizer role: %w", err)
+		}
+		_, _ = s.db.Exec(`UPDATE organizer_applications SET status = 'approved', reviewed_at = NOW(), updated_at = NOW() WHERE user_id = $1`, org.UserID)
+	case "rejected":
+		if _, err := s.db.Exec(`UPDATE users SET role = 'user', updated_at = NOW() WHERE id = $1 AND role = 'organizer'`, org.UserID); err != nil {
+			return nil, fmt.Errorf("revoke organizer role: %w", err)
+		}
+		_, _ = s.db.Exec(`UPDATE organizer_applications SET status = 'rejected', admin_user_message = $2, reviewed_at = NOW(), updated_at = NOW() WHERE user_id = $1`, org.UserID, req.RejectionReason)
+	}
+
 	org.Status = req.Status
 	org.RejectionReason = req.RejectionReason
 
@@ -394,11 +410,11 @@ type AdminUserDetail struct {
 	AvatarURL          *string `json:"avatar_url"`
 	CreatedAt          string  `json:"created_at"`
 	// Verification request info (if any)
-	VerificationRequestID  *string `json:"verification_request_id,omitempty"`
-	VerificationDocURL     *string `json:"verification_document_url,omitempty"`
-	VerificationPhotoURL   *string `json:"verification_photo_url,omitempty"`
-	VerificationDocType    *string `json:"verification_document_type,omitempty"`
-	VerificationNotes      *string `json:"verification_notes,omitempty"`
+	VerificationRequestID   *string `json:"verification_request_id,omitempty"`
+	VerificationDocURL      *string `json:"verification_document_url,omitempty"`
+	VerificationPhotoURL    *string `json:"verification_photo_url,omitempty"`
+	VerificationDocType     *string `json:"verification_document_type,omitempty"`
+	VerificationNotes       *string `json:"verification_notes,omitempty"`
 	VerificationReviewNotes *string `json:"verification_review_notes,omitempty"`
 	VerificationSubmittedAt *string `json:"verification_submitted_at,omitempty"`
 }
@@ -434,13 +450,27 @@ func (s *Service) GetUserDetail(userID uuid.UUID) (*AdminUserDetail, error) {
 		LIMIT 1
 	`, userID).Scan(&vrID, &docURL, &photoURL, &docType, &notes, &reviewNotes, &submittedAt)
 	if err == nil {
-		if vrID.Valid { u.VerificationRequestID = &vrID.String }
-		if docURL.Valid { u.VerificationDocURL = &docURL.String }
-		if photoURL.Valid { u.VerificationPhotoURL = &photoURL.String }
-		if docType.Valid { u.VerificationDocType = &docType.String }
-		if notes.Valid { u.VerificationNotes = &notes.String }
-		if reviewNotes.Valid { u.VerificationReviewNotes = &reviewNotes.String }
-		if submittedAt.Valid { u.VerificationSubmittedAt = &submittedAt.String }
+		if vrID.Valid {
+			u.VerificationRequestID = &vrID.String
+		}
+		if docURL.Valid {
+			u.VerificationDocURL = &docURL.String
+		}
+		if photoURL.Valid {
+			u.VerificationPhotoURL = &photoURL.String
+		}
+		if docType.Valid {
+			u.VerificationDocType = &docType.String
+		}
+		if notes.Valid {
+			u.VerificationNotes = &notes.String
+		}
+		if reviewNotes.Valid {
+			u.VerificationReviewNotes = &reviewNotes.String
+		}
+		if submittedAt.Valid {
+			u.VerificationSubmittedAt = &submittedAt.String
+		}
 	}
 
 	return &u, nil

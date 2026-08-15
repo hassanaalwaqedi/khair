@@ -1,27 +1,38 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart' hide MapEvent;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/config/api_config.dart';
-import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/utils/media_url_helper.dart';
 import '../../../../core/utils/share_helper.dart';
+import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../data/datasources/join_datasource.dart';
-import '../../domain/entities/event.dart';
+import '../../../events/data/datasources/join_datasource.dart';
+import '../../../events/data/datasources/saved_events_datasource.dart';
+import '../../../events/domain/entities/event.dart';
+import '../../../events/domain/repositories/events_repository.dart';
+import '../../../organizer/data/datasources/organizer_remote_datasource.dart';
+import '../../../organizer/domain/entities/organizer.dart';
 import '../bloc/events_bloc.dart';
-import '../widgets/join_event_modal.dart';
 import '../../../../core/widgets/loading_states.dart';
 
+/// Production event conversion page.
+///
+/// The page deliberately renders only values returned by the public event
+/// API. Save and reservations are server-backed; online access is never
+/// inferred or exposed to guests.
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
+
   const EventDetailsPage({super.key, required this.eventId});
 
   @override
@@ -29,1125 +40,1245 @@ class EventDetailsPage extends StatefulWidget {
 }
 
 class _EventDetailsPageState extends State<EventDetailsPage> {
+  Organizer? _organizer;
+  List<Event> _relatedEvents = const [];
   String? _registrationStatus;
+  String? _supplementalEventId;
   bool _isSaved = false;
+  bool _saveLoading = false;
+  bool _joinLoading = false;
 
   @override
   void initState() {
     super.initState();
     context.read<EventsBloc>().add(LoadEventDetails(widget.eventId));
     _checkRegistrationStatus();
+    _checkSavedStatus();
+  }
+
+  Future<void> _loadSupplemental(Event event) async {
+    if (_supplementalEventId == event.id) return;
+    _supplementalEventId = event.id;
+
+    final organizerFuture = getIt<OrganizerRemoteDataSource>()
+        .getOrganizerById(event.organizerId)
+        .catchError((_) => throw StateError('organizer unavailable'));
+    final relatedFuture = getIt<EventsRepository>().getEvents(
+      EventFilter(eventType: event.eventType, pageSize: 6),
+    );
+
+    try {
+      final organizer = await organizerFuture;
+      if (mounted) setState(() => _organizer = organizer);
+    } catch (_) {
+      // Organizer name from the event response remains the safe fallback.
+    }
+
+    final related = await relatedFuture;
+    if (!mounted) return;
+    related.fold(
+      (_) {},
+      (events) => setState(() => _relatedEvents = events
+          .where((candidate) => candidate.id != event.id)
+          .take(5)
+          .toList(growable: false)),
+    );
   }
 
   Future<void> _checkRegistrationStatus() async {
-    final authState = context.read<AuthBloc>().state;
-    if (authState.status != AuthStatus.authenticated || authState.user == null) return;
+    final auth = context.read<AuthBloc>().state;
+    if (!auth.isAuthenticated) return;
     try {
-      final ds = JoinDataSource(getIt<ApiClient>());
-      final result = await ds.getRegistrationStatus(widget.eventId);
-      if (mounted) {
-        setState(() {
-          _registrationStatus = result['registered'] == true
-              ? (result['status'] as String? ?? 'confirmed')
-              : null;
-        });
-      }
-    } catch (_) {}
+      final result =
+          await getIt<JoinDataSource>().getRegistrationStatus(widget.eventId);
+      if (!mounted) return;
+      setState(() {
+        _registrationStatus = result['registered'] == true
+            ? (result['status'] as String? ?? 'confirmed')
+            : null;
+      });
+    } catch (_) {
+      // The public event page remains usable if registration status is down.
+    }
   }
 
-  bool _isOnline(Event e) {
-    // Prefer the backend field; fallback to heuristic for old events
-    if (e.isOnline) return true;
-    final t = e.eventType.toLowerCase();
-    return t.contains('online') || t.contains('virtual') ||
-        t.contains('webinar') || (e.meetingUrl != null && e.meetingUrl!.isNotEmpty);
-  }
-
-  String _detectPlatform(Event e) {
-    if (e.meetingPlatform != null && e.meetingPlatform!.isNotEmpty) return e.meetingPlatform!;
-    final url = (e.meetingUrl ?? '').toLowerCase();
-    if (url.contains('zoom')) return 'Zoom';
-    if (url.contains('meet.google')) return 'Google Meet';
-    if (url.contains('teams')) return 'Microsoft Teams';
-    return 'Online';
+  Future<void> _checkSavedStatus() async {
+    final auth = context.read<AuthBloc>().state;
+    if (!auth.isAuthenticated) return;
+    try {
+      final saved =
+          await getIt<SavedEventsDataSource>().isSaved(widget.eventId);
+      if (mounted) setState(() => _isSaved = saved);
+    } catch (_) {
+      // Save is non-blocking for the event details experience.
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? KhairColors.darkBackground : KhairColors.background;
-    final cardBg = isDark ? KhairColors.darkCard : KhairColors.surface;
-    final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
-    final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
-    final tt = isDark ? KhairColors.darkTextTertiary : KhairColors.textTertiary;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final colors = _PageColors(dark);
 
     return Scaffold(
-      backgroundColor: bg,
-      // ── STICKY BOTTOM BAR via bottomNavigationBar ──
+      backgroundColor: colors.background,
       bottomNavigationBar: BlocBuilder<EventsBloc, EventsState>(
         builder: (context, state) {
-          if (state.selectedEvent == null) return const SizedBox.shrink();
-          final event = state.selectedEvent!;
-          return _buildBottomBar(event, isDark, bg, bdr);
+          final event = state.selectedEvent;
+          if (event == null || state.detailsStatus != EventsStatus.success) {
+            return const SizedBox.shrink();
+          }
+          return _buildStickyActions(event, colors);
         },
       ),
-      body: BlocBuilder<EventsBloc, EventsState>(
+      body: BlocConsumer<EventsBloc, EventsState>(
+        listenWhen: (previous, current) =>
+            previous.selectedEvent?.id != current.selectedEvent?.id ||
+            previous.detailsStatus != current.detailsStatus,
+        listener: (_, state) {
+          final event = state.selectedEvent;
+          if (state.detailsStatus == EventsStatus.success && event != null) {
+            _loadSupplemental(event);
+          }
+        },
         builder: (context, state) {
-          if (state.detailsStatus == EventsStatus.loading) {
+          if (state.detailsStatus == EventsStatus.loading ||
+              state.detailsStatus == EventsStatus.initial) {
             return const EventDetailsSkeleton();
           }
-          if (state.detailsStatus == EventsStatus.failure || state.selectedEvent == null) {
-            return Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: tt),
-                const SizedBox(height: 16),
-                Text(context.l10n.eventNotFound, style: TextStyle(color: ts, fontSize: 15)),
-                const SizedBox(height: 16),
-                ElevatedButton(onPressed: () => context.go('/'),
-                    child: Text(context.l10n.eventDetailsBack)),
-              ],
-            ));
+          if (state.detailsStatus == EventsStatus.failure ||
+              state.selectedEvent == null) {
+            return _buildError(colors);
           }
+          return _buildPage(state.selectedEvent!, colors);
+        },
+      ),
+    );
+  }
 
-          final event = state.selectedEvent!;
-          final online = _isOnline(event);
-
-          return CustomScrollView(
-            slivers: [
-              // ═══ 1. HERO APP BAR ═══
-              SliverAppBar(
-                expandedHeight: 280,
-                pinned: true,
-                backgroundColor: isDark ? KhairColors.darkSurface : KhairColors.surface,
-                leading: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                    onPressed: () => context.go('/'),
-                  ),
+  Widget _buildPage(Event event, _PageColors colors) {
+    final width = MediaQuery.sizeOf(context).width;
+    final desktop = width >= 900;
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Center(
+            child: SizedBox(
+              width: width > 1180 ? 1180 : width,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  desktop ? 24 : 0,
+                  desktop ? 18 : 0,
+                  desktop ? 24 : 0,
+                  0,
                 ),
-                actions: [
-                  Container(
-                    margin: const EdgeInsetsDirectional.only(end: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
-                      onPressed: () => _shareEvent(context, event),
-                    ),
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: isDark ? KhairColors.darkSurface : KhairColors.neutral200,
-                    child: Column(
-                      children: [
-                        Expanded(child: _buildEventImage(event)),
-                        // Bottom gradient with info
-                      ],
-                    ),
-                  ),
-                ),
+                child: _buildHero(event, colors, desktop),
               ),
-
-              // ═══ CONTENT ═══
-              SliverToBoxAdapter(
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Center(
+            child: SizedBox(
+              width: width > 980 ? 980 : width,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  desktop ? 34 : 20,
+                  28,
+                  desktop ? 34 : 20,
+                  34,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title + badges
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Badges row
-                          Row(children: [
-                            _badge(
-                              icon: online ? Icons.videocam_rounded : Icons.location_on_rounded,
-                              label: online ? 'ONLINE' : event.eventType.toUpperCase(),
-                              color: online ? KhairColors.primary : KhairColors.islamicGreen,
-                            ),
-                            const SizedBox(width: 8),
-                            _badge(
-                              icon: Icons.people_rounded,
-                              label: context.l10n.eventDetailsAttending(event.reservedCount),
-                              color: isDark ? KhairColors.darkSurfaceVariant : KhairColors.neutral200,
-                              textColor: tp,
-                            ),
-                          ]),
-                          const SizedBox(height: 14),
-                          // Title
-                          Text(event.title,
-                            style: TextStyle(color: tp, fontSize: 24,
-                                fontWeight: FontWeight.w700, height: 1.2, letterSpacing: -0.3),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ═══ 2. QUICK INFO CARDS ═══
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(children: [
-                        Expanded(child: _infoCard(
-                          isDark, cardBg, bdr,
-                          Icons.calendar_today_rounded, KhairColors.primary,
-                          context.l10n.eventDetailsDateTime, tt,
-                          DateFormat('EEE, MMM d').format(event.startDate), tp,
-                          DateFormat('hh:mm a').format(event.startDate) +
-                              (event.endDate != null ? ' – ${DateFormat('hh:mm a').format(event.endDate!)}' : ''),
-                          ts,
-                        )),
-                        const SizedBox(width: 12),
-                        Expanded(child: _infoCard(
-                          isDark, cardBg, bdr,
-                          online ? Icons.videocam_rounded : Icons.location_on_rounded,
-                          online ? KhairColors.primary : KhairColors.islamicGreen,
-                          online ? 'Platform' : context.l10n.eventDetailsLocation, tt,
-                          online ? _detectPlatform(event) : (event.city ?? event.country ?? 'TBA'), tp,
-                          online ? 'Virtual Event' : (event.address ?? ''), ts,
-                        )),
-                      ]),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ═══ 3. ACTION SECTION ═══
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: online
-                          ? _onlineActionCard(event, isDark, cardBg, bdr, tp, ts, tt)
-                          : _inPersonActionCard(event, isDark, cardBg, bdr, tp, ts, tt),
-                    ),
-
-                    // ═══ PAYMENT INFO ═══
-                    if (event.ticketPrice != null && event.ticketPrice! > 0) ...[
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _sectionCard(isDark, cardBg, bdr, child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _sectionHeader(Icons.payments_rounded, context.l10n.eventDetailsPaymentInfo, tp),
-                            const SizedBox(height: 14),
-                            // Price display
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: KhairColors.primarySurface,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(children: [
-                                Container(
-                                  width: 44, height: 44,
-                                  decoration: BoxDecoration(
-                                    color: KhairColors.primary.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(Icons.attach_money_rounded,
-                                      color: KhairColors.primary, size: 24),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(context.l10n.eventDetailsTicketPrice,
-                                        style: TextStyle(color: tt, fontSize: 11, fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${event.ticketPrice!.toStringAsFixed(event.ticketPrice! % 1 == 0 ? 0 : 2)} ${event.currency ?? 'USD'}',
-                                      style: TextStyle(color: tp, fontSize: 22, fontWeight: FontWeight.w700),
-                                    ),
-                                  ],
-                                )),
-                              ]),
-                            ),
-                            const SizedBox(height: 12),
-                            // Pay at location note
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.amber.withValues(alpha: 0.1) : const Color(0xFFFFF8E1),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                              ),
-                              child: Row(children: [
-                                Icon(Icons.info_outline_rounded, color: Colors.amber[700], size: 18),
-                                const SizedBox(width: 10),
-                                Expanded(child: Text(
-                                  context.l10n.eventDetailsPayAtLocation,
-                                  style: TextStyle(color: Colors.amber[800], fontSize: 13, height: 1.4),
-                                )),
-                              ]),
-                            ),
-                          ],
-                        )),
-                      ),
+                    _buildSummary(event, colors),
+                    const SizedBox(height: 25),
+                    _buildKeyInformation(event, colors),
+                    const SizedBox(height: 22),
+                    _buildInlineActions(event, colors),
+                    const SizedBox(height: 28),
+                    if (_isOnline(event))
+                      _buildOnlineLocation(event, colors)
+                    else
+                      _buildMapLocation(event, colors),
+                    const SizedBox(height: 32),
+                    _buildAbout(event, colors),
+                    const SizedBox(height: 32),
+                    _buildOrganizer(event, colors),
+                    const SizedBox(height: 18),
+                    _buildAttendees(event, colors),
+                    if (_relatedEvents.isNotEmpty) ...[
+                      const SizedBox(height: 36),
+                      _buildRelatedEvents(colors),
                     ],
-
-                    // ═══ 4. ABOUT ═══
-                    if (event.description != null && event.description!.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _sectionCard(isDark, cardBg, bdr, child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _sectionHeader(Icons.info_outline_rounded, context.l10n.eventDetailsAbout, tp),
-                            const SizedBox(height: 14),
-                            Text(event.description!,
-                                style: TextStyle(color: ts, fontSize: 14, height: 1.7)),
-                            if (event.eventType.isNotEmpty || event.language != null) ...[
-                              const SizedBox(height: 16),
-                              Wrap(spacing: 8, runSpacing: 8, children: [
-                                _chip(event.eventType, isDark, KhairColors.primary),
-                                if (event.language != null)
-                                  _chip(event.language!, isDark, KhairColors.islamicGreen),
-                              ]),
-                            ],
-                          ],
-                        )),
-                      ),
-                    ],
-
-                    // ═══ 5. ORGANIZER ═══
-                    if (event.organizerName != null) ...[
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _sectionCard(isDark, cardBg, bdr, child: Row(children: [
-                          Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(
-                              color: KhairColors.primarySurface,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Center(child: Text(
-                              event.organizerName![0].toUpperCase(),
-                              style: TextStyle(color: KhairColors.primary, fontSize: 20, fontWeight: FontWeight.w700),
-                            )),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(context.l10n.eventDetailsOrganizedBy, style: TextStyle(
-                                  color: tt, fontSize: 11, fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 2),
-                              Row(children: [
-                                Flexible(child: Text(event.organizerName!, style: TextStyle(
-                                    color: tp, fontSize: 15, fontWeight: FontWeight.w600))),
-                                const SizedBox(width: 6),
-                                Icon(Icons.verified_rounded, color: KhairColors.primary, size: 16),
-                              ]),
-                            ],
-                          )),
-                        ])),
-                      ),
-                    ],
-
-                    // ═══ 6. ATTENDEES ═══
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _attendeesCard(event, isDark, cardBg, bdr, tp, ts),
-                    ),
-
-                    // Bottom padding
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  //  BOTTOM BAR (via Scaffold.bottomNavigationBar)
-  // ═══════════════════════════════════════════════════
-  Widget _buildBottomBar(Event event, bool isDark, Color bg, Color border) {
-    final isPast = (event.endDate ?? event.startDate).isBefore(DateTime.now());
-    final isFull = event.capacity != null && event.reservedCount >= event.capacity!;
-    final isJoined = _registrationStatus != null;
-
-    String label;
-    Color btnColor;
-    IconData btnIcon;
-    bool disabled;
-
-    if (isPast) {
-      label = context.l10n.eventDetailsEventEnded;
-      btnColor = KhairColors.neutral400;
-      btnIcon = Icons.event_busy_rounded;
-      disabled = true;
-    } else if (isJoined) {
-      label = context.l10n.eventDetailsAlreadyJoinedBtn;
-      btnColor = KhairColors.success;
-      btnIcon = Icons.check_circle_rounded;
-      disabled = true;
-    } else if (isFull) {
-      label = context.l10n.eventDetailsSoldOut;
-      btnColor = KhairColors.neutral400;
-      btnIcon = Icons.event_busy_rounded;
-      disabled = true;
-    } else {
-      label = context.l10n.eventDetailsJoin;
-      btnColor = KhairColors.primary;
-      btnIcon = Icons.event_available_rounded;
-      disabled = false;
-    }
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(top: BorderSide(color: border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(children: [
-          // Capacity info
-          if (event.capacity != null && !isPast)
-            Expanded(flex: 2, child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isFull
-                      ? context.l10n.eventDetailsSoldOut
-                      : context.l10n.eventDetailsSeatsLeft(event.capacity! - event.reservedCount),
-                  style: TextStyle(
-                    color: isFull ? KhairColors.error : KhairColors.success,
-                    fontSize: 13, fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: event.capacity! > 0
-                        ? (event.reservedCount / event.capacity!).clamp(0.0, 1.0) : 0,
-                    backgroundColor: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.06),
-                    valueColor: AlwaysStoppedAnimation(isFull ? KhairColors.error : KhairColors.primary),
-                    minHeight: 4,
-                  ),
-                ),
-              ],
-            )),
-          if (event.capacity != null && !isPast) const SizedBox(width: 14),
-
-          // Bookmark
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: border),
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: IconButton(
-              icon: Icon(
-                _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                color: _isSaved ? KhairColors.primary : (isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary),
-                size: 22,
-              ),
-              onPressed: () => setState(() => _isSaved = !_isSaved),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Join CTA
-          Expanded(flex: 3, child: SizedBox(
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: disabled ? null
-                  : () => _handleJoinTap(context, event.id, event.title),
-              icon: Icon(btnIcon, size: 20),
-              label: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: btnColor,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: btnColor.withValues(alpha: 0.6),
-                disabledForegroundColor: Colors.white70,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: disabled ? 0 : 2,
-              ),
-            ),
-          )),
-        ]),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  //  ONLINE ACTION CARD
-  // ═══════════════════════════════════════════════════
-  Widget _onlineActionCard(Event event, bool isDark,
-      Color cardBg, Color bdr, Color tp, Color ts, Color tt) {
-    final platform = _detectPlatform(event);
-    final isJoined = _registrationStatus != null;
-    final now = DateTime.now();
-    final unlockTime = event.startDate.subtract(
-      Duration(minutes: event.joinLinkVisibleBeforeMinutes),
-    );
-    final isLinkUnlocked = now.isAfter(unlockTime);
-    final hasOnlineLink = event.onlineLink != null && event.onlineLink!.isNotEmpty;
-    // Fallback to meetingUrl for backward compat
-    final linkToUse = hasOnlineLink ? event.onlineLink! : (event.meetingUrl ?? '');
-    final hasLink = linkToUse.isNotEmpty;
-    final isLive = now.isAfter(event.startDate) &&
-        (event.endDate == null || now.isBefore(event.endDate!));
-    final isPast = (event.endDate ?? event.startDate).isBefore(now);
-
-    return _sectionCard(isDark, cardBg, bdr, child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header with LIVE badge
-        Row(children: [
-          Expanded(child: _sectionHeader(
-            Icons.videocam_rounded,
-            isLive ? 'Live Now' : 'Join Online',
-            tp,
-          )),
-          if (isLive && !isPast)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: KhairColors.error,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 8, height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.white, shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('LIVE', style: TextStyle(
-                  color: Colors.white, fontSize: 11,
-                  fontWeight: FontWeight.w800, letterSpacing: 0.5,
-                )),
-              ]),
-            )
-          else if (!isPast)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: KhairColors.primarySurface,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(platform, style: TextStyle(
-                color: KhairColors.primary, fontSize: 11, fontWeight: FontWeight.w700,
-              )),
-            ),
-        ]),
-        const SizedBox(height: 14),
-
-        // ── STATE: Not joined yet ──
-        if (!isJoined && !isPast)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: KhairColors.primarySurface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(children: [
-              Icon(Icons.info_outline_rounded, color: KhairColors.primary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(child: Text(
-                'Join this event to access the online meeting link.',
-                style: TextStyle(color: KhairColors.primary, fontSize: 13, height: 1.4),
-              )),
-            ]),
-          ),
-
-        // ── STATE: Joined but link locked ──
-        if (isJoined && !isLinkUnlocked && !isPast) ...[
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.amber.withValues(alpha: 0.1) : const Color(0xFFFFF8E1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Icon(Icons.lock_clock_rounded, color: Colors.amber[700], size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(
-                    'Link available ${event.joinLinkVisibleBeforeMinutes} minutes before start',
-                    style: TextStyle(color: Colors.amber[800], fontSize: 13, fontWeight: FontWeight.w600),
-                  )),
-                ]),
-                const SizedBox(height: 12),
-                // Countdown
-                _buildCountdown(event.startDate, isDark, tp, ts),
-              ],
-            ),
-          ),
-        ],
-
-        // ── STATE: Joined and link unlocked ──
-        if (isJoined && isLinkUnlocked && !isPast && hasLink) ...[
-          // Link display
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: bdr),
-            ),
-            child: Row(children: [
-              Icon(Icons.link_rounded, color: tt, size: 18),
-              const SizedBox(width: 10),
-              Expanded(child: Text(linkToUse, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: KhairColors.primary, fontSize: 13, fontWeight: FontWeight.w500))),
-            ]),
-          ),
-          const SizedBox(height: 14),
-          // Action buttons
-          Row(children: [
-            Expanded(child: ElevatedButton.icon(
-              onPressed: () => _launchUrl(linkToUse),
-              icon: Icon(isLive ? Icons.play_circle_filled_rounded : Icons.open_in_new_rounded, size: 18),
-              label: Text(isLive ? 'Join Now' : 'Open Link',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isLive ? KhairColors.error : KhairColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-            )),
-            const SizedBox(width: 10),
-            _iconButton(bdr, Icons.copy_rounded, () {
-              Clipboard.setData(ClipboardData(text: linkToUse));
-              _showSnack('Link copied!');
-            }),
-          ]),
-        ],
-
-        // ── STATE: Joined, unlocked, but no link available ──
-        if (isJoined && isLinkUnlocked && !hasLink && !isPast)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: KhairColors.warningLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(children: [
-              Icon(Icons.info_outline_rounded, color: KhairColors.warning, size: 18),
-              const SizedBox(width: 10),
-              Expanded(child: Text('The organizer hasn\'t shared the meeting link yet.',
-                  style: TextStyle(color: KhairColors.warning, fontSize: 13))),
-            ]),
-          ),
-
-        // ── Join instructions ──
-        if (event.joinInstructions != null && event.joinInstructions!.isNotEmpty && isJoined) ...[
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Icon(Icons.sticky_note_2_rounded, color: ts, size: 16),
-                  const SizedBox(width: 8),
-                  Text('Instructions', style: TextStyle(
-                    color: tp, fontSize: 12, fontWeight: FontWeight.w700,
-                  )),
-                ]),
-                const SizedBox(height: 8),
-                Text(event.joinInstructions!,
-                    style: TextStyle(color: ts, fontSize: 13, height: 1.5)),
-              ],
-            ),
-          ),
-        ],
-
-        // ── Event ended ──
-        if (isPast)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.04) : KhairColors.neutral100,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(children: [
-              Icon(Icons.event_busy_rounded, color: ts, size: 18),
-              const SizedBox(width: 10),
-              Expanded(child: Text('This event has ended.',
-                  style: TextStyle(color: ts, fontSize: 13))),
-            ]),
-          ),
-      ],
-    ));
-  }
-
-  /// Builds a countdown to event start time
-  Widget _buildCountdown(DateTime startDate, bool isDark, Color tp, Color ts) {
-    final now = DateTime.now();
-    final diff = startDate.difference(now);
-
-    if (diff.isNegative) return const SizedBox.shrink();
-
-    final days = diff.inDays;
-    final hours = diff.inHours % 24;
-    final minutes = diff.inMinutes % 60;
-
-    return Row(children: [
-      if (days > 0) _countdownUnit(days.toString(), 'days', isDark, tp, ts),
-      if (days > 0) const SizedBox(width: 8),
-      _countdownUnit(hours.toString().padLeft(2, '0'), 'hrs', isDark, tp, ts),
-      const SizedBox(width: 8),
-      _countdownUnit(minutes.toString().padLeft(2, '0'), 'min', isDark, tp, ts),
-    ]);
-  }
-
-  Widget _countdownUnit(String value, String label, bool isDark, Color tp, Color ts) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(value, style: TextStyle(color: tp, fontSize: 18, fontWeight: FontWeight.w700)),
-        Text(label, style: TextStyle(color: ts, fontSize: 10, fontWeight: FontWeight.w500)),
-      ]),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  //  IN-PERSON ACTION CARD
-  // ═══════════════════════════════════════════════════
-  Widget _inPersonActionCard(Event event, bool isDark,
-      Color cardBg, Color bdr, Color tp, Color ts, Color tt) {
-    final displayAddress = event.fullAddress ?? event.address;
-    final cityCountry = [event.city, event.country].where((e) => e != null).join(', ');
-    final hasCoords = event.latitude != null && event.longitude != null;
-
-    return Column(children: [
-      // Map placeholder — tap to open Google Maps
-      if (hasCoords) ...[
-        GestureDetector(
-          onTap: () => _openDirections(event.latitude!, event.longitude!, event.address),
-          child: Container(
-            height: 160,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A2332) : const Color(0xFFE8F0FE),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: bdr),
-            ),
-            child: Center(child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.location_on_rounded, color: KhairColors.primary, size: 36),
-                const SizedBox(height: 8),
-                Text('Tap to open in Maps',
-                    style: TextStyle(color: KhairColors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
-              ],
-            )),
           ),
         ),
-        const SizedBox(height: 12),
       ],
-      // Location card
-      _sectionCard(isDark, cardBg, bdr, child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(Icons.location_on_rounded, context.l10n.eventDetailsLocation, tp),
-          if (cityCountry.isNotEmpty)
-            Padding(padding: const EdgeInsets.only(top: 4),
-              child: Text(cityCountry, style: TextStyle(color: ts, fontSize: 13))),
-          if (displayAddress != null) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: bdr),
-              ),
-              child: Row(children: [
-                Icon(Icons.pin_drop_rounded, color: tt, size: 18),
-                const SizedBox(width: 10),
-                Expanded(child: Text(displayAddress, style: TextStyle(
-                    color: tp, fontSize: 13, fontWeight: FontWeight.w500, height: 1.4))),
-              ]),
-            ),
-          ],
-          if (displayAddress == null && !hasCoords) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: KhairColors.warningLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(children: [
-                Icon(Icons.info_outline_rounded, color: KhairColors.warning, size: 18),
-                const SizedBox(width: 10),
-                Expanded(child: Text('Exact location will be announced soon.',
-                    style: TextStyle(color: KhairColors.warning, fontSize: 13))),
-              ]),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Row(children: [
-            if (hasCoords)
-              Expanded(child: ElevatedButton.icon(
-                onPressed: () => _openDirections(event.latitude!, event.longitude!, event.address),
-                icon: const Icon(Icons.directions_rounded, size: 18),
-                label: Text(context.l10n.eventDetailsGetDirections,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: KhairColors.primary, foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-              )),
-            if (hasCoords && displayAddress != null) const SizedBox(width: 10),
-            if (displayAddress != null)
-              _iconButton(bdr, Icons.copy_rounded, () {
-                Clipboard.setData(ClipboardData(text: displayAddress));
-                _showSnack('Address copied!');
-              }),
-          ]),
-        ],
-      )),
-    ]);
+    );
   }
 
-  // ═══════════════════════════════════════════════════
-  //  ATTENDEES CARD
-  // ═══════════════════════════════════════════════════
-  Widget _attendeesCard(Event event, bool isDark, Color cardBg, Color bdr, Color tp, Color ts) {
-    final count = event.reservedCount;
-    final isFull = event.capacity != null && count >= event.capacity!;
+  Widget _buildHero(Event event, _PageColors colors, bool desktop) {
+    final imageUrl = resolveMediaUrl(event.imageUrl);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(desktop ? 26 : 0),
+      child: SizedBox(
+        height: desktop ? 440 : 250,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (imageUrl.isNotEmpty)
+              CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => _heroFallback(colors),
+                errorWidget: (_, __, ___) => _heroFallback(colors),
+              )
+            else
+              _heroFallback(colors),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: .24),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: .12),
+                  ],
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              top: 18,
+              start: 18,
+              child: _heroButton(
+                icon: Icons.arrow_back_rounded,
+                label: context.l10n.eventDetailsBack,
+                onPressed: () => context.pop(),
+              ),
+            ),
+            PositionedDirectional(
+              top: 18,
+              end: 18,
+              child: Row(
+                children: [
+                  _heroButton(
+                    icon: _isSaved
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    label: _isSaved ? 'Remove from saved' : 'Save event',
+                    onPressed: _saveLoading ? null : () => _toggleSaved(event),
+                    active: _isSaved,
+                  ),
+                  const SizedBox(width: 10),
+                  _heroButton(
+                    icon: Icons.ios_share_rounded,
+                    label: 'Share event',
+                    onPressed: () => _shareEvent(event),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return _sectionCard(isDark, cardBg, bdr, child: Column(
+  Widget _heroFallback(_PageColors colors) => DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF2A1220), Color(0xFFF43F75)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Icon(Icons.event_rounded,
+              size: 72, color: Colors.white.withValues(alpha: .35)),
+        ),
+      );
+
+  Widget _heroButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+    bool active = false,
+  }) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: Colors.black.withValues(alpha: .48),
+        shape: const CircleBorder(),
+        child: IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon, color: active ? AppColors.primary : Colors.white),
+          tooltip: label,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummary(Event event, _PageColors colors) {
+    final category = _label(
+        event.category?.isNotEmpty == true ? event.category! : event.eventType);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Icon(Icons.people_rounded, color: KhairColors.primary, size: 22),
-          const SizedBox(width: 10),
-          Text('Attendees', style: TextStyle(color: tp, fontSize: 17, fontWeight: FontWeight.w700)),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: isFull ? KhairColors.errorLight : KhairColors.primarySurface,
-              borderRadius: BorderRadius.circular(14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            _softPill(Icons.local_offer_outlined, category, colors),
+            _softPill(
+              _isOnline(event)
+                  ? Icons.videocam_outlined
+                  : Icons.people_alt_outlined,
+              _isOnline(event) ? 'ONLINE' : 'IN-PERSON',
+              colors,
             ),
-            child: Text(
-              event.capacity != null ? '$count / ${event.capacity}' : '$count',
-              style: TextStyle(
-                color: isFull ? KhairColors.error : KhairColors.primary,
-                fontSize: 13, fontWeight: FontWeight.w700,
-              ),
-            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text(
+          event.title,
+          style: TextStyle(
+            color: colors.primaryText,
+            fontSize: MediaQuery.sizeOf(context).width >= 900 ? 40 : 30,
+            height: 1.08,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
           ),
-        ]),
-        const SizedBox(height: 14),
-        if (count > 0) ...[
-          // Colored circles
-          Wrap(spacing: -10, runSpacing: 4, children: List.generate(
-            count.clamp(0, 6), (i) => Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: [KhairColors.primary, const Color(0xFF7C3AED), const Color(0xFFDB2777),
-                  KhairColors.islamicGreen, const Color(0xFFD97706), const Color(0xFF0891B2)][i % 6],
-                shape: BoxShape.circle,
-                border: Border.all(color: cardBg, width: 2),
-              ),
-              child: const Icon(Icons.person_rounded, color: Colors.white, size: 18),
-            ),
-          )),
-          if (count > 6)
-            Padding(padding: const EdgeInsets.only(top: 8),
-              child: Text('+${count - 6} more attending', style: TextStyle(color: ts, fontSize: 13))),
-        ],
-        if (count == 0)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(children: [
-              Icon(Icons.emoji_people_rounded, color: KhairColors.primary, size: 22),
-              const SizedBox(width: 12),
-              Text('Be the first to join!', style: TextStyle(color: tp, fontSize: 14, fontWeight: FontWeight.w600)),
-            ]),
-          ),
+        ),
       ],
-    ));
+    );
   }
 
-  // ═══════════════════════════════════════════════════
-  //  SHARED HELPERS
-  // ═══════════════════════════════════════════════════
+  Widget _softPill(IconData icon, String label, _PageColors colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: colors.softRose,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: AppColors.primary),
+          const SizedBox(width: 7),
+          Text(label.toUpperCase(),
+              style: const TextStyle(
+                  color: AppColors.primaryDark,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .35)),
+        ],
+      ),
+    );
+  }
 
-  Widget _sectionCard(bool isDark, Color bg, Color border, {required Widget child}) {
+  Widget _buildKeyInformation(Event event, _PageColors colors) {
+    final items = [
+      _EventMeta(
+        icon: Icons.calendar_month_outlined,
+        title: _dateLabel(event),
+        detail: _timeLabel(event),
+      ),
+      _EventMeta(
+        icon:
+            _isOnline(event) ? Icons.wifi_rounded : Icons.location_on_outlined,
+        title: _isOnline(event) ? 'Online event' : _locationLabel(event),
+        detail: _isOnline(event)
+            ? (event.onlinePlatform ?? 'Meeting access after joining')
+            : (event.venueName ?? event.address ?? ''),
+      ),
+      _EventMeta(
+        icon: Icons.groups_outlined,
+        title: event.reservedCount == 0
+            ? 'Be the first to join'
+            : '${event.reservedCount} going',
+        detail: event.capacity == null
+            ? 'Community event'
+            : '${event.capacity} spots total',
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 620) {
+          return Column(
+            children: items
+                .map((item) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      child: _metaItem(item, colors),
+                    ))
+                .toList(),
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0)
+                Container(
+                  width: 1,
+                  height: 58,
+                  margin: const EdgeInsets.symmetric(horizontal: 22),
+                  color: colors.border,
+                ),
+              Expanded(child: _metaItem(items[i], colors)),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _metaItem(_EventMeta item, _PageColors colors) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(item.icon, color: AppColors.primary, size: 25),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: colors.primaryText,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700)),
+              if (item.detail.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(item.detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        TextStyle(color: colors.secondaryText, fontSize: 13)),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineActions(Event event, _PageColors colors) {
+    return Row(
+      children: [
+        Expanded(
+          child: _outlineAction(
+            icon: _isSaved
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
+            label: _isSaved ? 'Saved' : 'Save',
+            colors: colors,
+            onPressed: _saveLoading ? null : () => _toggleSaved(event),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _outlineAction(
+            icon: Icons.ios_share_outlined,
+            label: 'Share',
+            colors: colors,
+            onPressed: () => _shareEvent(event),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _outlineAction({
+    required IconData icon,
+    required String label,
+    required _PageColors colors,
+    required VoidCallback? onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 21),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        side: BorderSide(color: AppColors.primary.withValues(alpha: .25)),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
+      ),
+    );
+  }
+
+  Widget _buildMapLocation(Event event, _PageColors colors) {
+    final hasCoordinates = event.latitude != null && event.longitude != null;
+    final address = [
+      event.venueName,
+      event.address,
+      [event.city, event.country]
+          .whereType<String>()
+          .where((value) => value.trim().isNotEmpty)
+          .join(', '),
+    ].whereType<String>().where((value) => value.trim().isNotEmpty).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Location', colors),
+        const SizedBox(height: 13),
+        if (hasCoordinates)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: SizedBox(
+              height: 190,
+              child: Stack(
+                children: [
+                  FlutterMap(
+                    options: MapOptions(
+                      initialCenter: LatLng(event.latitude!, event.longitude!),
+                      initialZoom: 13.5,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.khair.khair_app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: LatLng(event.latitude!, event.longitude!),
+                            width: 52,
+                            height: 52,
+                            child: const Icon(Icons.location_on_rounded,
+                                color: AppColors.primary, size: 46),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  PositionedDirectional(
+                    bottom: 12,
+                    end: 12,
+                    child: FilledButton.icon(
+                      onPressed: () => _openDirections(event),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                      label: const Text('View on map'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.surface,
+                        foregroundColor: colors.primaryText,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(99)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          _locationFallback(colors),
+        if (address.isNotEmpty) ...[
+          const SizedBox(height: 13),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.place_outlined, color: AppColors.primary, size: 21),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(address.join('\n'),
+                    style: TextStyle(
+                        color: colors.secondaryText,
+                        fontSize: 14,
+                        height: 1.45)),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _locationFallback(_PageColors colors) {
+    return Container(
+      height: 128,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: colors.softRose,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Center(
+        child: Text('Map preview is unavailable for this event.',
+            style: TextStyle(color: colors.secondaryText, fontSize: 13)),
+      ),
+    );
+  }
+
+  Widget _buildOnlineLocation(Event event, _PageColors colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
+        color: colors.softRose,
+        borderRadius: BorderRadius.circular(22),
       ),
-      child: child,
-    );
-  }
-
-  Widget _sectionHeader(IconData icon, String title, Color color) {
-    return Row(children: [
-      Icon(icon, color: KhairColors.primary, size: 22),
-      const SizedBox(width: 10),
-      Text(title, style: TextStyle(color: color, fontSize: 17, fontWeight: FontWeight.w700)),
-    ]);
-  }
-
-  Widget _infoCard(bool isDark, Color bg, Color border,
-      IconData icon, Color iconColor, String label, Color labelColor,
-      String title, Color titleColor, String sub, Color subColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bg, borderRadius: BorderRadius.circular(16), border: Border.all(color: border),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+                color: AppColors.primary, shape: BoxShape.circle),
+            child: const Icon(Icons.videocam_outlined, color: Colors.white),
           ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Online event',
+                    style: TextStyle(
+                        color: colors.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(
+                  '${event.onlinePlatform ?? 'Online'} · Meeting access available after joining.',
+                  style: TextStyle(color: colors.secondaryText, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAbout(Event event, _PageColors colors) {
+    final description = event.description?.trim();
+    final extras = <String>[
+      ...event.tags,
+      if (event.genderRestriction != null &&
+          event.genderRestriction!.trim().isNotEmpty)
+        _label(event.genderRestriction!),
+      if (event.language != null && event.language!.trim().isNotEmpty)
+        _label(event.language!),
+    ].where((tag) => tag.trim().isNotEmpty).take(6).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('About this event', colors),
+        const SizedBox(height: 11),
+        if (description != null && description.isNotEmpty)
+          Text(description,
+              style: TextStyle(
+                  color: colors.secondaryText, fontSize: 15.5, height: 1.65))
+        else
+          Text('The organizer has not added a description yet.',
+              style: TextStyle(color: colors.secondaryText, fontSize: 15.5)),
+        if (extras.isNotEmpty) ...[
+          const SizedBox(height: 17),
+          Wrap(
+            spacing: 9,
+            runSpacing: 9,
+            children: extras.map((tag) => _tag(tag, colors)).toList(),
+          ),
+        ],
+        if (event.registrationDeadline != null) ...[
+          const SizedBox(height: 17),
+          Row(
+            children: [
+              const Icon(Icons.schedule_outlined,
+                  color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Registration closes ${DateFormat('MMM d · h:mm a').format(event.registrationDeadline!.toLocal())}',
+                style: TextStyle(color: colors.secondaryText, fontSize: 13),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _tag(String text, _PageColors colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: colors.softRose,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(_label(text),
+          style: const TextStyle(
+              color: AppColors.primaryDark,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700)),
+    );
+  }
+
+  Widget _buildOrganizer(Event event, _PageColors colors) {
+    final name = _organizer?.name ?? event.organizerName;
+    if (name == null || name.trim().isEmpty) return const SizedBox.shrink();
+    final verified = _organizer?.isVerified == true;
+    final logo = resolveMediaUrl(_organizer?.logoUrl);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Hosted by', colors),
         const SizedBox(height: 12),
-        Text(label, style: TextStyle(color: labelColor, fontSize: 11,
-            fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-        const SizedBox(height: 4),
-        Text(title, style: TextStyle(color: titleColor, fontSize: 14,
-            fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
-        if (sub.isNotEmpty) Text(sub, style: TextStyle(color: subColor, fontSize: 12),
-            maxLines: 1, overflow: TextOverflow.ellipsis),
-      ]),
+        InkWell(
+          onTap: () => context.push('/organizers/${event.organizerId}'),
+          borderRadius: BorderRadius.circular(22),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Row(
+              children: [
+                _organizerAvatar(name, logo, colors),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: colors.primaryText,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 5),
+                      if (verified)
+                        Row(
+                          children: [
+                            const Icon(Icons.verified_rounded,
+                                color: AppColors.primary, size: 16),
+                            const SizedBox(width: 5),
+                            Text('Verified organizer',
+                                style: TextStyle(
+                                    color: colors.secondaryText, fontSize: 13)),
+                          ],
+                        )
+                      else
+                        Text('Event organizer',
+                            style: TextStyle(
+                                color: colors.secondaryText, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                Text('View profile',
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13)),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.primary),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _badge({required IconData icon, required String label,
-      required Color color, Color textColor = Colors.white}) {
+  Widget _organizerAvatar(String name, String logo, _PageColors colors) {
+    if (logo.isNotEmpty) {
+      return ClipOval(
+          child: CachedNetworkImage(
+              imageUrl: logo,
+              width: 54,
+              height: 54,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => _initialAvatar(name)));
+    }
+    return _initialAvatar(name);
+  }
+
+  Widget _initialAvatar(String name) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, color: textColor, size: 13),
-        const SizedBox(width: 5),
-        Text(label, style: TextStyle(color: textColor, fontSize: 11,
-            fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-      ]),
+      width: 54,
+      height: 54,
+      decoration:
+          const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
+          style: const TextStyle(
+              color: Colors.white, fontSize: 23, fontWeight: FontWeight.w800)),
     );
   }
 
-  Widget _chip(String label, bool isDark, Color accent) {
+  Widget _buildAttendees(Event event, _PageColors colors) {
+    final count = event.reservedCount;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: isDark ? 0.15 : 0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.border),
       ),
-      child: Text(label, style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration:
+                BoxDecoration(color: colors.softRose, shape: BoxShape.circle),
+            child: const Icon(Icons.groups_outlined, color: AppColors.primary),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Attendees',
+                    style: TextStyle(
+                        color: colors.primaryText,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text(
+                  count == 0
+                      ? 'Be one of the first to join this event.'
+                      : '$count ${count == 1 ? 'person is' : 'people are'} going',
+                  style: TextStyle(color: colors.secondaryText, fontSize: 13.5),
+                ),
+              ],
+            ),
+          ),
+          if (event.capacity != null)
+            Text('$count / ${event.capacity}',
+                style: const TextStyle(
+                    color: AppColors.primary, fontWeight: FontWeight.w800)),
+        ],
+      ),
     );
   }
 
-  Widget _iconButton(Color border, IconData icon, VoidCallback onTap) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: KhairColors.primary, size: 20),
-        onPressed: onTap,
-        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+  Widget _buildRelatedEvents(_PageColors colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('You may also like', colors),
+        const SizedBox(height: 13),
+        SizedBox(
+          height: 250,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _relatedEvents.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (_, index) =>
+                _relatedCard(_relatedEvents[index], colors),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _relatedCard(Event event, _PageColors colors) {
+    final image = resolveMediaUrl(event.imageUrl);
+    return SizedBox(
+      width: 235,
+      child: InkWell(
+        onTap: () => context.push('/events/${event.id}'),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 112,
+                width: double.infinity,
+                child: image.isEmpty
+                    ? _heroFallback(colors)
+                    : CachedNetworkImage(
+                        imageUrl: image,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => _heroFallback(colors),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_dateLabel(event),
+                        style: const TextStyle(
+                            color: AppColors.primaryDark,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 5),
+                    Text(event.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: colors.primaryText,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15)),
+                    const SizedBox(height: 7),
+                    Text(_locationLabel(event),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: colors.secondaryText, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  //  IMAGE
-  // ═══════════════════════════════════════════════════
-  Widget _buildEventImage(Event event) {
-    final url = resolveMediaUrl(event.imageUrl);
-    if (url.isNotEmpty) {
-      return Image.network(url, fit: BoxFit.cover, width: double.infinity,
-          errorBuilder: (_, __, ___) => _placeholder(event.eventType));
-    }
-    return _placeholder(event.eventType);
-  }
+  Widget _sectionTitle(String title, _PageColors colors) => Text(title,
+      style: TextStyle(
+          color: colors.primaryText,
+          fontSize: 20,
+          fontWeight: FontWeight.w800));
 
-  Widget _placeholder([String? type]) {
-    final t = (type ?? '').toLowerCase();
-    final colors = t.contains('quran') || t.contains('recit')
-        ? [const Color(0xFF1B4332), const Color(0xFF40916C)]
-        : t.contains('masjid') || t.contains('mosque')
-        ? [const Color(0xFF166534), const Color(0xFF22C55E)]
-        : [const Color(0xFF1E3A5F), const Color(0xFF3B82F6)];
-    final icon = t.contains('quran') ? Icons.menu_book_rounded
-        : t.contains('masjid') || t.contains('mosque') ? Icons.mosque_rounded
-        : t.contains('lecture') ? Icons.school_rounded
-        : t.contains('charity') ? Icons.volunteer_activism_rounded
-        : Icons.event_rounded;
-
-    return Container(
-      decoration: BoxDecoration(gradient: LinearGradient(
-          begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors)),
-      child: Center(child: Icon(icon, size: 80, color: Colors.white.withValues(alpha: 0.12))),
+  Widget _buildStickyActions(Event event, _PageColors colors) {
+    final ended = _isEnded(event);
+    final joined = _isJoined(event);
+    final closed = _isRegistrationClosed(event);
+    final canJoin = !ended && !closed && !joined && !(_isFull(event));
+    final label = ended
+        ? 'Event ended'
+        : closed
+            ? 'Registration closed'
+            : joined
+                ? "You're going"
+                : _isFull(event)
+                    ? 'Event full'
+                    : 'Join event';
+    return Material(
+      color: colors.surface,
+      elevation: 12,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: SizedBox(
+            width: MediaQuery.sizeOf(context).width > 980
+                ? 980
+                : MediaQuery.sizeOf(context).width,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _saveLoading ? null : () => _toggleSaved(event),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: colors.border),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Icon(_isSaved
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: canJoin && !_joinLoading
+                          ? () => _handleJoin(event)
+                          : joined
+                              ? _showLeaveDialog
+                              : null,
+                      icon: _joinLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : Icon(joined
+                              ? Icons.check_rounded
+                              : Icons.event_available_outlined),
+                      label: Text(label),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: canJoin
+                            ? AppColors.primary
+                            : joined
+                                ? AppColors.success
+                                : colors.disabled,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(17)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  //  ACTIONS
-  // ═══════════════════════════════════════════════════
-
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg), duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
+  Widget _buildError(_PageColors colors) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.event_busy_outlined,
+                size: 54, color: colors.secondaryText),
+            const SizedBox(height: 16),
+            Text('We couldn’t load this event.',
+                style: TextStyle(
+                    color: colors.primaryText,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Text(
+                'The event may have been removed or is temporarily unavailable.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.secondaryText, fontSize: 14)),
+            const SizedBox(height: 22),
+            FilledButton(
+              onPressed: () => context
+                  .read<EventsBloc>()
+                  .add(LoadEventDetails(widget.eventId)),
+              child: const Text('Try again'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> _launchUrl(String url) async {
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (_) {
-      _showSnack('Could not open link');
-    }
-  }
-
-  Future<void> _openDirections(double lat, double lng, String? address) async {
-    await _launchUrl('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-  }
-
-  Future<void> _shareEvent(BuildContext ctx, Event event) async {
-    final baseUrl = ApiConfig.serverOrigin;
-    try {
-      final apiClient = getIt<ApiClient>();
-      final response = await apiClient.get('/events/${event.id}/share');
-      final data = response.data['data'] ?? response.data;
-      final publicUrl = data['public_url'] ?? '$baseUrl/events/${event.id}';
-      final title = data['title'] ?? event.title;
-      final organizer = data['organizer'] ?? '';
-      final description = data['description'] ?? '';
-      final sb = StringBuffer();
-      sb.writeln('🌿 $title');
-      if (organizer.isNotEmpty) sb.writeln('📋 By $organizer');
-      if (description.isNotEmpty) {
-        sb.writeln(description.length > 100 ? '${description.substring(0, 100)}...' : description);
-      }
-      sb.writeln();
-      sb.write('Join on Khair: $publicUrl');
-      if (!ctx.mounted) return;
-      await ShareHelper.share(ctx, sb.toString());
-    } catch (_) {
-      if (!ctx.mounted) return;
-      await ShareHelper.share(ctx, '🌿 Check out "${event.title}" on Khair!\n$baseUrl/events/${event.id}');
-    }
-  }
-
-  void _handleJoinTap(BuildContext ctx, String eventId, String title) {
-    final authState = ctx.read<AuthBloc>().state;
-    if (authState.status != AuthStatus.authenticated || authState.user == null) {
-      // Navigate to registration page for unauthenticated users
-      GoRouter.of(ctx).push('/register');
+  Future<void> _toggleSaved(Event event) async {
+    final auth = context.read<AuthBloc>().state;
+    if (!auth.isAuthenticated) {
+      context.go('/login?next=${Uri.encodeComponent('/events/${event.id}')}');
       return;
     }
-    _joinDirectly(ctx, eventId, title);
-  }
-
-  Future<void> _joinDirectly(BuildContext ctx, String eventId, String title) async {
-    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-      content: Row(children: [
-        const SizedBox(width: 18, height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-        const SizedBox(width: 12),
-        Text(context.l10n.eventDetailsJoining),
-      ]),
-      duration: const Duration(seconds: 10),
-    ));
-
+    setState(() => _saveLoading = true);
     try {
-      final ds = JoinDataSource(getIt<ApiClient>());
-      await ds.joinEvent(eventId);
+      final saved = await getIt<SavedEventsDataSource>()
+          .toggle(event.id, saved: _isSaved);
       if (!mounted) return;
-      ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
-      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-        content: Row(children: [
-          const Icon(Icons.check_circle, color: Colors.white),
-          const SizedBox(width: 12),
-          Text(context.l10n.eventDetailsReservedSuccess),
-        ]),
-        backgroundColor: KhairColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 4),
-      ));
-      ctx.read<EventsBloc>().add(LoadEventDetails(eventId));
-      setState(() => _registrationStatus = 'confirmed');
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
-      String errorMsg = context.l10n.eventDetailsJoinFailed;
-      String srvMsg = '';
-      if (e is DioException && e.response?.data != null) {
-        final d = e.response!.data;
-        if (d is Map) srvMsg = (d['message'] ?? d['error'] ?? '').toString();
-      }
-      if (srvMsg.isEmpty) srvMsg = e.toString();
-      if (srvMsg.contains('already')) errorMsg = context.l10n.eventDetailsAlreadyJoined;
-      else if (srvMsg.contains('full') || srvMsg.contains('capacity') || srvMsg.contains('booked'))
-        errorMsg = context.l10n.eventDetailsEventFull;
-      else if (srvMsg.isNotEmpty && !srvMsg.contains('DioException')) errorMsg = srvMsg;
-
-      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-        content: Row(children: [
-          const Icon(Icons.error_outline, color: Colors.white),
-          const SizedBox(width: 12),
-          Expanded(child: Text(errorMsg)),
-        ]),
-        backgroundColor: KhairColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
+      setState(() => _isSaved = saved);
+      _showSnack(saved ? 'Event saved.' : 'Event removed from saved events.');
+    } catch (_) {
+      if (mounted) _showSnack('We couldn’t update your saved events.');
+    } finally {
+      if (mounted) setState(() => _saveLoading = false);
     }
   }
+
+  Future<void> _handleJoin(Event event) async {
+    final auth = context.read<AuthBloc>().state;
+    if (!auth.isAuthenticated) {
+      context
+          .go('/register?next=${Uri.encodeComponent('/events/${event.id}')}');
+      return;
+    }
+    setState(() => _joinLoading = true);
+    try {
+      await getIt<JoinDataSource>().joinEvent(event.id);
+      if (!mounted) return;
+      setState(() => _registrationStatus = 'confirmed');
+      _showSnack('You’re going! Your place is reserved.');
+      context.read<EventsBloc>().add(LoadEventDetails(event.id));
+    } catch (error) {
+      if (mounted) _showJoinError(error);
+    } finally {
+      if (mounted) setState(() => _joinLoading = false);
+    }
+  }
+
+  Future<void> _showLeaveDialog() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave event?'),
+        content: const Text('Your reservation will be released.'),
+        actions: [
+          TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Keep reservation')),
+          FilledButton(
+              onPressed: () => context.pop(true), child: const Text('Leave')),
+        ],
+      ),
+    );
+    if (leave != true || !mounted) return;
+    try {
+      await getIt<JoinDataSource>().cancelReservation(widget.eventId);
+      if (mounted) {
+        setState(() => _registrationStatus = null);
+        _showSnack('Reservation cancelled.');
+        context.read<EventsBloc>().add(LoadEventDetails(widget.eventId));
+      }
+    } catch (_) {
+      if (mounted) _showSnack('We couldn’t cancel your reservation.');
+    }
+  }
+
+  void _showJoinError(Object error) {
+    var message = 'We couldn’t join this event.';
+    if (error is DioException && error.response?.data is Map) {
+      final data = error.response!.data as Map;
+      final server = (data['message'] ?? data['error'] ?? '').toString();
+      if (server.isNotEmpty && !server.contains('DioException')) {
+        message = server;
+      }
+    }
+    _showSnack(message);
+  }
+
+  Future<void> _shareEvent(Event event) async {
+    final fallback = ApiConfig.publicEventUrl(event.id);
+    try {
+      final response =
+          await getIt<ApiClient>().get('/events/${event.id}/share');
+      if (!mounted) return;
+      final data = response.data['data'] ?? response.data;
+      final url = (data['public_url'] ?? fallback).toString();
+      final description =
+          (data['description'] ?? event.description).toString().trim();
+      final message = [
+        event.title,
+        if (description.isNotEmpty) description,
+        url,
+      ].join('\n');
+      await ShareHelper.share(context, message);
+    } catch (_) {
+      if (mounted) {
+        final description = event.description?.trim() ?? '';
+        final message = [
+          event.title,
+          if (description.isNotEmpty) description,
+          fallback,
+        ].join('\n');
+        await ShareHelper.share(context, message);
+      }
+    }
+  }
+
+  Future<void> _openDirections(Event event) async {
+    if (event.latitude == null || event.longitude == null) return;
+    final uri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      _showSnack('Couldn’t open maps.');
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ));
+  }
+
+  bool _isOnline(Event event) =>
+      event.isOnline || event.eventType.toLowerCase().contains('online');
+
+  bool _isJoined(Event event) =>
+      _registrationStatus != null || event.isUserJoined;
+
+  bool _isEnded(Event event) =>
+      event.status == 'completed' ||
+      event.status == 'cancelled' ||
+      (event.endDate ?? event.startDate).isBefore(DateTime.now());
+
+  bool _isRegistrationClosed(Event event) =>
+      event.registrationDeadline != null &&
+      event.registrationDeadline!.isBefore(DateTime.now());
+
+  bool _isFull(Event event) =>
+      event.capacity != null &&
+      event.capacity! > 0 &&
+      event.reservedCount >= event.capacity!;
+
+  String _dateLabel(Event event) =>
+      DateFormat('EEE, MMM d, yyyy').format(event.startDate.toLocal());
+
+  String _timeLabel(Event event) {
+    final start = DateFormat('h:mm a').format(event.startDate.toLocal());
+    if (event.endDate == null) return start;
+    return '$start – ${DateFormat('h:mm a').format(event.endDate!.toLocal())}';
+  }
+
+  String _locationLabel(Event event) {
+    if (_isOnline(event)) return 'Online event';
+    final parts = [event.city, event.country]
+        .whereType<String>()
+        .where((value) => value.trim().isNotEmpty)
+        .toList();
+    return parts.isEmpty ? 'Location to be announced' : parts.join(', ');
+  }
+
+  String _label(String value) => value
+      .trim()
+      .split(RegExp(r'[_\s-]+'))
+      .where((part) => part.isNotEmpty)
+      .map((part) =>
+          '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+      .join(' ');
+}
+
+class _EventMeta {
+  final IconData icon;
+  final String title;
+  final String detail;
+
+  const _EventMeta(
+      {required this.icon, required this.title, required this.detail});
+}
+
+class _PageColors {
+  final bool dark;
+  const _PageColors(this.dark);
+
+  Color get background =>
+      dark ? AppColors.darkBackground : AppColors.background;
+  Color get surface => dark ? AppColors.darkSurface : AppColors.surface;
+  Color get primaryText =>
+      dark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+  Color get secondaryText =>
+      dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+  Color get border => dark ? AppColors.darkBorder : AppColors.border;
+  Color get softRose =>
+      dark ? const Color(0x332E1722) : const Color(0xFFFFF1F5);
+  Color get disabled =>
+      dark ? const Color(0xFF514B54) : const Color(0xFFB8B1B8);
 }

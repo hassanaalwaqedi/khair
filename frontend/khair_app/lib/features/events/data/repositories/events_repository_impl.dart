@@ -14,7 +14,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, List<Event>>> getEvents(EventFilter filter) async {
     try {
-      final events = await _remoteDataSource.getEvents(filter.toQueryParameters());
+      final events =
+          await _remoteDataSource.getEvents(filter.toQueryParameters());
       return Right(events);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));
@@ -88,7 +89,20 @@ class EventsRepositoryImpl implements EventsRepository {
   }
 
   @override
-  Future<Either<Failure, Event>> updateEvent(String id, UpdateEventParams params) async {
+  Future<Either<Failure, Event>> createDraft(CreateEventParams params) async {
+    try {
+      final event = await _remoteDataSource.createDraft(params.toJson());
+      return Right(event);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Event>> updateEvent(
+      String id, UpdateEventParams params) async {
     try {
       final event = await _remoteDataSource.updateEvent(id, params.toJson());
       return Right(event);

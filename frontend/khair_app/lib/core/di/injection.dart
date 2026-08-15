@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
+import '../auth/auth_session_controller.dart';
+import '../config/api_config.dart';
 import '../network/api_client.dart';
 import '../network/auth_interceptor.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -11,10 +13,12 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/data/datasources/registration_datasource.dart';
 import '../../features/auth/presentation/bloc/registration_bloc.dart';
 import '../../features/events/data/datasources/events_remote_datasource.dart';
+import '../../features/events/data/datasources/join_datasource.dart';
 import '../../features/events/data/repositories/events_repository_impl.dart';
 import '../../features/events/domain/repositories/events_repository.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/organizer/data/datasources/organizer_remote_datasource.dart';
+import '../../features/organizer/data/datasources/organizer_hub_datasource.dart';
 import '../../features/organizer/data/repositories/organizer_repository_impl.dart';
 import '../../features/organizer/domain/repositories/organizer_repository.dart';
 import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
@@ -43,16 +47,7 @@ import '../../features/owner_posts/presentation/bloc/owner_posts_bloc.dart';
 import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
-import '../../features/sheikh/data/datasources/sheikh_remote_datasource.dart';
-import '../../features/sheikh/presentation/bloc/sheikh_bloc.dart';
-import '../../features/chat/data/datasources/chat_datasource.dart';
-import '../../features/chat/presentation/bloc/chat_bloc.dart';
-import '../../features/sheikh_dashboard/data/sheikh_dashboard_datasource.dart';
-import '../../features/sheikh_dashboard/presentation/bloc/sheikh_dashboard_bloc.dart';
-import '../../features/booking/data/booking_datasource.dart';
-import '../../features/booking/presentation/bloc/booking_bloc.dart';
-import '../../features/student_dashboard/data/student_dashboard_datasource.dart';
-import '../../features/student_dashboard/presentation/bloc/student_dashboard_bloc.dart';
+import '../../features/profile/data/profile_overview_datasource.dart';
 
 final getIt = GetIt.instance;
 
@@ -60,11 +55,12 @@ Future<void> configureDependencies() async {
   // External
   const secureStorage = FlutterSecureStorage();
   getIt.registerSingleton<FlutterSecureStorage>(secureStorage);
+  final authSessionController = AuthSessionController();
+  getIt.registerSingleton<AuthSessionController>(authSessionController);
 
   // Dio
   final dio = Dio(BaseOptions(
-    baseUrl: const String.fromEnvironment('API_URL',
-        defaultValue: 'https://khair.it.com/api/v1'),
+    baseUrl: ApiConfig.apiBaseUrl,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     responseType: ResponseType.json,
@@ -74,14 +70,14 @@ Future<void> configureDependencies() async {
     },
   ));
 
-  dio.interceptors.add(AuthInterceptor(secureStorage));
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-  ));
+  dio.interceptors.add(AuthInterceptor(secureStorage, authSessionController));
 
   getIt.registerSingleton<Dio>(dio);
   getIt.registerSingleton<ApiClient>(ApiClient(dio));
+  getIt.registerLazySingleton<JoinDataSource>(
+      () => JoinDataSource(getIt<ApiClient>()));
+  getIt.registerLazySingleton<ProfileOverviewDataSource>(
+      () => ProfileOverviewDataSource(getIt<ApiClient>()));
 
   // Auth Feature
   getIt.registerLazySingleton<AuthRemoteDataSource>(
@@ -93,8 +89,11 @@ Future<void> configureDependencies() async {
       getIt<FlutterSecureStorage>(),
     ),
   );
-  getIt.registerFactory<AuthBloc>(
-    () => AuthBloc(getIt<AuthRepository>()),
+  getIt.registerLazySingleton<AuthBloc>(
+    () => AuthBloc(
+      getIt<AuthRepository>(),
+      getIt<AuthSessionController>(),
+    ),
   );
 
   // Registration Feature
@@ -119,6 +118,9 @@ Future<void> configureDependencies() async {
   // Organizer Feature
   getIt.registerLazySingleton<OrganizerRemoteDataSource>(
     () => OrganizerRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<OrganizerHubDataSource>(
+    () => OrganizerHubDataSource(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<OrganizerRepository>(
     () => OrganizerRepositoryImpl(getIt<OrganizerRemoteDataSource>()),
@@ -209,45 +211,5 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
-  );
-
-  // Sheikh Directory Feature
-  getIt.registerLazySingleton<SheikhRemoteDataSource>(
-    () => SheikhRemoteDataSource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<SheikhBloc>(
-    () => SheikhBloc(getIt<SheikhRemoteDataSource>()),
-  );
-
-  // Chat Feature
-  getIt.registerLazySingleton<ChatDatasource>(
-    () => ChatDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<ChatBloc>(
-    () => ChatBloc(getIt<ChatDatasource>()),
-  );
-
-  // Sheikh Dashboard Feature
-  getIt.registerLazySingleton<SheikhDashboardDatasource>(
-    () => SheikhDashboardDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<SheikhDashboardBloc>(
-    () => SheikhDashboardBloc(getIt<SheikhDashboardDatasource>()),
-  );
-
-  // Booking Calendar Feature
-  getIt.registerLazySingleton<BookingDatasource>(
-    () => BookingDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<BookingBloc>(
-    () => BookingBloc(getIt<BookingDatasource>()),
-  );
-
-  // Student Dashboard Feature
-  getIt.registerLazySingleton<StudentDashboardDatasource>(
-    () => StudentDashboardDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<StudentDashboardBloc>(
-    () => StudentDashboardBloc(getIt<StudentDashboardDatasource>()),
   );
 }

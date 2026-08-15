@@ -58,9 +58,23 @@ func (h *Handler) ListAttendees(c *gin.Context) {
 
 // MarkAttendance marks attendance for an attendee
 func (h *Handler) MarkAttendance(c *gin.Context) {
+	orgID := c.MustGet("org_id").(uuid.UUID)
+	eventID, err := uuid.Parse(c.Param("event_id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	if err := h.service.VerifyEventOwnership(eventID, orgID); err != nil {
+		response.NotFound(c, "Event not found in this organization")
+		return
+	}
 	regID, err := uuid.Parse(c.Param("reg_id"))
 	if err != nil {
 		response.BadRequest(c, "Invalid registration ID")
+		return
+	}
+	if err := h.service.VerifyRegistrationEvent(regID, eventID); err != nil {
+		response.NotFound(c, "Registration not found for this event")
 		return
 	}
 
@@ -81,9 +95,23 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 
 // RemoveAttendee removes an attendee
 func (h *Handler) RemoveAttendee(c *gin.Context) {
+	orgID := c.MustGet("org_id").(uuid.UUID)
+	eventID, err := uuid.Parse(c.Param("event_id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	if err := h.service.VerifyEventOwnership(eventID, orgID); err != nil {
+		response.NotFound(c, "Event not found in this organization")
+		return
+	}
 	regID, err := uuid.Parse(c.Param("reg_id"))
 	if err != nil {
 		response.BadRequest(c, "Invalid registration ID")
+		return
+	}
+	if err := h.service.VerifyRegistrationEvent(regID, eventID); err != nil {
+		response.NotFound(c, "Registration not found for this event")
 		return
 	}
 

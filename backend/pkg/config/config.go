@@ -16,6 +16,7 @@ type Config struct {
 	Logger   LoggerConfig
 	Gemini   GeminiConfig
 	Email    EmailConfig
+	Google   GoogleConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -72,13 +73,22 @@ type EmailConfig struct {
 	SendGridFrom string
 	FromEmail    string
 	FromName     string
+	BrandLogoURL string
+}
+
+// GoogleConfig contains the OAuth audience expected on Google ID tokens.
+// The mobile/web client IDs stay public; token verification always happens on
+// the API with this server-side audience check.
+type GoogleConfig struct {
+	ClientID string
 }
 
 // Load loads configuration from environment variables
 func Load() *Config {
 	cfg := &Config{
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8080"),
+			// Render injects PORT. SERVER_PORT remains available for Docker and local development.
+			Port: getEnv("SERVER_PORT", getEnv("PORT", "8080")),
 			Mode: getEnv("GIN_MODE", "debug"),
 		},
 		Database: DatabaseConfig{
@@ -111,6 +121,9 @@ func Load() *Config {
 			Enabled:   getEnv("GEMINI_API_KEY", "") != "",
 		},
 		Email: buildEmailConfig(),
+		Google: GoogleConfig{
+			ClientID: strings.TrimSpace(getEnv("GOOGLE_OAUTH_CLIENT_ID", "")),
+		},
 	}
 
 	// Validate JWT secret security — refuse to start with a weak secret
@@ -153,14 +166,17 @@ func requireEnv(key string) string {
 func buildEmailConfig() EmailConfig {
 	fromEmail := strings.TrimSpace(getEnv("EMAIL_FROM", getEnv("SENDGRID_FROM", "no-reply@khair.it.com")))
 	fromName := strings.TrimSpace(getEnv("EMAIL_FROM_NAME", "Khair Platform"))
+	publicBaseURL := strings.TrimRight(getEnv("PUBLIC_BASE_URL", "https://api.khair.it.com"), "/")
+	brandLogoURL := strings.TrimSpace(getEnv("KHAIR_BRAND_LOGO_URL", publicBaseURL+"/brand/khair-logo.png"))
 
 	resendKey := strings.TrimSpace(getEnv("RESEND_API_KEY", ""))
 	if resendKey != "" {
 		return EmailConfig{
-			Provider:  "resend",
-			ResendKey: resendKey,
-			FromEmail: fromEmail,
-			FromName:  fromName,
+			Provider:     "resend",
+			ResendKey:    resendKey,
+			FromEmail:    fromEmail,
+			FromName:     fromName,
+			BrandLogoURL: brandLogoURL,
 		}
 	}
 
@@ -171,5 +187,6 @@ func buildEmailConfig() EmailConfig {
 		SendGridFrom: fromEmail,
 		FromEmail:    fromEmail,
 		FromName:     fromName,
+		BrandLogoURL: brandLogoURL,
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/khair/backend/pkg/config"
@@ -30,7 +31,7 @@ func NewClient(cfg config.GeminiConfig) *Client {
 		maxTokens: cfg.MaxTokens,
 		enabled:   cfg.Enabled,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 60 * time.Second,
 		},
 	}
 }
@@ -112,8 +113,8 @@ func (c *Client) Generate(ctx context.Context, prompt string, temperature float6
 		return "", fmt.Errorf("marshal request: %w", err)
 	}
 
-	// Retry up to 3 times for rate-limit (429) errors
-	maxRetries := 3
+	// Retry up to 5 times for rate-limit (429) errors
+	maxRetries := 5
 	backoff := 2 * time.Second
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
@@ -175,7 +176,18 @@ func (c *Client) GenerateJSON(ctx context.Context, prompt string, temperature fl
 		return err
 	}
 
-	if err := json.Unmarshal([]byte(text), target); err != nil {
+	// Gemini sometimes wraps JSON in markdown blocks (e.g. ```json ... ```)
+	cleanedText := strings.TrimSpace(text)
+	if strings.HasPrefix(cleanedText, "```json") {
+		cleanedText = strings.TrimPrefix(cleanedText, "```json")
+		cleanedText = strings.TrimSuffix(cleanedText, "```")
+	} else if strings.HasPrefix(cleanedText, "```") {
+		cleanedText = strings.TrimPrefix(cleanedText, "```")
+		cleanedText = strings.TrimSuffix(cleanedText, "```")
+	}
+	cleanedText = strings.TrimSpace(cleanedText)
+
+	if err := json.Unmarshal([]byte(cleanedText), target); err != nil {
 		return fmt.Errorf("parse AI JSON response: %w (raw: %s)", err, text)
 	}
 

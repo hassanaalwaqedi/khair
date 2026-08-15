@@ -59,6 +59,9 @@ func (p *LocalProvider) Upload(file multipart.File, header *multipart.FileHeader
 
 	destDir := filepath.Join(p.UploadDir, subDir)
 	destPath := filepath.Join(destDir, filename)
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return "", fmt.Errorf("create upload directory: %w", err)
+	}
 
 	// Path traversal check
 	absDir, _ := filepath.Abs(destDir)
@@ -243,21 +246,20 @@ func (p *AzureBlobProvider) signRequest(req *http.Request, contentLength int) (s
 }
 
 // NewProvider creates the appropriate storage provider based on environment.
+// Production uploads must go to Cloudflare R2; Render disks are ephemeral and
+// are intentionally never used as a silent fallback.
 func NewProvider(uploadDir, baseURL string) Provider {
-	local := NewLocalProvider(uploadDir, baseURL)
-
-	azureConn := os.Getenv("AZURE_STORAGE_CONNECTION")
-	azureContainer := os.Getenv("AZURE_STORAGE_CONTAINER")
-	cdnURL := os.Getenv("CDN_BASE_URL")
-
-	if azureConn != "" {
-		if azureContainer == "" {
-			azureContainer = "uploads"
-		}
-		return NewAzureBlobProvider(azureConn, azureContainer, cdnURL, local)
+	provider := strings.ToLower(strings.TrimSpace(os.Getenv("STORAGE_PROVIDER")))
+	production := strings.EqualFold(os.Getenv("ENV"), "production") || strings.EqualFold(os.Getenv("GIN_MODE"), "release")
+	if provider == "local" || (!production && provider == "") {
+		return NewLocalProvider(uploadDir, baseURL)
 	}
 
-	return local
+	r2, err := newR2ProviderFromEnv()
+	if err != nil {
+		return unavailableProvider{err: fmt.Errorf("Cloudflare R2 storage is unavailable: %w", err)}
+	}
+	return r2
 }
 
 func extensionForMIME(mimeType string) string {

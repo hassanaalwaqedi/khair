@@ -7,6 +7,7 @@ abstract class EventsRemoteDataSource {
   Future<List<EventModel>> getNearbyEvents(Map<String, dynamic> queryParams);
   Future<List<EventModel>> getMyEvents();
   Future<EventModel> createEvent(Map<String, dynamic> data);
+  Future<EventModel> createDraft(Map<String, dynamic> data);
   Future<EventModel> updateEvent(String id, Map<String, dynamic> data);
   Future<void> deleteEvent(String id);
   Future<EventModel> submitForReview(String id);
@@ -19,9 +20,12 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
 
   @override
   Future<List<EventModel>> getEvents(Map<String, dynamic> queryParams) async {
-    final response = await _apiClient.get('/events', queryParameters: queryParams);
+    final response =
+        await _apiClient.get('/events', queryParameters: queryParams);
     final data = (response.data['data'] as List?) ?? [];
-    return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => EventModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -31,22 +35,34 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   }
 
   @override
-  Future<List<EventModel>> getNearbyEvents(Map<String, dynamic> queryParams) async {
-    final response = await _apiClient.get('/map/nearby', queryParameters: queryParams);
+  Future<List<EventModel>> getNearbyEvents(
+      Map<String, dynamic> queryParams) async {
+    final response =
+        await _apiClient.get('/map/nearby', queryParameters: queryParams);
     final data = (response.data['data'] as List?) ?? [];
-    return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => EventModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
   Future<List<EventModel>> getMyEvents() async {
     final response = await _apiClient.get('/my/events');
     final data = (response.data['data'] as List?) ?? [];
-    return data.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => EventModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
   Future<EventModel> createEvent(Map<String, dynamic> data) async {
     final response = await _apiClient.post('/events', data: data);
+    return EventModel.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<EventModel> createDraft(Map<String, dynamic> data) async {
+    final response = await _apiClient.post('/events/draft', data: data);
     return EventModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 

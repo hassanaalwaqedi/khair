@@ -9,6 +9,7 @@ import '../../../notifications/presentation/bloc/notification_bloc.dart';
 import '../../../notifications/presentation/widgets/notification_dropdown.dart';
 import '../../../../core/theme/theme_bloc.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/widgets/khair_brand.dart';
 
 /// Clean, minimal header with greeting, search bar, and action buttons.
 class HeroSection extends StatelessWidget {
@@ -20,33 +21,32 @@ class HeroSection extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? KhairColors.darkSurface : KhairColors.surface;
     final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-    final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+    final ts =
+        isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
     final tt = isDark ? KhairColors.darkTextTertiary : KhairColors.textTertiary;
     final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
-    final searchBg = isDark ? KhairColors.darkSurfaceVariant : KhairColors.surfaceVariant;
+    final searchBg =
+        isDark ? KhairColors.darkSurfaceVariant : KhairColors.surfaceVariant;
 
     return Container(
       color: bg,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 12, 20, 16),
+      padding: EdgeInsets.fromLTRB(
+          20, MediaQuery.of(context).padding.top + 12, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── TOP ROW: Brand + Actions ──
           Row(
             children: [
-              // Khair logo
-              Container(
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  color: KhairColors.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.mosque, color: Colors.white, size: 20),
-              ),
+              const KhairBrandMark(size: 36, decorative: true),
               const SizedBox(width: 10),
-              Text('Khair', style: TextStyle(
-                fontSize: 22, color: tp, fontWeight: FontWeight.w800, letterSpacing: 0.3,
-              )),
+              Text('Khair',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: tp,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  )),
               const Spacer(),
               // Language switcher
               const LanguageSwitcher(showLabel: false, lightStyle: false),
@@ -55,11 +55,14 @@ class HeroSection extends StatelessWidget {
               BlocBuilder<ThemeBloc, ThemeState>(
                 builder: (context, _) {
                   return _actionBtn(
-                    icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                    icon: isDark
+                        ? Icons.light_mode_rounded
+                        : Icons.dark_mode_rounded,
                     color: isDark ? KhairColors.secondary : tt,
                     bgColor: searchBg,
                     border: bdr,
-                    onTap: () => context.read<ThemeBloc>().add(const ToggleTheme()),
+                    onTap: () =>
+                        context.read<ThemeBloc>().add(const ToggleTheme()),
                   );
                 },
               ),
@@ -76,7 +79,8 @@ class HeroSection extends StatelessWidget {
                   return GestureDetector(
                     onTap: () => NotificationDropdown.show(context),
                     child: Container(
-                      width: 40, height: 40,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: searchBg,
                         borderRadius: BorderRadius.circular(12),
@@ -86,12 +90,17 @@ class HeroSection extends StatelessWidget {
                         child: state.unreadCount > 0
                             ? Badge(
                                 label: Text(
-                                  state.unreadCount > 9 ? '9+' : '${state.unreadCount}',
-                                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                                  state.unreadCount > 9
+                                      ? '9+'
+                                      : '${state.unreadCount}',
+                                  style: const TextStyle(
+                                      fontSize: 9, fontWeight: FontWeight.w700),
                                 ),
-                                child: Icon(Icons.notifications_outlined, color: tp, size: 22),
+                                child: Icon(Icons.notifications_outlined,
+                                    color: tp, size: 22),
                               )
-                            : Icon(Icons.notifications_outlined, color: tt, size: 22),
+                            : Icon(Icons.notifications_outlined,
+                                color: tt, size: 22),
                       ),
                     ),
                   );
@@ -119,13 +128,18 @@ class HeroSection extends StatelessWidget {
               children: [
                 Text(
                   '${context.l10n.greeting} 👋',
-                  style: TextStyle(fontSize: 14, color: ts, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: 14, color: ts, fontWeight: FontWeight.w500),
                 ),
                 if (userName.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(userName, style: TextStyle(
-                    fontSize: 24, color: tp, fontWeight: FontWeight.w700, letterSpacing: -0.3,
-                  )),
+                  Text(userName,
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: tp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      )),
                 ],
               ],
             ),
@@ -151,21 +165,28 @@ class HeroSection extends StatelessWidget {
               child: Row(children: [
                 Icon(Icons.search_rounded, color: tt, size: 22),
                 const SizedBox(width: 12),
-                Expanded(child: Text(
+                Expanded(
+                    child: Text(
                   context.l10n.searchEventsHint,
-                  style: TextStyle(color: tt, fontSize: 14, fontWeight: FontWeight.w400),
+                  style: TextStyle(
+                      color: tt, fontSize: 14, fontWeight: FontWeight.w400),
                 )),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: KhairColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.location_on_rounded, color: KhairColors.primary, size: 14),
+                    Icon(Icons.location_on_rounded,
+                        color: KhairColors.primary, size: 14),
                     const SizedBox(width: 4),
-                    Text(context.l10n.allCities, style: TextStyle(
-                        color: KhairColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                    Text(context.l10n.allCities,
+                        style: TextStyle(
+                            color: KhairColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600)),
                   ]),
                 ),
               ]),
@@ -176,12 +197,17 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _actionBtn({required IconData icon, required Color color,
-      required Color bgColor, required Color border, required VoidCallback onTap}) {
+  Widget _actionBtn(
+      {required IconData icon,
+      required Color color,
+      required Color bgColor,
+      required Color border,
+      required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),

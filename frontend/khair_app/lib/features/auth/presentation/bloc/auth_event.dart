@@ -35,3 +35,29 @@ class RegisterRequested extends AuthEvent {
 }
 
 class LogoutRequested extends AuthEvent {}
+
+class AuthSessionExpired extends AuthEvent {
+  const AuthSessionExpired();
+}
+
+class GoogleLoginRequested extends AuthEvent {
+  final String idToken;
+  final String preferredLanguage;
+
+  const GoogleLoginRequested({
+    required this.idToken,
+    required this.preferredLanguage,
+  });
+
+  @override
+  List<Object?> get props => [idToken, preferredLanguage];
+}
+
+class OrganizerSessionChanged extends AuthEvent {
+  final Organizer organizer;
+
+  const OrganizerSessionChanged(this.organizer);
+
+  @override
+  List<Object?> get props => [organizer];
+}

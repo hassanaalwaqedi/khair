@@ -55,7 +55,9 @@ class OrganizerRemoteDataSourceImpl implements OrganizerRemoteDataSource {
               latitude: json['latitude']?.toDouble(),
               longitude: json['longitude']?.toDouble(),
               startDate: DateTime.parse(json['start_date']),
-              endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+              endDate: json['end_date'] != null
+                  ? DateTime.parse(json['end_date'])
+                  : null,
               imageUrl: json['image_url'],
               status: json['status'],
               rejectionReason: json['rejection_reason'],
@@ -80,7 +82,14 @@ class OrganizerRemoteDataSourceImpl implements OrganizerRemoteDataSource {
 
   @override
   Future<Organizer> applyAsOrganizer(Map<String, dynamic> data) async {
-    final response = await _apiClient.post('/auth/register-organizer', data: data);
+    final response = await _apiClient.post('/auth/register-organizer', data: {
+      'organization_name': data['name'],
+      'description': data['description'],
+      'country': data['country'],
+      'city': data['city'],
+      'contact_email': data['email'],
+      'website': data['website'],
+    });
     return Organizer.fromJson(response.data['data']);
   }
 }

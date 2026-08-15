@@ -59,7 +59,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         title: Text(
           context.l10n.adminDashboardTitle,
           style: KhairTypography.headlineSmall.copyWith(
-            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+            color:
+                isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -67,6 +68,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           onPressed: () => context.go('/'),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.fact_check_outlined),
+            tooltip: 'Organizer application review queue',
+            onPressed: () => context.go('/admin/organizer-applications'),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: context.l10n.adminRefresh,
@@ -85,7 +91,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           indicatorColor: KhairColors.primary,
           labelColor: KhairColors.primary,
           unselectedLabelColor: KhairColors.textTertiary,
-          labelStyle: KhairTypography.labelLarge.copyWith(fontWeight: FontWeight.w600),
+          labelStyle:
+              KhairTypography.labelLarge.copyWith(fontWeight: FontWeight.w600),
           unselectedLabelStyle: KhairTypography.labelLarge,
           tabs: [
             BlocBuilder<AdminBloc, AdminState>(
@@ -126,7 +133,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             Tab(text: context.l10n.adminUsersTab),
             BlocBuilder<AdminBloc, AdminState>(
               buildWhen: (prev, curr) =>
-                  prev.pendingVerificationCount != curr.pendingVerificationCount,
+                  prev.pendingVerificationCount !=
+                  curr.pendingVerificationCount,
               builder: (context, state) => Tab(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -142,12 +150,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 ),
               ),
             ),
-            const Tab(icon: Icon(Icons.notifications_active), text: 'Notifications'),
+            const Tab(
+                icon: Icon(Icons.notifications_active), text: 'Notifications'),
           ],
         ),
       ),
       body: BlocListener<AdminBloc, AdminState>(
-        listenWhen: (prev, curr) => prev.actionStatus != curr.actionStatus || prev.notificationSendStatus != curr.notificationSendStatus,
+        listenWhen: (prev, curr) =>
+            prev.actionStatus != curr.actionStatus ||
+            prev.notificationSendStatus != curr.notificationSendStatus,
         listener: (context, state) {
           if (state.actionStatus == AdminStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +170,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           } else if (state.actionStatus == AdminStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? context.l10n.adminActionFailed),
+                content:
+                    Text(state.errorMessage ?? context.l10n.adminActionFailed),
                 backgroundColor: KhairColors.error,
               ),
             );
@@ -167,14 +179,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           if (state.notificationSendStatus == AdminStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Notification sent to ${state.notificationSentCount ?? 0} user(s)'),
+                content: Text(
+                    'Notification sent to ${state.notificationSentCount ?? 0} user(s)'),
                 backgroundColor: KhairColors.success,
               ),
             );
           } else if (state.notificationSendStatus == AdminStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Failed to send notification'),
+                content:
+                    Text(state.errorMessage ?? 'Failed to send notification'),
                 backgroundColor: KhairColors.error,
               ),
             );
@@ -212,9 +226,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         children: [
           Icon(Icons.flag, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          Text(context.l10n.adminReportsMgmt, style: KhairTypography.headlineSmall.copyWith(
-            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
-          )),
+          Text(context.l10n.adminReportsMgmt,
+              style: KhairTypography.headlineSmall.copyWith(
+                color: isDark
+                    ? KhairColors.darkTextPrimary
+                    : KhairColors.textPrimary,
+              )),
           const SizedBox(height: 8),
           Text(context.l10n.adminReviewReportsDesc,
               style: KhairTypography.bodyMedium),
@@ -236,9 +253,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         children: [
           Icon(Icons.history, size: 64, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          Text(context.l10n.adminAuditLogsTab, style: KhairTypography.headlineSmall.copyWith(
-            color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
-          )),
+          Text(context.l10n.adminAuditLogsTab,
+              style: KhairTypography.headlineSmall.copyWith(
+                color: isDark
+                    ? KhairColors.darkTextPrimary
+                    : KhairColors.textPrimary,
+              )),
           const SizedBox(height: 8),
           Text(context.l10n.adminAuditLogsDesc,
               style: KhairTypography.bodyMedium),
@@ -277,8 +297,7 @@ class _OrganizersTab extends StatelessWidget {
         if (state.status == AdminStatus.failure) {
           return _ErrorView(
             message: state.errorMessage ?? context.l10n.adminFailedLoadOrg,
-            onRetry: () =>
-                context.read<AdminBloc>().add(const LoadAdminData()),
+            onRetry: () => context.read<AdminBloc>().add(const LoadAdminData()),
           );
         }
 
@@ -387,7 +406,8 @@ class _OrganizerCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: KhairColors.warningLight,
                   borderRadius: BorderRadius.circular(12),
@@ -419,7 +439,8 @@ class _OrganizerCard extends StatelessWidget {
                   .where((e) => e != null)
                   .join(', '),
             ),
-          if (organizer.description != null && organizer.description!.isNotEmpty)
+          if (organizer.description != null &&
+              organizer.description!.isNotEmpty)
             _DetailRow(
               icon: Icons.description_outlined,
               label: context.l10n.adminAbout,
@@ -438,9 +459,8 @@ class _OrganizerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: isActionLoading
-                      ? null
-                      : () => _showRejectDialog(context),
+                  onPressed:
+                      isActionLoading ? null : () => _showRejectDialog(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: KhairColors.error,
                     side: const BorderSide(color: KhairColors.error),
@@ -567,8 +587,7 @@ class _EventsTab extends StatelessWidget {
         if (state.status == AdminStatus.failure) {
           return _ErrorView(
             message: state.errorMessage ?? context.l10n.adminFailedLoadEvents,
-            onRetry: () =>
-                context.read<AdminBloc>().add(const LoadAdminData()),
+            onRetry: () => context.read<AdminBloc>().add(const LoadAdminData()),
           );
         }
 
@@ -704,9 +723,8 @@ class _EventCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: isActionLoading
-                      ? null
-                      : () => _showRejectDialog(context),
+                  onPressed:
+                      isActionLoading ? null : () => _showRejectDialog(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: KhairColors.error,
                     side: const BorderSide(color: KhairColors.error),
@@ -723,9 +741,7 @@ class _EventCard extends StatelessWidget {
                   onPressed: isActionLoading
                       ? null
                       : () {
-                          context
-                              .read<AdminBloc>()
-                              .add(ApproveEvent(event.id));
+                          context.read<AdminBloc>().add(ApproveEvent(event.id));
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: KhairColors.success,
@@ -794,9 +810,7 @@ class _EventCard extends StatelessWidget {
                 return;
               }
               Navigator.pop(dialogContext);
-              context
-                  .read<AdminBloc>()
-                  .add(RejectEvent(event.id, reason));
+              context.read<AdminBloc>().add(RejectEvent(event.id, reason));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: KhairColors.error,
@@ -978,7 +992,8 @@ class _StatsPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: isDark ? KhairColors.darkCard : KhairColors.surface,
-            border: Border(bottom: BorderSide(
+            border: Border(
+                bottom: BorderSide(
               color: isDark ? KhairColors.darkBorder : KhairColors.border,
             )),
           ),
@@ -986,15 +1001,35 @@ class _StatsPanel extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _StatCard(icon: Icons.people, label: 'Users', value: stats.totalUsers, color: KhairColors.primary),
+                _StatCard(
+                    icon: Icons.people,
+                    label: 'Users',
+                    value: stats.totalUsers,
+                    color: KhairColors.primary),
                 const SizedBox(width: 10),
-                _StatCard(icon: Icons.business, label: 'Organizers', value: stats.totalOrganizers, color: const Color(0xFF7C3AED)),
+                _StatCard(
+                    icon: Icons.business,
+                    label: 'Organizers',
+                    value: stats.totalOrganizers,
+                    color: const Color(0xFF7C3AED)),
                 const SizedBox(width: 10),
-                _StatCard(icon: Icons.event, label: 'Events', value: stats.totalEvents, color: const Color(0xFF0891B2)),
+                _StatCard(
+                    icon: Icons.event,
+                    label: 'Events',
+                    value: stats.totalEvents,
+                    color: const Color(0xFF0891B2)),
                 const SizedBox(width: 10),
-                _StatCard(icon: Icons.pending_actions, label: 'Pending', value: stats.pendingOrganizers + stats.pendingEvents, color: KhairColors.warning),
+                _StatCard(
+                    icon: Icons.pending_actions,
+                    label: 'Pending',
+                    value: stats.pendingOrganizers + stats.pendingEvents,
+                    color: KhairColors.warning),
                 const SizedBox(width: 10),
-                _StatCard(icon: Icons.flag, label: 'Reports', value: stats.pendingReports, color: KhairColors.error),
+                _StatCard(
+                    icon: Icons.flag,
+                    label: 'Reports',
+                    value: stats.pendingReports,
+                    color: KhairColors.error),
               ],
             ),
           ),
@@ -1009,7 +1044,11 @@ class _StatCard extends StatelessWidget {
   final String label;
   final int value;
   final Color color;
-  const _StatCard({required this.icon, required this.label, required this.value, required this.color});
+  const _StatCard(
+      {required this.icon,
+      required this.label,
+      required this.value,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -1030,11 +1069,16 @@ class _StatCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(value.toString(), style: KhairTypography.labelLarge.copyWith(
-                color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              )),
-              Text(label, style: KhairTypography.labelSmall.copyWith(color: KhairColors.textTertiary)),
+              Text(value.toString(),
+                  style: KhairTypography.labelLarge.copyWith(
+                    color: isDark
+                        ? KhairColors.darkTextPrimary
+                        : KhairColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  )),
+              Text(label,
+                  style: KhairTypography.labelSmall
+                      .copyWith(color: KhairColors.textTertiary)),
             ],
           ),
         ],
@@ -1087,12 +1131,17 @@ class _UsersTab extends StatelessWidget {
                 return Text(
                   'All Users (${state.users.length})',
                   style: KhairTypography.headlineSmall.copyWith(
-                    color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                    color: isDark
+                        ? KhairColors.darkTextPrimary
+                        : KhairColors.textPrimary,
                   ),
                 );
               }
               final user = state.users[index - 1];
-              return _UserCard(user: user, isDark: isDark, isActionLoading: state.isActionLoading);
+              return _UserCard(
+                  user: user,
+                  isDark: isDark,
+                  isActionLoading: state.isActionLoading);
             },
           ),
         );
@@ -1106,21 +1155,30 @@ class _UserCard extends StatelessWidget {
   final bool isDark;
   final bool isActionLoading;
 
-  const _UserCard({required this.user, required this.isDark, required this.isActionLoading});
+  const _UserCard(
+      {required this.user,
+      required this.isDark,
+      required this.isActionLoading});
 
   Color _roleColor() {
     switch (user.role) {
-      case 'admin': return KhairColors.error;
-      case 'organizer': return const Color(0xFF7C3AED);
-      default: return KhairColors.textTertiary;
+      case 'admin':
+        return KhairColors.error;
+      case 'organizer':
+        return const Color(0xFF7C3AED);
+      default:
+        return KhairColors.textTertiary;
     }
   }
 
   Color _statusColor() {
     switch (user.status) {
-      case 'suspended': return KhairColors.warning;
-      case 'banned': return KhairColors.error;
-      default: return KhairColors.success;
+      case 'suspended':
+        return KhairColors.warning;
+      case 'banned':
+        return KhairColors.error;
+      default:
+        return KhairColors.success;
     }
   }
 
@@ -1132,7 +1190,8 @@ class _UserCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? KhairColors.darkCard : KhairColors.surface,
         borderRadius: KhairRadius.medium,
-        border: Border.all(color: isDark ? KhairColors.darkBorder : KhairColors.border),
+        border: Border.all(
+            color: isDark ? KhairColors.darkBorder : KhairColors.border),
       ),
       child: Row(
         children: [
@@ -1140,45 +1199,58 @@ class _UserCard extends StatelessWidget {
             radius: 20,
             backgroundColor: _roleColor().withValues(alpha: 0.15),
             child: Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-              style: TextStyle(color: _roleColor(), fontWeight: FontWeight.w700)),
+                style: TextStyle(
+                    color: _roleColor(), fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name, style: KhairTypography.labelLarge.copyWith(
-                  color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                )),
+                Text(user.name,
+                    style: KhairTypography.labelLarge.copyWith(
+                      color: isDark
+                          ? KhairColors.darkTextPrimary
+                          : KhairColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    )),
                 Text(user.email, style: KhairTypography.bodySmall),
                 const SizedBox(height: 4),
                 Row(children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: _roleColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(user.role.toUpperCase(), style: KhairTypography.labelSmall.copyWith(
-                      color: _roleColor(), fontWeight: FontWeight.w700, fontSize: 10,
-                    )),
+                    child: Text(user.role.toUpperCase(),
+                        style: KhairTypography.labelSmall.copyWith(
+                          color: _roleColor(),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        )),
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: _statusColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(user.status.toUpperCase(), style: KhairTypography.labelSmall.copyWith(
-                      color: _statusColor(), fontWeight: FontWeight.w700, fontSize: 10,
-                    )),
+                    child: Text(user.status.toUpperCase(),
+                        style: KhairTypography.labelSmall.copyWith(
+                          color: _statusColor(),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        )),
                   ),
                   if (user.isVerified) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFF2196F3).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -1186,19 +1258,25 @@ class _UserCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.verified, size: 10, color: Color(0xFF2196F3)),
+                          const Icon(Icons.verified,
+                              size: 10, color: Color(0xFF2196F3)),
                           const SizedBox(width: 3),
-                          Text('VERIFIED', style: KhairTypography.labelSmall.copyWith(
-                            color: const Color(0xFF2196F3), fontWeight: FontWeight.w700, fontSize: 10,
-                          )),
+                          Text('VERIFIED',
+                              style: KhairTypography.labelSmall.copyWith(
+                                color: const Color(0xFF2196F3),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                              )),
                         ],
                       ),
                     ),
                   ],
                   const SizedBox(width: 6),
-                  Text(dateFormat.format(user.createdAt), style: KhairTypography.labelSmall.copyWith(
-                    color: KhairColors.textTertiary, fontSize: 10,
-                  )),
+                  Text(dateFormat.format(user.createdAt),
+                      style: KhairTypography.labelSmall.copyWith(
+                        color: KhairColors.textTertiary,
+                        fontSize: 10,
+                      )),
                 ]),
               ],
             ),
@@ -1208,22 +1286,71 @@ class _UserCard extends StatelessWidget {
             icon: Icon(Icons.more_vert, color: KhairColors.textTertiary),
             onSelected: (action) => _onAction(context, action),
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'view', child: ListTile(leading: Icon(Icons.person), title: Text('View Profile'), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuItem(
+                  value: 'view',
+                  child: ListTile(
+                      leading: Icon(Icons.person),
+                      title: Text('View Profile'),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero)),
               if (!user.isVerified)
-                const PopupMenuItem(value: 'verify', child: ListTile(leading: Icon(Icons.verified, color: Color(0xFF2196F3)), title: Text('Verify User'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'verify',
+                    child: ListTile(
+                        leading: Icon(Icons.verified, color: Color(0xFF2196F3)),
+                        title: Text('Verify User'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               if (user.role != 'organizer')
-                const PopupMenuItem(value: 'promote_organizer', child: ListTile(leading: Icon(Icons.business), title: Text('Promote to Organizer'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'promote_organizer',
+                    child: ListTile(
+                        leading: Icon(Icons.business),
+                        title: Text('Promote to Organizer'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               if (user.role != 'admin')
-                const PopupMenuItem(value: 'promote_admin', child: ListTile(leading: Icon(Icons.admin_panel_settings), title: Text('Promote to Admin'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'promote_admin',
+                    child: ListTile(
+                        leading: Icon(Icons.admin_panel_settings),
+                        title: Text('Promote to Admin'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               const PopupMenuDivider(),
               if (user.status != 'suspended')
-                const PopupMenuItem(value: 'suspend', child: ListTile(leading: Icon(Icons.pause_circle, color: Colors.orange), title: Text('Suspend'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'suspend',
+                    child: ListTile(
+                        leading: Icon(Icons.pause_circle, color: Colors.orange),
+                        title: Text('Suspend'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               if (user.status != 'banned')
-                const PopupMenuItem(value: 'ban', child: ListTile(leading: Icon(Icons.block, color: Colors.red), title: Text('Ban'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'ban',
+                    child: ListTile(
+                        leading: Icon(Icons.block, color: Colors.red),
+                        title: Text('Ban'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               if (user.status != 'active')
-                const PopupMenuItem(value: 'activate', child: ListTile(leading: Icon(Icons.check_circle, color: Colors.green), title: Text('Activate'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(
+                    value: 'activate',
+                    child: ListTile(
+                        leading: Icon(Icons.check_circle, color: Colors.green),
+                        title: Text('Activate'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero)),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_forever, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                      leading: Icon(Icons.delete_forever, color: Colors.red),
+                      title:
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero)),
             ],
           ),
         ],
@@ -1234,27 +1361,39 @@ class _UserCard extends StatelessWidget {
   void _onAction(BuildContext context, String action) {
     switch (action) {
       case 'promote_organizer':
-        _showConfirmDialog(context, 'Promote to Organizer', 'Promote "${user.name}" to organizer role?', () {
+        _showConfirmDialog(context, 'Promote to Organizer',
+            'Promote "${user.name}" to organizer role?', () {
           context.read<AdminBloc>().add(UpdateUserRole(user.id, 'organizer'));
         });
         break;
       case 'promote_admin':
-        _showConfirmDialog(context, 'Promote to Admin', 'Promote "${user.name}" to admin role? This grants full access.', () {
+        _showConfirmDialog(context, 'Promote to Admin',
+            'Promote "${user.name}" to admin role? This grants full access.',
+            () {
           context.read<AdminBloc>().add(UpdateUserRole(user.id, 'admin'));
         });
         break;
       case 'suspend':
-        _showReasonDialog(context, 'Suspend User', 'Suspend "${user.name}"?', (reason) {
-          context.read<AdminBloc>().add(UpdateUserStatus(user.id, 'suspended', reason: reason));
+        _showReasonDialog(context, 'Suspend User', 'Suspend "${user.name}"?',
+            (reason) {
+          context
+              .read<AdminBloc>()
+              .add(UpdateUserStatus(user.id, 'suspended', reason: reason));
         });
         break;
       case 'ban':
-        _showReasonDialog(context, 'Ban User', 'Ban "${user.name}"? This action is severe.', (reason) {
-          context.read<AdminBloc>().add(UpdateUserStatus(user.id, 'banned', reason: reason));
+        _showReasonDialog(
+            context, 'Ban User', 'Ban "${user.name}"? This action is severe.',
+            (reason) {
+          context
+              .read<AdminBloc>()
+              .add(UpdateUserStatus(user.id, 'banned', reason: reason));
         });
         break;
       case 'verify':
-        _showConfirmDialog(context, 'Verify User', 'Mark "${user.name}" as verified? This adds a verified badge to their profile.', () {
+        _showConfirmDialog(context, 'Verify User',
+            'Mark "${user.name}" as verified? This adds a verified badge to their profile.',
+            () {
           context.read<AdminBloc>().add(VerifyUserEvent(user.id));
         });
         break;
@@ -1262,14 +1401,17 @@ class _UserCard extends StatelessWidget {
         context.read<AdminBloc>().add(UpdateUserStatus(user.id, 'active'));
         break;
       case 'delete':
-        _showConfirmDialog(context, 'Delete User', 'Permanently delete "${user.name}"? This cannot be undone.', () {
+        _showConfirmDialog(context, 'Delete User',
+            'Permanently delete "${user.name}"? This cannot be undone.', () {
           context.read<AdminBloc>().add(DeleteUserEvent(user.id));
         }, destructive: true);
         break;
     }
   }
 
-  void _showConfirmDialog(BuildContext context, String title, String message, VoidCallback onConfirm, {bool destructive = false}) {
+  void _showConfirmDialog(BuildContext context, String title, String message,
+      VoidCallback onConfirm,
+      {bool destructive = false}) {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -1277,11 +1419,17 @@ class _UserCard extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () { Navigator.pop(dialogCtx); onConfirm(); },
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              onConfirm();
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: destructive ? KhairColors.error : KhairColors.primary,
+              backgroundColor:
+                  destructive ? KhairColors.error : KhairColors.primary,
               foregroundColor: Colors.white,
             ),
             child: Text(destructive ? 'Delete' : 'Confirm'),
@@ -1291,7 +1439,8 @@ class _UserCard extends StatelessWidget {
     );
   }
 
-  void _showReasonDialog(BuildContext context, String title, String message, void Function(String?) onConfirm) {
+  void _showReasonDialog(BuildContext context, String title, String message,
+      void Function(String?) onConfirm) {
     final reasonCtrl = TextEditingController();
     showDialog(
       context: context,
@@ -1305,20 +1454,26 @@ class _UserCard extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: reasonCtrl,
-              decoration: const InputDecoration(labelText: 'Reason (optional)', hintText: 'Provide a reason...'),
+              decoration: const InputDecoration(
+                  labelText: 'Reason (optional)',
+                  hintText: 'Provide a reason...'),
               maxLines: 2,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogCtx);
               final reason = reasonCtrl.text.trim();
               onConfirm(reason.isEmpty ? null : reason);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: KhairColors.warning, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: KhairColors.warning,
+                foregroundColor: Colors.white),
             child: const Text('Confirm'),
           ),
         ],
@@ -1373,7 +1528,9 @@ class _QuotesTabState extends State<_QuotesTab> {
         title: const Text('Delete Quote'),
         content: const Text('Are you sure you want to delete this quote?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: KhairColors.error),
@@ -1386,13 +1543,19 @@ class _QuotesTabState extends State<_QuotesTab> {
 
     try {
       await _apiClient.delete('/admin/quotes/$id');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quote deleted'), backgroundColor: KhairColors.success),
+        const SnackBar(
+            content: Text('Quote deleted'),
+            backgroundColor: KhairColors.success),
       );
       _loadQuotes();
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete'), backgroundColor: KhairColors.error),
+        const SnackBar(
+            content: Text('Failed to delete'),
+            backgroundColor: KhairColors.error),
       );
     }
   }
@@ -1413,13 +1576,14 @@ class _QuotesTabState extends State<_QuotesTab> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           title: Text(isEdit ? 'Edit Quote' : 'Add Quote'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: type,
+                  initialValue: type,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: const [
                     DropdownMenuItem(value: 'quran', child: Text('Quran')),
@@ -1435,9 +1599,13 @@ class _QuotesTabState extends State<_QuotesTab> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
-                TextField(controller: sourceCtrl, decoration: const InputDecoration(labelText: 'Source')),
+                TextField(
+                    controller: sourceCtrl,
+                    decoration: const InputDecoration(labelText: 'Source')),
                 const SizedBox(height: 12),
-                TextField(controller: refCtrl, decoration: const InputDecoration(labelText: 'Reference')),
+                TextField(
+                    controller: refCtrl,
+                    decoration: const InputDecoration(labelText: 'Reference')),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   title: const Text('Active'),
@@ -1471,10 +1639,13 @@ class _QuotesTabState extends State<_QuotesTab> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
-                if (textCtrl.text.trim().isEmpty || sourceCtrl.text.trim().isEmpty) {
+                if (textCtrl.text.trim().isEmpty ||
+                    sourceCtrl.text.trim().isEmpty) {
                   return;
                 }
                 Navigator.pop(dialogContext);
@@ -1490,10 +1661,12 @@ class _QuotesTabState extends State<_QuotesTab> {
                 };
                 try {
                   if (isEdit) {
-                    await _apiClient.put('/admin/quotes/${existing['id']}', data: body);
+                    await _apiClient.put('/admin/quotes/${existing['id']}',
+                        data: body);
                   } else {
                     await _apiClient.post('/admin/quotes', data: body);
                   }
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(isEdit ? 'Quote updated' : 'Quote added'),
@@ -1502,8 +1675,11 @@ class _QuotesTabState extends State<_QuotesTab> {
                   );
                   _loadQuotes();
                 } catch (_) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to save'), backgroundColor: KhairColors.error),
+                    const SnackBar(
+                        content: Text('Failed to save'),
+                        backgroundColor: KhairColors.error),
                   );
                 }
               },
@@ -1518,7 +1694,8 @@ class _QuotesTabState extends State<_QuotesTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: KhairColors.primary));
+      return const Center(
+          child: CircularProgressIndicator(color: KhairColors.primary));
     }
 
     if (_error != null) {
@@ -1547,7 +1724,9 @@ class _QuotesTabState extends State<_QuotesTab> {
               Text(
                 'Quotes (${_quotes.length})',
                 style: KhairTypography.headlineSmall.copyWith(
-                  color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                  color: widget.isDark
+                      ? KhairColors.darkTextPrimary
+                      : KhairColors.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -1569,7 +1748,8 @@ class _QuotesTabState extends State<_QuotesTab> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.format_quote, size: 64, color: KhairColors.textTertiary),
+                      Icon(Icons.format_quote,
+                          size: 64, color: KhairColors.textTertiary),
                       const SizedBox(height: 16),
                       Text('No quotes yet', style: KhairTypography.bodyMedium),
                     ],
@@ -1589,11 +1769,15 @@ class _QuotesTabState extends State<_QuotesTab> {
                       return Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+                          color: widget.isDark
+                              ? KhairColors.darkCard
+                              : KhairColors.surface,
                           borderRadius: KhairRadius.medium,
                           border: Border.all(
                             color: isActive
-                                ? (widget.isDark ? KhairColors.darkBorder : KhairColors.border)
+                                ? (widget.isDark
+                                    ? KhairColors.darkBorder
+                                    : KhairColors.border)
                                 : KhairColors.error.withValues(alpha: 0.3),
                           ),
                         ),
@@ -1603,7 +1787,8 @@ class _QuotesTabState extends State<_QuotesTab> {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: isQuran
                                         ? KhairColors.primarySurface
@@ -1614,21 +1799,26 @@ class _QuotesTabState extends State<_QuotesTab> {
                                     isQuran ? 'Quran' : 'Hadith',
                                     style: KhairTypography.labelSmall.copyWith(
                                       fontWeight: FontWeight.w700,
-                                      color: isQuran ? KhairColors.primary : const Color(0xFFB8860B),
+                                      color: isQuran
+                                          ? KhairColors.primary
+                                          : const Color(0xFFB8860B),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 if (!isActive)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: KhairColors.error.withValues(alpha: 0.1),
+                                      color: KhairColors.error
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       'Inactive',
-                                      style: KhairTypography.labelSmall.copyWith(
+                                      style:
+                                          KhairTypography.labelSmall.copyWith(
                                         color: KhairColors.error,
                                         fontSize: 10,
                                       ),
@@ -1636,12 +1826,14 @@ class _QuotesTabState extends State<_QuotesTab> {
                                   ),
                                 const Spacer(),
                                 IconButton(
-                                  icon: const Icon(Icons.edit_outlined, size: 18),
+                                  icon:
+                                      const Icon(Icons.edit_outlined, size: 18),
                                   onPressed: () => _showQuoteDialog(q),
                                   tooltip: 'Edit',
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete_outline, size: 18, color: KhairColors.error),
+                                  icon: Icon(Icons.delete_outline,
+                                      size: 18, color: KhairColors.error),
                                   onPressed: () => _deleteQuote(q['id']),
                                   tooltip: 'Delete',
                                 ),
@@ -1777,7 +1969,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.notifications_active, color: Colors.white),
+                child:
+                    const Icon(Icons.notifications_active, color: Colors.white),
               ),
               const SizedBox(width: 14),
               Column(
@@ -1786,7 +1979,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                   Text(
                     'Send Notification',
                     style: KhairTypography.headlineSmall.copyWith(
-                      color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      color: widget.isDark
+                          ? KhairColors.darkTextPrimary
+                          : KhairColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1807,7 +2002,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
               color: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
               borderRadius: KhairRadius.medium,
               border: Border.all(
-                color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                color:
+                    widget.isDark ? KhairColors.darkBorder : KhairColors.border,
               ),
             ),
             child: Row(
@@ -1823,7 +2019,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _target == 'all' ? KhairColors.primary : Colors.transparent,
+                        color: _target == 'all'
+                            ? KhairColors.primary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -1832,13 +2030,17 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                           Icon(
                             Icons.group,
                             size: 18,
-                            color: _target == 'all' ? Colors.white : KhairColors.textTertiary,
+                            color: _target == 'all'
+                                ? Colors.white
+                                : KhairColors.textTertiary,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'All Users',
                             style: KhairTypography.labelLarge.copyWith(
-                              color: _target == 'all' ? Colors.white : KhairColors.textTertiary,
+                              color: _target == 'all'
+                                  ? Colors.white
+                                  : KhairColors.textTertiary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1854,7 +2056,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _target == 'individual' ? KhairColors.primary : Colors.transparent,
+                        color: _target == 'individual'
+                            ? KhairColors.primary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -1863,13 +2067,17 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                           Icon(
                             Icons.person,
                             size: 18,
-                            color: _target == 'individual' ? Colors.white : KhairColors.textTertiary,
+                            color: _target == 'individual'
+                                ? Colors.white
+                                : KhairColors.textTertiary,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'Individual',
                             style: KhairTypography.labelLarge.copyWith(
-                              color: _target == 'individual' ? Colors.white : KhairColors.textTertiary,
+                              color: _target == 'individual'
+                                  ? Colors.white
+                                  : KhairColors.textTertiary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1887,16 +2095,19 @@ class _NotificationsTabState extends State<_NotificationsTab> {
           if (_target == 'individual') ...[
             if (_selectedUserName != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: KhairColors.primarySurface,
                   borderRadius: KhairRadius.medium,
-                  border: Border.all(color: KhairColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: KhairColors.primary.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.person, size: 18, color: KhairColors.primary),
+                    const Icon(Icons.person,
+                        size: 18, color: KhairColors.primary),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1912,7 +2123,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                         _selectedUserId = null;
                         _selectedUserName = null;
                       }),
-                      child: const Icon(Icons.close, size: 18, color: KhairColors.textTertiary),
+                      child: const Icon(Icons.close,
+                          size: 18, color: KhairColors.textTertiary),
                     ),
                   ],
                 ),
@@ -1925,38 +2137,51 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                   hintText: 'Search user by name or email...',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   filled: true,
-                  fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+                  fillColor: widget.isDark
+                      ? KhairColors.darkCard
+                      : KhairColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                      color: widget.isDark
+                          ? KhairColors.darkBorder
+                          : KhairColors.border,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                      color: widget.isDark
+                          ? KhairColors.darkBorder
+                          : KhairColors.border,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+                    borderSide: const BorderSide(
+                        color: KhairColors.primary, width: 1.5),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
               ),
               BlocBuilder<AdminBloc, AdminState>(
-                buildWhen: (prev, curr) => prev.searchedUsers != curr.searchedUsers,
+                buildWhen: (prev, curr) =>
+                    prev.searchedUsers != curr.searchedUsers,
                 builder: (context, state) {
-                  if (state.searchedUsers.isEmpty) return const SizedBox(height: 12);
+                  if (state.searchedUsers.isEmpty)
+                    return const SizedBox(height: 12);
                   return Container(
                     margin: const EdgeInsets.only(top: 4),
                     constraints: const BoxConstraints(maxHeight: 180),
                     decoration: BoxDecoration(
-                      color: widget.isDark ? KhairColors.darkCard : Colors.white,
+                      color:
+                          widget.isDark ? KhairColors.darkCard : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                        color: widget.isDark
+                            ? KhairColors.darkBorder
+                            : KhairColors.border,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -1972,7 +2197,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                       itemCount: state.searchedUsers.length,
                       separatorBuilder: (_, __) => Divider(
                         height: 1,
-                        color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                        color: widget.isDark
+                            ? KhairColors.darkBorder
+                            : KhairColors.border,
                       ),
                       itemBuilder: (context, index) {
                         final user = state.searchedUsers[index];
@@ -1993,7 +2220,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                           title: Text(
                             user['name']?.toString() ?? 'Unknown',
                             style: KhairTypography.labelMedium.copyWith(
-                              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                              color: widget.isDark
+                                  ? KhairColors.darkTextPrimary
+                                  : KhairColors.textPrimary,
                             ),
                           ),
                           subtitle: Text(
@@ -2015,7 +2244,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
           Text(
             'Title',
             style: KhairTypography.labelLarge.copyWith(
-              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+              color: widget.isDark
+                  ? KhairColors.darkTextPrimary
+                  : KhairColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2025,24 +2256,31 @@ class _NotificationsTabState extends State<_NotificationsTab> {
             decoration: InputDecoration(
               hintText: 'Notification title...',
               filled: true,
-              fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+              fillColor:
+                  widget.isDark ? KhairColors.darkCard : KhairColors.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                  color: widget.isDark
+                      ? KhairColors.darkBorder
+                      : KhairColors.border,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                  color: widget.isDark
+                      ? KhairColors.darkBorder
+                      : KhairColors.border,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+                borderSide:
+                    const BorderSide(color: KhairColors.primary, width: 1.5),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
           const SizedBox(height: 18),
@@ -2051,7 +2289,9 @@ class _NotificationsTabState extends State<_NotificationsTab> {
           Text(
             'Message',
             style: KhairTypography.labelLarge.copyWith(
-              color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+              color: widget.isDark
+                  ? KhairColors.darkTextPrimary
+                  : KhairColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2062,24 +2302,31 @@ class _NotificationsTabState extends State<_NotificationsTab> {
             decoration: InputDecoration(
               hintText: 'Write your notification message...',
               filled: true,
-              fillColor: widget.isDark ? KhairColors.darkCard : KhairColors.surface,
+              fillColor:
+                  widget.isDark ? KhairColors.darkCard : KhairColors.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                  color: widget.isDark
+                      ? KhairColors.darkBorder
+                      : KhairColors.border,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: widget.isDark ? KhairColors.darkBorder : KhairColors.border,
+                  color: widget.isDark
+                      ? KhairColors.darkBorder
+                      : KhairColors.border,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: KhairColors.primary, width: 1.5),
+                borderSide:
+                    const BorderSide(color: KhairColors.primary, width: 1.5),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
           const SizedBox(height: 24),
@@ -2093,14 +2340,16 @@ class _NotificationsTabState extends State<_NotificationsTab> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, size: 18, color: KhairColors.info),
+                const Icon(Icons.info_outline,
+                    size: 18, color: KhairColors.info),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     _target == 'all'
                         ? 'This notification will be sent to all active users and will also appear in their notification center.'
                         : 'This notification will be sent only to the selected user.',
-                    style: KhairTypography.bodySmall.copyWith(color: KhairColors.info),
+                    style: KhairTypography.bodySmall
+                        .copyWith(color: KhairColors.info),
                   ),
                 ),
               ],
@@ -2110,7 +2359,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
 
           // Send button
           BlocBuilder<AdminBloc, AdminState>(
-            buildWhen: (prev, curr) => prev.notificationSendStatus != curr.notificationSendStatus,
+            buildWhen: (prev, curr) =>
+                prev.notificationSendStatus != curr.notificationSendStatus,
             builder: (context, state) {
               return SizedBox(
                 width: double.infinity,
@@ -2121,7 +2371,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.send, size: 20),
                   label: Text(
@@ -2130,7 +2381,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                         : _target == 'all'
                             ? 'Send to All Users'
                             : 'Send to User',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: KhairColors.primary,
@@ -2192,17 +2444,21 @@ class _VerificationsTabState extends State<_VerificationsTab> {
                 Text(
                   'No Pending Verification Requests',
                   style: KhairTypography.headlineSmall.copyWith(
-                    color: widget.isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                    color: widget.isDark
+                        ? KhairColors.darkTextPrimary
+                        : KhairColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'All verification requests have been reviewed',
-                  style: KhairTypography.bodyMedium.copyWith(color: KhairColors.textTertiary),
+                  style: KhairTypography.bodyMedium
+                      .copyWith(color: KhairColors.textTertiary),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  onPressed: () => context.read<AdminBloc>().add(const LoadVerifications()),
+                  onPressed: () =>
+                      context.read<AdminBloc>().add(const LoadVerifications()),
                   icon: const Icon(Icons.refresh),
                   label: const Text('Refresh'),
                 ),
@@ -2296,7 +2552,7 @@ class _VerificationCard extends StatelessWidget {
                 // User avatar
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: KhairColors.primary.withOpacity(0.15),
+                  backgroundColor: KhairColors.primary.withValues(alpha: 0.15),
                   backgroundImage: request.profileImagePath != null
                       ? NetworkImage(request.profileImagePath!)
                       : null,
@@ -2314,24 +2570,29 @@ class _VerificationCard extends StatelessWidget {
                         request.userName,
                         style: KhairTypography.headlineSmall.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                          color: isDark
+                              ? KhairColors.darkTextPrimary
+                              : KhairColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         request.userEmail,
-                        style: KhairTypography.bodySmall.copyWith(color: KhairColors.textTertiary),
+                        style: KhairTypography.bodySmall
+                            .copyWith(color: KhairColors.textTertiary),
                       ),
                     ],
                   ),
                 ),
                 // Status badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _statusColor().withOpacity(0.15),
+                    color: _statusColor().withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _statusColor().withOpacity(0.4)),
+                    border: Border.all(
+                        color: _statusColor().withValues(alpha: 0.4)),
                   ),
                   child: Text(
                     _statusLabel(),
@@ -2354,8 +2615,12 @@ class _VerificationCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _InfoChip(icon: Icons.badge, label: _roleLabel()),
-                _InfoChip(icon: Icons.description, label: 'Doc: ${request.documentType}'),
-                _InfoChip(icon: Icons.calendar_today, label: dateFormatter.format(request.createdAt)),
+                _InfoChip(
+                    icon: Icons.description,
+                    label: 'Doc: ${request.documentType}'),
+                _InfoChip(
+                    icon: Icons.calendar_today,
+                    label: dateFormatter.format(request.createdAt)),
               ],
             ),
 
@@ -2366,16 +2631,18 @@ class _VerificationCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  color: (isDark ? Colors.white : Colors.black)
+                      .withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('User Notes:', style: KhairTypography.labelSmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: KhairColors.textTertiary,
-                    )),
+                    Text('User Notes:',
+                        style: KhairTypography.labelSmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: KhairColors.textTertiary,
+                        )),
                     const SizedBox(height: 4),
                     Text(request.notes!, style: KhairTypography.bodySmall),
                   ],
@@ -2390,25 +2657,30 @@ class _VerificationCard extends StatelessWidget {
                 if (request.documentPath != null)
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _viewDocument(context, request.documentPath!, 'Certificate'),
+                      onPressed: () => _viewDocument(
+                          context, request.documentPath!, 'Certificate'),
                       icon: const Icon(Icons.file_present, size: 18),
                       label: const Text('View Certificate'),
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
-                if (request.documentPath != null && request.profileImagePath != null)
+                if (request.documentPath != null &&
+                    request.profileImagePath != null)
                   const SizedBox(width: 12),
                 if (request.profileImagePath != null)
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _viewDocument(context, request.profileImagePath!, 'Photo'),
+                      onPressed: () => _viewDocument(
+                          context, request.profileImagePath!, 'Photo'),
                       icon: const Icon(Icons.photo, size: 18),
                       label: const Text('View Photo'),
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
@@ -2431,15 +2703,16 @@ class _VerificationCard extends StatelessWidget {
                         'Approve Verification',
                         'Are you sure you want to verify ${request.userName}?',
                         () => context.read<AdminBloc>().add(
-                          ReviewVerificationEvent(request.id, 'approved'),
-                        ),
+                              ReviewVerificationEvent(request.id, 'approved'),
+                            ),
                       ),
                       icon: const Icon(Icons.check_circle, size: 18),
                       label: const Text('Approve'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: KhairColors.success,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         elevation: 0,
                       ),
@@ -2460,7 +2733,8 @@ class _VerificationCard extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: KhairColors.error,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         elevation: 0,
                       ),
@@ -2481,7 +2755,8 @@ class _VerificationCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.orange,
                         side: const BorderSide(color: Colors.orange),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
@@ -2491,25 +2766,29 @@ class _VerificationCard extends StatelessWidget {
             ],
 
             // Review notes (for already reviewed)
-            if (request.reviewNotes != null && request.reviewNotes!.isNotEmpty) ...[
+            if (request.reviewNotes != null &&
+                request.reviewNotes!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _statusColor().withOpacity(0.08),
+                  color: _statusColor().withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _statusColor().withOpacity(0.2)),
+                  border:
+                      Border.all(color: _statusColor().withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Admin Review Notes:', style: KhairTypography.labelSmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: _statusColor(),
-                    )),
+                    Text('Admin Review Notes:',
+                        style: KhairTypography.labelSmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: _statusColor(),
+                        )),
                     const SizedBox(height: 4),
-                    Text(request.reviewNotes!, style: KhairTypography.bodySmall),
+                    Text(request.reviewNotes!,
+                        style: KhairTypography.bodySmall),
                   ],
                 ),
               ),
@@ -2532,7 +2811,9 @@ class _VerificationCard extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Text(title, style: KhairTypography.headlineSmall.copyWith(fontWeight: FontWeight.w700)),
+                  Text(title,
+                      style: KhairTypography.headlineSmall
+                          .copyWith(fontWeight: FontWeight.w700)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -2564,7 +2845,8 @@ class _VerificationCard extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                          Icon(Icons.broken_image,
+                              size: 48, color: Colors.grey),
                           SizedBox(height: 8),
                           Text('Failed to load image'),
                         ],
@@ -2580,7 +2862,8 @@ class _VerificationCard extends StatelessWidget {
     );
   }
 
-  void _confirmAction(BuildContext context, String title, String message, VoidCallback onConfirm) {
+  void _confirmAction(BuildContext context, String title, String message,
+      VoidCallback onConfirm) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -2608,7 +2891,8 @@ class _VerificationCard extends StatelessWidget {
     );
   }
 
-  void _showReasonDialog(BuildContext context, String title, String hint, String status) {
+  void _showReasonDialog(
+      BuildContext context, String title, String hint, String status) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -2623,7 +2907,8 @@ class _VerificationCard extends StatelessWidget {
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: hint,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -2638,17 +2923,21 @@ class _VerificationCard extends StatelessWidget {
               final notes = controller.text.trim();
               if (notes.isEmpty && status == 'rejected') {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please provide a reason'), backgroundColor: Colors.orange),
+                  const SnackBar(
+                      content: Text('Please provide a reason'),
+                      backgroundColor: Colors.orange),
                 );
                 return;
               }
               Navigator.pop(ctx);
               context.read<AdminBloc>().add(
-                ReviewVerificationEvent(request.id, status, reviewNotes: notes.isNotEmpty ? notes : null),
-              );
+                    ReviewVerificationEvent(request.id, status,
+                        reviewNotes: notes.isNotEmpty ? notes : null),
+                  );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: status == 'rejected' ? KhairColors.error : Colors.orange,
+              backgroundColor:
+                  status == 'rejected' ? KhairColors.error : Colors.orange,
               foregroundColor: Colors.white,
             ),
             child: Text(status == 'rejected' ? 'Reject' : 'Send'),
@@ -2671,7 +2960,9 @@ class _InfoChip extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: KhairColors.textTertiary),
         const SizedBox(width: 4),
-        Text(label, style: KhairTypography.labelSmall.copyWith(color: KhairColors.textTertiary)),
+        Text(label,
+            style: KhairTypography.labelSmall
+                .copyWith(color: KhairColors.textTertiary)),
       ],
     );
   }

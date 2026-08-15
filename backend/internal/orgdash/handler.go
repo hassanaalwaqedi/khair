@@ -1,11 +1,13 @@
 package orgdash
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/pkg/response"
 )
 
@@ -42,6 +44,52 @@ func getActorID(c *gin.Context) uuid.UUID {
 	default:
 		return uuid.Nil
 	}
+}
+
+// GetHubDashboard is the self-scoped Organizer Hub endpoint. It deliberately
+// never accepts an organization id, preventing an organizer from enumerating
+// another organization's private operational data.
+func (h *Handler) GetHubDashboard(c *gin.Context) {
+	userID := getActorID(c)
+	if userID == uuid.Nil {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+	dashboard, err := h.service.GetHubDashboard(
+		userID,
+		c.DefaultQuery("range", "30d"),
+		c.Query("start"),
+		c.Query("end"),
+	)
+	if err != nil {
+		if errors.Is(err, ErrOrganizerAccess) {
+			response.Forbidden(c, "Approved organizer access required")
+			return
+		}
+		if err.Error() == "unsupported dashboard range" ||
+			(len(err.Error()) > 12 && err.Error()[:12] == "custom range") {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		response.InternalServerError(c, "Failed to load organizer hub")
+		return
+	}
+	response.Success(c, dashboard)
+}
+
+// requireOrgRole must be called after the scoped authorization middleware in
+// main. Read-only viewers never gain mutation permissions simply by knowing an
+// organization id.
+func requireOrgRole(c *gin.Context, minimum string) bool {
+	if role, _ := c.Get("role"); role == models.RoleAdmin || role == "super_admin" {
+		return true
+	}
+	role, _ := c.Get("org_role")
+	if value, ok := role.(string); ok && models.OrgRoleLevel(value) >= models.OrgRoleLevel(minimum) {
+		return true
+	}
+	response.Forbidden(c, "Your organization role does not allow this action")
+	return false
 }
 
 // ── Dashboard ──
@@ -103,6 +151,9 @@ func (h *Handler) ListEvents(c *gin.Context) {
 
 // CreateEvent creates a new event
 func (h *Handler) CreateEvent(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleEventManager) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -125,6 +176,9 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 
 // UpdateEvent updates an event
 func (h *Handler) UpdateEvent(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleEventManager) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -153,6 +207,9 @@ func (h *Handler) UpdateEvent(c *gin.Context) {
 
 // CancelEvent cancels an event
 func (h *Handler) CancelEvent(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleEventManager) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -174,6 +231,9 @@ func (h *Handler) CancelEvent(c *gin.Context) {
 
 // DuplicateEvent duplicates an event
 func (h *Handler) DuplicateEvent(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleEventManager) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -208,6 +268,9 @@ func (h *Handler) ListMembers(c *gin.Context) {
 
 // AddMember adds a member
 func (h *Handler) AddMember(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleAdmin) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -233,6 +296,9 @@ func (h *Handler) AddMember(c *gin.Context) {
 
 // UpdateMemberRole changes a member's role
 func (h *Handler) UpdateMemberRole(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleAdmin) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -262,6 +328,9 @@ func (h *Handler) UpdateMemberRole(c *gin.Context) {
 
 // RemoveMember removes a member
 func (h *Handler) RemoveMember(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleAdmin) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 
@@ -295,6 +364,9 @@ func (h *Handler) GetProfile(c *gin.Context) {
 
 // UpdateProfile updates the org profile
 func (h *Handler) UpdateProfile(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleAdmin) {
+		return
+	}
 	orgID := getOrgID(c)
 	actorID := getActorID(c)
 

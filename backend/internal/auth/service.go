@@ -7,11 +7,13 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"math/big"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -76,6 +78,24 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+// GoogleSignInRequest contains only an opaque Google ID token. The API
+// resolves identity attributes directly from Google rather than trusting the
+// Flutter client.
+type GoogleSignInRequest struct {
+	IDToken           string `json:"id_token" binding:"required"`
+	PreferredLanguage string `json:"preferred_language"`
+}
+
+type googleTokenInfo struct {
+	Issuer        string `json:"iss"`
+	Audience      string `json:"aud"`
+	Subject       string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified string `json:"email_verified"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
 }
 
 // VerifyEmailRequest represents an email verification request
@@ -150,7 +170,7 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 		ID:           uuid.New(),
 		Email:        req.Email,
 		PasswordHash: string(hashedPassword),
-		Role:         "organizer",
+		Role:         models.RoleUser,
 		Status:       "pending_verification",
 		IsVerified:   false,
 		CreatedAt:    time.Now(),
@@ -165,20 +185,6 @@ func (s *Service) Register(req *RegisterRequest) (*MessageResponse, error) {
 	if err := s.repo.CreateVerification(user.ID, otpHash, expiresAt); err != nil {
 		log.Printf("[ERROR] Failed to create verification record for %s: %v", req.Email, err)
 		return nil, fmt.Errorf("create verification: %w", err)
-	}
-
-	// Create organizer profile
-	organizer := &models.Organizer{
-		ID:        uuid.New(),
-		UserID:    user.ID,
-		Name:      req.Name,
-		Status:    "pending",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	if err := s.repo.CreateOrganizer(organizer); err != nil {
-		return nil, fmt.Errorf("create organizer profile: %w", err)
 	}
 
 	// Send verification email (do NOT return OTP in response)
@@ -239,11 +245,10 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, errors.New("email not verified, please check your inbox for the verification code")
 	}
 
-	// Get organizer profile if exists
-	var organizer *models.Organizer
-	if user.Role == "organizer" {
-		organizer, _ = s.repo.GetOrganizerByUserID(user.ID)
-	}
+	// Include an organizer application even while it is pending. The client uses
+	// this status to route applicants to the correct review screen; permissions
+	// still come from the user role and organizer approval checks.
+	organizer, _ := s.repo.GetOrganizerByUserID(user.ID)
 
 	// Generate JWT
 	token, expiresAt, err := s.generateToken(user)
@@ -264,6 +269,95 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 		User:         user,
 		Organizer:    organizer,
 	}, nil
+}
+
+// GoogleSignIn verifies a Google ID token on the server, then creates or
+// links exactly one attendee account for that verified email address.
+func (s *Service) GoogleSignIn(req *GoogleSignInRequest) (*AuthResponse, error) {
+	if s.cfg.Google.ClientID == "" {
+		return nil, errors.New("google sign-in is not configured")
+	}
+
+	// Try as ID token first, then fall back to access token (web sends access tokens).
+	token, err := s.verifyGoogleIDToken(req.IDToken)
+	if err != nil {
+		token, err = s.verifyGoogleAccessToken(req.IDToken)
+		if err != nil {
+			return nil, errors.New("invalid Google sign-in")
+		}
+	}
+	if token.Subject == "" || token.Email == "" {
+		return nil, errors.New("invalid Google sign-in")
+	}
+
+	user, err := s.repo.GetUserByEmail(token.Email)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, errors.New("could not complete Google sign-in")
+	}
+	now := time.Now()
+	if user == nil || err == sql.ErrNoRows {
+		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
+		if hashErr != nil {
+			return nil, errors.New("could not secure Google account")
+		}
+		displayName := token.Name
+		if displayName == "" {
+			displayName = token.Email
+		}
+		user = &models.User{
+			ID: uuid.New(), Email: token.Email, PasswordHash: string(passwordHash),
+			Role: models.RoleUser, Status: "active", DisplayName: &displayName,
+			IsVerified: true, VerifiedAt: &now, CreatedAt: now, UpdatedAt: now,
+		}
+		language := normalizePreferredLanguage(req.PreferredLanguage)
+		profile := &models.Profile{
+			ID: uuid.New(), UserID: user.ID, AvatarURL: optionalString(token.Picture),
+			PreferredLanguage: language, ProfileCompletionScore: 40, CreatedAt: now, UpdatedAt: now,
+		}
+		if err := s.repo.CreateGoogleUser(user, profile); err != nil {
+			return nil, errors.New("could not create your account")
+		}
+	} else {
+		switch user.Status {
+		case "deleted", "suspended", "banned":
+			return nil, errors.New("this account is not available")
+		}
+		if err := s.repo.ActivateGoogleEmail(user.ID); err != nil {
+			return nil, errors.New("could not complete Google sign-in")
+		}
+		user.IsVerified = true
+		user.Status = "active"
+	}
+
+	if err := s.repo.LinkGoogleIdentity(user.ID, token.Subject); err != nil {
+		return nil, errors.New("this Google account is linked to another user")
+	}
+	organizer, _ := s.repo.GetOrganizerByUserID(user.ID)
+	accessToken, expiresAt, err := s.generateToken(user)
+	if err != nil {
+		return nil, errors.New("could not complete Google sign-in")
+	}
+	refreshToken, err := s.createRefreshToken(user.ID, "", "")
+	if err != nil {
+		log.Printf("[WARN] Failed to create Google refresh token for %s: %v", user.Email, err)
+	}
+	return &AuthResponse{Token: accessToken, RefreshToken: refreshToken, ExpiresAt: expiresAt, User: user, Organizer: organizer}, nil
+}
+
+func normalizePreferredLanguage(language string) string {
+	switch language {
+	case "ar", "tr":
+		return language
+	default:
+		return "en"
+	}
+}
+
+func optionalString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
 
 // recordFailedLogin increments the failed login counter and locks the account
@@ -370,11 +464,7 @@ func (s *Service) VerifyEmail(req *VerifyEmailRequest) (*AuthResponse, error) {
 	// Refresh user data after verification
 	user, _ = s.repo.GetUserByEmail(req.Email)
 
-	// Get organizer profile if exists
-	var organizer *models.Organizer
-	if user.Role == "organizer" {
-		organizer, _ = s.repo.GetOrganizerByUserID(user.ID)
-	}
+	organizer, _ := s.repo.GetOrganizerByUserID(user.ID)
 
 	// Issue JWT token
 	token, expiresAt, err := s.generateToken(user)
@@ -599,11 +689,8 @@ func (s *Service) RefreshTokens(req *RefreshTokenRequest, userAgent, ipAddress s
 	}
 	_ = s.repo.RevokeRefreshToken(rt.ID, newID)
 
-	// Get organizer if exists
-	var org *models.Organizer
-	if user.Role == "organizer" {
-		org, _ = s.repo.GetOrganizerByUserID(user.ID)
-	}
+	// Pending and rejected applications are part of the signed-in session too.
+	org, _ := s.repo.GetOrganizerByUserID(user.ID)
 
 	return &AuthResponse{
 		Token:        accessToken,
@@ -660,4 +747,74 @@ func (s *Service) GetUserStatus(userID uuid.UUID) (string, error) {
 func (s *Service) CheckSuspension(c interface{ GetString(string) string }) (int, error) {
 	// This is called from middleware/handlers to check if a user is banned
 	return http.StatusOK, nil
+}
+
+// ── Google token verification helpers ────────────────────────────────────────
+
+// verifyGoogleIDToken verifies a Google ID token via Google's tokeninfo endpoint.
+func (s *Service) verifyGoogleIDToken(idToken string) (*googleTokenInfo, error) {
+	verifyURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + url.QueryEscape(idToken)
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Get(verifyURL)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid id_token (status %d)", resp.StatusCode)
+	}
+
+	var token googleTokenInfo
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return nil, fmt.Errorf("decode failed: %w", err)
+	}
+	if token.Audience != s.cfg.Google.ClientID || token.EmailVerified != "true" ||
+		(token.Issuer != "accounts.google.com" && token.Issuer != "https://accounts.google.com") {
+		return nil, fmt.Errorf("token validation failed")
+	}
+	return &token, nil
+}
+
+// verifyGoogleAccessToken verifies a Google access token via the userinfo endpoint.
+// This is the fallback for web clients where google_sign_in only returns access tokens.
+func (s *Service) verifyGoogleAccessToken(accessToken string) (*googleTokenInfo, error) {
+	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v3/userinfo", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid access_token (status %d)", resp.StatusCode)
+	}
+
+	var info struct {
+		Sub           string `json:"sub"`
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return nil, fmt.Errorf("decode failed: %w", err)
+	}
+	if !info.EmailVerified || info.Email == "" {
+		return nil, fmt.Errorf("email not verified")
+	}
+
+	return &googleTokenInfo{
+		Subject:       info.Sub,
+		Email:         info.Email,
+		EmailVerified: "true",
+		Name:          info.Name,
+		Picture:       info.Picture,
+		Issuer:        "accounts.google.com",
+		Audience:      s.cfg.Google.ClientID,
+	}, nil
 }

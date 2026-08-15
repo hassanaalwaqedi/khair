@@ -270,7 +270,9 @@ func (h *Handler) getOrganizerUserID(organizerID uuid.UUID) uuid.UUID {
 
 // NotifyAttendeesRequest is the request body for notifying event attendees
 type NotifyAttendeesRequest struct {
+	Title       string `json:"title" binding:"max=160"`
 	Message     string `json:"message" binding:"required"`
+	Type        string `json:"type" binding:"max=32"`
 	IncludeLink bool   `json:"include_link"`
 }
 
@@ -314,6 +316,24 @@ func (h *Handler) NotifyAttendees(c *gin.Context) {
 		return
 	}
 
+	announcementType := req.Type
+	if announcementType == "" {
+		announcementType = "general"
+	}
+	if announcementType != "general" && announcementType != "schedule_change" && announcementType != "reminder" && announcementType != "important" {
+		response.BadRequest(c, "Invalid announcement type")
+		return
+	}
+	title := req.Title
+	if title == "" {
+		title = fmt.Sprintf("Update from %s", evt.OrganizerName)
+	}
+	announcementID, err := h.service.repo.StoreAnnouncement(eventID, uid, title, announcementType, req.Message, req.IncludeLink)
+	if err != nil {
+		response.InternalServerError(c, "Failed to store event announcement")
+		return
+	}
+
 	// Get all confirmed attendee user IDs
 	attendeeIDs, err := h.service.repo.GetEventAttendeeUserIDs(eventID)
 	if err != nil {
@@ -327,19 +347,26 @@ func (h *Handler) NotifyAttendees(c *gin.Context) {
 	}
 
 	// Build notification content
-	title := fmt.Sprintf("Message from %s", evt.OrganizerName)
 	msg := req.Message
 
 	// Send to each attendee
 	go func() {
 		for _, attendeeID := range attendeeIDs {
+			_ = h.service.repo.QueueAnnouncementDelivery(announcementID, attendeeID)
+			inAppStatus := "delivered"
 			if h.notifSvc != nil {
-				_ = h.notifSvc.Create(attendeeID, title, msg)
+				if err := h.notifSvc.CreateTyped(attendeeID, title, msg, "organizer_announcement", map[string]string{
+					"event_id": eventID.String(), "announcement_id": announcementID.String(),
+				}); err != nil {
+					inAppStatus = "failed"
+				}
 			}
+			_ = h.service.repo.UpdateAnnouncementDelivery(announcementID, attendeeID, inAppStatus, "dispatched")
 			if h.pushSvc != nil {
 				data := map[string]string{
-					"type":     "organizer_message",
-					"event_id": eventID.String(),
+					"type":            "organizer_announcement",
+					"event_id":        eventID.String(),
+					"announcement_id": announcementID.String(),
 				}
 				h.pushSvc.SendToUser(attendeeID, title, msg, data)
 			}
@@ -348,6 +375,7 @@ func (h *Handler) NotifyAttendees(c *gin.Context) {
 	}()
 
 	response.SuccessWithMessage(c, fmt.Sprintf("Message sent to %d attendees", len(attendeeIDs)), map[string]interface{}{
+		"announcement_id":    announcementID,
 		"attendees_notified": len(attendeeIDs),
 	})
 }

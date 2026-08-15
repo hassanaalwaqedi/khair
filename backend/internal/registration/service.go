@@ -39,12 +39,14 @@ func NewService(db *sql.DB, cfg *config.Config, emailSvc *email.Service) *Servic
 
 // --- Request types ---
 
-// Step1Request is role selection + credentials
+// Step1Request collects attendee credentials. Role is accepted only for
+// backwards compatibility and is always normalized to a standard user.
 type Step1Request struct {
-	Role        string `json:"role" binding:"required"`
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required,min=8"`
-	DisplayName string `json:"display_name"` // optional — required for simple roles
+	Role              string `json:"role"`
+	Email             string `json:"email" binding:"required,email"`
+	Password          string `json:"password" binding:"required,min=8"`
+	PreferredLanguage string `json:"preferred_language"`
+	DisplayName       string `json:"display_name"` // optional — required for simple roles
 }
 
 // Step2Request is basic info
@@ -104,16 +106,11 @@ type RegistrationCompleteResponse struct {
 
 // ProcessStep1 handles role selection and credential creation
 func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*StepResponse, error) {
-	// Validate role
-	validRoles := map[string]bool{
-		models.RoleOrganization:       true,
-		models.RoleSheikh:             true,
-		models.RoleNewMuslim:          true,
-		models.RoleStudent:            true,
-		models.RoleCommunityOrganizer: true,
-	}
-	if !validRoles[req.Role] {
-		return nil, errors.New("invalid role selection")
+	// Every account starts as an attendee. Organizer access is a separate,
+	// reviewed application after signup.
+	req.Role = models.RoleUser
+	if strings.TrimSpace(req.DisplayName) == "" {
+		return nil, errors.New("display name is required")
 	}
 
 	// Check if email already exists as verified user
@@ -151,9 +148,10 @@ func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*StepRespon
 
 	// Create draft
 	formData := map[string]interface{}{
-		"role":          req.Role,
-		"email":         req.Email,
-		"password_hash": string(hashedPassword),
+		"role":               req.Role,
+		"email":              req.Email,
+		"password_hash":      string(hashedPassword),
+		"preferred_language": normalizeLanguage(req.PreferredLanguage),
 	}
 	if req.DisplayName != "" {
 		formData["display_name"] = req.DisplayName
@@ -186,6 +184,15 @@ func (s *Service) ProcessStep1(req *Step1Request, ipAddress string) (*StepRespon
 		Suggestions:     GetSuggestionsForRole(req.Role, formData),
 		Message:         "Credentials saved. Please complete your profile.",
 	}, nil
+}
+
+func normalizeLanguage(language string) string {
+	switch strings.ToLower(strings.TrimSpace(language)) {
+	case "ar", "tr":
+		return strings.ToLower(strings.TrimSpace(language))
+	default:
+		return "en"
+	}
 }
 
 // ProcessStep2 handles basic profile info
@@ -575,78 +582,7 @@ func (s *Service) loadAndValidateDraft(id uuid.UUID) (*models.RegistrationDraft,
 	return draft, nil
 }
 
-func (s *Service) createRoleSpecificRecords(user *models.User, data map[string]interface{}, role string) error {
-	now := time.Now()
-
-	switch role {
-	case models.RoleOrganization:
-		org := &models.Organizer{
-			ID:                 uuid.New(),
-			UserID:             user.ID,
-			Name:               getString(data, "org_name"),
-			Description:        strPtr(getString(data, "org_description")),
-			OrganizationType:   strPtr(getString(data, "org_type")),
-			City:               strPtr(getString(data, "org_city")),
-			Country:            strPtr(getString(data, "org_country")),
-			RegistrationNumber: strPtr(getString(data, "registration_number")),
-			LogoURL:            strPtr(getString(data, "logo_url")),
-			Status:             "pending",
-			CreatedAt:          now,
-			UpdatedAt:          now,
-		}
-		if org.Name == "" {
-			org.Name = getString(data, "display_name")
-		}
-		return s.repo.CreateOrganizer(org)
-
-	case models.RoleSheikh:
-		certs := []string{}
-		if certsRaw, ok := data["certifications"]; ok {
-			if certsList, ok := certsRaw.([]interface{}); ok {
-				for _, c := range certsList {
-					if str, ok := c.(string); ok {
-						certs = append(certs, str)
-					}
-				}
-			}
-		}
-		sheikh := &models.Sheikh{
-			ID:                 uuid.New(),
-			UserID:             user.ID,
-			Specialization:     strPtr(getString(data, "specialization")),
-			IjazahInfo:         strPtr(getString(data, "ijazah_info")),
-			Certifications:     certs,
-			VerificationStatus: "unverified",
-			CreatedAt:          now,
-			UpdatedAt:          now,
-		}
-		if yoe, ok := data["years_experience"]; ok {
-			if num, ok := yoe.(float64); ok {
-				years := int(num)
-				sheikh.YearsOfExperience = &years
-			}
-		}
-		return s.repo.CreateSheikh(sheikh)
-
-	case models.RoleCommunityOrganizer:
-		org := &models.Organizer{
-			ID:               uuid.New(),
-			UserID:           user.ID,
-			Name:             getString(data, "org_name"),
-			Description:      strPtr(getString(data, "community_focus")),
-			City:             strPtr(getString(data, "org_city")),
-			Country:          strPtr(getString(data, "org_country")),
-			OrganizationType: strPtr("community"),
-			Status:           "pending",
-			CreatedAt:        now,
-			UpdatedAt:        now,
-		}
-		if org.Name == "" {
-			org.Name = getString(data, "display_name")
-		}
-		return s.repo.CreateOrganizer(org)
-	}
-
+func (s *Service) createRoleSpecificRecords(_ *models.User, _ map[string]interface{}, _ string) error {
 	return nil
 }
 
@@ -665,11 +601,7 @@ func (s *Service) logAudit(userID *uuid.UUID, email *string, step *int, action, 
 
 func getWelcomeMessage(role string) string {
 	messages := map[string]string{
-		models.RoleOrganization:       "Your organization is now registered. You are part of a growing Ummah of knowledge and service. Your account will be reviewed shortly.",
-		models.RoleSheikh:             "Welcome, dear teacher. Your knowledge is a trust (amanah). May Allah benefit the Ummah through you.",
-		models.RoleNewMuslim:          "Welcome to Islam and to our community! We are honored to support your journey. You are never alone.",
-		models.RoleStudent:            "Welcome, seeker of knowledge. The Prophet ﷺ said: 'Whoever follows a path seeking knowledge, Allah will make his path to Paradise easy.'",
-		models.RoleCommunityOrganizer: "Welcome, community builder. Your efforts to unite the Ummah are a form of worship. Let us build together.",
+		models.RoleUser: "Welcome to Khair. Discover meaningful events and join your community.",
 	}
 	if msg, ok := messages[role]; ok {
 		return msg

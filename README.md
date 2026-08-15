@@ -176,7 +176,8 @@ The API will start on `http://localhost:8080`.
 ```bash
 cd frontend/khair_app
 flutter pub get
-flutter run -d chrome
+# Fixed localhost origin so Google sign-in does not fail with origin_mismatch.
+flutter run -d chrome --web-hostname localhost --web-port 7357 --dart-define=API_URL=http://localhost:8081/api/v1
 ```
 
 ### Building for Mobile

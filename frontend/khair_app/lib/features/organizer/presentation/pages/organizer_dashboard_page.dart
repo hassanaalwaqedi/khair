@@ -638,7 +638,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
 
   Widget _buildEventCard(Event event) {
     return KhairCard(
-      onTap: () => context.go('/events/${event.id}'),
+      onTap: () => _openEvent(event),
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(
@@ -695,7 +695,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               onSelected: (value) {
                 switch (value) {
                   case 'view':
-                    context.go('/events/${event.id}');
+                    _openEvent(event);
                     break;
                   case 'edit':
                     context.go('/organizer/events/${event.id}/edit');
@@ -707,6 +707,13 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         ),
       ),
     );
+  }
+
+  void _openEvent(Event event) {
+    final publicEvent = event.status == 'approved' || event.status == 'published';
+    context.go(publicEvent
+        ? '/events/${event.id}'
+        : '/organizer/events/${event.id}');
   }
 
   // ─── Sidebar ───────────────────────────────────────

@@ -55,3 +55,16 @@ func (s *Service) VerifyEventOwnership(eventID, orgID uuid.UUID) error {
 	}
 	return nil
 }
+
+// VerifyRegistrationEvent prevents a valid organizer from mutating a
+// registration that belongs to another event or organization.
+func (s *Service) VerifyRegistrationEvent(registrationID, eventID uuid.UUID) error {
+	registeredEventID, err := s.repo.GetRegistrationEventID(registrationID)
+	if err != nil {
+		return err
+	}
+	if registeredEventID != eventID {
+		return sql.ErrNoRows
+	}
+	return nil
+}

@@ -24,32 +24,69 @@ type EnhancedDescription struct {
 	MissingDetails []string `json:"missing_details"`
 }
 
-// EnhanceDescription rewrites an event description professionally
-func (s *DescriptionService) EnhanceDescription(ctx context.Context, title, rawDescription string, tags []string) (*EnhancedDescription, error) {
+// EnhanceOptions contains metadata for AI generation
+type EnhanceOptions struct {
+	Category  string
+	EventType string
+	Language  string
+	City      string
+	Audience  string
+	Tags      []string
+}
+
+// EnhanceDescription rewrites or generates an event description professionally
+func (s *DescriptionService) EnhanceDescription(ctx context.Context, title, rawDescription string, opts EnhanceOptions) (*EnhancedDescription, error) {
 	if !s.client.IsEnabled() {
 		return nil, fmt.Errorf("AI not enabled")
 	}
 
-	prompt := fmt.Sprintf(`You are a professional event copywriter. Enhance this event listing.
+	langInstruction := "Generate the response in English."
+	if opts.Language != "" {
+		langInstruction = fmt.Sprintf("CRITICAL: You MUST write the description and summary in %s. Do not use English unless the requested language is English.", opts.Language)
+	}
+
+	taskInstruction := "1. Rewrite the description professionally — improve clarity, emotional appeal, and readability."
+	if rawDescription == "" {
+		taskInstruction = "1. Generate a compelling, professional event description from scratch based on the title and provided metadata."
+	}
+
+	prompt := fmt.Sprintf(`You are a professional event copywriter. Enhance or create this event listing.
 
 EVENT TITLE: %s
 RAW DESCRIPTION: %s
+CATEGORY: %s
+EVENT TYPE: %s
+CITY: %s
+AUDIENCE: %s
 TAGS: %v
 
+%s
+
+KHAIR ORGANIZER STANDARDS (STRICT COMPLIANCE):
+Descriptions MUST NOT promote:
+- Explicit sexual content
+- Alcohol or drug promotion
+- Gambling
+- Hate speech
+- Extremist/violent advocacy
+- Fraudulent fundraising
+- Illegal activities
+If the title or description violates these standards, politely refuse in the description field.
+
 TASK:
-1. Rewrite the description professionally — improve clarity, emotional appeal, and readability.
+%s
 2. Generate a short preview summary (max 120 characters).
 3. Suggest missing details (e.g., agenda, prerequisites, dress code).
-4. Suggest relevant tags if the provided list is incomplete.
+4. Suggest up to 5 relevant tags (only alphanumeric and hyphens).
 
 Return ONLY a JSON object:
 {
   "title": "improved title or same if good",
-  "description": "professionally rewritten description",
+  "description": "professionally rewritten/generated description",
   "short_summary": "120-char max preview",
   "suggested_tags": ["tag1", "tag2"],
   "missing_details": ["what's missing"]
-}`, title, rawDescription, tags)
+}`, title, rawDescription, opts.Category, opts.EventType, opts.City, opts.Audience, opts.Tags, langInstruction, taskInstruction)
 
 	var result EnhancedDescription
 	if err := s.client.GenerateJSON(ctx, prompt, 0.5, &result); err != nil {
@@ -78,7 +115,7 @@ func (s *DescriptionService) DetectCategory(ctx context.Context, title, descript
 EVENT TITLE: %s
 DESCRIPTION: %s
 
-VALID CATEGORIES: conference, workshop, seminar, festival, meetup, hackathon, webinar, networking, charity, sports
+VALID CATEGORIES: community, charity, workshop, conference, seminar, lectures, meetup, festival, webinar, retreat, family, youth, knowledge, quran, networking, hackathon, sports, technology, education, business, entrepreneurship, career, health, wellness, arts, culture, environment, volunteering, food, travel, entertainment, parenting, other
 
 TASK:
 1. Detect the most likely category from the valid list.

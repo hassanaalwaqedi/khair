@@ -4,14 +4,14 @@ class AppColors {
   AppColors._();
 
   // ── Primary Accent (Blue) ──
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryLight = Color(0xFF60A5FA);
-  static const Color primaryDark = Color(0xFF1D4ED8);
+  static const Color primary = Color(0xFFF43F75);
+  static const Color primaryLight = Color(0xFFFF7AA2);
+  static const Color primaryDark = Color(0xFFE63268);
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   // ── Secondary (Gold — premium feel) ──
-  static const Color secondary = Color(0xFFD5B26B);
-  static const Color onSecondary = Color(0xFF3C2E17);
+  static const Color secondary = Color(0xFFC75A7C);
+  static const Color onSecondary = Color(0xFFFFFFFF);
 
   // ── Islamic Identity (Green — limited use) ──
   static const Color islamicGreen = Color(0xFF16A34A);
@@ -19,29 +19,29 @@ class AppColors {
   static const Color islamicGreenDark = Color(0xFF166534);
 
   // ── Light Theme Surfaces ──
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color surface = Color(0xFFF6F7F8);
+  static const Color background = Color(0xFFFCFAFB);
+  static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
-  static const Color border = Color(0xFFE5E7EB);
-  static const Color divider = Color(0xFFF3F4F6);
+  static const Color border = Color(0xFFE8E3E7);
+  static const Color divider = Color(0xFFF5EFF2);
 
   // ── Dark Theme Surfaces ──
-  static const Color darkBackground = Color(0xFF0B0F14);
-  static const Color darkSurface = Color(0xFF111827);
-  static const Color darkSurfaceElevated = Color(0xFF1F2937);
-  static const Color darkBorder = Color(0xFF374151);
-  static const Color darkDivider = Color(0xFF1F2937);
+  static const Color darkBackground = Color(0xFF101014);
+  static const Color darkSurface = Color(0xFF19181E);
+  static const Color darkSurfaceElevated = Color(0xFF211F26);
+  static const Color darkBorder = Color(0xFF302D35);
+  static const Color darkDivider = Color(0xFF242129);
 
   // ── Text (Light) ──
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textTertiary = Color(0xFF9CA3AF);
-  static const Color onSurface = Color(0xFF111827);
+  static const Color textPrimary = Color(0xFF171126);
+  static const Color textSecondary = Color(0xFF726B7B);
+  static const Color textTertiary = Color(0xFF9B94A0);
+  static const Color onSurface = Color(0xFF171126);
 
   // ── Text (Dark) ──
-  static const Color darkTextPrimary = Color(0xFFF9FAFB);
-  static const Color darkTextSecondary = Color(0xFF9CA3AF);
-  static const Color darkTextTertiary = Color(0xFF6B7280);
+  static const Color darkTextPrimary = Color(0xFFF8F6F8);
+  static const Color darkTextSecondary = Color(0xFFC8C1CA);
+  static const Color darkTextTertiary = Color(0xFF938B96);
 
   // ── Semantic ──
   static const Color success = Color(0xFF22C55E);
@@ -66,7 +66,7 @@ class AppColors {
   static const ColorScheme darkScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: primaryLight,
-    onPrimary: Color(0xFF0B0F14),
+    onPrimary: Color(0xFF101014),
     secondary: secondary,
     onSecondary: onSecondary,
     error: error,

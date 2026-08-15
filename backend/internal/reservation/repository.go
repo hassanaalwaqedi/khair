@@ -47,10 +47,14 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 	var status string
 	var startDate time.Time
 	var endDate sql.NullTime
+	var registrationDeadline sql.NullTime
 	err = tx.QueryRow(`
-		SELECT capacity, reserved_count, status, start_date, end_date FROM events WHERE id = $1 FOR UPDATE`,
+		SELECT capacity, reserved_count, status, start_date, end_date,
+		       registration_deadline
+		FROM events WHERE id = $1 FOR UPDATE`,
 		eventID,
-	).Scan(&capacity, &reservedCount, &status, &startDate, &endDate)
+	).Scan(&capacity, &reservedCount, &status, &startDate, &endDate,
+		&registrationDeadline)
 	if err != nil {
 		return nil, errors.New("event not found")
 	}
@@ -68,6 +72,12 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		}
 	} else if startDate.Before(now) {
 		return nil, errors.New("this event has already ended")
+	}
+
+	// Enforce the organizer's registration deadline in the transaction. The
+	// frontend state is only a presentation hint; this check is authoritative.
+	if registrationDeadline.Valid && !now.Before(registrationDeadline.Time) {
+		return nil, errors.New("registration for this event is closed")
 	}
 
 	// Check capacity
@@ -299,4 +309,32 @@ func (r *Repository) GetEventAttendeeUserIDs(eventID uuid.UUID) ([]uuid.UUID, er
 		userIDs = append(userIDs, uid)
 	}
 	return userIDs, nil
+}
+
+// StoreAnnouncement persists organizer communication before it is delivered.
+func (r *Repository) StoreAnnouncement(eventID, organizerUserID uuid.UUID, title, announcementType, message string, includeLink bool) (uuid.UUID, error) {
+	var id uuid.UUID
+	err := r.db.QueryRow(`
+		INSERT INTO event_announcements (event_id, organizer_user_id, title, announcement_type, message, include_link)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		eventID, organizerUserID, title, announcementType, message, includeLink,
+	).Scan(&id)
+	return id, err
+}
+
+func (r *Repository) QueueAnnouncementDelivery(announcementID, userID uuid.UUID) error {
+	_, err := r.db.Exec(`INSERT INTO event_announcement_deliveries (announcement_id, user_id)
+		VALUES ($1, $2) ON CONFLICT (announcement_id, user_id) DO NOTHING`, announcementID, userID)
+	return err
+}
+
+// "dispatched" means the message was handed to the push service; it is not a
+// fabricated device receipt.
+func (r *Repository) UpdateAnnouncementDelivery(announcementID, userID uuid.UUID, inAppStatus, pushStatus string) error {
+	_, err := r.db.Exec(`UPDATE event_announcement_deliveries
+		SET in_app_status=$3, push_status=$4,
+			delivered_at=CASE WHEN $3='delivered' THEN NOW() ELSE delivered_at END,
+			updated_at=NOW()
+		WHERE announcement_id=$1 AND user_id=$2`, announcementID, userID, inAppStatus, pushStatus)
+	return err
 }

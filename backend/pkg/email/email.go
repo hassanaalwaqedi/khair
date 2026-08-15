@@ -18,10 +18,11 @@ var templateFS embed.FS
 
 // Service handles email delivery via Resend or SendGrid.
 type Service struct {
-	provider  string // "resend" or "sendgrid"
-	apiKey    string
-	fromEmail string
-	fromName  string
+	provider     string // "resend" or "sendgrid"
+	apiKey       string
+	fromEmail    string
+	fromName     string
+	brandLogoURL string
 }
 
 // NewService creates an email service using the configured provider.
@@ -35,10 +36,11 @@ func NewService(cfg config.EmailConfig) *Service {
 		}
 		log.Printf("[INFO] Email provider: Resend (from: %s)", cfg.FromEmail)
 		return &Service{
-			provider:  "resend",
-			apiKey:    cfg.ResendKey,
-			fromEmail: cfg.FromEmail,
-			fromName:  cfg.FromName,
+			provider:     "resend",
+			apiKey:       cfg.ResendKey,
+			fromEmail:    cfg.FromEmail,
+			fromName:     cfg.FromName,
+			brandLogoURL: cfg.BrandLogoURL,
 		}
 
 	default: // "sendgrid"
@@ -52,10 +54,11 @@ func NewService(cfg config.EmailConfig) *Service {
 		}
 		log.Printf("[INFO] Email provider: SendGrid (from: %s)", from)
 		return &Service{
-			provider:  "sendgrid",
-			apiKey:    cfg.SendGridKey,
-			fromEmail: from,
-			fromName:  cfg.FromName,
+			provider:     "sendgrid",
+			apiKey:       cfg.SendGridKey,
+			fromEmail:    from,
+			fromName:     cfg.FromName,
+			brandLogoURL: cfg.BrandLogoURL,
 		}
 	}
 }
@@ -94,7 +97,8 @@ func (s *Service) SendVerificationEmail(email, code, language string) error {
 	}
 
 	data := map[string]string{
-		"{{CODE}}": code,
+		"{{CODE}}":           code,
+		"{{BRAND_LOGO_URL}}": s.brandLogoURL,
 	}
 
 	body, err := s.loadTemplate("verification", lang, data)
@@ -115,8 +119,9 @@ func (s *Service) SendNotificationEmail(email, title, body, language string) err
 	lang := supportedLanguage(language)
 
 	data := map[string]string{
-		"{{TITLE}}": title,
-		"{{BODY}}":  body,
+		"{{TITLE}}":          title,
+		"{{BODY}}":           body,
+		"{{BRAND_LOGO_URL}}": s.brandLogoURL,
 	}
 
 	htmlBody, err := s.loadTemplate("notification", lang, data)
