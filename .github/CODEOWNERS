@@ -1,0 +1,11 @@
+# CODEOWNERS
+# 
+# This file will automatically request reviews from the specified teams/individuals
+# when PRs modify matching files.
+#
+# NOTE: To be configured when the engineering team's GitHub accounts are finalized.
+#
+# Example usage:
+# *       @global-owner1 @global-owner2
+# /backend/   @backend-team
+# /frontend/  @mobile-team
