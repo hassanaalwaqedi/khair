@@ -8,3 +8,6 @@ export PATH="$PATH:$HOME/flutter/bin"
 cd frontend/khair_app
 flutter pub get
 flutter build web --release --base-href / --dart-define=API_URL="$API_URL" --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID"
+
+# Create Cloudflare Pages redirect rules for SPA routing
+echo "/* /index.html 200" > build/web/_redirects
