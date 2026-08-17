@@ -21,6 +21,7 @@ abstract class EventsRepository {
       String id, UpdateEventParams params);
   Future<Either<Failure, void>> deleteEvent(String id);
   Future<Either<Failure, Event>> submitForReview(String id);
+  Future<Either<Failure, Map<String, dynamic>>> getMeetingAccess(String id);
 }
 
 class CreateEventParams {

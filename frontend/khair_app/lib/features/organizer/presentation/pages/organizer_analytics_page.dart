@@ -26,6 +26,15 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
     }
   }
 
+  Future<void> _refreshEvents() async {
+    final bloc = context.read<OrganizerBloc>();
+    final completed = bloc.stream.firstWhere(
+      (state) => state.eventsStatus != OrganizerStatus.loading,
+    );
+    bloc.add(const LoadOrganizerEvents());
+    await completed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -43,47 +52,33 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
           if (state.eventsStatus == OrganizerStatus.failure &&
               state.events.isEmpty) {
             return KhairErrorState(
-              message:
-                  state.errorMessage ?? 'Failed to load analytics data.',
+              message: state.errorMessage ?? 'Failed to load analytics data.',
               onRetry: () {
-                context
-                    .read<OrganizerBloc>()
-                    .add(const LoadOrganizerEvents());
+                context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
               },
             );
           }
 
           final events = state.events;
           final total = events.length;
-          final approved =
-              events.where((e) => e.status == 'approved').length;
-          final pending =
-              events.where((e) => e.status == 'pending').length;
-          final rejected =
-              events.where((e) => e.status == 'rejected').length;
+          final approved = events.where((e) => e.status == 'approved').length;
+          final pending = events.where((e) => e.status == 'pending').length;
+          final rejected = events.where((e) => e.status == 'rejected').length;
 
           // Group events by type
           final typeMap = <String, int>{};
           for (final event in events) {
-            typeMap[event.eventType] =
-                (typeMap[event.eventType] ?? 0) + 1;
+            typeMap[event.eventType] = (typeMap[event.eventType] ?? 0) + 1;
           }
 
           // Upcoming events
           final now = DateTime.now();
-          final upcoming =
-              events.where((e) => e.startDate.isAfter(now)).length;
-          final past =
-              events.where((e) => e.startDate.isBefore(now)).length;
+          final upcoming = events.where((e) => e.startDate.isAfter(now)).length;
+          final past = events.where((e) => e.startDate.isBefore(now)).length;
 
           return RefreshIndicator(
             color: KhairColors.primary,
-            onRefresh: () async {
-              context
-                  .read<OrganizerBloc>()
-                  .add(const LoadOrganizerEvents());
-              await Future.delayed(const Duration(milliseconds: 800));
-            },
+            onRefresh: _refreshEvents,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24),
@@ -241,8 +236,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                     )
                   else
                     ...typeMap.entries.map((entry) {
-                      final fraction =
-                          total > 0 ? entry.value / total : 0.0;
+                      final fraction = total > 0 ? entry.value / total : 0.0;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Container(
@@ -307,9 +301,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
   String _formatEventType(String type) {
     return type
         .split('_')
-        .map((w) => w.isEmpty
-            ? ''
-            : '${w[0].toUpperCase()}${w.substring(1)}')
+        .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
   }
 }

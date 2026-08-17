@@ -137,6 +137,17 @@ func (s *Service) ListOrgEvents(orgID uuid.UUID, status *string, page, pageSize 
 	return s.repo.ListOrgEvents(orgID, status, page, pageSize)
 }
 
+// GetEventAttendees lists attendees for an event
+func (s *Service) GetEventAttendees(orgID, eventID uuid.UUID, page, pageSize int, search string) (*EventAttendeesResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.repo.GetEventAttendees(orgID, eventID, page, pageSize, search)
+}
+
 // CreateEvent creates a new event for the organization
 func (s *Service) CreateEvent(orgID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
 	if req.Capacity != nil && *req.Capacity < 1 {

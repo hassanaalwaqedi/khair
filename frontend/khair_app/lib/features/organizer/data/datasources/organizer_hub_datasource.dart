@@ -45,7 +45,8 @@ class OrganizerHubDataSource {
       '/org/$organizationId/events/$eventId/attendees',
       queryParameters: const {'page_size': 100, 'status': 'confirmed'},
     );
-    final raw = response.data['data'] as List<dynamic>? ?? const [];
+    final data = response.data['data'] as Map<String, dynamic>? ?? {};
+    final raw = data['attendees'] as List<dynamic>? ?? const [];
     return raw.map((item) => Map<String, dynamic>.from(item as Map)).toList();
   }
 }

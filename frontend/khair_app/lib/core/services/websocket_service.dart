@@ -1,28 +1,39 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+import '../config/api_config.dart';
 
 /// WebSocket service for real-time event updates and notifications.
 ///
 /// Connects to the backend WS endpoint with JWT auth.
 /// Exposes a broadcast stream of typed messages.
-class WebSocketService {
+class WebSocketService with WidgetsBindingObserver {
   static final WebSocketService _instance = WebSocketService._();
   static WebSocketService get instance => _instance;
-  WebSocketService._();
+  WebSocketService._() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      debugPrint('[WS] App paused/detached, disconnecting');
+      disconnect();
+    } else if (state == AppLifecycleState.resumed) {
+      debugPrint('[WS] App resumed, reconnecting');
+      connect();
+    }
+  }
 
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
   bool _isConnecting = false;
   static const _maxReconnectAttempts = 10;
-  static const _baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'https://khair.it.com/api/v1',
-  );
 
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
 
@@ -47,7 +58,7 @@ class WebSocketService {
       }
 
       // Convert HTTP URL to WS URL
-      final wsUrl = _baseUrl
+      final wsUrl = ApiConfig.apiBaseUrl
           .replaceFirst('https://', 'wss://')
           .replaceFirst('http://', 'ws://');
 

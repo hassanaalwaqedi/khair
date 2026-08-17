@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/utils/image_upload_validator.dart';
 import '../../data/organizer_application_api.dart';
 
 /// The server-backed organizer trust gateway. A draft only exists after the
@@ -58,6 +59,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   bool _loading = true;
   bool _saving = false;
   bool _submitting = false;
+  bool _isTransitioning = false;
   bool _showStatus = false;
   String? _error;
 
@@ -239,14 +241,21 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   }
 
   Future<void> _continue() async {
+    if (_isTransitioning) return;
+    if (_step >= _stepTitles.length - 1) return;
     final validation = _validateStep(_step);
     if (validation != null) {
       _snack(validation);
       return;
     }
-    if (!await _save()) return;
-    if (!mounted) return;
-    setState(() => _step += 1);
+    setState(() => _isTransitioning = true);
+    try {
+      if (!await _save()) return;
+      if (!mounted) return;
+      setState(() => _step += 1);
+    } finally {
+      if (mounted) setState(() => _isTransitioning = false);
+    }
   }
 
   String? _validateStep(int step) {
@@ -291,15 +300,17 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   }
 
   Future<void> _submit() async {
+    if (_isTransitioning || _submitting) return;
     final validation = _validateStep(2);
     if (validation != null) {
       setState(() => _step = 2);
       _snack(validation);
       return;
     }
-    if (!await _save()) return;
-    setState(() => _submitting = true);
+    setState(() => _isTransitioning = true);
     try {
+      if (!await _save()) return;
+      setState(() => _submitting = true);
       final status = _application?['status']?.toString();
       final submitted = await _api.submit(resubmit: status == 'needs_revision');
       if (!mounted) return;
@@ -313,18 +324,31 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         _snack(_errorText(error, 'We could not submit your application.'));
       }
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _isTransitioning = false;
+        });
+      }
     }
   }
 
   Future<void> _pickImage({required bool representativePhoto}) async {
     final file = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 2200,
-      imageQuality: 90,
+      maxWidth: 1600,
+      imageQuality: 85,
     );
     if (file == null) return;
     try {
+      final validation = validateImageUpload(
+        filename: file.name,
+        byteLength: await file.length(),
+      );
+      if (validation != null) {
+        _snack(validation);
+        return;
+      }
       final bytes = await file.readAsBytes();
       final updated = await _api.uploadImage(
         bytes: bytes,
@@ -465,91 +489,103 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     }
     if (_showStatus) return _statusPage();
 
-    return Scaffold(
-      backgroundColor: const Color(0xfffdfbfc),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.go('/'),
-          icon: const Icon(Icons.close_rounded),
-          tooltip: 'Close organizer application',
-        ),
-        title: const Text('Become an organizer'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(_saving ? 'Saving…' : 'Draft saved securely',
-                  style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            ),
+    return PopScope(
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_step > 0) {
+          setState(() => _step -= 1);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xfffdfbfc),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.close_rounded),
+            tooltip: 'Close organizer application',
           ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) => Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 116),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _progress(),
-                    const SizedBox(height: 30),
-                    Text(_stepTitles[_step],
-                        style: const TextStyle(
-                            fontSize: 31,
-                            fontWeight: FontWeight.w800,
-                            color: _ink)),
-                    const SizedBox(height: 8),
-                    Text(_stepDescriptions[_step],
-                        style: const TextStyle(
-                            fontSize: 16, color: Color(0xff716b7d))),
-                    const SizedBox(height: 24),
-                    _stepBody(),
-                  ],
+          title: const Text('Become an organizer'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text(_saving ? 'Saving…' : 'Draft saved securely',
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.black54)),
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 980),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 116),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _progress(),
+                      const SizedBox(height: 30),
+                      Text(_stepTitles[_step],
+                          style: const TextStyle(
+                              fontSize: 31,
+                              fontWeight: FontWeight.w800,
+                              color: _ink)),
+                      const SizedBox(height: 8),
+                      Text(_stepDescriptions[_step],
+                          style: const TextStyle(
+                              fontSize: 16, color: Color(0xff716b7d))),
+                      const SizedBox(height: 24),
+                      _stepBody(),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-          decoration: const BoxDecoration(color: Colors.white, boxShadow: [
-            BoxShadow(
-                color: Color(0x16000000), blurRadius: 14, offset: Offset(0, -3))
-          ]),
-          child: Row(children: [
-            if (_step > 0)
-              TextButton.icon(
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+            decoration: const BoxDecoration(color: Colors.white, boxShadow: [
+              BoxShadow(
+                  color: Color(0x16000000),
+                  blurRadius: 14,
+                  offset: Offset(0, -3))
+            ]),
+            child: Row(children: [
+              if (_step > 0)
+                TextButton.icon(
+                  onPressed:
+                      _submitting ? null : () => setState(() => _step -= 1),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back'),
+                ),
+              const Spacer(),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                    backgroundColor: _pink, minimumSize: const Size(172, 52)),
                 onPressed:
-                    _submitting ? null : () => setState(() => _step -= 1),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back'),
+                    _submitting ? null : (_step == 3 ? _submit : _continue),
+                icon: _submitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : Icon(_step == 3
+                        ? Icons.verified_rounded
+                        : Icons.arrow_forward_rounded),
+                label: Text(_step == 3 ? 'Submit for review' : 'Continue'),
               ),
-            const Spacer(),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                  backgroundColor: _pink, minimumSize: const Size(172, 52)),
-              onPressed:
-                  _submitting ? null : (_step == 3 ? _submit : _continue),
-              icon: _submitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : Icon(_step == 3
-                      ? Icons.verified_rounded
-                      : Icons.arrow_forward_rounded),
-              label: Text(_step == 3 ? 'Submit for review' : 'Continue'),
-            ),
-          ]),
+            ]),
+          ),
         ),
       ),
     );
@@ -726,7 +762,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                 color: Colors.transparent,
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.verified_user_outlined, color: _pink),
+                  leading:
+                      const Icon(Icons.verified_user_outlined, color: _pink),
                   title: Text(_string(file['original_filename'],
                       fallback: 'Secure document')),
                   subtitle: Text('${_string(file['file_type'])} · private'),
@@ -895,13 +932,20 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     final isApproved = status == 'approved';
     final needsRevision = status == 'needs_revision';
     final rejected = status == 'rejected';
+    final suspended = status == 'suspended';
+    final isDraft = status == 'draft';
+    
     final title = isApproved
         ? 'You are approved to organize'
         : needsRevision
             ? 'Your application needs changes'
             : rejected
                 ? 'Your application was not approved'
-                : 'Your application is under review';
+                : suspended
+                    ? 'Your organizer account is suspended'
+                    : isDraft
+                        ? 'Your application is incomplete'
+                        : 'Your application is under review';
     final message = isApproved
         ? 'Organizer tools are now available on your account.'
         : needsRevision
@@ -912,14 +956,23 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                 ? _string(_application?['admin_user_message'],
                     fallback:
                         'This application is closed. Contact Khair support if you need help with the decision.')
-                : 'Your details, evidence, and event plan are securely with the Khair review team.';
+                : suspended
+                    ? _string(_application?['admin_user_message'],
+                        fallback: 'Contact Khair support for more information.')
+                    : isDraft
+                        ? 'Complete and submit your application to start organizing events.'
+                        : 'Your details, evidence, and event plan are securely with the Khair review team.';
     final icon = isApproved
         ? Icons.verified_rounded
         : needsRevision
-            ? Icons.edit_note_rounded
+            ? Icons.edit_note_outlined
             : rejected
                 ? Icons.cancel_outlined
-                : Icons.hourglass_top_rounded;
+                : suspended
+                    ? Icons.block_flipped
+                    : isDraft
+                        ? Icons.edit_document
+                        : Icons.hourglass_top_rounded;
     return Scaffold(
       backgroundColor: const Color(0xfffdfbfc),
       appBar: AppBar(
@@ -974,11 +1027,11 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                                 description:
                                     _application!['description'] as String?,
                                 status: 'approved',
-                                createdAt: DateTime.tryParse(_string(
-                                        _application!['created_at'])) ??
+                                createdAt: DateTime.tryParse(
+                                        _string(_application!['created_at'])) ??
                                     DateTime.now(),
-                                updatedAt: DateTime.tryParse(_string(
-                                        _application!['updated_at'])) ??
+                                updatedAt: DateTime.tryParse(
+                                        _string(_application!['updated_at'])) ??
                                     DateTime.now(),
                               );
                               context
@@ -1067,7 +1120,12 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                 height: 96,
                 width: 96,
                 child: bytes != null
-                    ? Image.memory(bytes, fit: BoxFit.cover)
+                    ? Image.memory(
+                        bytes,
+                        fit: BoxFit.cover,
+                        cacheWidth: 192,
+                        cacheHeight: 192,
+                      )
                     : Container(
                         color: Colors.white,
                         child: Icon(

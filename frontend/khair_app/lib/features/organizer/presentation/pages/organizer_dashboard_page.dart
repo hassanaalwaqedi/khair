@@ -35,6 +35,21 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
     bloc.add(const LoadAdminMessages());
   }
 
+  Future<void> _refreshDashboard() async {
+    final bloc = context.read<OrganizerBloc>();
+    final profileComplete = bloc.stream.firstWhere(
+      (state) => state.profileStatus != OrganizerStatus.loading,
+    );
+    final eventsComplete = bloc.stream.firstWhere(
+      (state) => state.eventsStatus != OrganizerStatus.loading,
+    );
+    final messagesComplete = bloc.stream.firstWhere(
+      (state) => state.messagesStatus != OrganizerStatus.loading,
+    );
+    _loadDashboardData();
+    await Future.wait([profileComplete, eventsComplete, messagesComplete]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +66,9 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               state.organizer == null) {
             // Check if user hasn't registered as organizer yet
             final msg = state.errorMessage ?? '';
-            if (msg.contains('no rows') || msg.contains('not found') || msg.contains('Profile not found')) {
+            if (msg.contains('no rows') ||
+                msg.contains('not found') ||
+                msg.contains('Profile not found')) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(32),
@@ -99,10 +116,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
 
           return RefreshIndicator(
             color: KhairColors.primary,
-            onRefresh: () async {
-              _loadDashboardData();
-              await Future.delayed(const Duration(milliseconds: 800));
-            },
+            onRefresh: _refreshDashboard,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth > 900;
@@ -148,8 +162,9 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
       title: BlocBuilder<OrganizerBloc, OrganizerState>(
         buildWhen: (prev, curr) => prev.organizer != curr.organizer,
         builder: (context, state) {
-          return Text(
-              state.organizer != null ? context.l10n.orgDashboardTitle : context.l10n.orgOrganizerDashboard);
+          return Text(state.organizer != null
+              ? context.l10n.orgDashboardTitle
+              : context.l10n.orgOrganizerDashboard);
         },
       ),
       actions: [
@@ -283,7 +298,8 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         const SizedBox(height: 24),
 
         // Quick Actions
-        Text(context.l10n.orgQuickActions, style: KhairTypography.headlineSmall),
+        Text(context.l10n.orgQuickActions,
+            style: KhairTypography.headlineSmall),
         const SizedBox(height: 16),
         _buildQuickActions(isApproved),
         const SizedBox(height: 32),
@@ -416,7 +432,9 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
             DashboardCard(
               icon: Icons.add_circle_outline_rounded,
               title: context.l10n.orgCreateEvent,
-              subtitle: isApproved ? context.l10n.orgAddNewEvent : context.l10n.orgApprovalRequired,
+              subtitle: isApproved
+                  ? context.l10n.orgAddNewEvent
+                  : context.l10n.orgApprovalRequired,
               disabled: !isApproved,
               iconColor: KhairColors.primary,
               onTap: () => context.go('/organizer/events/create'),
@@ -617,7 +635,8 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           Icon(Icons.event_note_outlined,
               size: 48, color: KhairColors.textTertiary),
           const SizedBox(height: 16),
-          Text(context.l10n.orgNoEventsYet, style: KhairTypography.headlineSmall),
+          Text(context.l10n.orgNoEventsYet,
+              style: KhairTypography.headlineSmall),
           const SizedBox(height: 8),
           Text(
             context.l10n.orgCreateFirstEvent,
@@ -710,10 +729,10 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
   }
 
   void _openEvent(Event event) {
-    final publicEvent = event.status == 'approved' || event.status == 'published';
-    context.go(publicEvent
-        ? '/events/${event.id}'
-        : '/organizer/events/${event.id}');
+    final publicEvent =
+        event.status == 'approved' || event.status == 'published';
+    context.go(
+        publicEvent ? '/events/${event.id}' : '/organizer/events/${event.id}');
   }
 
   // ─── Sidebar ───────────────────────────────────────

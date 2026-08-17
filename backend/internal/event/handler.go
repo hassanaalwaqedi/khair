@@ -51,6 +51,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	authEvents.Use(authMiddleware)
 	{
 		authEvents.GET("/:id/details", h.GetByIDAuth)
+		authEvents.GET("/:id/meeting-access", h.GetMeetingAccess)
 		authEvents.GET("/:id/saved", h.GetSavedStatus)
 		authEvents.POST("/:id/save", h.SaveEvent)
 		authEvents.DELETE("/:id/save", h.UnsaveEvent)
@@ -344,6 +345,76 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 	}
 
 	response.Success(c, resp)
+}
+
+// MeetingAccessResponse represents the secure meeting link payload
+type MeetingAccessResponse struct {
+	Available bool   `json:"available"`
+	Provider  string `json:"provider,omitempty"`
+	URL       string `json:"url,omitempty"`
+}
+
+// GetMeetingAccess returns the meeting URL for an online event if the user is authorized.
+func (h *Handler) GetMeetingAccess(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid event ID")
+		return
+	}
+
+	event, err := h.service.GetByID(id)
+	if err != nil {
+		response.NotFound(c, "Event not found")
+		return
+	}
+
+	if !event.IsOnline {
+		response.BadRequest(c, "Not an online event")
+		return
+	}
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	isAuthorized := false
+
+	// Organizer check
+	if event.OrganizerID == userID {
+		isAuthorized = true
+	}
+
+	// Attendee check (if not already authorized)
+	if !isAuthorized {
+		regStatus, _ := h.service.repo.CheckUserRegistration(userID, id)
+		if regStatus == "confirmed" {
+			isAuthorized = true
+		}
+	}
+
+	// Admin check (if we had an easy admin role check on the context, we would do it here. 
+	// For now, rely on organizer/attendee logic).
+
+	if !isAuthorized {
+		response.Error(c, http.StatusForbidden, "Not authorized to access meeting link")
+		return
+	}
+
+	if event.OnlineLink == nil || *event.OnlineLink == "" {
+		response.Success(c, MeetingAccessResponse{
+			Available: false,
+		})
+		return
+	}
+
+	provider := "unknown"
+	if event.OnlinePlatform != nil {
+		provider = *event.OnlinePlatform
+	}
+
+	response.Success(c, MeetingAccessResponse{
+		Available: true,
+		Provider:  provider,
+		URL:       *event.OnlineLink,
+	})
 }
 
 // Create creates a new event

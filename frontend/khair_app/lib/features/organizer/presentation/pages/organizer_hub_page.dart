@@ -51,6 +51,16 @@ class _OrganizerHubPageState extends State<OrganizerHubPage> {
       setState(() => _dashboard = dashboard);
     } catch (error) {
       if (!mounted) return;
+      if (error is DioException) {
+        if (error.response?.statusCode == 403) {
+          context.go('/organizer/apply');
+          return;
+        }
+        if (error.response?.statusCode == 401) {
+          context.go('/login?next=${Uri.encodeComponent('/organizer')}');
+          return;
+        }
+      }
       setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -1169,6 +1179,13 @@ class _LineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (points.isEmpty) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        child: const Text('No performance data yet.', style: TextStyle(color: _HubColors.muted)),
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -1372,21 +1389,62 @@ class _AttendeeProgress extends StatelessWidget {
     final ratio = capacity != null && capacity > 0
         ? (attendees / capacity).clamp(0.0, 1.0)
         : null;
+        
+    final preview = event['attendee_preview'] as List? ?? [];
+        
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.groups_2_outlined, size: 17, color: _muted(context)),
-            const SizedBox(width: 7),
-            Text(
-              capacity == null
-                  ? '$attendees confirmed attendees'
-                  : '$attendees / $capacity confirmed attendees',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-          ],
-        ),
+        if (attendees == 0)
+          Row(
+            children: [
+              Icon(Icons.groups_2_outlined, size: 17, color: _muted(context)),
+              const SizedBox(width: 7),
+              Text(
+                'No attendees yet. They will appear here.',
+                style: TextStyle(color: _muted(context), fontSize: 13),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              SizedBox(
+                height: 28,
+                width: preview.isEmpty ? 0 : (preview.length * 20.0) + 8,
+                child: Stack(
+                  children: List.generate(preview.length, (index) {
+                    final p = preview[index] as Map? ?? {};
+                    final avatar = p['avatar_url']?.toString();
+                    return Positioned(
+                      left: index * 20.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: CircleAvatar(
+                          radius: 12,
+                          backgroundColor: _HubColors.softRose,
+                          backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                          child: avatar == null
+                              ? const Icon(Icons.person, size: 14, color: _HubColors.rose)
+                              : null,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              if (preview.isNotEmpty) const SizedBox(width: 8),
+              Text(
+                capacity == null
+                    ? '$attendees confirmed attendees'
+                    : '$attendees / $capacity confirmed attendees',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ],
+          ),
         if (ratio != null) ...[
           const SizedBox(height: 8),
           ClipRRect(
@@ -1653,16 +1711,20 @@ class _AttendeeSheet extends StatelessWidget {
                     final name = _asString(attendee['display_name'],
                         fallback:
                             _asString(attendee['email'], fallback: 'Attendee'));
+                    final avatar = attendee['avatar_url']?.toString();
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
                         backgroundColor: _HubColors.softRose,
-                        child: Text(name.characters.first.toUpperCase(),
-                            style: const TextStyle(color: _HubColors.rose)),
+                        backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                        child: avatar == null 
+                            ? Text(name.characters.first.toUpperCase(),
+                                style: const TextStyle(color: _HubColors.rose))
+                            : null,
                       ),
                       title: Text(name,
                           style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(_relativeDate(attendee['registered_at'])),
+                      subtitle: Text(_relativeDate(attendee['joined_at'] ?? attendee['registered_at'])),
                       trailing: attendee['attended'] == true
                           ? const Icon(Icons.check_circle,
                               color: _HubColors.success, size: 19)

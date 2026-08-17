@@ -103,11 +103,11 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 			reg := &models.EventRegistration{
 				UserID:        userID,
 				EventID:       eventID,
-				Status:        "pending",
+				Status:        "confirmed",
 				ReservedUntil: &reservedUntil,
 			}
 			_, err = tx.Exec(`
-				UPDATE event_registrations SET status = 'pending', reserved_until = $1, updated_at = NOW()
+				UPDATE event_registrations SET status = 'confirmed', reserved_until = $1, updated_at = NOW()
 				WHERE user_id = $2 AND event_id = $3`,
 				reservedUntil, userID, eventID)
 			if err != nil {
@@ -129,7 +129,7 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		ID:            uuid.New(),
 		UserID:        userID,
 		EventID:       eventID,
-		Status:        "pending",
+		Status:        "confirmed",
 		ReservedUntil: &reservedUntil,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -204,7 +204,7 @@ func (r *Repository) GetUserReservations(userID uuid.UUID) ([]EventReservationWi
 	}
 	defer rows.Close()
 
-	var results []EventReservationWithDetails
+	results := make([]EventReservationWithDetails, 0)
 	for rows.Next() {
 		var r EventReservationWithDetails
 		err := rows.Scan(&r.ID, &r.UserID, &r.EventID, &r.Status, &r.ReservedUntil, &r.CreatedAt,

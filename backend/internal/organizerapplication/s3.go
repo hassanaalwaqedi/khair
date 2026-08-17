@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -89,7 +90,8 @@ func (s *S3Store) Put(ctx context.Context, key string, data []byte, contentType 
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("S3 upload returned status %d", response.StatusCode)
+		bodyBytes, _ := io.ReadAll(response.Body)
+		return fmt.Errorf("S3 upload returned status %d: %s", response.StatusCode, string(bodyBytes))
 	}
 	return nil
 }

@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_components.dart';
+import '../../../../core/widgets/discard_changes_dialog.dart';
+import '../../../../core/config/api_config.dart';
+import '../../../../core/di/injection.dart';
 import '../../domain/entities/organizer.dart';
 import '../../domain/repositories/organizer_repository.dart';
 import '../bloc/organizer_bloc.dart';
@@ -30,6 +35,15 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
   late TextEditingController _countryController;
 
   bool _isInitialized = false;
+  bool _hydrating = false;
+  bool _allowPop = false;
+  bool _discardDialogOpen = false;
+  bool _saveRequested = false;
+  List<String> _initialValues = const [];
+
+  bool _uploadingImage = false;
+  String? _logoUrl;
+  Uint8List? _logoPreview;
 
   @override
   void initState() {
@@ -41,6 +55,9 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
     _websiteController = TextEditingController();
     _cityController = TextEditingController();
     _countryController = TextEditingController();
+    for (final controller in _controllers) {
+      controller.addListener(_onFieldChanged);
+    }
 
     // Load profile if not already loaded
     final state = context.read<OrganizerBloc>().state;
@@ -52,6 +69,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
   }
 
   void _populateFields(Organizer organizer) {
+    _hydrating = true;
     _nameController.text = organizer.name;
     _descriptionController.text = organizer.description ?? '';
     _emailController.text = organizer.email ?? '';
@@ -59,18 +77,59 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
     _websiteController.text = organizer.website ?? '';
     _cityController.text = organizer.city ?? '';
     _countryController.text = organizer.country ?? '';
+    _logoUrl = organizer.logoUrl;
+    _captureInitialValues();
+    _hydrating = false;
     _isInitialized = true;
+  }
+
+  List<TextEditingController> get _controllers => [
+        _nameController,
+        _descriptionController,
+        _emailController,
+        _phoneController,
+        _websiteController,
+        _cityController,
+        _countryController,
+      ];
+
+  List<String> get _currentValues =>
+      _controllers.map((controller) => controller.text).toList();
+
+  void _captureInitialValues() {
+    _initialValues = _currentValues;
+  }
+
+  bool get _hasUnsavedChanges {
+    if (!_isInitialized || _initialValues.length != _currentValues.length) {
+      return false;
+    }
+    for (var index = 0; index < _initialValues.length; index++) {
+      if (_initialValues[index] != _currentValues[index]) return true;
+    }
+    return false;
+  }
+
+  void _onFieldChanged() {
+    if (!_hydrating && mounted) setState(() {});
+  }
+
+  Future<void> _handlePop(bool didPop) async {
+    if (didPop || !_hasUnsavedChanges || _discardDialogOpen) return;
+    _discardDialogOpen = true;
+    final discard = await showDiscardChangesDialog(context);
+    if (!mounted) return;
+    _discardDialogOpen = false;
+    if (!discard) return;
+    setState(() => _allowPop = true);
+    Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _websiteController.dispose();
-    _cityController.dispose();
-    _countryController.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -97,214 +156,317 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
       country: _countryController.text.trim().isEmpty
           ? null
           : _countryController.text.trim(),
+      logoUrl: _logoUrl,
     );
 
+    _saveRequested = true;
     context.read<OrganizerBloc>().add(UpdateOrganizerProfile(params));
+  }
+
+  Future<void> _pickLogo() async {
+    final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85);
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _uploadingImage = true;
+    });
+
+    try {
+      final data = FormData.fromMap(
+          {'image': MultipartFile.fromBytes(bytes, filename: image.name)});
+      final response = await getIt<Dio>().post('/upload/image',
+          data: data, options: Options(contentType: 'multipart/form-data'));
+      
+      final result = Map<String, dynamic>.from(response.data['data'] as Map);
+      if (!mounted) return;
+      setState(() {
+        _logoPreview = bytes;
+        _logoUrl = result['url']?.toString();
+        _uploadingImage = false;
+        _onFieldChanged();
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _uploadingImage = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Failed to upload image. Please try again.'),
+          backgroundColor: KhairColors.error,
+        ));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _allowPop || !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Edit Profile'),
+        ),
+        body: BlocConsumer<OrganizerBloc, OrganizerState>(
+          listener: (context, state) {
+            // Populate fields when profile loads for the first time
+            if (state.organizer != null && !_isInitialized) {
+              _populateFields(state.organizer!);
+              setState(() {});
+            }
 
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-      ),
-      body: BlocConsumer<OrganizerBloc, OrganizerState>(
-        listener: (context, state) {
-          // Populate fields when profile loads for the first time
-          if (state.organizer != null && !_isInitialized) {
-            _populateFields(state.organizer!);
-            setState(() {});
-          }
-
-          // Success feedback
-          if (state.profileStatus == OrganizerStatus.success &&
-              _isInitialized) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 12),
-                    const Text('Profile updated successfully'),
-                  ],
+            // Success feedback
+            if (state.profileStatus == OrganizerStatus.success &&
+                _saveRequested) {
+              _saveRequested = false;
+              _captureInitialValues();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white),
+                      const SizedBox(width: 12),
+                      const Text('Profile updated successfully'),
+                    ],
+                  ),
+                  backgroundColor: KhairColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: KhairRadius.medium,
+                  ),
                 ),
-                backgroundColor: KhairColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: KhairRadius.medium,
+              );
+            }
+
+            // Error feedback
+            if (state.profileStatus == OrganizerStatus.failure &&
+                _saveRequested) {
+              _saveRequested = false;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                            state.errorMessage ?? 'Failed to update profile'),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: KhairColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: KhairRadius.medium,
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
+          },
+          builder: (context, state) {
+            // Loading profile
+            if (state.isProfileLoading && state.organizer == null) {
+              return const KhairLoadingState(message: 'Loading profile...');
+            }
 
-          // Error feedback
-          if (state.profileStatus == OrganizerStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                          state.errorMessage ?? 'Failed to update profile'),
-                    ),
-                  ],
+            // Error loading profile
+            if (state.profileStatus == OrganizerStatus.failure &&
+                state.organizer == null) {
+              return KhairErrorState(
+                message: state.errorMessage ?? 'Failed to load profile.',
+                onRetry: () {
+                  context
+                      .read<OrganizerBloc>()
+                      .add(const LoadOrganizerProfile());
+                },
+              );
+            }
+
+            final isSaving = state.isProfileLoading && state.organizer != null;
+
+            return SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  24,
+                  24,
+                  24 + MediaQuery.viewInsetsOf(context).bottom,
                 ),
-                backgroundColor: KhairColors.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: KhairRadius.medium,
-                ),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          // Loading profile
-          if (state.isProfileLoading && state.organizer == null) {
-            return const KhairLoadingState(message: 'Loading profile...');
-          }
-
-          // Error loading profile
-          if (state.profileStatus == OrganizerStatus.failure &&
-              state.organizer == null) {
-            return KhairErrorState(
-              message: state.errorMessage ?? 'Failed to load profile.',
-              onRetry: () {
-                context
-                    .read<OrganizerBloc>()
-                    .add(const LoadOrganizerProfile());
-              },
-            );
-          }
-
-          final isSaving = state.isProfileLoading && state.organizer != null;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile header
-                  if (state.organizer != null) ...[
-                    Row(
-                      children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: KhairColors.primarySurface,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(Icons.business_rounded,
-                              color: KhairColors.primary, size: 32),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                state.organizer!.name,
-                                style: KhairTypography.h3,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Profile header
+                      if (state.organizer != null) ...[
+                        Row(
+                          children: [
+                            InkWell(
+                              onTap: _uploadingImage ? null : _pickLogo,
+                              borderRadius: BorderRadius.circular(16),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: KhairColors.primarySurface,
+                                      borderRadius: BorderRadius.circular(16),
+                                      image: _logoPreview != null
+                                          ? DecorationImage(
+                                              image: MemoryImage(_logoPreview!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : _logoUrl != null
+                                              ? DecorationImage(
+                                                  image: NetworkImage(
+                                                      ApiConfig.resolveUrl(
+                                                          _logoUrl!)),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null,
+                                    ),
+                                    child: _logoPreview == null &&
+                                            _logoUrl == null
+                                        ? const Icon(Icons.business_rounded,
+                                            color: KhairColors.primary,
+                                            size: 32)
+                                        : null,
+                                  ),
+                                  if (_uploadingImage)
+                                    Container(
+                                      width: 64,
+                                      height: 64,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black45,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              StatusBadge(
-                                status: state.organizer!.status
-                                    .toUpperCase(),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    state.organizer!.name,
+                                    style: KhairTypography.h3,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  StatusBadge(
+                                    status:
+                                        state.organizer!.status.toUpperCase(),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 32),
                       ],
-                    ),
-                    const SizedBox(height: 32),
-                  ],
 
-                  // Form fields
-                  _buildField(
-                    'Organization Name *',
-                    _nameController,
-                    Icons.business_outlined,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Name is required';
-                      }
-                      return null;
-                    },
-                  ),
-                  _buildField(
-                    'Bio / Description',
-                    _descriptionController,
-                    Icons.description_outlined,
-                    maxLines: 3,
-                  ),
-                  _buildField(
-                    'Contact Email',
-                    _emailController,
-                    Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v != null && v.isNotEmpty && !v.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  _buildField(
-                    'Phone',
-                    _phoneController,
-                    Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  _buildField(
-                    'Website',
-                    _websiteController,
-                    Icons.language_outlined,
-                    keyboardType: TextInputType.url,
-                  ),
-                  _buildField(
-                    'City',
-                    _cityController,
-                    Icons.location_city_outlined,
-                  ),
-                  _buildField(
-                    'Country',
-                    _countryController,
-                    Icons.flag_outlined,
-                  ),
+                      // Form fields
+                      _buildField(
+                        'Organization Name *',
+                        _nameController,
+                        Icons.business_outlined,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      _buildField(
+                        'Bio / Description',
+                        _descriptionController,
+                        Icons.description_outlined,
+                        maxLines: 3,
+                      ),
+                      _buildField(
+                        'Contact Email',
+                        _emailController,
+                        Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v != null && v.isNotEmpty && !v.contains('@')) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      _buildField(
+                        'Phone',
+                        _phoneController,
+                        Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      _buildField(
+                        'Website',
+                        _websiteController,
+                        Icons.language_outlined,
+                        keyboardType: TextInputType.url,
+                      ),
+                      _buildField(
+                        'City',
+                        _cityController,
+                        Icons.location_city_outlined,
+                      ),
+                      _buildField(
+                        'Country',
+                        _countryController,
+                        Icons.flag_outlined,
+                      ),
 
-                  const SizedBox(height: 32),
+                      const SizedBox(height: 32),
 
-                  // Save button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: isSaving ? null : _onSave,
-                      child: isSaving
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Save Changes'),
-                    ),
+                      // Save button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: isSaving ? null : _onSave,
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Save Changes'),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

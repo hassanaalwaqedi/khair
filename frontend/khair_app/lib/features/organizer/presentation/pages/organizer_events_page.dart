@@ -10,7 +10,6 @@ import '../../../events/domain/entities/event.dart';
 
 import '../bloc/organizer_bloc.dart';
 
-
 /// Full-page organizer events list with status filter chips, pull-to-refresh,
 /// and proper loading/empty/error states.
 class OrganizerEventsPage extends StatefulWidget {
@@ -32,6 +31,15 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   List<Event> _filterEvents(List<Event> events) {
     if (_selectedFilter == 'all') return events;
     return events.where((e) => e.status == _selectedFilter).toList();
+  }
+
+  Future<void> _refreshEvents() async {
+    final bloc = context.read<OrganizerBloc>();
+    final completed = bloc.stream.firstWhere(
+      (state) => state.eventsStatus != OrganizerStatus.loading,
+    );
+    bloc.add(const LoadOrganizerEvents());
+    await completed;
   }
 
   @override
@@ -81,11 +89,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
 
           return RefreshIndicator(
             color: KhairColors.primary,
-            onRefresh: () async {
-              context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
-              // Wait for the events to load
-              await Future.delayed(const Duration(milliseconds: 800));
-            },
+            onRefresh: _refreshEvents,
             child: CustomScrollView(
               slivers: [
                 // Filter chips
@@ -255,7 +259,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     value: 'notify',
                     child: Row(
                       children: [
-                        Icon(Icons.campaign_rounded, size: 18, color: KhairColors.primary),
+                        Icon(Icons.campaign_rounded,
+                            size: 18, color: KhairColors.primary),
                         SizedBox(width: 8),
                         Text('Notify Attendees'),
                       ],
@@ -288,10 +293,10 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   }
 
   void _openEvent(BuildContext context, Event event) {
-    final publicEvent = event.status == 'approved' || event.status == 'published';
-    context.go(publicEvent
-        ? '/events/${event.id}'
-        : '/organizer/events/${event.id}');
+    final publicEvent =
+        event.status == 'approved' || event.status == 'published';
+    context.go(
+        publicEvent ? '/events/${event.id}' : '/organizer/events/${event.id}');
   }
 
   void _showNotifyAttendeesDialog(BuildContext ctx, Event event) {
@@ -309,8 +314,11 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final bg = isDark ? KhairColors.darkSurface : Colors.white;
             final bdr = isDark ? KhairColors.darkBorder : KhairColors.border;
-            final tp = isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
-            final ts = isDark ? KhairColors.darkTextSecondary : KhairColors.textSecondary;
+            final tp =
+                isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary;
+            final ts = isDark
+                ? KhairColors.darkTextSecondary
+                : KhairColors.textSecondary;
 
             return Container(
               margin: EdgeInsets.only(
@@ -318,7 +326,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
               ),
               decoration: BoxDecoration(
                 color: bg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -329,7 +338,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     // Handle
                     Center(
                       child: Container(
-                        width: 40, height: 4,
+                        width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
                           color: bdr,
                           borderRadius: BorderRadius.circular(2),
@@ -340,14 +350,21 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
 
                     // Title
                     Row(children: [
-                      Icon(Icons.campaign_rounded, color: KhairColors.primary, size: 22),
+                      Icon(Icons.campaign_rounded,
+                          color: KhairColors.primary, size: 22),
                       const SizedBox(width: 10),
-                      Expanded(child: Text('Send Message to Attendees',
-                        style: TextStyle(color: tp, fontSize: 18, fontWeight: FontWeight.w700),
+                      Expanded(
+                          child: Text(
+                        'Send Message to Attendees',
+                        style: TextStyle(
+                            color: tp,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700),
                       )),
                     ]),
                     const SizedBox(height: 6),
-                    Text('Message will be sent as push notification and in-app notification to all confirmed attendees of "${event.title}".',
+                    Text(
+                      'Message will be sent as push notification and in-app notification to all confirmed attendees of "${event.title}".',
                       style: TextStyle(color: ts, fontSize: 13, height: 1.4),
                     ),
                     const SizedBox(height: 20),
@@ -362,7 +379,9 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                         hintText: 'Type your message to attendees...',
                         hintStyle: TextStyle(color: ts.withValues(alpha: 0.5)),
                         filled: true,
-                        fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : KhairColors.neutral50,
+                        fillColor: isDark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : KhairColors.neutral50,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: bdr),
@@ -373,7 +392,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: KhairColors.primary, width: 1.5),
+                          borderSide: BorderSide(
+                              color: KhairColors.primary, width: 1.5),
                         ),
                         contentPadding: const EdgeInsets.all(14),
                       ),
@@ -384,21 +404,26 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     if (event.isOnline)
                       InkWell(
                         borderRadius: BorderRadius.circular(8),
-                        onTap: () => setSheetState(() => includeLink = !includeLink),
+                        onTap: () =>
+                            setSheetState(() => includeLink = !includeLink),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(children: [
                             SizedBox(
-                              width: 22, height: 22,
+                              width: 22,
+                              height: 22,
                               child: Checkbox(
                                 value: includeLink,
-                                onChanged: (v) => setSheetState(() => includeLink = v ?? false),
+                                onChanged: (v) => setSheetState(
+                                    () => includeLink = v ?? false),
                                 activeColor: KhairColors.primary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Text('Include event link in notification',
+                            Text(
+                              'Include event link in notification',
                               style: TextStyle(color: tp, fontSize: 13),
                             ),
                           ]),
@@ -411,7 +436,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton.icon(
-                        onPressed: isSending || messageController.text.trim().isEmpty
+                        onPressed: isSending ||
+                                messageController.text.trim().isEmpty
                             ? null
                             : () async {
                                 setSheetState(() => isSending = true);
@@ -428,10 +454,13 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                   if (ctx.mounted) {
                                     ScaffoldMessenger.of(ctx).showSnackBar(
                                       SnackBar(
-                                        content: const Text('Message sent to all attendees!'),
+                                        content: const Text(
+                                            'Message sent to all attendees!'),
                                         backgroundColor: KhairColors.success,
                                         behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
                                       ),
                                     );
                                   }
@@ -443,24 +472,32 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                         content: Text('Failed to send: $e'),
                                         backgroundColor: KhairColors.error,
                                         behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
                                       ),
                                     );
                                   }
                                 }
                               },
                         icon: isSending
-                            ? const SizedBox(width: 18, height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.send_rounded, size: 18),
                         label: Text(isSending ? 'Sending...' : 'Send Message',
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 14)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: KhairColors.primary,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: KhairColors.primary.withValues(alpha: 0.5),
+                          disabledBackgroundColor:
+                              KhairColors.primary.withValues(alpha: 0.5),
                           disabledForegroundColor: Colors.white70,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
                       ),
@@ -492,8 +529,18 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
 
   String _monthAbbr(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

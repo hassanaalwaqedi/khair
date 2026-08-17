@@ -108,8 +108,11 @@ class PushNotificationService {
       case 'event_cancelled':
       case 'organizer_announcement':
       case 'organizer_message':
+      case 'new_participant':
         final eventId = data['event_id'];
         return eventId == null ? '/my-events' : '/events/$eventId';
+      case 'verification_review':
+        return '/organizer/apply';
       default:
         return null;
     }

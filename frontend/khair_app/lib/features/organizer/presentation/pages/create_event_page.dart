@@ -40,7 +40,9 @@ class CreateEventPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<CreateEventCubit>()..loadCategories()..loadLocalDraft(),
+      create: (_) => getIt<CreateEventCubit>()
+        ..loadCategories()
+        ..loadLocalDraft(),
       child: const _CreateEventView(),
     );
   }
@@ -135,7 +137,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
           previous.aiCategorySuggestion != current.aiCategorySuggestion,
       listener: (context, state) {
         if (!state.isLocalDraftLoaded) return;
-        
+
         if (state.status == CreateEventStatus.failure &&
             state.errorMessage != null) {
           ScaffoldMessenger.of(context)
@@ -149,39 +151,54 @@ class _CreateEventViewState extends State<_CreateEventView> {
         if (state.isLocalDraftLoaded) {
           final data = state.formData;
           if (_title.text != data.title) _title.text = data.title;
-          if (_description.text != data.description) _description.text = data.description;
+          if (_description.text != data.description)
+            _description.text = data.description;
           if (_city.text != (data.city ?? '')) _city.text = data.city ?? '';
-          if (_venue.text != (data.venueName ?? '')) _venue.text = data.venueName ?? '';
-          if (_address.text != (data.address ?? '')) _address.text = data.address ?? '';
-          if (_onlineLink.text != (data.onlineLink ?? '')) _onlineLink.text = data.onlineLink ?? '';
-          if (_onlineInstructions.text != (data.onlineInstructions ?? '')) _onlineInstructions.text = data.onlineInstructions ?? '';
+          if (_venue.text != (data.venueName ?? ''))
+            _venue.text = data.venueName ?? '';
+          if (_address.text != (data.address ?? ''))
+            _address.text = data.address ?? '';
+          if (_onlineLink.text != (data.onlineLink ?? ''))
+            _onlineLink.text = data.onlineLink ?? '';
+          if (_onlineInstructions.text != (data.onlineInstructions ?? ''))
+            _onlineInstructions.text = data.onlineInstructions ?? '';
           final capStr = data.capacity?.toString() ?? '';
           if (_capacity.text != capStr) _capacity.text = capStr;
-          if (_guidelines.text != data.guidelines) _guidelines.text = data.guidelines;
+          if (_guidelines.text != data.guidelines)
+            _guidelines.text = data.guidelines;
         }
       },
       child: BlocBuilder<CreateEventCubit, CreateEventState>(
         builder: (context, state) {
-          print('BLOC BUILDER REBUILDING: state.currentStep=${state.currentStep}, status=${state.status}');
           final dark = Theme.of(context).brightness == Brightness.dark;
-          return Scaffold(
-            backgroundColor:
-                dark ? _CreateColors.darkBackground : _CreateColors.background,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  _topBar(context, state, dark),
-                  _progress(context, state, dark),
-                  Expanded(child: _editor(context, state, dark)),
-                ],
+          return PopScope(
+            canPop: state.currentStep == 0,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              if (state.currentStep > 0) {
+                context.read<CreateEventCubit>().previousStep();
+              }
+            },
+            child: Scaffold(
+              backgroundColor: dark
+                  ? _CreateColors.darkBackground
+                  : _CreateColors.background,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    _topBar(context, state, dark),
+                    _progress(context, state, dark),
+                    Expanded(child: _editor(context, state, dark)),
+                  ],
+                ),
               ),
-            ),
-            // Keep navigation pinned to the viewport. Putting it inside the
-            // scrolling body allowed it to disappear below the editor on
-            // shorter browser windows.
-            bottomNavigationBar: SafeArea(
-              top: false,
-              child: _bottomBar(context, state, dark),
+              // Keep navigation pinned to the viewport. Putting it inside the
+              // scrolling body allowed it to disappear below the editor on
+              // shorter browser windows.
+              bottomNavigationBar: SafeArea(
+                top: false,
+                child: _bottomBar(context, state, dark),
+              ),
             ),
           );
         },
@@ -358,11 +375,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 1050;
         final horizontalPadding = desktop ? 32.0 : 20.0;
-        final availableWidth = (constraints.maxWidth - horizontalPadding * 2)
-            .clamp(0.0, 1180.0);
+        final availableWidth =
+            (constraints.maxWidth - horizontalPadding * 2).clamp(0.0, 1180.0);
         final content = SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-              horizontalPadding, 10, horizontalPadding, 32),
+          padding:
+              EdgeInsets.fromLTRB(horizontalPadding, 10, horizontalPadding, 32),
           child: Center(
             child: SizedBox(
               width: availableWidth,
@@ -916,10 +933,17 @@ class _CreateEventViewState extends State<_CreateEventView> {
                             borderRadius: BorderRadius.circular(19),
                             child: Stack(fit: StackFit.expand, children: [
                               if (previewBytes != null)
-                                Image.memory(previewBytes, fit: BoxFit.cover)
+                                Image.memory(
+                                  previewBytes,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 720,
+                                  cacheHeight: 405,
+                                )
                               else
                                 Image.network(ApiConfig.resolveUrl(url),
                                     fit: BoxFit.cover,
+                                    cacheWidth: 720,
+                                    cacheHeight: 405,
                                     errorBuilder: (_, __, ___) =>
                                         const _UploadEmpty()),
                               Container(
@@ -1055,25 +1079,25 @@ class _CreateEventViewState extends State<_CreateEventView> {
       required Widget child}) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-      Text(title,
-          style: TextStyle(
-              fontSize: 30,
-              height: 1.1,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.8,
-              color: dark ? Colors.white : _CreateColors.text)),
-      const SizedBox(height: 8),
-      Text(subtitle,
-          style: TextStyle(
-              fontSize: 15,
-              height: 1.45,
-              color: dark ? Colors.white60 : _CreateColors.muted)),
-      const SizedBox(height: 24),
-      _panel(dark, child: child),
-    ]);
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: TextStyle(
+                  fontSize: 30,
+                  height: 1.1,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
+                  color: dark ? Colors.white : _CreateColors.text)),
+          const SizedBox(height: 8),
+          Text(subtitle,
+              style: TextStyle(
+                  fontSize: 15,
+                  height: 1.45,
+                  color: dark ? Colors.white60 : _CreateColors.muted)),
+          const SizedBox(height: 24),
+          _panel(dark, child: child),
+        ]);
   }
 
   Widget _panel(bool dark, {required Widget child}) => Container(
@@ -1383,7 +1407,13 @@ class _CreateEventViewState extends State<_CreateEventView> {
         title: 'AI suggestion',
         detail: state.aiDescriptionSuggestion!,
         action: 'Use suggestion',
-        onAction: cubit.useDescriptionSuggestion,
+        onAction: () {
+          final suggestion = state.aiDescriptionSuggestion;
+          if (suggestion != null) {
+            _description.text = suggestion;
+          }
+          cubit.useDescriptionSuggestion();
+        },
         dark: dark);
   }
 
@@ -1554,83 +1584,96 @@ class _LivePreview extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          if (!compact)
-            Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
-                child: Row(children: [
-                  const Icon(Icons.visibility_outlined,
-                      color: _CreateColors.rose, size: 18),
-                  const SizedBox(width: 8),
-                  Text('Live preview',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: dark ? Colors.white : _CreateColors.text))
-                ])),
-          SizedBox(
-              height: compact ? 150 : 180,
-              width: double.infinity,
-              child: data.coverImagePreviewBytes != null
-                  ? Image.memory(data.coverImagePreviewBytes!, fit: BoxFit.cover)
-                  : image == null
-                  ? const ColoredBox(
-                      color: _CreateColors.softRose,
-                      child: Center(
-                          child: Icon(Icons.event_outlined,
-                              color: _CreateColors.rose, size: 42)))
-                  : Image.network(ApiConfig.resolveUrl(image),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
-                          color: _CreateColors.softRose,
-                          child: Center(
-                              child: Icon(Icons.event_outlined,
-                                  color: _CreateColors.rose, size: 42))))),
-          Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (data.category.isNotEmpty)
-                      Text(_titleCase(data.category),
-                          style: const TextStyle(
-                              color: _CreateColors.rose,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 7),
-                    Text(data.title.isEmpty ? 'Your event title' : data.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 19,
-                            height: 1.15,
-                            fontWeight: FontWeight.w900,
-                            color: dark ? Colors.white : _CreateColors.text)),
-                    const SizedBox(height: 12),
-                    _previewLine(
-                        Icons.calendar_today_outlined,
-                        DateFormat('EEE, MMM d · h:mm a')
-                            .format(data.startDateTime),
-                        dark),
-                    const SizedBox(height: 7),
-                    _previewLine(
-                        data.eventType == 'online'
-                            ? Icons.videocam_outlined
-                            : Icons.place_outlined,
-                        data.eventType == 'online'
-                            ? 'Online event'
-                            : (data.city?.isNotEmpty == true
-                                ? '${data.city}, ${data.countryName ?? ''}'
-                                : 'Location to be added'),
-                        dark),
-                    if (data.genderPolicy.isNotEmpty) ...[
-                      const SizedBox(height: 7),
-                      _previewLine(
-                          Icons.groups_outlined,
-                          _titleCase(data.genderPolicy.replaceAll('_', ' ')),
-                          dark)
-                    ]
-                  ]))
-        ]));
+              if (!compact)
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
+                    child: Row(children: [
+                      const Icon(Icons.visibility_outlined,
+                          color: _CreateColors.rose, size: 18),
+                      const SizedBox(width: 8),
+                      Text('Live preview',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: dark ? Colors.white : _CreateColors.text))
+                    ])),
+              SizedBox(
+                  height: compact ? 150 : 180,
+                  width: double.infinity,
+                  child: data.coverImagePreviewBytes != null
+                      ? Image.memory(
+                          data.coverImagePreviewBytes!,
+                          fit: BoxFit.cover,
+                          cacheWidth: 720,
+                          cacheHeight: 405,
+                        )
+                      : image == null
+                          ? const ColoredBox(
+                              color: _CreateColors.softRose,
+                              child: Center(
+                                  child: Icon(Icons.event_outlined,
+                                      color: _CreateColors.rose, size: 42)))
+                          : Image.network(ApiConfig.resolveUrl(image),
+                              fit: BoxFit.cover,
+                              cacheWidth: 720,
+                              cacheHeight: 405,
+                              errorBuilder: (_, __, ___) => const ColoredBox(
+                                  color: _CreateColors.softRose,
+                                  child: Center(
+                                      child: Icon(Icons.event_outlined,
+                                          color: _CreateColors.rose,
+                                          size: 42))))),
+              Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (data.category.isNotEmpty)
+                          Text(_titleCase(data.category),
+                              style: const TextStyle(
+                                  color: _CreateColors.rose,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 7),
+                        Text(
+                            data.title.isEmpty
+                                ? 'Your event title'
+                                : data.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 19,
+                                height: 1.15,
+                                fontWeight: FontWeight.w900,
+                                color:
+                                    dark ? Colors.white : _CreateColors.text)),
+                        const SizedBox(height: 12),
+                        _previewLine(
+                            Icons.calendar_today_outlined,
+                            DateFormat('EEE, MMM d · h:mm a')
+                                .format(data.startDateTime),
+                            dark),
+                        const SizedBox(height: 7),
+                        _previewLine(
+                            data.eventType == 'online'
+                                ? Icons.videocam_outlined
+                                : Icons.place_outlined,
+                            data.eventType == 'online'
+                                ? 'Online event'
+                                : (data.city?.isNotEmpty == true
+                                    ? '${data.city}, ${data.countryName ?? ''}'
+                                    : 'Location to be added'),
+                            dark),
+                        if (data.genderPolicy.isNotEmpty) ...[
+                          const SizedBox(height: 7),
+                          _previewLine(
+                              Icons.groups_outlined,
+                              _titleCase(
+                                  data.genderPolicy.replaceAll('_', ' ')),
+                              dark)
+                        ]
+                      ]))
+            ]));
   }
 
   Widget _previewLine(IconData icon, String text, bool dark) => Row(children: [

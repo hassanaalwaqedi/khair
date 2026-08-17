@@ -248,7 +248,7 @@ class MapClusterNode extends Equatable {
 
   bool get isCluster => events.length > 1;
   int get count => events.length;
-  MapEvent? get singleEvent => isCluster ? null : events.first;
+  MapEvent? get singleEvent => isCluster || events.isEmpty ? null : events.first;
 
   @override
   List<Object?> get props => [key, center, events];

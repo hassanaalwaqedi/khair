@@ -11,6 +11,7 @@ abstract class EventsRemoteDataSource {
   Future<EventModel> updateEvent(String id, Map<String, dynamic> data);
   Future<void> deleteEvent(String id);
   Future<EventModel> submitForReview(String id);
+  Future<Map<String, dynamic>> getMeetingAccess(String id);
 }
 
 class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
@@ -81,5 +82,11 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   Future<EventModel> submitForReview(String id) async {
     final response = await _apiClient.post('/events/$id/submit');
     return EventModel.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMeetingAccess(String id) async {
+    final response = await _apiClient.get('/events/$id/meeting-access');
+    return response.data['data'] as Map<String, dynamic>;
   }
 }

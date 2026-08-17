@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_brand.dart';
@@ -98,7 +99,7 @@ class _NotificationBell extends StatelessWidget {
       buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
       builder: (context, state) {
         return GestureDetector(
-          onTap: () => NotificationDropdown.show(context),
+          onTap: () => context.push('/notifications'),
           child: Container(
             width: 36,
             height: 36,
@@ -116,8 +117,8 @@ class _NotificationBell extends StatelessWidget {
                   ),
                 ),
                 if (state.unreadCount > 0)
-                  Positioned(
-                    right: 4,
+                  PositionedDirectional(
+                    end: 4,
                     top: 4,
                     child: Container(
                       padding: const EdgeInsets.all(2),

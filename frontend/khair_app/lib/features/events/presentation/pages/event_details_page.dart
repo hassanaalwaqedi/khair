@@ -47,6 +47,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   bool _isSaved = false;
   bool _saveLoading = false;
   bool _joinLoading = false;
+  
+  Map<String, dynamic>? _meetingAccess;
+  bool _isLoadingMeeting = false;
 
   @override
   void initState() {
@@ -85,6 +88,31 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     );
   }
 
+  Future<void> _fetchMeetingAccess() async {
+    final auth = context.read<AuthBloc>().state;
+    if (!auth.isAuthenticated) return;
+    
+    if (mounted) setState(() => _isLoadingMeeting = true);
+    try {
+      final result = await getIt<EventsRepository>().getMeetingAccess(widget.eventId);
+      result.fold(
+        (_) {
+          if (mounted) setState(() => _isLoadingMeeting = false);
+        },
+        (data) {
+          if (mounted) {
+            setState(() {
+              _meetingAccess = data;
+              _isLoadingMeeting = false;
+            });
+          }
+        },
+      );
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingMeeting = false);
+    }
+  }
+
   Future<void> _checkRegistrationStatus() async {
     final auth = context.read<AuthBloc>().state;
     if (!auth.isAuthenticated) return;
@@ -97,6 +125,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             ? (result['status'] as String? ?? 'confirmed')
             : null;
       });
+      
+      if (_registrationStatus == 'confirmed') {
+        _fetchMeetingAccess();
+      }
     } catch (_) {
       // The public event page remains usable if registration status is down.
     }
@@ -625,6 +657,22 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   }
 
   Widget _buildOnlineLocation(Event event, _PageColors colors) {
+    final isJoined = _registrationStatus == 'confirmed';
+    final hasAccess = _meetingAccess?['available'] == true && _meetingAccess?['url'] != null;
+    final meetingUrl = hasAccess ? _meetingAccess!['url'] as String : null;
+    final provider = hasAccess && _meetingAccess!['provider'] != null 
+        ? _meetingAccess!['provider'] as String 
+        : event.onlinePlatform ?? 'Online';
+
+    String statusText = 'Meeting access becomes available after you join.';
+    if (isJoined) {
+      if (_isLoadingMeeting) {
+        statusText = 'Loading meeting access...';
+      } else if (!hasAccess) {
+        statusText = 'Meeting link hasn\'t been added yet.';
+      }
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -632,33 +680,61 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         color: colors.softRose,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-                color: AppColors.primary, shape: BoxShape.circle),
-            child: const Icon(Icons.videocam_outlined, color: Colors.white),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Online event',
-                    style: TextStyle(
-                        color: colors.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text(
-                  '${event.onlinePlatform ?? 'Online'} · Meeting access available after joining.',
-                  style: TextStyle(color: colors.secondaryText, fontSize: 13),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                    color: AppColors.primary, shape: BoxShape.circle),
+                child: const Icon(Icons.videocam_outlined, color: Colors.white),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Online event',
+                        style: TextStyle(
+                            color: colors.primaryText,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasAccess ? provider : '${event.onlinePlatform ?? 'Online'} · $statusText',
+                      style: TextStyle(color: colors.secondaryText, fontSize: 13),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (hasAccess) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  final uri = Uri.tryParse(meetingUrl!);
+                  if (uri != null && await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                icon: const Icon(Icons.video_call),
+                label: Text('Join $provider meeting'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1113,6 +1189,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       await getIt<JoinDataSource>().joinEvent(event.id);
       if (!mounted) return;
       setState(() => _registrationStatus = 'confirmed');
+      _fetchMeetingAccess();
       _showSnack('You’re going! Your place is reserved.');
       context.read<EventsBloc>().add(LoadEventDetails(event.id));
     } catch (error) {
@@ -1141,7 +1218,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     try {
       await getIt<JoinDataSource>().cancelReservation(widget.eventId);
       if (mounted) {
-        setState(() => _registrationStatus = null);
+        setState(() {
+          _registrationStatus = null;
+          _meetingAccess = null;
+        });
         _showSnack('Reservation cancelled.');
         context.read<EventsBloc>().add(LoadEventDetails(widget.eventId));
       }

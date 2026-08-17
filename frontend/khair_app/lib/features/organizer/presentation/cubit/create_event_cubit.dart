@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/image_upload_validator.dart';
 import '../../../events/domain/repositories/events_repository.dart';
 import 'create_event_state.dart';
 
@@ -72,12 +73,16 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   bool nextStep() {
+    if (state.status == CreateEventStatus.saving ||
+        state.status == CreateEventStatus.submitting) return false;
     if (!validateStep(state.currentStep)) return false;
     if (!state.isLastStep) goToStep(state.currentStep + 1);
     return true;
   }
 
   void previousStep() {
+    if (state.status == CreateEventStatus.saving ||
+        state.status == CreateEventStatus.submitting) return;
     if (!state.isFirstStep) goToStep(state.currentStep - 1);
   }
 
@@ -205,14 +210,17 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         if (fd.startDateTime.isBefore(DateTime.now())) {
           return 'Start date and time must be in the future.';
         }
-        if (fd.endDateTime != null && !fd.endDateTime!.isAfter(fd.startDateTime)) {
+        if (fd.endDateTime != null &&
+            !fd.endDateTime!.isAfter(fd.startDateTime)) {
           return 'End date and time must be after the start date.';
         }
         if (fd.eventType == 'online') return 'Add a valid meeting URL.';
         if (fd.countryCode == null) return 'Select a country.';
         if (fd.city?.trim().isEmpty ?? true) return 'Enter a city.';
-        if (fd.address?.trim().isEmpty ?? true) return 'Enter a street address.';
-        if (fd.latitude == null || fd.longitude == null) return 'Pinpoint the exact location on the map.';
+        if (fd.address?.trim().isEmpty ?? true)
+          return 'Enter a street address.';
+        if (fd.latitude == null || fd.longitude == null)
+          return 'Pinpoint the exact location on the map.';
         return 'Complete all required fields.';
       case 2:
         return fd.unlimitedCapacity
@@ -288,11 +296,19 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   Future<void> uploadImage(XFile file) async {
     try {
+      final validation = validateImageUpload(
+        filename: file.name,
+        byteLength: await file.length(),
+      );
+      if (validation != null) {
+        emit(state.copyWith(
+          status: CreateEventStatus.failure,
+          errorMessage: validation,
+        ));
+        return;
+      }
       final bytes = await file.readAsBytes();
-      if (bytes.isEmpty) throw Exception('The selected image is empty.');
 
-      // Show the selected image immediately. The permanent URL is still
-      // required before the draft can be submitted.
       emit(state.copyWith(
         status: CreateEventStatus.imageUploading,
         formData: state.formData.copyWith(coverImagePreviewBytes: bytes),
@@ -307,7 +323,13 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       final url = response.data['data']?['url']?.toString();
       if (url == null || url.isEmpty)
         throw Exception('No permanent image URL returned.');
-      _update(state.formData.copyWith(coverImageUrl: url), schedule: false);
+      _update(
+        state.formData.copyWith(
+          coverImageUrl: url,
+          clearCoverImagePreviewBytes: true,
+        ),
+        schedule: false,
+      );
     } on DioException catch (error) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
@@ -354,7 +376,6 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     _autosaveTimer?.cancel();
     if (state.formData.title.trim().isNotEmpty) await _persistDraft();
   }
-
 
   Future<dynamic> _persistDraft({
     bool redirectAfterSave = false,
@@ -430,7 +451,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   void _scheduleAutosave() {
     _autosaveTimer?.cancel();
-    
+
     // Save locally immediately without debouncing
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString(_draftCacheKey, jsonEncode(state.formData.toJson()));

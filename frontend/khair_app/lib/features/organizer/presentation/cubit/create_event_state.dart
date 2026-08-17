@@ -45,6 +45,7 @@ class CreateEventFormData extends Equatable {
   final String registrationMode; // instant | approval_required
   final String guidelines;
   final String? coverImageUrl;
+
   /// Browser/mobile preview bytes shown while the permanent upload is pending
   /// or when the remote preview is temporarily unavailable.
   final Uint8List? coverImagePreviewBytes;
@@ -117,6 +118,7 @@ class CreateEventFormData extends Equatable {
     String? guidelines,
     String? coverImageUrl,
     Uint8List? coverImagePreviewBytes,
+    bool clearCoverImagePreviewBytes = false,
     bool? finalConfirmed,
   }) {
     return CreateEventFormData(
@@ -150,8 +152,9 @@ class CreateEventFormData extends Equatable {
       registrationMode: registrationMode ?? this.registrationMode,
       guidelines: guidelines ?? this.guidelines,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
-      coverImagePreviewBytes:
-          coverImagePreviewBytes ?? this.coverImagePreviewBytes,
+      coverImagePreviewBytes: clearCoverImagePreviewBytes
+          ? null
+          : coverImagePreviewBytes ?? this.coverImagePreviewBytes,
       finalConfirmed: finalConfirmed ?? this.finalConfirmed,
     );
   }
@@ -231,12 +234,13 @@ class CreateEventFormData extends Equatable {
       startDate: json['startDate'] != null
           ? DateTime.tryParse(json['startDate'])
           : null,
-      startTime: (json['startTimeHour'] != null && json['startTimeMinute'] != null)
-          ? TimeOfDay(hour: json['startTimeHour'], minute: json['startTimeMinute'])
-          : const TimeOfDay(hour: 9, minute: 0),
-      endDate: json['endDate'] != null
-          ? DateTime.tryParse(json['endDate'])
-          : null,
+      startTime:
+          (json['startTimeHour'] != null && json['startTimeMinute'] != null)
+              ? TimeOfDay(
+                  hour: json['startTimeHour'], minute: json['startTimeMinute'])
+              : const TimeOfDay(hour: 9, minute: 0),
+      endDate:
+          json['endDate'] != null ? DateTime.tryParse(json['endDate']) : null,
       endTime: (json['endTimeHour'] != null && json['endTimeMinute'] != null)
           ? TimeOfDay(hour: json['endTimeHour'], minute: json['endTimeMinute'])
           : null,

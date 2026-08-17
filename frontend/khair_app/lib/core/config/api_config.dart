@@ -16,7 +16,7 @@ class ApiConfig {
     String url = _envApiUrl.isNotEmpty
         ? _envApiUrl
         : (kDebugMode
-            ? 'http://localhost:8081/api/v1'
+            ? 'http://localhost:8080/api/v1'
             : 'https://api.khair.it.com/api/v1');
     return url.endsWith('/') ? url : '$url/';
   }();

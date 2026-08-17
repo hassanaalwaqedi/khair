@@ -10,6 +10,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -266,6 +267,7 @@ func applicationError(c *gin.Context, err error) {
 	if strings.Contains(lower, "sql") || strings.Contains(lower, "database") ||
 		strings.Contains(lower, "transaction") || strings.Contains(lower, "s3") ||
 		strings.Contains(lower, "storage") || strings.Contains(lower, "aws") {
+		log.Printf("[ERROR] applicationError caught generic error: %v", err)
 		response.InternalServerError(c, "We could not complete that organizer application action. Please try again.")
 		return
 	}

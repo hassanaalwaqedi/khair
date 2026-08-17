@@ -203,7 +203,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: Text('Cities with events',
-                    style: Theme.of(context).textTheme.labelLarge),
+                    style: Theme.of(sheetContext).textTheme.labelLarge),
               ),
               const SizedBox(height: 8),
               Align(

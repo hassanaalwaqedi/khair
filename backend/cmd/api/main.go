@@ -455,6 +455,7 @@ func main() {
 		orgRoutes.PUT("/events/:event_id", orgdashHandler.UpdateEvent)
 		orgRoutes.DELETE("/events/:event_id", orgdashHandler.CancelEvent)
 		orgRoutes.POST("/events/:event_id/duplicate", orgdashHandler.DuplicateEvent)
+		orgRoutes.GET("/events/:event_id/attendees", orgdashHandler.GetEventAttendees)
 
 		orgRoutes.GET("/members", orgdashHandler.ListMembers)
 		orgRoutes.POST("/members", orgdashHandler.AddMember)
@@ -469,7 +470,6 @@ func main() {
 	attendeeService := attendee.NewService(db)
 	attendeeHandler := attendee.NewHandler(attendeeService)
 	{
-		orgRoutes.GET("/events/:event_id/attendees", attendeeHandler.ListAttendees)
 		orgRoutes.PUT("/events/:event_id/attendees/:reg_id/attendance", attendeeHandler.MarkAttendance)
 		orgRoutes.DELETE("/events/:event_id/attendees/:reg_id", attendeeHandler.RemoveAttendee)
 		orgRoutes.GET("/events/:event_id/attendees/export", attendeeHandler.ExportCSV)

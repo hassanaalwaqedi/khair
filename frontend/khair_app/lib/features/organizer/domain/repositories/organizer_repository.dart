@@ -40,6 +40,7 @@ class UpdateProfileParams {
   final String? phone;
   final String? email;
   final String? website;
+  final String? logoUrl;
 
   const UpdateProfileParams({
     this.name,
@@ -52,6 +53,7 @@ class UpdateProfileParams {
     this.phone,
     this.email,
     this.website,
+    this.logoUrl,
   });
 
   Map<String, dynamic> toJson() {
@@ -66,6 +68,7 @@ class UpdateProfileParams {
     if (phone != null) map['phone'] = phone;
     if (email != null) map['email'] = email;
     if (website != null) map['website'] = website;
+    if (logoUrl != null) map['logo_url'] = logoUrl;
     return map;
   }
 }

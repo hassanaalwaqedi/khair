@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/image_upload_validator.dart';
+import '../../../../core/widgets/discard_changes_dialog.dart';
 
 const _rose = Color(0xFFF43F75);
 const _roseSoft = Color(0xFFFFF1F5);
@@ -31,11 +33,22 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   bool _loading = true;
   bool _saving = false;
   bool _uploading = false;
+  bool _hydrating = false;
+  bool _hasInitialValues = false;
+  bool _allowPop = false;
+  bool _discardDialogOpen = false;
   String? _error;
+  String _initialName = '';
+  String _initialCountry = '';
+  String _initialCity = '';
+  String _initialLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    for (final controller in [_name, _country, _city]) {
+      controller.addListener(_onFieldChanged);
+    }
     _load();
   }
 
@@ -52,16 +65,20 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       final response = await getIt<Dio>().get('/profile');
       final data = Map<String, dynamic>.from(response.data['data'] as Map);
       if (!mounted) return;
+      _hydrating = true;
+      _name.text = data['display_name']?.toString() ?? '';
+      _country.text = data['country']?.toString() ?? '';
+      _city.text = data['city']?.toString() ?? '';
+      _language = data['preferred_language']?.toString() ?? 'en';
+      _avatarUrl = data['avatar_url']?.toString();
+      _captureInitialValues();
+      _hydrating = false;
       setState(() {
-        _name.text = data['display_name']?.toString() ?? '';
-        _country.text = data['country']?.toString() ?? '';
-        _city.text = data['city']?.toString() ?? '';
-        _language = data['preferred_language']?.toString() ?? 'en';
-        _avatarUrl = data['avatar_url']?.toString();
         _loading = false;
       });
     } catch (_) {
       if (mounted) {
+        _captureInitialValues();
         setState(() {
           _loading = false;
           _error = 'We couldn’t load your profile details.';
@@ -77,6 +94,15 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         maxHeight: 512,
         imageQuality: 82);
     if (image == null) return;
+    final validation = validateImageUpload(
+      filename: image.name,
+      byteLength: await image.length(),
+      maxBytes: 5 * 1024 * 1024,
+    );
+    if (validation != null) {
+      if (mounted) setState(() => _error = validation);
+      return;
+    }
     final bytes = await image.readAsBytes();
     if (!mounted) return;
     setState(() {
@@ -120,6 +146,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         'preferred_language': _language,
       });
       if (mounted) {
+        _captureInitialValues();
         Navigator.of(context).pop(true);
       }
     } on DioException catch (_) {
@@ -139,108 +166,146 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
   }
 
+  void _captureInitialValues() {
+    _initialName = _name.text;
+    _initialCountry = _country.text;
+    _initialCity = _city.text;
+    _initialLanguage = _language;
+    _hasInitialValues = true;
+  }
+
+  bool get _hasUnsavedChanges =>
+      _hasInitialValues &&
+      (_name.text != _initialName ||
+          _country.text != _initialCountry ||
+          _city.text != _initialCity ||
+          _language != _initialLanguage);
+
+  void _onFieldChanged() {
+    if (!_hydrating && mounted) setState(() {});
+  }
+
+  Future<void> _handlePop(bool didPop) async {
+    if (didPop || !_hasUnsavedChanges || _discardDialogOpen) return;
+    _discardDialogOpen = true;
+    final discard = await showDiscardChangesDialog(context);
+    if (!mounted) return;
+    _discardDialogOpen = false;
+    if (!discard) return;
+    setState(() => _allowPop = true);
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final background = dark ? const Color(0xFF101014) : const Color(0xFFFCFAFB);
-    return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
+    return PopScope(
+      canPop: _allowPop || !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+      child: Scaffold(
         backgroundColor: background,
-        title: Text('Edit profile',
-            style: TextStyle(
-                color: dark ? Colors.white : _ink,
-                fontWeight: FontWeight.w700)),
-        actions: [
-          TextButton(
-              onPressed: _saving || _loading ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: _rose))
-                  : const Text('Save',
-                      style:
-                          TextStyle(color: _rose, fontWeight: FontWeight.w800)))
-        ],
+        appBar: AppBar(
+          backgroundColor: background,
+          title: Text('Edit profile',
+              style: TextStyle(
+                  color: dark ? Colors.white : _ink,
+                  fontWeight: FontWeight.w700)),
+          actions: [
+            TextButton(
+                onPressed: _saving || _loading ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: _rose))
+                    : const Text('Save',
+                        style: TextStyle(
+                            color: _rose, fontWeight: FontWeight.w800)))
+          ],
+        ),
+        body: _loading
+            ? const _EditSkeleton()
+            : Center(
+                child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 620),
+                    child: Form(
+                        key: _form,
+                        child: ListView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: EdgeInsets.fromLTRB(20, 16, 20,
+                                80 + MediaQuery.viewInsetsOf(context).bottom),
+                            children: [
+                              Text('Your event profile',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: dark ? Colors.white : _ink)),
+                              const SizedBox(height: 6),
+                              Text(
+                                  'Keep these details current so Khair can personalize your event experience.',
+                                  style: TextStyle(
+                                      color: dark
+                                          ? const Color(0xFFC5BEC8)
+                                          : _muted)),
+                              const SizedBox(height: 26),
+                              Center(
+                                  child: _AvatarEditor(
+                                      preview: _preview,
+                                      avatarUrl: _avatarUrl,
+                                      name: _name.text,
+                                      loading: _uploading,
+                                      onTap: _pickAvatar)),
+                              const SizedBox(height: 26),
+                              if (_error != null) _Error(message: _error!),
+                              if (_error != null) const SizedBox(height: 14),
+                              _Field(
+                                  controller: _name,
+                                  label: 'Display name',
+                                  icon: Icons.person_outline,
+                                  validator: (v) =>
+                                      v == null || v.trim().isEmpty
+                                          ? 'Enter your display name.'
+                                          : null),
+                              const SizedBox(height: 14),
+                              _Field(
+                                  controller: _country,
+                                  label: 'Country',
+                                  icon: Icons.public_outlined),
+                              const SizedBox(height: 14),
+                              _Field(
+                                  controller: _city,
+                                  label: 'City',
+                                  icon: Icons.location_city_outlined),
+                              const SizedBox(height: 14),
+                              DropdownButtonFormField<String>(
+                                  initialValue: _language,
+                                  decoration: _decoration('Preferred language',
+                                      Icons.language_outlined),
+                                  items: const [
+                                    DropdownMenuItem(
+                                        value: 'en', child: Text('English')),
+                                    DropdownMenuItem(
+                                        value: 'ar', child: Text('Arabic')),
+                                    DropdownMenuItem(
+                                        value: 'tr', child: Text('Turkish'))
+                                  ],
+                                  onChanged: (value) => setState(
+                                      () => _language = value ?? 'en')),
+                              const SizedBox(height: 28),
+                              FilledButton(
+                                  onPressed: _saving ? null : _save,
+                                  style: FilledButton.styleFrom(
+                                      backgroundColor: _rose,
+                                      minimumSize: const Size.fromHeight(52)),
+                                  child: Text(
+                                      _saving ? 'Saving…' : 'Save changes')),
+                            ])))),
       ),
-      body: _loading
-          ? const _EditSkeleton()
-          : Center(
-              child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 620),
-                  child: Form(
-                      key: _form,
-                      child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 80),
-                          children: [
-                            Text('Your event profile',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        color: dark ? Colors.white : _ink)),
-                            const SizedBox(height: 6),
-                            Text(
-                                'Keep these details current so Khair can personalize your event experience.',
-                                style: TextStyle(
-                                    color: dark
-                                        ? const Color(0xFFC5BEC8)
-                                        : _muted)),
-                            const SizedBox(height: 26),
-                            Center(
-                                child: _AvatarEditor(
-                                    preview: _preview,
-                                    avatarUrl: _avatarUrl,
-                                    name: _name.text,
-                                    loading: _uploading,
-                                    onTap: _pickAvatar)),
-                            const SizedBox(height: 26),
-                            if (_error != null) _Error(message: _error!),
-                            if (_error != null) const SizedBox(height: 14),
-                            _Field(
-                                controller: _name,
-                                label: 'Display name',
-                                icon: Icons.person_outline,
-                                validator: (v) => v == null || v.trim().isEmpty
-                                    ? 'Enter your display name.'
-                                    : null),
-                            const SizedBox(height: 14),
-                            _Field(
-                                controller: _country,
-                                label: 'Country',
-                                icon: Icons.public_outlined),
-                            const SizedBox(height: 14),
-                            _Field(
-                                controller: _city,
-                                label: 'City',
-                                icon: Icons.location_city_outlined),
-                            const SizedBox(height: 14),
-                            DropdownButtonFormField<String>(
-                                initialValue: _language,
-                                decoration: _decoration('Preferred language',
-                                    Icons.language_outlined),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'en', child: Text('English')),
-                                  DropdownMenuItem(
-                                      value: 'ar', child: Text('Arabic')),
-                                  DropdownMenuItem(
-                                      value: 'tr', child: Text('Turkish'))
-                                ],
-                                onChanged: (value) =>
-                                    setState(() => _language = value ?? 'en')),
-                            const SizedBox(height: 28),
-                            FilledButton(
-                                onPressed: _saving ? null : _save,
-                                style: FilledButton.styleFrom(
-                                    backgroundColor: _rose,
-                                    minimumSize: const Size.fromHeight(52)),
-                                child:
-                                    Text(_saving ? 'Saving…' : 'Save changes')),
-                          ])))),
     );
   }
 }
@@ -273,10 +338,15 @@ class _AvatarEditor extends StatelessWidget {
                     ? const Center(
                         child: CircularProgressIndicator(color: Colors.white))
                     : preview != null
-                        ? Image.memory(preview!, fit: BoxFit.cover)
+                        ? Image.memory(preview!,
+                            fit: BoxFit.cover,
+                            cacheWidth: 200,
+                            cacheHeight: 200)
                         : avatarUrl?.isNotEmpty == true
                             ? Image.network(ApiConfig.resolveUrl(avatarUrl),
                                 fit: BoxFit.cover,
+                                cacheWidth: 200,
+                                cacheHeight: 200,
                                 errorBuilder: (_, __, ___) =>
                                     _AvatarInitial(name))
                             : _AvatarInitial(name))),

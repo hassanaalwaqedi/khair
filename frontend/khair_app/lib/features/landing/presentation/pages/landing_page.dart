@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:khair_app/core/di/injection.dart';
@@ -22,14 +24,15 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage> {
   late EventsBloc _eventsBloc;
   late VideoPlayerController _videoController;
+  StreamSubscription<EventsState>? _eventsSubscription;
   bool _videoReady = false;
-  
+
   // Stats loaded from API (with fallback defaults)
   int _eventCount = 0;
   int _organizationCount = 0;
   int _cityCount = 0;
   bool _statsLoaded = false;
-  
+
   // Featured events for hero section
   List<Event> _featuredEvents = [];
 
@@ -41,31 +44,30 @@ class _LandingPageState extends State<LandingPage> {
     _initVideo();
   }
 
-  void _initVideo() {
+  Future<void> _initVideo() async {
     _videoController = VideoPlayerController.asset('video_khair.mp4')
       ..setLooping(true)
-      ..setVolume(0)
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() => _videoReady = true);
-          _videoController.play();
-        }
-      });
+      ..setVolume(0);
+    try {
+      await _videoController.initialize();
+      if (!mounted) return;
+      setState(() => _videoReady = true);
+      await _videoController.play();
+    } catch (_) {
+      if (mounted) setState(() => _videoReady = false);
+    }
   }
 
   @override
   void dispose() {
+    _eventsSubscription?.cancel();
     _videoController.dispose();
     _eventsBloc.close();
     super.dispose();
   }
 
   Future<void> _loadStats() async {
-    // Load a few events to show in hero section and get stats
-    _eventsBloc.add(LoadEvents());
-    
-    // Listen for state changes
-    _eventsBloc.stream.listen((state) {
+    _eventsSubscription = _eventsBloc.stream.listen((state) {
       if (state.status == EventsStatus.success && mounted) {
         setState(() {
           _featuredEvents = state.events.take(2).toList();
@@ -73,7 +75,7 @@ class _LandingPageState extends State<LandingPage> {
           // In a real app, you'd have a dedicated stats endpoint
           _eventCount = state.events.length;
           _statsLoaded = true;
-          
+
           // Get unique organizers and cities from events
           final organizers = <String>{};
           final cities = <String>{};
@@ -88,10 +90,12 @@ class _LandingPageState extends State<LandingPage> {
         });
       }
     });
+    _eventsBloc.add(LoadEvents());
   }
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 440;
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -130,24 +134,42 @@ class _LandingPageState extends State<LandingPage> {
               ],
             ),
             actions: [
-              TextButton(
-                onPressed: () => context.go('/'),
-                child: Text(context.l10n.events),
-              ),
-              TextButton(
-                onPressed: () => context.go('/map'),
-                child: Text(context.l10n.mapTab),
-              ),
-              const SizedBox(width: 8),
-              const LanguageSwitcher(showLabel: false),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 16),
-                child: ElevatedButton(
-                  onPressed: () => context.go('/login'),
-                  child: Text(context.l10n.signIn),
+              if (compact) ...[
+                IconButton(
+                  tooltip: context.l10n.events,
+                  onPressed: () => context.go('/'),
+                  icon: const Icon(Icons.event_outlined),
                 ),
-              ),
+                IconButton(
+                  tooltip: context.l10n.mapTab,
+                  onPressed: () => context.go('/map'),
+                  icon: const Icon(Icons.map_outlined),
+                ),
+              ] else ...[
+                TextButton(
+                  onPressed: () => context.go('/'),
+                  child: Text(context.l10n.events),
+                ),
+                TextButton(
+                  onPressed: () => context.go('/map'),
+                  child: Text(context.l10n.mapTab),
+                ),
+              ],
+              const LanguageSwitcher(showLabel: false),
+              if (compact)
+                IconButton(
+                  tooltip: context.l10n.signIn,
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.login_rounded),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 16),
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/login'),
+                    child: Text(context.l10n.signIn),
+                  ),
+                ),
             ],
           ),
 
@@ -441,7 +463,9 @@ class _LandingPageState extends State<LandingPage> {
               left: 24,
               child: _buildFloatingEventCard(
                 _featuredEvents[0].title,
-                _featuredEvents[0].organizerName ?? _featuredEvents[0].city ?? 'Event',
+                _featuredEvents[0].organizerName ??
+                    _featuredEvents[0].city ??
+                    'Event',
               ),
             ),
             if (_featuredEvents.length > 1)
@@ -450,7 +474,9 @@ class _LandingPageState extends State<LandingPage> {
                 right: 24,
                 child: _buildFloatingEventCard(
                   _featuredEvents[1].title,
-                  _featuredEvents[1].organizerName ?? _featuredEvents[1].city ?? 'Event',
+                  _featuredEvents[1].organizerName ??
+                      _featuredEvents[1].city ??
+                      'Event',
                 ),
               ),
           ] else ...[
@@ -489,7 +515,8 @@ class _LandingPageState extends State<LandingPage> {
               color: KhairColors.primarySurface,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.event, color: KhairColors.primary, size: 20),
+            child:
+                const Icon(Icons.event, color: KhairColors.primary, size: 20),
           ),
           const SizedBox(width: 12),
           Column(
@@ -501,7 +528,9 @@ class _LandingPageState extends State<LandingPage> {
                 style: KhairTypography.labelLarge,
               ),
               Text(
-                location.length > 25 ? '${location.substring(0, 25)}...' : location,
+                location.length > 25
+                    ? '${location.substring(0, 25)}...'
+                    : location,
                 style: KhairTypography.bodySmall,
               ),
             ],
@@ -678,20 +707,29 @@ class _LandingPageState extends State<LandingPage> {
           isWide
               ? Row(
                   children: [
-                    Expanded(child: _buildStep('1', context.l10n.step1Title, context.l10n.step1Desc)),
+                    Expanded(
+                        child: _buildStep('1', context.l10n.step1Title,
+                            context.l10n.step1Desc)),
                     _buildStepConnector(),
-                    Expanded(child: _buildStep('2', context.l10n.step2Title, context.l10n.step2Desc)),
+                    Expanded(
+                        child: _buildStep('2', context.l10n.step2Title,
+                            context.l10n.step2Desc)),
                     _buildStepConnector(),
-                    Expanded(child: _buildStep('3', context.l10n.step3Title, context.l10n.step3Desc)),
+                    Expanded(
+                        child: _buildStep('3', context.l10n.step3Title,
+                            context.l10n.step3Desc)),
                   ],
                 )
               : Column(
                   children: [
-                    _buildStep('1', context.l10n.step1Title, context.l10n.step1Desc),
+                    _buildStep(
+                        '1', context.l10n.step1Title, context.l10n.step1Desc),
                     const SizedBox(height: 24),
-                    _buildStep('2', context.l10n.step2Title, context.l10n.step2Desc),
+                    _buildStep(
+                        '2', context.l10n.step2Title, context.l10n.step2Desc),
                     const SizedBox(height: 24),
-                    _buildStep('3', context.l10n.step3Title, context.l10n.step3Desc),
+                    _buildStep(
+                        '3', context.l10n.step3Title, context.l10n.step3Desc),
                   ],
                 ),
         ],
@@ -773,7 +811,8 @@ class _LandingPageState extends State<LandingPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: KhairColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: Text(context.l10n.registerOrganization),
             ),
@@ -796,23 +835,28 @@ class _LandingPageState extends State<LandingPage> {
             children: [
               TextButton(
                 onPressed: () => context.go('/about'),
-                child: Text(context.l10n.footerAbout, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerAbout,
+                    style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/privacy'),
-                child: Text(context.l10n.footerPrivacy, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerPrivacy,
+                    style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/terms'),
-                child: Text(context.l10n.footerTerms, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerTerms,
+                    style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/content-policy'),
-                child: Text(context.l10n.footerContent, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerContent,
+                    style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
               TextButton(
                 onPressed: () => context.go('/verification-policy'),
-                child: Text(context.l10n.footerVerification, style: TextStyle(color: Colors.white.withAlpha(179))),
+                child: Text(context.l10n.footerVerification,
+                    style: TextStyle(color: Colors.white.withAlpha(179))),
               ),
             ],
           ),

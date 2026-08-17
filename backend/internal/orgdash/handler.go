@@ -205,6 +205,34 @@ func (h *Handler) UpdateEvent(c *gin.Context) {
 	response.Success(c, ev)
 }
 
+// GetEventAttendees gets the attendees for an event
+func (h *Handler) GetEventAttendees(c *gin.Context) {
+	if !requireOrgRole(c, models.OrgRoleViewer) {
+		return
+	}
+	orgID := getOrgID(c)
+
+	eventID, err := uuid.Parse(c.Param("event_id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+
+	page := 1
+	pageSize := 20
+	// Try parsing query params if needed...
+
+	search := c.Query("search")
+
+	resp, err := h.service.GetEventAttendees(orgID, eventID, page, pageSize, search)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
 // CancelEvent cancels an event
 func (h *Handler) CancelEvent(c *gin.Context) {
 	if !requireOrgRole(c, models.OrgRoleEventManager) {

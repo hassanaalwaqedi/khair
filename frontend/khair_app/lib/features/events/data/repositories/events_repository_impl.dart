@@ -18,8 +18,14 @@ class EventsRepositoryImpl implements EventsRepository {
           await _remoteDataSource.getEvents(filter.toQueryParameters());
       return Right(events);
     } on DioException catch (e) {
+      print('=== DIO EXCEPTION in getEvents ===');
+      print(e.message);
+      print(e.response?.data);
       return Left(ServerFailure(_getErrorMessage(e)));
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== GENERIC ERROR in getEvents ===');
+      print(e);
+      print(stack);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -130,6 +136,18 @@ class EventsRepositoryImpl implements EventsRepository {
     try {
       final event = await _remoteDataSource.submitForReview(id);
       return Right(event);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMeetingAccess(String id) async {
+    try {
+      final result = await _remoteDataSource.getMeetingAccess(id);
+      return Right(result);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));
     } catch (e) {

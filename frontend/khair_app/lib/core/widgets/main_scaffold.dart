@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../layout/app_breakpoints.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../tokens/tokens.dart';
 import 'khair_brand.dart';
 
@@ -20,12 +22,21 @@ class MainScaffold extends StatelessWidget {
         builder: (context, auth) {
           final items = _itemsFor(auth);
           final desktop = AppBreakpoints.isDesktop(context);
-          return Scaffold(
-            appBar: desktop ? _DesktopNavigation(auth: auth) : null,
-            body: child,
-            extendBody: !desktop,
-            bottomNavigationBar:
-                desktop ? null : _MobileNavigation(items: items),
+          final path = GoRouterState.of(context).uri.path;
+          return PopScope(
+            canPop: path == '/',
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) {
+                context.go('/');
+              }
+            },
+            child: Scaffold(
+              appBar: desktop ? _DesktopNavigation(auth: auth) : null,
+              body: child,
+              extendBody: !desktop,
+              bottomNavigationBar:
+                  desktop ? null : _MobileNavigation(items: items),
+            ),
           );
         },
       );
@@ -97,6 +108,9 @@ class _DesktopNavigation extends StatelessWidget
             icon: Icon(Icons.bookmark_border_rounded,
                 color: _matches(path, '/my-events') ? AppColors.primary : null),
           ),
+        const SizedBox(width: 8),
+        if (auth.isAuthenticated)
+          const _DesktopNotificationBell(),
         const SizedBox(width: 8),
         if (!auth.isAuthenticated)
           TextButton(
@@ -232,6 +246,43 @@ class _NavItem extends StatelessWidget {
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: color)),
       ]),
+    );
+  }
+}
+
+class _DesktopNotificationBell extends StatelessWidget {
+  const _DesktopNotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
+      builder: (context, state) {
+        final path = GoRouterState.of(context).uri.path;
+        final isSelected = path == '/notifications';
+        return IconButton(
+          tooltip: AppLocalizations.of(context)?.orgNotifications ?? 'Notifications',
+          onPressed: () => context.go('/notifications'),
+          icon: Badge(
+            isLabelVisible: state.unreadCount > 0,
+            label: Text(
+              state.unreadCount > 9 ? '9+' : state.unreadCount.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+            backgroundColor: AppColors.primary,
+            offset: const Offset(4, -4),
+            child: Icon(
+              isSelected ? Icons.notifications_rounded : Icons.notifications_none_rounded,
+              color: isSelected ? AppColors.primary : null,
+            ),
+          ),
+        );
+      },
     );
   }
 }

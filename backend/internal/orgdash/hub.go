@@ -3,6 +3,7 @@ package orgdash
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -66,8 +67,14 @@ type HubEvent struct {
 	Address   *string    `json:"address,omitempty"`
 	IsOnline  bool       `json:"is_online"`
 	Capacity  *int       `json:"capacity,omitempty"`
-	Attendees int        `json:"attendees"`
-	Views     int        `json:"views"`
+	Attendees       int                  `json:"attendees"`
+	Views           int                  `json:"views"`
+	AttendeePreview []HubAttendeePreview `json:"attendee_preview,omitempty"`
+}
+
+type HubAttendeePreview struct {
+	DisplayName string  `json:"display_name"`
+	AvatarURL   *string `json:"avatar_url,omitempty"`
 }
 
 type HubEventGroups struct {
@@ -303,13 +310,33 @@ func (r *Repository) GetHubNextEvent(orgID uuid.UUID) (*HubEvent, error) {
 
 const hubEventQuery = `SELECT e.id,e.title,e.status,e.start_date,e.end_date,e.image_url,e.city,e.address,e.is_online,e.capacity,
 	COALESCE((SELECT COUNT(DISTINCT er.user_id) FROM event_registrations er WHERE er.event_id=e.id AND er.status='confirmed'),0),
-	COALESCE((SELECT COUNT(DISTINCT (CASE WHEN ev.viewer_user_id IS NOT NULL THEN ev.viewer_user_id::text ELSE ev.session_id END)) FROM event_views ev WHERE ev.event_id=e.id),0) FROM events e`
+	COALESCE((SELECT COUNT(DISTINCT (CASE WHEN ev.viewer_user_id IS NOT NULL THEN ev.viewer_user_id::text ELSE ev.session_id END)) FROM event_views ev WHERE ev.event_id=e.id),0),
+	COALESCE((
+		SELECT json_agg(json_build_object('display_name', COALESCE(t.display_name, 'Anonymous'), 'avatar_url', t.avatar_url))
+		FROM (
+			SELECT u.display_name, p.avatar_url
+			FROM event_registrations er
+			JOIN users u ON u.id = er.user_id
+			LEFT JOIN profiles p ON p.user_id = er.user_id
+			WHERE er.event_id=e.id AND er.status='confirmed'
+			ORDER BY er.created_at ASC
+			LIMIT 4
+		) t
+	), '[]'::json) FROM events e`
 
 type rowScanner interface{ Scan(...interface{}) error }
 
 func (r *Repository) scanHubEvent(row rowScanner) (*HubEvent, error) {
 	e := &HubEvent{}
-	err := row.Scan(&e.ID, &e.Title, &e.Status, &e.StartDate, &e.EndDate, &e.ImageURL, &e.City, &e.Address, &e.IsOnline, &e.Capacity, &e.Attendees, &e.Views)
+	var previewJSON []byte
+	err := row.Scan(&e.ID, &e.Title, &e.Status, &e.StartDate, &e.EndDate, &e.ImageURL, &e.City, &e.Address, &e.IsOnline, &e.Capacity, &e.Attendees, &e.Views, &previewJSON)
+	if err == nil && len(previewJSON) > 0 {
+		importJsonError := false
+		if err := json.Unmarshal(previewJSON, &e.AttendeePreview); err != nil {
+			importJsonError = true
+		}
+		_ = importJsonError
+	}
 	return e, err
 }
 

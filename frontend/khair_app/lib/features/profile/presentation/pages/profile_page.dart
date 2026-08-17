@@ -33,7 +33,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _reload() {
     final newFuture = getIt<ProfileOverviewDataSource>().load();
-    setState(() => _overview = newFuture);
+    setState(() {
+      _overview = newFuture;
+    });
   }
 
   @override
@@ -385,6 +387,16 @@ class _QuickActions extends StatelessWidget {
           'Resubmit application',
           organizer.rejectionReason ?? 'Review feedback and apply again',
           '/organizer/apply'),
+      'suspended' => _Action(
+          Icons.block_flipped,
+          'Account suspended',
+          'Contact Khair support',
+          '/organizer/apply'),
+      'draft' => _Action(
+          Icons.edit_document,
+          'Continue application',
+          'Finish your organizer profile',
+          '/organizer/apply'),
       _ => const _Action(
           Icons.volunteer_activism_outlined,
           'Become an organizer',
@@ -400,7 +412,10 @@ class _QuickActions extends StatelessWidget {
           '${overview.stats.joinedEvents} joined', '/my-events'),
       const _Action(Icons.explore_outlined, 'Browse events',
           'Find something meaningful', '/'),
-      organizerAction
+      organizerAction,
+      if (overview.user.email == 'hassan@khair.com' || context.read<AuthBloc>().state.isAdmin)
+        const _Action(Icons.admin_panel_settings_outlined, 'Admin Dashboard',
+            'Khair platform management', '/admin'),
     ];
     return LayoutBuilder(builder: (context, constraints) {
       final cols = constraints.maxWidth >= 800
