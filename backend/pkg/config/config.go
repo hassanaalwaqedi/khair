@@ -88,7 +88,7 @@ func Load() *Config {
 	cfg := &Config{
 		Server: ServerConfig{
 			// Render injects PORT. SERVER_PORT remains available for Docker and local development.
-			Port: getEnv("SERVER_PORT", getEnv("PORT", "8080")),
+			Port: getEnv("PORT", getEnv("SERVER_PORT", "8080")),
 			Mode: getEnv("GIN_MODE", "debug"),
 		},
 		Database: DatabaseConfig{
