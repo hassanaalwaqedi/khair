@@ -222,11 +222,13 @@ func (r *Repository) Create(event *models.Event) error {
 	`
 	
 	pricingType := "free"
-	var priceCents *int64
+	var priceCents int64 = 0
 	var currency, paymentMethod *string
 	if event.Pricing != nil {
 		pricingType = event.Pricing.Type
-		priceCents = event.Pricing.AmountCents
+		if event.Pricing.AmountCents != nil {
+			priceCents = *event.Pricing.AmountCents
+		}
 		currency = event.Pricing.Currency
 		paymentMethod = event.Pricing.PaymentMethod
 	}
@@ -507,11 +509,13 @@ func (r *Repository) Update(event *models.Event) error {
 	`
 	
 	pricingType := "free"
-	var priceCents *int64
+	var priceCents int64 = 0
 	var currency, paymentMethod *string
 	if event.Pricing != nil {
 		pricingType = event.Pricing.Type
-		priceCents = event.Pricing.AmountCents
+		if event.Pricing.AmountCents != nil {
+			priceCents = *event.Pricing.AmountCents
+		}
 		currency = event.Pricing.Currency
 		paymentMethod = event.Pricing.PaymentMethod
 	}

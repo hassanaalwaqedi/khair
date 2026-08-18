@@ -256,7 +256,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     if (state.formData.title.trim().isEmpty) return;
     emit(state.copyWith(status: CreateEventStatus.aiGenerating));
     try {
-      final response = await getIt<Dio>().post('/ai/detect-category', data: {
+      final response = await getIt<Dio>().post('ai/detect-category', data: {
         'title': state.formData.title.trim(),
         'description': state.formData.description.trim(),
       });
@@ -290,7 +290,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(state.copyWith(status: CreateEventStatus.aiGenerating));
     try {
       final response =
-          await getIt<Dio>().post('/ai/enhance-description', data: {
+          await getIt<Dio>().post('ai/enhance-description', data: {
         'title': state.formData.title.trim(),
         'description': state.formData.description.trim(),
         'category': state.formData.category,
@@ -340,7 +340,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       ));
 
       final response = await getIt<Dio>().post(
-        '/upload/image',
+        'upload/image',
         data: FormData.fromMap({
           'image': MultipartFile.fromBytes(bytes, filename: file.name),
         }),

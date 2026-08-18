@@ -44,7 +44,7 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
             ),
           ),
           SizedBox(
-            height: 310,
+            height: 390,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),

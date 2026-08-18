@@ -170,7 +170,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 320,
+                            height: 390,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               padding: const EdgeInsets.symmetric(horizontal: 16),
