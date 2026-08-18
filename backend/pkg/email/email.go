@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/khair/backend/pkg/config"
 )
@@ -89,24 +90,74 @@ func (s *Service) SendVerificationEmail(email, code, language string) error {
 	}
 
 	lang := supportedLanguage(language)
+	currentYear := time.Now().Year()
 
-	subjects := map[string]string{
-		"en": "Khair — Your Verification Code",
-		"ar": "خير — رمز التحقق الخاص بك",
-		"tr": "Khair — Doğrulama Kodunuz",
+	var data map[string]string
+	var subject string
+
+	switch lang {
+	case "ar":
+		subject = "رمز التحقق الخاص بك في خير"
+		data = map[string]string{
+			"{{LANG}}":           "ar",
+			"{{DIR}}":            "rtl",
+			"{{TEXT_ALIGN}}":     "right",
+			"{{SUBJECT}}":        subject,
+			"{{GREETING}}":       "السلام عليكم 👋",
+			"{{TITLE}}":          "رمز التحقق الخاص بك",
+			"{{INTRO}}":          "استخدم الرمز أدناه للتحقق من عنوان بريدك الإلكتروني.",
+			"{{EXPIRY}}":         "تنتهي صلاحية هذا الرمز خلال <strong>10 دقائق</strong>.",
+			"{{CODE}}":           code,
+			"{{SECURITY_TITLE}}": "لا تشارك هذا الرمز مع أي شخص.",
+			"{{SECURITY_BODY}}":  "لن يطلب منك فريق خير هذا الرمز أبدًا.",
+			"{{IGNORE_TEXT}}":    "إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة بأمان.",
+			"{{FOOTER}}":         "منصة خير",
+			"{{COPYRIGHT}}":      fmt.Sprintf("© %d خير. جميع الحقوق محفوظة.", currentYear),
+		}
+	case "tr":
+		subject = "Khair — Doğrulama Kodunuz"
+		data = map[string]string{
+			"{{LANG}}":           "tr",
+			"{{DIR}}":            "ltr",
+			"{{TEXT_ALIGN}}":     "left",
+			"{{SUBJECT}}":        subject,
+			"{{GREETING}}":       "Merhaba 👋",
+			"{{TITLE}}":          "Doğrulama Kodunuz",
+			"{{INTRO}}":          "E-posta adresinizi doğrulamak için aşağıdaki kodu kullanın.",
+			"{{EXPIRY}}":         "Bu kod <strong>10 dakika</strong> içinde sona erer.",
+			"{{CODE}}":           code,
+			"{{SECURITY_TITLE}}": "Bu kodu kimseyle paylaşmayın.",
+			"{{SECURITY_BODY}}":  "Khair ekibi sizden asla bu kodu istemez.",
+			"{{IGNORE_TEXT}}":    "Bu kodu siz talep etmediyseniz, bu e-postayı güvenle yok sayabilirsiniz.",
+			"{{FOOTER}}":         "Khair Platformu",
+			"{{COPYRIGHT}}":      fmt.Sprintf("© %d Khair. Tüm hakları saklıdır.", currentYear),
+		}
+	default:
+		subject = "Khair — Verification Code"
+		data = map[string]string{
+			"{{LANG}}":           "en",
+			"{{DIR}}":            "ltr",
+			"{{TEXT_ALIGN}}":     "left",
+			"{{SUBJECT}}":        subject,
+			"{{GREETING}}":       "Assalamu Alaikum 👋",
+			"{{TITLE}}":          "Your Verification Code",
+			"{{INTRO}}":          "Use the code below to verify your email address.",
+			"{{EXPIRY}}":         "This code expires in <strong>10 minutes</strong>.",
+			"{{CODE}}":           code,
+			"{{SECURITY_TITLE}}": "Never share this code with anyone.",
+			"{{SECURITY_BODY}}":  "The Khair team will never ask for it.",
+			"{{IGNORE_TEXT}}":    "If you didn't request this code, you can safely ignore this email.",
+			"{{FOOTER}}":         "Khair Platform &middot; Building community with purpose",
+			"{{COPYRIGHT}}":      "",
+		}
 	}
 
-	data := map[string]string{
-		"{{CODE}}":           code,
-		"{{BRAND_LOGO_URL}}": s.brandLogoURL,
-	}
-
-	body, err := s.loadTemplate("verification", lang, data)
+	body, err := s.loadTemplate("verification", "en", data) // Always load the single verification.html file
 	if err != nil {
 		return fmt.Errorf("load verification template: %w", err)
 	}
 
-	return s.sendEmail(email, subjects[lang], body)
+	return s.sendEmail(email, subject, body)
 }
 
 // SendNotificationEmail sends a generic branded notification email.
@@ -135,15 +186,23 @@ func (s *Service) SendNotificationEmail(email, title, body, language string) err
 // ── Template Loading ─────────────────────────────────────────────────────────
 
 func (s *Service) loadTemplate(name, lang string, data map[string]string) (string, error) {
-	filename := fmt.Sprintf("templates/%s_%s.html", name, lang)
+	var filename string
+	if name == "verification" {
+		filename = "templates/verification.html"
+	} else {
+		filename = fmt.Sprintf("templates/%s_%s.html", name, lang)
+	}
+
 	content, err := templateFS.ReadFile(filename)
-	if err != nil {
-		// Fallback to English
+	if err != nil && name != "verification" {
+		// Fallback to English for other templates
 		filename = fmt.Sprintf("templates/%s_en.html", name)
 		content, err = templateFS.ReadFile(filename)
 		if err != nil {
 			return "", fmt.Errorf("template %s not found: %w", filename, err)
 		}
+	} else if err != nil {
+		return "", fmt.Errorf("template %s not found: %w", filename, err)
 	}
 
 	result := string(content)
