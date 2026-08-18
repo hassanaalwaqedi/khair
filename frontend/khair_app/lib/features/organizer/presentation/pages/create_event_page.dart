@@ -66,7 +66,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
   late final TextEditingController _onlineLink;
   late final TextEditingController _onlineInstructions;
   late final TextEditingController _capacity;
-  late final TextEditingController _guidelines;
+  late final TextEditingController _priceAmount;
+  late final TextEditingController _currency;
   final _countriesSource = CountriesDataSource(getIt<ApiClient>());
   final _imagePicker = ImagePicker();
   List<Country> _countries = const [];
@@ -88,10 +89,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
     _venue = TextEditingController(text: data.venueName ?? '');
     _address = TextEditingController(text: data.address ?? '');
     _onlineLink = TextEditingController(text: data.onlineLink ?? '');
-    _onlineInstructions =
-        TextEditingController(text: data.onlineInstructions ?? '');
+    _onlineInstructions = TextEditingController(text: data.onlineInstructions ?? '');
     _capacity = TextEditingController(text: data.capacity?.toString() ?? '');
     _guidelines = TextEditingController(text: data.guidelines);
+    _priceAmount = TextEditingController(text: data.priceAmount ?? '');
+    _currency = TextEditingController(text: data.currency ?? 'USD');
     _loadCountries();
   }
 
@@ -121,6 +123,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
       _onlineInstructions,
       _capacity,
       _guidelines,
+      _priceAmount,
+      _currency,
     ]) {
       controller.dispose();
     }
@@ -870,11 +874,65 @@ class _CreateEventViewState extends State<_CreateEventView> {
               (value) => cubit
                   .updateFormData(data.copyWith(registrationDeadline: value)),
               dark),
-          const SizedBox(height: 22),
-          _hintBox(
-              'Paid events are coming later. Khair currently supports free events only.',
-              Icons.info_outline_rounded,
-              dark),
+          const SizedBox(height: 24),
+          _sectionLabel('Pricing', dark),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+                child: _choiceChip(
+                    'Free',
+                    data.pricingType == 'free',
+                    () => cubit.updatePricingType('free'),
+                    dark)),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _choiceChip(
+                    'Paid',
+                    data.pricingType == 'paid',
+                    () {
+                      if (data.eventType == 'online') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Paid online events are not supported yet.')),
+                        );
+                      } else {
+                        cubit.updatePricingType('paid');
+                      }
+                    },
+                    dark))
+          ]),
+          if (data.pricingType == 'paid') ...[
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(
+                flex: 2,
+                child: _field(
+                  label: 'Price',
+                  hint: 'e.g. 50',
+                  controller: _priceAmount,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefix: Icons.attach_money_outlined,
+                  onChanged: (val) => cubit.updatePriceAmount(val),
+                  dark: dark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: _field(
+                  label: 'Currency',
+                  hint: 'USD',
+                  controller: _currency,
+                  onChanged: (val) => cubit.updateCurrency(val),
+                  dark: dark,
+                ),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            _hintBox(
+                'Payment will be collected at the venue. Khair does not process payments.',
+                Icons.payments_outlined,
+                dark),
+          ],
           const SizedBox(height: 18),
           _field(
               label: 'Anything attendees should know? (optional)',

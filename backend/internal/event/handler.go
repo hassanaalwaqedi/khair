@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/middleware"
 	"github.com/khair/backend/pkg/response"
@@ -241,8 +242,7 @@ type EventDetailResponse struct {
 	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
 	AgeMin                       *int       `json:"age_min,omitempty"`
 	AgeMax                       *int       `json:"age_max,omitempty"`
-	TicketPrice                  *float64   `json:"ticket_price,omitempty"`
-	Currency                     *string    `json:"currency,omitempty"`
+	Pricing                      *models.PricingInfo `json:"pricing,omitempty"`
 	Status                       string     `json:"status"`
 	IsPublished                  bool       `json:"is_published"`
 	IsOnline                     bool       `json:"is_online"`
@@ -340,8 +340,7 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 		GenderRestriction:            event.GenderRestriction,
 		AgeMin:                       event.AgeMin,
 		AgeMax:                       event.AgeMax,
-		TicketPrice:                  event.TicketPrice,
-		Currency:                     event.Currency,
+		Pricing:                      event.Pricing,
 		Status:                       event.Status,
 		IsPublished:                  event.IsPublished,
 		IsOnline:                     event.IsOnline,

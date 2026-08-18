@@ -6,8 +6,13 @@ import '../../../../core/theme/app_theme.dart';
 /// Success page shown after joining an event
 class ReservationSuccessPage extends StatelessWidget {
   final String eventId;
+  final bool isPaid;
 
-  const ReservationSuccessPage({super.key, required this.eventId});
+  const ReservationSuccessPage({
+    super.key,
+    required this.eventId,
+    this.isPaid = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +81,32 @@ class ReservationSuccessPage extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
+              if (isPaid) ...[
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: Colors.amber),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'This is a paid event. Please remember to bring payment to the venue.',
+                          style: TextStyle(
+                            color: Colors.amber[900],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 40),
 
 

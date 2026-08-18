@@ -8,6 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// PricingInfo represents the structured pricing for an event
+type PricingInfo struct {
+	Type          string  `json:"type"`                     // "free" or "paid"
+	AmountCents   *int64  `json:"amount_cents,omitempty"`   // E.g., 500 for $5.00
+	Currency      *string `json:"currency,omitempty"`       // ISO currency code (e.g., "USD")
+	PaymentMethod *string `json:"payment_method,omitempty"` // E.g., "pay_at_venue"
+}
+
 // Role constants
 const (
 	RoleUser      = "user"
@@ -121,9 +129,8 @@ type Event struct {
 	ReservedCount                int        `json:"reserved_count"`
 	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
 	AgeMin                       *int       `json:"age_min,omitempty"`
-	AgeMax                       *int       `json:"age_max,omitempty"`
-	TicketPrice                  *float64   `json:"ticket_price,omitempty"`
-	Currency                     *string    `json:"currency,omitempty"`
+	AgeMax                       *int         `json:"age_max,omitempty"`
+	Pricing                      *PricingInfo `json:"pricing,omitempty"`
 	Status                       string     `json:"status"`
 	IsPublished                  bool       `json:"is_published"`
 	IsOnline                     bool       `json:"is_online"`

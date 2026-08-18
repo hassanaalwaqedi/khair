@@ -169,6 +169,13 @@ class _EventCardState extends State<EventCard> {
                             leading: const Text('👥'),
                             text: attendeeText,
                           ),
+                          const SizedBox(height: AppSpacing.x1),
+                          _MetaRow(
+                            leading: const Text('💵'),
+                            text: widget.event.pricing.isFree
+                                ? 'Free'
+                                : '${(widget.event.pricing.amountCents! / 100).toStringAsFixed(2)} ${widget.event.pricing.currency ?? ""}',
+                          ),
                           const Spacer(),
                           Row(
                             children: [

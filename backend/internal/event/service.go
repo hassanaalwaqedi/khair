@@ -87,9 +87,8 @@ type CreateEventRequest struct {
 	OnlinePlatform               *string  `json:"online_platform"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
-	TicketPrice                  *float64 `json:"ticket_price"`
-	Currency                     *string  `json:"currency"`
-	VenueName                    *string  `json:"venue_name"`
+	Pricing                      *models.PricingInfo `json:"pricing"`
+	VenueName                    *string             `json:"venue_name"`
 	Capacity                     *int     `json:"capacity"`
 	GenderRestriction            *string  `json:"gender_restriction"`
 	AgeMin                       *int     `json:"age_min"`
@@ -121,9 +120,8 @@ type DraftEventRequest struct {
 	OnlinePlatform               *string  `json:"online_platform"`
 	JoinInstructions             *string  `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
-	TicketPrice                  *float64 `json:"ticket_price"`
-	Currency                     *string  `json:"currency"`
-	VenueName                    *string  `json:"venue_name"`
+	Pricing                      *models.PricingInfo `json:"pricing"`
+	VenueName                    *string             `json:"venue_name"`
 	Capacity                     *int     `json:"capacity"`
 	GenderRestriction            *string  `json:"gender_restriction"`
 	AgeMin                       *int     `json:"age_min"`
@@ -164,8 +162,7 @@ func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
 		OnlinePlatform:               d.OnlinePlatform,
 		JoinInstructions:             d.JoinInstructions,
 		JoinLinkVisibleBeforeMinutes: d.JoinLinkVisibleBeforeMinutes,
-		TicketPrice:                  d.TicketPrice,
-		Currency:                     d.Currency,
+		Pricing:                      d.Pricing,
 		VenueName:                    d.VenueName,
 		Capacity:                     d.Capacity,
 		GenderRestriction:            d.GenderRestriction,
@@ -196,11 +193,10 @@ type UpdateEventRequest struct {
 	IsOnline                     *bool     `json:"is_online"`
 	OnlineLink                   *string   `json:"online_link"`
 	OnlinePlatform               *string   `json:"online_platform"`
-	JoinInstructions             *string   `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int      `json:"join_link_visible_before_minutes"`
-	TicketPrice                  *float64  `json:"ticket_price"`
-	Currency                     *string   `json:"currency"`
-	VenueName                    *string   `json:"venue_name"`
+	JoinInstructions             *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
+	Pricing                      *models.PricingInfo `json:"pricing"`
+	VenueName                    *string             `json:"venue_name"`
 	Capacity                     *int      `json:"capacity"`
 	GenderRestriction            *string   `json:"gender_restriction"`
 	AgeMin                       *int      `json:"age_min"`
@@ -247,6 +243,29 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	}
 	if req.Capacity != nil && *req.Capacity < 1 {
 		return nil, errors.New("capacity must be at least 1")
+	}
+
+	// Validate pricing
+	if req.Pricing == nil {
+		// Default to free
+		req.Pricing = &models.PricingInfo{Type: "free"}
+	}
+	if req.Pricing.Type != "free" && req.Pricing.Type != "paid" {
+		return nil, errors.New("invalid pricing type")
+	}
+	if req.Pricing.Type == "paid" {
+		if req.IsOnline {
+			return nil, errors.New("paid online events aren't supported yet")
+		}
+		if req.Pricing.AmountCents == nil || *req.Pricing.AmountCents <= 0 {
+			return nil, errors.New("paid events must have a valid price > 0")
+		}
+		if req.Pricing.Currency == nil || *req.Pricing.Currency == "" {
+			return nil, errors.New("paid events must specify a currency")
+		}
+		if req.Pricing.PaymentMethod == nil || *req.Pricing.PaymentMethod != "pay_at_venue" {
+			return nil, errors.New("paid events must use 'pay_at_venue' payment method")
+		}
 	}
 
 	// Parse and validate dates
@@ -310,8 +329,7 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		OnlineLink:                   req.OnlineLink,
 		JoinInstructions:             req.JoinInstructions,
 		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
-		TicketPrice:                  req.TicketPrice,
-		Currency:                     req.Currency,
+		Pricing:                      req.Pricing,
 		Capacity:                     req.Capacity,
 		GenderRestriction:            req.GenderRestriction,
 		AgeMin:                       req.AgeMin,
@@ -454,11 +472,29 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	if req.JoinLinkVisibleBeforeMinutes != nil {
 		event.JoinLinkVisibleBeforeMinutes = *req.JoinLinkVisibleBeforeMinutes
 	}
-	if req.TicketPrice != nil {
-		event.TicketPrice = req.TicketPrice
-	}
-	if req.Currency != nil {
-		event.Currency = req.Currency
+	if req.Pricing != nil {
+		if req.Pricing.Type != "free" && req.Pricing.Type != "paid" {
+			return nil, errors.New("invalid pricing type")
+		}
+		if req.Pricing.Type == "paid" {
+			isOnline := event.IsOnline
+			if req.IsOnline != nil {
+				isOnline = *req.IsOnline
+			}
+			if isOnline {
+				return nil, errors.New("paid online events aren't supported yet")
+			}
+			if req.Pricing.AmountCents == nil || *req.Pricing.AmountCents <= 0 {
+				return nil, errors.New("paid events must have a valid price > 0")
+			}
+			if req.Pricing.Currency == nil || *req.Pricing.Currency == "" {
+				return nil, errors.New("paid events must specify a currency")
+			}
+			if req.Pricing.PaymentMethod == nil || *req.Pricing.PaymentMethod != "pay_at_venue" {
+				return nil, errors.New("paid events must use 'pay_at_venue' payment method")
+			}
+		}
+		event.Pricing = req.Pricing
 	}
 	if req.Title != nil {
 		title := strings.TrimSpace(*req.Title)

@@ -39,8 +39,7 @@ class CreateEventParams {
   final DateTime startDate;
   final DateTime? endDate;
   final String? imageUrl;
-  final double? ticketPrice;
-  final String? currency;
+  final EventPricing? pricing;
   final bool isOnline;
   final String? onlinePlatform;
   final String? onlineLink;
@@ -69,8 +68,7 @@ class CreateEventParams {
     required this.startDate,
     this.endDate,
     this.imageUrl,
-    this.ticketPrice,
-    this.currency,
+    this.pricing,
     this.isOnline = false,
     this.onlinePlatform,
     this.onlineLink,
@@ -101,8 +99,13 @@ class CreateEventParams {
       'start_date': startDate.toUtc().toIso8601String(),
       'end_date': endDate?.toUtc().toIso8601String(),
       'image_url': imageUrl,
-      'ticket_price': ticketPrice,
-      'currency': currency,
+      if (pricing != null)
+        'pricing': {
+          'type': pricing!.type,
+          'amount_cents': pricing!.amountCents,
+          'currency': pricing!.currency,
+          'payment_method': pricing!.paymentMethod,
+        },
       'is_online': isOnline,
       'online_platform': onlinePlatform,
       'online_link': onlineLink,
@@ -162,8 +165,7 @@ class UpdateEventParams {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? imageUrl;
-  final double? ticketPrice;
-  final String? currency;
+  final EventPricing? pricing;
   final bool? isOnline;
   final String? onlineLink;
   final String? joinInstructions;
@@ -191,8 +193,7 @@ class UpdateEventParams {
     this.startDate,
     this.endDate,
     this.imageUrl,
-    this.ticketPrice,
-    this.currency,
+    this.pricing,
     this.isOnline,
     this.onlineLink,
     this.joinInstructions,
@@ -223,8 +224,14 @@ class UpdateEventParams {
       json['start_date'] = startDate!.toUtc().toIso8601String();
     if (endDate != null) json['end_date'] = endDate!.toUtc().toIso8601String();
     if (imageUrl != null) json['image_url'] = imageUrl;
-    if (ticketPrice != null) json['ticket_price'] = ticketPrice;
-    if (currency != null) json['currency'] = currency;
+    if (pricing != null) {
+      json['pricing'] = {
+        'type': pricing!.type,
+        'amount_cents': pricing!.amountCents,
+        'currency': pricing!.currency,
+        'payment_method': pricing!.paymentMethod,
+      };
+    }
     if (isOnline != null) json['is_online'] = isOnline;
     if (onlineLink != null) json['online_link'] = onlineLink;
     if (joinInstructions != null) json['join_instructions'] = joinInstructions;

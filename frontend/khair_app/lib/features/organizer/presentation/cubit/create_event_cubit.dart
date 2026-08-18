@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/image_upload_validator.dart';
+import '../../../events/domain/entities/event.dart';
 import '../../../events/domain/repositories/events_repository.dart';
 import 'create_event_state.dart';
 
@@ -97,8 +98,13 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       _update(state.formData.copyWith(description: value));
   void updateCategory(String value) =>
       _update(state.formData.copyWith(category: value));
-  void updateEventType(String value) =>
-      _update(state.formData.copyWith(eventType: value));
+  void updateEventType(String value) {
+    var nextData = state.formData.copyWith(eventType: value);
+    if (value == 'online' && nextData.pricingType == 'paid') {
+      nextData = nextData.copyWith(pricingType: 'free');
+    }
+    _update(nextData);
+  }
   void updateLanguage(String value) =>
       _update(state.formData.copyWith(language: value));
   void updateGenderPolicy(String value) =>
@@ -108,8 +114,17 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   void updateCapacity({required bool unlimited, int? value}) => _update(
         state.formData.copyWith(unlimitedCapacity: unlimited, capacity: value),
       );
-  void updateRegistrationMode(String value) =>
-      _update(state.formData.copyWith(registrationMode: value));
+  void updateRegistrationMode(String mode) =>
+      _update(state.formData.copyWith(registrationMode: mode));
+
+  void updatePricingType(String type) =>
+      _update(state.formData.copyWith(pricingType: type));
+
+  void updatePriceAmount(String amount) =>
+      _update(state.formData.copyWith(priceAmount: amount));
+
+  void updateCurrency(String currency) =>
+      _update(state.formData.copyWith(currency: currency));
   void setFinalConfirmed(bool value) =>
       _update(state.formData.copyWith(finalConfirmed: value));
 
@@ -438,8 +453,16 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         startDate: fd.startDateTime,
         endDate: fd.endDateTime,
         imageUrl: fd.coverImageUrl,
-        ticketPrice: null,
-        currency: null,
+        pricing: fd.pricingType == 'paid'
+            ? EventPricing(
+                type: 'paid',
+                amountCents: fd.priceAmount != null && fd.priceAmount!.isNotEmpty
+                    ? (double.parse(fd.priceAmount!) * 100).toInt()
+                    : 0,
+                currency: fd.currency ?? 'USD',
+                paymentMethod: 'pay_at_venue',
+              )
+            : const EventPricing(type: 'free'),
         isOnline: fd.eventType == 'online',
         onlinePlatform: fd.onlinePlatform,
         onlineLink: fd.eventType == 'online' ? fd.onlineLink : null,

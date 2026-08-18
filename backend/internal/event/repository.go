@@ -116,7 +116,7 @@ type EventFilter struct {
 const eventCols = `e.id, e.organizer_id, e.title, e.description, e.event_type, e.category, e.language,
        e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
        e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
-       e.ticket_price, e.currency,
+       e.pricing_type, e.price_cents, e.currency, e.payment_method,
        e.status, e.is_published, e.is_online, e.online_link, e.join_instructions,
        e.join_link_visible_before_minutes, e.rejection_reason, e.approved_at,
        e.created_at, e.updated_at, e.venue_name, e.online_platform,
@@ -130,7 +130,7 @@ const eventWithOrgCols = eventCols + `, o.name as organizer_name`
 const bareEventCols = `id, organizer_id, title, description, event_type, category, language,
        country, city, address, latitude, longitude, start_date, end_date,
        image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
-       ticket_price, currency,
+       pricing_type, price_cents, currency, payment_method,
        status, is_published, is_online, online_link, join_instructions,
        join_link_visible_before_minutes, rejection_reason, approved_at,
        created_at, updated_at, venue_name, online_platform,
@@ -143,36 +143,72 @@ const bareEventCols = `id, organizer_id, title, description, event_type, categor
 func scanEvent(scanner interface {
 	Scan(dest ...interface{}) error
 }, event *models.Event) error {
-	return scanner.Scan(
+	var pricingType string
+	var amountCents *int64
+	var currency, paymentMethod *string
+
+	err := scanner.Scan(
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-		&event.TicketPrice, &event.Currency,
+		&pricingType, &amountCents, &currency, &paymentMethod,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
 		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
 		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
 		&event.OrganizerGuidelines, pq.Array(&event.Tags),
 	)
+	if err != nil {
+		return err
+	}
+	
+	if pricingType == "" {
+		pricingType = "free"
+	}
+	event.Pricing = &models.PricingInfo{
+		Type:          pricingType,
+		AmountCents:   amountCents,
+		Currency:      currency,
+		PaymentMethod: paymentMethod,
+	}
+	return nil
 }
 
 // scanEventWithOrg scans a row into an EventWithOrganizer struct
 func scanEventWithOrg(scanner interface {
 	Scan(dest ...interface{}) error
 }, event *models.EventWithOrganizer) error {
-	return scanner.Scan(
+	var pricingType string
+	var amountCents *int64
+	var currency, paymentMethod *string
+
+	err := scanner.Scan(
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
 		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
-		&event.TicketPrice, &event.Currency,
+		&pricingType, &amountCents, &currency, &paymentMethod,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
 		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
 		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
 		&event.OrganizerGuidelines, pq.Array(&event.Tags), &event.OrganizerName,
 	)
+	if err != nil {
+		return err
+	}
+	
+	if pricingType == "" {
+		pricingType = "free"
+	}
+	event.Pricing = &models.PricingInfo{
+		Type:          pricingType,
+		AmountCents:   amountCents,
+		Currency:      currency,
+		PaymentMethod: paymentMethod,
+	}
+	return nil
 }
 
 // Create creates a new event
@@ -180,15 +216,26 @@ func (r *Repository) Create(event *models.Event) error {
 	query := `
 		INSERT INTO events (id, organizer_id, title, description, event_type, language, 
 		                    country, city, address, latitude, longitude, start_date, end_date, 
-		                    image_url, ticket_price, currency, is_online, online_link, join_instructions,
+		                    image_url, pricing_type, price_cents, currency, payment_method, is_online, online_link, join_instructions,
 		                    join_link_visible_before_minutes, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
 	`
+	
+	pricingType := "free"
+	var priceCents *int64
+	var currency, paymentMethod *string
+	if event.Pricing != nil {
+		pricingType = event.Pricing.Type
+		priceCents = event.Pricing.AmountCents
+		currency = event.Pricing.Currency
+		paymentMethod = event.Pricing.PaymentMethod
+	}
+
 	_, err := r.db.Exec(query,
 		event.ID, event.OrganizerID, event.Title, event.Description, event.EventType,
 		event.Language, event.Country, event.City, event.Address, event.Latitude,
 		event.Longitude, event.StartDate, event.EndDate, event.ImageURL,
-		event.TicketPrice, event.Currency,
+		pricingType, priceCents, currency, paymentMethod,
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes, event.Status,
 		event.CreatedAt, event.UpdatedAt,
@@ -356,7 +403,7 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 	}
 
 	if filter.FreeOnly {
-		const freeClause = ` AND COALESCE(e.ticket_price, 0) = 0`
+		const freeClause = ` AND e.pricing_type = 'free'`
 		query += freeClause
 		countQuery += freeClause
 	}
@@ -453,16 +500,27 @@ func (r *Repository) Update(event *models.Event) error {
 			title = $2, description = $3, event_type = $4, language = $5,
 			country = $6, city = $7, address = $8, latitude = $9, longitude = $10,
 			start_date = $11, end_date = $12, image_url = $13, status = $14,
-			ticket_price = $15, currency = $16,
-			is_online = $17, online_link = $18, join_instructions = $19,
-			join_link_visible_before_minutes = $20
+			pricing_type = $15, price_cents = $16, currency = $17, payment_method = $18,
+			is_online = $19, online_link = $20, join_instructions = $21,
+			join_link_visible_before_minutes = $22
 		WHERE id = $1
 	`
+	
+	pricingType := "free"
+	var priceCents *int64
+	var currency, paymentMethod *string
+	if event.Pricing != nil {
+		pricingType = event.Pricing.Type
+		priceCents = event.Pricing.AmountCents
+		currency = event.Pricing.Currency
+		paymentMethod = event.Pricing.PaymentMethod
+	}
+
 	_, err := r.db.Exec(query,
 		event.ID, event.Title, event.Description, event.EventType, event.Language,
 		event.Country, event.City, event.Address, event.Latitude, event.Longitude,
 		event.StartDate, event.EndDate, event.ImageURL, event.Status,
-		event.TicketPrice, event.Currency,
+		pricingType, priceCents, currency, paymentMethod,
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes,
 	)

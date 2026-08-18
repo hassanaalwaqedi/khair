@@ -40,8 +40,7 @@ class EventModel extends Event {
     super.isLinkUnlocked,
     required super.createdAt,
     required super.updatedAt,
-    super.ticketPrice,
-    super.currency,
+    required super.pricing,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
@@ -89,8 +88,14 @@ class EventModel extends Event {
       isLinkUnlocked: json['is_link_unlocked'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      ticketPrice: (json['ticket_price'] as num?)?.toDouble(),
-      currency: json['currency'] as String?,
+      pricing: json['pricing'] != null
+          ? EventPricing(
+              type: json['pricing']['type'] as String? ?? 'free',
+              amountCents: json['pricing']['amount_cents'] as int?,
+              currency: json['pricing']['currency'] as String?,
+              paymentMethod: json['pricing']['payment_method'] as String?,
+            )
+          : const EventPricing(type: 'free'),
     );
   }
 
@@ -134,8 +139,12 @@ class EventModel extends Event {
       'is_link_unlocked': isLinkUnlocked,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
-      'ticket_price': ticketPrice,
-      'currency': currency,
+      'pricing': {
+        'type': pricing.type,
+        'amount_cents': pricing.amountCents,
+        'currency': pricing.currency,
+        'payment_method': pricing.paymentMethod,
+      },
     };
   }
 }

@@ -1,5 +1,25 @@
 import 'package:equatable/equatable.dart';
 
+class EventPricing extends Equatable {
+  final String type; // "free" or "paid"
+  final int? amountCents;
+  final String? currency;
+  final String? paymentMethod;
+
+  const EventPricing({
+    required this.type,
+    this.amountCents,
+    this.currency,
+    this.paymentMethod,
+  });
+
+  bool get isFree => type == 'free';
+  bool get isPaid => type == 'paid';
+
+  @override
+  List<Object?> get props => [type, amountCents, currency, paymentMethod];
+}
+
 class Event extends Equatable {
   final String id;
   final String organizerId;
@@ -39,8 +59,7 @@ class Event extends Equatable {
   final bool isLinkUnlocked;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final double? ticketPrice;
-  final String? currency;
+  final EventPricing pricing;
 
   const Event({
     required this.id,
@@ -81,8 +100,7 @@ class Event extends Equatable {
     this.isLinkUnlocked = false,
     required this.createdAt,
     required this.updatedAt,
-    this.ticketPrice,
-    this.currency,
+    required this.pricing,
   });
 
   @override
@@ -125,8 +143,7 @@ class Event extends Equatable {
         isLinkUnlocked,
         createdAt,
         updatedAt,
-        ticketPrice,
-        currency,
+        pricing,
       ];
 }
 

@@ -438,6 +438,13 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             ? 'Community event'
             : '${event.capacity} spots total',
       ),
+      _EventMeta(
+        icon: Icons.payments_outlined,
+        title: event.pricing.isFree ? 'Free Event' : 'Paid Event',
+        detail: event.pricing.isFree
+            ? 'No cost to attend'
+            : '${(event.pricing.amountCents! / 100).toStringAsFixed(2)} ${event.pricing.currency ?? ""}',
+      ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {

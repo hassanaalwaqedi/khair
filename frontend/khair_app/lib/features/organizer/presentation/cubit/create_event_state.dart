@@ -44,6 +44,10 @@ class CreateEventFormData extends Equatable {
   final DateTime? registrationDeadline;
   final String registrationMode; // instant | approval_required
   final String guidelines;
+  final String pricingType; // free | paid
+  final String? priceAmount;
+  final String? currency;
+  final String? paymentMethod;
   final String? coverImageUrl;
 
   /// Browser/mobile preview bytes shown while the permanent upload is pending
@@ -81,6 +85,10 @@ class CreateEventFormData extends Equatable {
     this.registrationDeadline,
     this.registrationMode = 'instant',
     this.guidelines = '',
+    this.pricingType = 'free',
+    this.priceAmount,
+    this.currency,
+    this.paymentMethod = 'pay_at_venue',
     this.coverImageUrl,
     this.coverImagePreviewBytes,
     this.finalConfirmed = false,
@@ -116,6 +124,10 @@ class CreateEventFormData extends Equatable {
     DateTime? registrationDeadline,
     String? registrationMode,
     String? guidelines,
+    String? pricingType,
+    String? priceAmount,
+    String? currency,
+    String? paymentMethod,
     String? coverImageUrl,
     Uint8List? coverImagePreviewBytes,
     bool clearCoverImagePreviewBytes = false,
@@ -151,6 +163,10 @@ class CreateEventFormData extends Equatable {
       registrationDeadline: registrationDeadline ?? this.registrationDeadline,
       registrationMode: registrationMode ?? this.registrationMode,
       guidelines: guidelines ?? this.guidelines,
+      pricingType: pricingType ?? this.pricingType,
+      priceAmount: priceAmount ?? this.priceAmount,
+      currency: currency ?? this.currency,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       coverImagePreviewBytes: clearCoverImagePreviewBytes
           ? null
@@ -218,7 +234,11 @@ class CreateEventFormData extends Equatable {
       'registrationDeadline': registrationDeadline?.toIso8601String(),
       'registrationMode': registrationMode,
       'guidelines': guidelines,
-      'coverImageUrl': coverImageUrl,
+      'pricing_type': pricingType,
+      'price_amount': priceAmount,
+      'currency': currency,
+      'payment_method': paymentMethod,
+      'cover_image_url': coverImageUrl,
       'finalConfirmed': finalConfirmed,
     };
   }
@@ -264,8 +284,12 @@ class CreateEventFormData extends Equatable {
           ? DateTime.tryParse(json['registrationDeadline'])
           : null,
       registrationMode: json['registrationMode'] ?? 'instant',
-      guidelines: json['guidelines'] ?? '',
-      coverImageUrl: json['coverImageUrl'],
+      guidelines: json['guidelines'] as String? ?? '',
+      pricingType: json['pricing_type'] as String? ?? 'free',
+      priceAmount: json['price_amount'] as String?,
+      currency: json['currency'] as String?,
+      paymentMethod: json['payment_method'] as String? ?? 'pay_at_venue',
+      coverImageUrl: json['cover_image_url'] as String?,
       finalConfirmed: json['finalConfirmed'] ?? false,
     );
   }
@@ -301,6 +325,10 @@ class CreateEventFormData extends Equatable {
         registrationDeadline,
         registrationMode,
         guidelines,
+        pricingType,
+        priceAmount,
+        currency,
+        paymentMethod,
         coverImageUrl,
         coverImagePreviewBytes,
         finalConfirmed,
