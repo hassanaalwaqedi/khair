@@ -4671,6 +4671,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No'**
   String get no;
+
+  /// No description provided for @shareEventIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Join me at {eventTitle} on Khair 👋'**
+  String shareEventIntro(String eventTitle);
+
+  /// No description provided for @shareEventOnlineLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'💻 Online'**
+  String get shareEventOnlineLocation;
+
+  /// No description provided for @shareEventPhysicalLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'📍 {location}'**
+  String shareEventPhysicalLocation(String location);
+
+  /// No description provided for @shareEventOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'🎤 Hosted by {name}'**
+  String shareEventOrganizer(String name);
+
+  /// No description provided for @chooseYourArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your area'**
+  String get chooseYourArea;
+
+  /// No description provided for @discoverEventsNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover events near you.'**
+  String get discoverEventsNearYou;
+
+  /// No description provided for @useYourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your location or search a city.'**
+  String get useYourLocation;
+
+  /// No description provided for @useCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current location. Khair only asks when you choose this.'**
+  String get useCurrentLocation;
+
+  /// No description provided for @showEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Show events'**
+  String get showEvents;
+
+  /// No description provided for @findSomethingToDo.
+  ///
+  /// In en, this message translates to:
+  /// **'Find something to do'**
+  String get findSomethingToDo;
+
+  /// No description provided for @searchEventsOrCities.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events, topics, or cities'**
+  String get searchEventsOrCities;
+
+  /// No description provided for @howCanWeHelpYou.
+  ///
+  /// In en, this message translates to:
+  /// **'How can we help you?'**
+  String get howCanWeHelpYou;
+
+  /// No description provided for @askKhairAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Khair AI or connect with our support team.'**
+  String get askKhairAi;
+
+  /// No description provided for @supportCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get supportCategory;
+
+  /// No description provided for @supportCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Payment, Account, General'**
+  String get supportCategoryHint;
+
+  /// No description provided for @howCanWeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'How can we help?'**
+  String get howCanWeHelp;
+
+  /// No description provided for @startChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Chat'**
+  String get startChat;
+
+  /// No description provided for @talkToHuman.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to Human'**
+  String get talkToHuman;
+
+  /// No description provided for @resolveTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve'**
+  String get resolveTicket;
+
+  /// No description provided for @waitingForSupportAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for an available support agent...'**
+  String get waitingForSupportAgent;
 }
 
 class _AppLocalizationsDelegate

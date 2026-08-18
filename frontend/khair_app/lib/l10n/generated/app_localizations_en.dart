@@ -2427,4 +2427,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get no => 'No';
+
+  @override
+  String shareEventIntro(String eventTitle) {
+    return 'Join me at $eventTitle on Khair 👋';
+  }
+
+  @override
+  String get shareEventOnlineLocation => '💻 Online';
+
+  @override
+  String shareEventPhysicalLocation(String location) {
+    return '📍 $location';
+  }
+
+  @override
+  String shareEventOrganizer(String name) {
+    return '🎤 Hosted by $name';
+  }
+
+  @override
+  String get chooseYourArea => 'Choose your area';
+
+  @override
+  String get discoverEventsNearYou => 'Discover events near you.';
+
+  @override
+  String get useYourLocation => 'Use your location or search a city.';
+
+  @override
+  String get useCurrentLocation =>
+      'Use current location. Khair only asks when you choose this.';
+
+  @override
+  String get showEvents => 'Show events';
+
+  @override
+  String get findSomethingToDo => 'Find something to do';
+
+  @override
+  String get searchEventsOrCities => 'Search events, topics, or cities';
+
+  @override
+  String get howCanWeHelpYou => 'How can we help you?';
+
+  @override
+  String get askKhairAi => 'Ask Khair AI or connect with our support team.';
+
+  @override
+  String get supportCategory => 'Category';
+
+  @override
+  String get supportCategoryHint => 'e.g., Payment, Account, General';
+
+  @override
+  String get howCanWeHelp => 'How can we help?';
+
+  @override
+  String get startChat => 'Start Chat';
+
+  @override
+  String get talkToHuman => 'Talk to Human';
+
+  @override
+  String get resolveTicket => 'Resolve';
+
+  @override
+  String get waitingForSupportAgent =>
+      'Waiting for an available support agent...';
 }

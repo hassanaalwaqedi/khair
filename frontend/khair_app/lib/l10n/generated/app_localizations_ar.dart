@@ -2390,4 +2390,71 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get no => 'لا';
+
+  @override
+  String shareEventIntro(String eventTitle) {
+    return 'انضم إلي في فعالية $eventTitle على خير 👋';
+  }
+
+  @override
+  String get shareEventOnlineLocation => '💻 عبر الإنترنت';
+
+  @override
+  String shareEventPhysicalLocation(String location) {
+    return '📍 $location';
+  }
+
+  @override
+  String shareEventOrganizer(String name) {
+    return '🎤 بتنظيم $name';
+  }
+
+  @override
+  String get chooseYourArea => 'اختر منطقتك';
+
+  @override
+  String get discoverEventsNearYou => 'اكتشف الفعاليات بالقرب منك.';
+
+  @override
+  String get useYourLocation => 'استخدم موقعك أو ابحث عن مدينة.';
+
+  @override
+  String get useCurrentLocation =>
+      'استخدم الموقع الحالي. تطبيق خير يسأل فقط عند اختيارك لهذا.';
+
+  @override
+  String get showEvents => 'عرض الفعاليات';
+
+  @override
+  String get findSomethingToDo => 'ابحث عن شيء لتفعله';
+
+  @override
+  String get searchEventsOrCities => 'ابحث عن فعاليات، مواضيع، أو مدن';
+
+  @override
+  String get howCanWeHelpYou => 'كيف يمكننا مساعدتك؟';
+
+  @override
+  String get askKhairAi => 'اسأل الذكاء الاصطناعي لخير أو تواصل مع فريق الدعم.';
+
+  @override
+  String get supportCategory => 'الفئة';
+
+  @override
+  String get supportCategoryHint => 'مثال: الدفع، الحساب، عام';
+
+  @override
+  String get howCanWeHelp => 'كيف يمكننا المساعدة؟';
+
+  @override
+  String get startChat => 'بدء المحادثة';
+
+  @override
+  String get talkToHuman => 'تحدث إلى شخص';
+
+  @override
+  String get resolveTicket => 'حل التذكرة';
+
+  @override
+  String get waitingForSupportAgent => 'في انتظار وكيل دعم متاح...';
 }

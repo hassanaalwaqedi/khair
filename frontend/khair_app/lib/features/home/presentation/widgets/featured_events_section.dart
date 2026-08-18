@@ -51,7 +51,7 @@ class FeaturedEventsSection extends StatelessWidget {
                           child: _FeaturedCard(
                             event: events[index],
                             onTap: () =>
-                                context.go('/events/${events[index].id}'),
+                                context.push('/events/${events[index].id}'),
                           ),
                         );
                       },

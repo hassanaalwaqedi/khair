@@ -2440,4 +2440,73 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get no => 'Hayır';
+
+  @override
+  String shareEventIntro(String eventTitle) {
+    return 'Khair\'deki $eventTitle etkinliğine katıl 👋';
+  }
+
+  @override
+  String get shareEventOnlineLocation => '💻 Çevrim içi';
+
+  @override
+  String shareEventPhysicalLocation(String location) {
+    return '📍 $location';
+  }
+
+  @override
+  String shareEventOrganizer(String name) {
+    return '🎤 Düzenleyen: $name';
+  }
+
+  @override
+  String get chooseYourArea => 'Bölgenizi seçin';
+
+  @override
+  String get discoverEventsNearYou => 'Yakınınızdaki etkinlikleri keşfedin.';
+
+  @override
+  String get useYourLocation => 'Konumunuzu kullanın veya bir şehir arayın.';
+
+  @override
+  String get useCurrentLocation =>
+      'Mevcut konumu kullan. Khair sadece bunu seçtiğinizde sorar.';
+
+  @override
+  String get showEvents => 'Etkinlikleri göster';
+
+  @override
+  String get findSomethingToDo => 'Yapacak bir şey bulun';
+
+  @override
+  String get searchEventsOrCities => 'Etkinlik, konu veya şehir arayın';
+
+  @override
+  String get howCanWeHelpYou => 'Size nasıl yardımcı olabiliriz?';
+
+  @override
+  String get askKhairAi =>
+      'Khair AI\'a sorun veya destek ekibimizle iletişime geçin.';
+
+  @override
+  String get supportCategory => 'Kategori';
+
+  @override
+  String get supportCategoryHint => 'örn. Ödeme, Hesap, Genel';
+
+  @override
+  String get howCanWeHelp => 'Nasıl yardımcı olabiliriz?';
+
+  @override
+  String get startChat => 'Sohbeti Başlat';
+
+  @override
+  String get talkToHuman => 'İnsanla Konuş';
+
+  @override
+  String get resolveTicket => 'Çöz';
+
+  @override
+  String get waitingForSupportAgent =>
+      'Müsait bir destek görevlisi bekleniyor...';
 }

@@ -83,7 +83,7 @@ class RecommendedSection extends StatelessWidget {
                             eventId: rec.eventId,
                             interactionType: 'click',
                           ));
-                      context.go('/events/${rec.eventId}');
+                      context.push('/events/${rec.eventId}');
                     },
                   );
                 },

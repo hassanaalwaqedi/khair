@@ -440,8 +440,10 @@ class _QuickActions extends StatelessWidget {
                 if (actions[i].route == '/profile/edit') {
                   final changed = await context.push<bool>(actions[i].route);
                   if (changed == true) onUpdated();
-                } else {
+                } else if (actions[i].route == '/') {
                   context.go(actions[i].route);
+                } else {
+                  context.push(actions[i].route);
                 }
               }));
     });
@@ -575,7 +577,7 @@ class _UpcomingEvents extends StatelessWidget {
   Widget build(BuildContext context) => _Panel(
       title: 'Upcoming events',
       action: TextButton(
-          onPressed: () => context.go('/my-events'),
+          onPressed: () => context.push('/my-events'),
           child: const Text('View all')),
       children: events.isEmpty
           ? [_EmptyUpcoming()]

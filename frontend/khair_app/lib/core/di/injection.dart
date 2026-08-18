@@ -63,8 +63,8 @@ Future<void> configureDependencies() async {
   // Dio
   final dio = Dio(BaseOptions(
     baseUrl: ApiConfig.apiBaseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
     responseType: ResponseType.json,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',

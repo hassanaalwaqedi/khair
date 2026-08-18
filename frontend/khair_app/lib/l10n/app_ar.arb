@@ -1,8 +1,6 @@
 {
   "@@locale": "ar",
-
   "appTitle": "خير",
-
   "discoverTitle": "اكتشف التجمعات المفيدة",
   "discoverSubtitle": "تواصل مع العلم والمجتمع والفعاليات الهادفة",
   "searchGatherings": "ابحث عن التجمعات...",
@@ -13,7 +11,6 @@
   "motivationalLine2": "وجعلناكم شعوبًا وقبائل لتعارفوا 🤍",
   "motivationalLine3": "اللَّهُ لطيفٌ بعباده 🌙",
   "dateLabel": "التاريخ",
-
   "heroTagline": "🌍 نربط المجتمعات حول العالم",
   "heroTitle": "اكتشف الفعاليات الإسلامية\nالقريبة منك",
   "heroSubtitle": "ابحث عن الفعاليات والمحاضرات والتجمعات الإسلامية في مجتمعك. تواصل مع منظمين موثوقين وابقَ على اطلاع.",
@@ -22,7 +19,6 @@
   "events": "الفعاليات",
   "organizations": "المنظمات",
   "cities": "المدن",
-
   "catKnowledge": "علم",
   "catQuran": "قرآن",
   "catLectures": "محاضرات",
@@ -30,7 +26,6 @@
   "catYouth": "شباب",
   "catCharity": "إحسان",
   "catFamily": "عائلة",
-
   "whyChooseKhair": "لماذا خير؟",
   "whyChooseSubtitle": "منصة موثوقة مصممة للمجتمع المسلم",
   "featureVerifiedTitle": "منظمون موثقون",
@@ -45,7 +40,6 @@
   "featureSafeDesc": "تتم مراجعة المحتوى للحفاظ على معايير المجتمع.",
   "featureCommunityTitle": "مجتمع عالمي",
   "featureCommunityDesc": "تواصل مع المسلمين حول العالم من خلال الفعاليات المشتركة.",
-
   "howItWorks": "كيف يعمل",
   "step1Title": "تصفح الفعاليات",
   "step1Desc": "استكشف الفعاليات القادمة في مدينتك أو بالقرب منك.",
@@ -53,17 +47,14 @@
   "step2Desc": "اطلع على معلومات الفعالية وملف المنظم والموقع.",
   "step3Title": "الحضور",
   "step3Desc": "انضم إلى الفعالية وتواصل مع مجتمعك.",
-
   "ctaTitle": "هل أنت منظمة؟",
   "ctaSubtitle": "سجّل مسجدك أو مركزك أو منظمتك لنشر الفعاليات والوصول إلى مجتمعك.",
-
   "footerAbout": "عن خير",
   "footerPrivacy": "سياسة الخصوصية",
   "footerTerms": "شروط الاستخدام",
   "footerContent": "سياسة المحتوى",
   "footerVerification": "سياسة التحقق",
   "footerCopyright": "© ٢٠٢٦ خير. جميع الحقوق محفوظة.",
-
   "welcomeBack": "مرحباً\nبعودتك",
   "signInToContinue": "سجّل الدخول للمتابعة",
   "email": "البريد الإلكتروني",
@@ -79,7 +70,6 @@
   "enterEmail": "يرجى إدخال بريدك الإلكتروني",
   "validEmail": "يرجى إدخال بريد إلكتروني صالح",
   "enterPassword": "يرجى إدخال كلمة المرور",
-
   "createAccount": "إنشاء\nحساب",
   "joinCommunity": "انضم إلى مجتمع خير",
   "organizationName": "اسم المنظمة",
@@ -88,7 +78,6 @@
   "passwordTooShort": "كلمة المرور يجب أن تكون ٨ أحرف على الأقل",
   "passwordsNoMatch": "كلمتا المرور غير متطابقتين",
   "alreadyHaveAccount": "لديك حساب بالفعل؟ ",
-
   "profile": "الملف الشخصي",
   "notSignedIn": "لم يتم تسجيل الدخول",
   "accountInformation": "معلومات الحساب",
@@ -112,9 +101,7 @@
   "createNewEvent": "إنشاء فعالية جديدة",
   "becomeOrganizer": "كن منظماً",
   "adminPanel": "لوحة الإدارة",
-
   "mapTab": "الخريطة",
-
   "createEvent": "إنشاء فعالية",
   "basicInfo": "المعلومات الأساسية",
   "eventTitle": "عنوان الفعالية",
@@ -131,7 +118,6 @@
   "address": "العنوان",
   "submit": "إرسال",
   "save": "حفظ",
-
   "reserveSeat": "احجز مقعدك",
   "attendGathering": "حضور التجمع",
   "emptyGatheringsTitle": "لا توجد تجمعات حالياً",
@@ -140,23 +126,22 @@
   "seatsRemaining": "{count} مقعد متبقي",
   "@seatsRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reservationSuccess": "نسأل الله أن يكون تجمعاً مباركاً",
   "refreshEvents": "تحديث",
   "filterByDate": "تصفية بالتاريخ",
   "clearDateFilter": "مسح تصفية التاريخ",
-
   "noInternetConnection": "لا يوجد اتصال بالإنترنت",
   "backOnline": "عاد الاتصال",
-
   "eventNotFound": "الفعالية غير موجودة",
   "loading": "جاري التحميل...",
   "error": "خطأ",
   "retry": "إعادة المحاولة",
   "noEventsFound": "لم يتم العثور على فعاليات",
-
   "language": "اللغة",
   "english": "English",
   "arabic": "العربية",
@@ -194,7 +179,9 @@
   "mapRemainingSeats": "المقاعد المتبقية: {count}",
   "@mapRemainingSeats": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapReserveSeat": "احجز مقعداً",
@@ -203,7 +190,9 @@
   "mapKmAway": "يبعد {distance} كم",
   "@mapKmAway": {
     "placeholders": {
-      "distance": { "type": "String" }
+      "distance": {
+        "type": "String"
+      }
     }
   },
   "mapRecommended": "موصى به",
@@ -214,11 +203,14 @@
   "mapDistanceOrg": "{distance} كم • {organization}",
   "@mapDistanceOrg": {
     "placeholders": {
-      "distance": { "type": "String" },
-      "organization": { "type": "String" }
+      "distance": {
+        "type": "String"
+      },
+      "organization": {
+        "type": "String"
+      }
     }
   },
-
   "registrationBismillahArabic": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "registrationBismillahTranslation": "بسم الله الرحمن الرحيم",
   "registrationJoinUmmah": "انضم إلى الأمة",
@@ -251,9 +243,7 @@
   "registrationCenterName": "اسم المركز",
   "registrationCommunityGroupName": "اسم المجتمع / المجموعة",
   "registrationPhoneOptional": "رقم الهاتف (اختياري)",
-  "confirmPassword": "تأكيد كلمة المرور",
   "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
-  "city": "المدينة",
   "name": "الاسم",
   "registrationEnterFullName": "يرجى إدخال اسمك الكامل",
   "registrationGoalsTitle": "ما الذي تأمل\nفي تحقيقه؟",
@@ -418,25 +408,25 @@
   "createEventComplianceWarning": "يجب تأكيد الامتثال الإسلامي قبل تقديم الفعالية.",
   "createEventMediaDetails": "الوسائط والتفاصيل",
   "createEventUploading": "جاري الرفع...",
-  "createEventUploadPlaceholder": "انقر لرفع صورة الغلاف",
-  "createEventUploadLimits": "JPG, PNG • الحد الأقصى 5 ميغابايت",
+  "createEventUploadPlaceholder": "اضغط لرفع صورة الغلاف",
+  "createEventUploadLimits": "JPG, PNG • حد أقصى 5 ميغابايت",
   "createEventMaxAttendees": "الحد الأقصى للحضور",
   "createEventTicketPrice": "سعر التذكرة",
   "createEventTicketPriceHint": "0 = مجاني",
   "createEventRegistrationDeadline": "آخر موعد للتسجيل",
   "createEventSelectDeadline": "اختر الموعد النهائي",
-  "createEventAutoApproval": "موافقة تلقائية",
-  "createEventAutoApprovalDesc": "الموافقة التلقائية على المسجلين",
-  "createEventReviewSubmit": "المراجعة والتقديم",
+  "createEventAutoApproval": "الموافقة التلقائية",
+  "createEventAutoApprovalDesc": "الموافقة التلقائية على التسجيلات",
+  "createEventReviewSubmit": "مراجعة وإرسال",
   "createEventEventSummary": "ملخص الفعالية",
   "createEventReviewCompliance": "الامتثال",
   "createEventReviewRiskAssessment": "تقييم المخاطر",
   "createEventReviewTrustImpact": "تأثير الثقة",
-  "createEventTrustImpactDesc": "الاستضافة الناجحة لهذه الفعالية ستزيد من نقاط الثقة الخاصة بك. الفعاليات المخالفة قد تقللها.",
-  "createEventFinalConfirm": "أؤكد أن جميع المعلومات دقيقة. وأتفهم أن الفعاليات تخضع للمراجعة قبل النشر.",
-  "createEventRiskLow": "خطر منخفض — يُرجح الموافقة التلقائية",
-  "createEventRiskMedium": "خطر متوسط — يتطلب مراجعة يدوية",
-  "createEventRiskHigh": "خطر مرتفع — يتطلب مراجعة إضافية",
+  "createEventTrustImpactDesc": "استضافة هذه الفعالية بنجاح سيزيد من درجة ثقتك. الفعاليات المُبلَّغ عنها قد تقللها.",
+  "createEventFinalConfirm": "أؤكد أن جميع المعلومات صحيحة. أفهم أن الفعاليات تُراجع قبل النشر.",
+  "createEventRiskLow": "مخاطر منخفضة — من المحتمل الموافقة التلقائية",
+  "createEventRiskMedium": "مخاطر متوسطة — مراجعة يدوية مطلوبة",
+  "createEventRiskHigh": "مخاطر عالية — مراجعة إضافية مطلوبة",
   "createEventReviewConfirmed": "مؤكد",
   "createEventReviewIncluded": "مشمول",
   "createEventReviewYes": "نعم",
@@ -474,7 +464,6 @@
   "registrationLevelBeginner": "مبتدئ",
   "registrationLevelIntermediate": "متوسط",
   "registrationLevelAdvanced": "متقدم",
-  "registrationCommunityGroupName": "اسم المجتمع / المجموعة",
   "registrationCommunityFocus": "مجال تركيز المجتمع",
   "registrationCommunityFocusHint": "مثال: برامج الشباب، الدعوة، الخدمات الاجتماعية",
   "registrationSelectRolePrompt": "يرجى اختيار دور للمتابعة",
@@ -496,7 +485,9 @@
   "registrationVerificationEmailWillBeSent": "سيتم إرسال بريد تحقق إلى {email}",
   "@registrationVerificationEmailWillBeSent": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "registrationCompleteRegistration": "إكمال التسجيل",
@@ -523,7 +514,6 @@
   "registrationRoleDescNewMuslim": "اعتنق الإسلام حديثاً ويبحث عن التوجيه",
   "registrationRoleDescStudent": "يسعى لتعلم القرآن والعربية والفقه",
   "registrationRoleDescCommunityOrganizer": "بناء وقيادة مجموعات مجتمعية مسلمة",
-
   "registrationProgressRole": "الدور",
   "registrationProgressAccount": "الحساب",
   "registrationProgressProfile": "الملف",
@@ -628,21 +618,24 @@
   "ownerDelete": "حذف",
   "ownerDeletePost": "حذف المنشور",
   "ownerDeleteConfirm": "هل أنت متأكد؟",
-
   "greeting": "السلام عليكم",
   "featuredEvents": "فعاليات مميزة",
   "joinNow": "انضم الآن",
   "byOrganizer": "بواسطة {name}",
   "@byOrganizer": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "communityActivity": "نشاط المجتمع",
   "peopleJoinedEvents": "{count} شخص انضموا للفعاليات",
   "@peopleJoinedEvents": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recommendedForYou": "موصى بها لك",
@@ -651,7 +644,9 @@
   "moreEventsToGold": "{count} فعاليات أخرى للوصول إلى الذهبي",
   "@moreEventsToGold": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "viewProgress": "عرض التقدم",
@@ -666,7 +661,6 @@
   "catMasjid": "مسجد",
   "becomeOrganizerTitle": "كن منظماً",
   "becomeOrganizerDesc": "لوحة التحكم متاحة للمنظمين فقط.\n\nسجّل كمنظم لبدء إنشاء وإدارة الفعاليات الإسلامية!",
-
   "mapPickerTitle": "اختر الموقع على الخريطة",
   "mapPickerSearchHint": "ابحث عن مكان أو عنوان...",
   "mapPickerUseCurrentLocation": "استخدم موقعي الحالي",
@@ -676,7 +670,6 @@
   "mapPickerRefineAddress": "يمكنك تعديل تفاصيل العنوان أدناه إذا لزم الأمر",
   "eventDetailsGetDirections": "الحصول على الاتجاهات",
   "eventDetailsOpenInMaps": "فتح في الخرائط",
-
   "editProfile": "تعديل الملف الشخصي",
   "displayName": "الاسم المعروض",
   "bio": "نبذة",
@@ -697,14 +690,15 @@
   "failedProcessImage": "فشل في معالجة الصورة",
   "imageMustBeUnder5MB": "حجم الصورة يجب أن يكون أقل من 5 ميغابايت",
   "aiModerationNotice": "يتم مراجعة المحتوى الخاص بك بواسطة الذكاء الاصطناعي للحفاظ على مجتمع خير آمنًا ومحترمًا.",
-
   "mapSearchHint": "ابحث عن مدينة أو فعالية",
   "mapFindKhairNearYou": "اعثر على الخير بالقرب منك",
   "mapSearchThisArea": "ابحث في هذه المنطقة",
   "mapEventsNearby": "{count} فعاليات قريبة",
   "@mapEventsNearby": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapClearFilters": "مسح الفلاتر",
@@ -735,7 +729,6 @@
   "verifiedByKhair": "موثّق من خير",
   "visit": "زيارة",
   "seeAllEvents": "عرض الكل",
-
   "discoverNoEventsNearYou": "لا توجد فعاليات بالقرب منك",
   "discoverExploreOtherCities": "استكشف الفعاليات في مدن أخرى.",
   "discoverExploreAllEvents": "استكشف جميع الفعاليات",
@@ -744,16 +737,19 @@
   "discoverEventsCount": "{count} فعاليات",
   "@discoverEventsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "sheikhLocation": "الموقع",
   "sheikhExperience": "الخبرة",
   "sheikhYearsExperience": "{count} سنوات",
   "@sheikhYearsExperience": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhStatus": "الحالة",
@@ -775,7 +771,9 @@
   "sheikhSendLessonRequest": "إرسال طلب درس لـ {name}",
   "@sheikhSendLessonRequest": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "sheikhWhatToLearn": "ماذا تريد أن تتعلم؟",
@@ -793,7 +791,9 @@
   "sheikhReviewsCount": "{count} تقييمات",
   "@sheikhReviewsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhNoReviewsYet": "لا توجد تقييمات بعد",
@@ -806,15 +806,8 @@
   "sheikhProfileNotFound": "تعذر العثور على العالم",
   "sheikhProfileUnavailableMessage": "ربما تمت إزالة هذا الملف أو أن الرابط غير صحيح.",
   "sheikhAllCities": "جميع المدن",
-  "catLectures": "محاضرات",
-  "catCommunity": "مجتمع",
-  "retry": "إعادة المحاولة",
-  "email": "البريد الإلكتروني",
-  "welcomeBack": "مرحباً\nبعودتك",
-  "searchEventsHint": "ابحث عن فعاليات، مواضيع، مدن...",
   "allCities": "جميع المدن",
   "mapNoEventsFoundHere": "لا توجد فعاليات هنا بعد",
-
   "guestHeroTitle": "اكتشف فعاليات\nهادفة بالقرب منك",
   "guestHeroSubtitle": "انضم إلى الدروس والمحاضرات والتجمعات المجتمعية حولك",
   "guestBenefitEvents": "اعثر على فعاليات بالقرب منك",
@@ -823,45 +816,16 @@
   "guestGetStarted": "ابدأ الآن",
   "guestAlreadyHaveAccount": "لديّ حساب بالفعل",
   "guestSignUpToExplore": "سجّل لاستكشاف الفعاليات بالقرب منك",
-
   "deleteAccountTitle": "حذف الحساب",
   "deleteAccountWarning": "هذا الإجراء نهائي. سيتم حذف جميع بياناتك وفعالياتك ونشاطك. لا يمكن التراجع عن هذا.",
   "deleteAccountConfirm": "حذف حسابي",
   "deleteAccountSuccess": "تم حذف حسابك.",
   "deleteAccountError": "فشل في حذف الحساب. يرجى المحاولة مرة أخرى.",
-
-  "createEventMediaDetails": "الوسائط والتفاصيل",
-  "createEventUploading": "جاري الرفع...",
-  "createEventUploadPlaceholder": "اضغط لرفع صورة الغلاف",
-  "createEventUploadLimits": "JPG, PNG • حد أقصى 5 ميغابايت",
-  "createEventMaxAttendees": "الحد الأقصى للحضور",
-  "createEventTicketPrice": "سعر التذكرة",
-  "createEventTicketPriceHint": "0 = مجاني",
   "createEventSelectCurrency": "اختر العملة",
-  "createEventRegistrationDeadline": "آخر موعد للتسجيل",
-  "createEventSelectDeadline": "اختر الموعد النهائي",
-  "createEventAutoApproval": "الموافقة التلقائية",
-  "createEventAutoApprovalDesc": "الموافقة التلقائية على التسجيلات",
-  "createEventReviewSubmit": "مراجعة وإرسال",
-  "createEventEventSummary": "ملخص الفعالية",
-  "createEventReviewCompliance": "الامتثال",
-  "createEventReviewRiskAssessment": "تقييم المخاطر",
-  "createEventReviewTrustImpact": "تأثير الثقة",
-  "createEventTrustImpactDesc": "استضافة هذه الفعالية بنجاح سيزيد من درجة ثقتك. الفعاليات المُبلَّغ عنها قد تقللها.",
-  "createEventFinalConfirm": "أؤكد أن جميع المعلومات صحيحة. أفهم أن الفعاليات تُراجع قبل النشر.",
-  "createEventRiskLow": "مخاطر منخفضة — من المحتمل الموافقة التلقائية",
-  "createEventRiskMedium": "مخاطر متوسطة — مراجعة يدوية مطلوبة",
-  "createEventRiskHigh": "مخاطر عالية — مراجعة إضافية مطلوبة",
-  "createEventReviewConfirmed": "مؤكد",
-  "createEventReviewIncluded": "مشمول",
-  "createEventReviewYes": "نعم",
-  "createEventReviewNo": "لا",
-
   "eventDetailsPaymentInfo": "معلومات الدفع",
   "eventDetailsTicketPrice": "سعر التذكرة",
   "eventDetailsPayAtLocation": "يتم الدفع في موقع الفعالية نقداً. يرجى إحضار المبلغ المحدد.",
   "eventDetailsFree": "فعالية مجانية",
-
   "myLearning": "تعلّمي",
   "myLearningGreeting": "السلام عليكم",
   "myLearningSubtitle": "رحلتك التعليمية في نظرة واحدة",
@@ -891,6 +855,46 @@
   "statusAccepted": "مقبول",
   "statusScheduled": "مجدول",
   "yes": "نعم",
-  "no": "لا"
+  "no": "لا",
+  "shareEventIntro": "انضم إلي في فعالية {eventTitle} على خير 👋",
+  "@shareEventIntro": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOnlineLocation": "💻 عبر الإنترنت",
+  "shareEventPhysicalLocation": "📍 {location}",
+  "@shareEventPhysicalLocation": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOrganizer": "🎤 بتنظيم {name}",
+  "@shareEventOrganizer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseYourArea": "اختر منطقتك",
+  "discoverEventsNearYou": "اكتشف الفعاليات بالقرب منك.",
+  "useYourLocation": "استخدم موقعك أو ابحث عن مدينة.",
+  "useCurrentLocation": "استخدم الموقع الحالي. تطبيق خير يسأل فقط عند اختيارك لهذا.",
+  "showEvents": "عرض الفعاليات",
+  "findSomethingToDo": "ابحث عن شيء لتفعله",
+  "searchEventsOrCities": "ابحث عن فعاليات، مواضيع، أو مدن",
+  "howCanWeHelpYou": "كيف يمكننا مساعدتك؟",
+  "askKhairAi": "اسأل الذكاء الاصطناعي لخير أو تواصل مع فريق الدعم.",
+  "supportCategory": "الفئة",
+  "supportCategoryHint": "مثال: الدفع، الحساب، عام",
+  "howCanWeHelp": "كيف يمكننا المساعدة؟",
+  "startChat": "بدء المحادثة",
+  "talkToHuman": "تحدث إلى شخص",
+  "resolveTicket": "حل التذكرة",
+  "waitingForSupportAgent": "في انتظار وكيل دعم متاح..."
 }
-

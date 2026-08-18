@@ -9,26 +9,27 @@ class ApiConfig {
 
   /// Compile-time env override (pass `--dart-define=API_URL=...`).
   static const _envApiUrl = String.fromEnvironment('API_URL');
+  static const _envPublicAppUrl = String.fromEnvironment('PUBLIC_APP_URL');
 
   /// The base API URL including the `/api/v1` path prefix.
   /// Debug builds default to localhost; release builds default to production.
   static final String apiBaseUrl = () {
     String url = _envApiUrl.isNotEmpty
         ? _envApiUrl
-        : (kDebugMode
-            ? 'https://khair-4adc.onrender.com/api/v1'
-            : 'https://api.khair.it.com/api/v1');
+        : 'https://khair-4adc.onrender.com/api/v1';
     return url.endsWith('/') ? url : '$url/';
   }();
 
   /// The server origin (scheme + host), without any path.
   static final serverOrigin = _extractOrigin(apiBaseUrl);
 
-  /// Event share links point to the API origin. It returns static Open Graph
-  /// metadata for social crawlers, then redirects people to the Flutter app.
-  /// Flutter hash routes cannot be crawled by WhatsApp, LinkedIn, or Telegram.
-  static String publicEventUrl(String eventId) =>
-      '${serverOrigin.replaceFirst(RegExp(r'/$'), '')}/events/$eventId';
+  static final String publicAppUrl = () {
+    String url = _envPublicAppUrl.isNotEmpty ? _envPublicAppUrl : 'https://khair.app';
+    return url.replaceFirst(RegExp(r'/$'), '');
+  }();
+
+  /// Event share links point to the canonical public domain.
+  static String publicEventUrl(String eventId) => '$publicAppUrl/events/$eventId';
 
   /// Resolves a potentially relative URL to an absolute URL.
   /// Already-absolute URLs are returned as-is.

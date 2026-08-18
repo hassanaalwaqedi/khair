@@ -1,8 +1,6 @@
 {
   "@@locale": "tr",
-
   "appTitle": "Hayır",
-
   "discoverTitle": "Anlamlı Buluşmalar Keşfedin",
   "discoverSubtitle": "Bilgi, topluluk ve amaçlı etkinliklerle bağlantı kurun",
   "searchGatherings": "Buluşmaları ara...",
@@ -13,7 +11,6 @@
   "motivationalLine2": "Sizi kavimler ve kabileler olarak yarattık ki, birbirinizi tanıyasınız 🤍",
   "motivationalLine3": "Allah kullarına karşı çok lütufkârdır 🌙",
   "dateLabel": "Tarih",
-
   "heroTagline": "🌍 Toplulukları Dünya Çapında Birleştiriyoruz",
   "heroTitle": "Yakınınızdaki İslami\nEtkinlikleri Keşfedin",
   "heroSubtitle": "Toplumunuzdaki onaylı İslami etkinlikleri, dersleri ve buluşmaları bulun. Güvenilir organizatörlerle bağlantı kurun ve bilgi sahibi olun.",
@@ -22,7 +19,6 @@
   "events": "Etkinlikler",
   "organizations": "Kuruluşlar",
   "cities": "Şehirler",
-
   "catKnowledge": "İlim",
   "catQuran": "Kur'an",
   "catLectures": "Dersler",
@@ -30,7 +26,6 @@
   "catYouth": "Gençlik",
   "catCharity": "Hayır İşleri",
   "catFamily": "Aile",
-
   "whyChooseKhair": "Neden Hayır?",
   "whyChooseSubtitle": "Müslüman topluluk için tasarlanmış güvenilir bir platform",
   "featureVerifiedTitle": "Onaylı Organizatörler",
@@ -45,7 +40,6 @@
   "featureSafeDesc": "İçerik, topluluk standartlarını korumak için incelenir.",
   "featureCommunityTitle": "Küresel Topluluk",
   "featureCommunityDesc": "Ortak etkinlikler aracılığıyla dünya genelindeki Müslümanlarla bağlantı kurun.",
-
   "howItWorks": "Nasıl Çalışır",
   "step1Title": "Etkinliklere Göz At",
   "step1Desc": "Şehrinizdeki veya yakınınızdaki yaklaşan etkinlikleri keşfedin.",
@@ -53,17 +47,14 @@
   "step2Desc": "Etkinlik bilgilerini, organizatör profilini ve konumu kontrol edin.",
   "step3Title": "Katıl",
   "step3Desc": "Etkinliğe katılın ve topluluğunuzla bağlantı kurun.",
-
   "ctaTitle": "Bir Kuruluş musunuz?",
   "ctaSubtitle": "Caminizi, merkezinizi veya kuruluşunuzu kaydederek etkinlik yayınlayın ve topluluğunuza ulaşın.",
-
   "footerAbout": "Hakkında",
   "footerPrivacy": "Gizlilik Politikası",
   "footerTerms": "Kullanım Koşulları",
   "footerContent": "İçerik Politikası",
   "footerVerification": "Doğrulama Politikası",
   "footerCopyright": "© 2026 Hayır. Tüm hakları saklıdır.",
-
   "welcomeBack": "Tekrar\nHoşgeldiniz",
   "signInToContinue": "Devam etmek için giriş yapın",
   "email": "E-posta",
@@ -79,7 +70,6 @@
   "enterEmail": "Lütfen e-postanızı girin",
   "validEmail": "Lütfen geçerli bir e-posta girin",
   "enterPassword": "Lütfen şifrenizi girin",
-
   "createAccount": "Hesap\nOluştur",
   "joinCommunity": "Hayır topluluğuna katılın",
   "organizationName": "Kuruluş Adı",
@@ -88,7 +78,6 @@
   "passwordTooShort": "Şifre en az 8 karakter olmalıdır",
   "passwordsNoMatch": "Şifreler eşleşmiyor",
   "alreadyHaveAccount": "Zaten bir hesabınız var mı? ",
-
   "profile": "Profil",
   "notSignedIn": "Giriş yapılmadı",
   "accountInformation": "Hesap Bilgileri",
@@ -112,9 +101,7 @@
   "createNewEvent": "Yeni Etkinlik Oluştur",
   "becomeOrganizer": "Organizatör Ol",
   "adminPanel": "Yönetici Paneli",
-
   "mapTab": "Harita",
-
   "createEvent": "Etkinlik Oluştur",
   "basicInfo": "Temel Bilgiler",
   "eventTitle": "Etkinlik Başlığı",
@@ -131,7 +118,6 @@
   "address": "Adres",
   "submit": "Gönder",
   "save": "Kaydet",
-
   "reserveSeat": "Koltuk Ayırt",
   "attendGathering": "Buluşmaya Katıl",
   "emptyGatheringsTitle": "Şu anda buluşma mevcut değil",
@@ -140,23 +126,22 @@
   "seatsRemaining": "{count} koltuk kaldı",
   "@seatsRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reservationSuccess": "Bu buluşmanın sizin için faydalı olmasını diliyoruz",
   "refreshEvents": "Yenile",
   "filterByDate": "Tarihe Göre Filtrele",
   "clearDateFilter": "Tarih Filtresini Temizle",
-
   "noInternetConnection": "İnternet bağlantısı yok",
   "backOnline": "Tekrar çevrimiçi",
-
   "eventNotFound": "Etkinlik bulunamadı",
   "loading": "Yükleniyor...",
   "error": "Hata",
   "retry": "Tekrar Dene",
   "noEventsFound": "Etkinlik bulunamadı",
-
   "language": "Dil",
   "english": "English",
   "arabic": "العربية",
@@ -194,7 +179,9 @@
   "mapRemainingSeats": "Kalan koltuk: {count}",
   "@mapRemainingSeats": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapReserveSeat": "Koltuk Ayırt",
@@ -203,7 +190,9 @@
   "mapKmAway": "{distance} km uzaklıkta",
   "@mapKmAway": {
     "placeholders": {
-      "distance": { "type": "String" }
+      "distance": {
+        "type": "String"
+      }
     }
   },
   "mapRecommended": "Önerilen",
@@ -214,11 +203,14 @@
   "mapDistanceOrg": "{distance} km • {organization}",
   "@mapDistanceOrg": {
     "placeholders": {
-      "distance": { "type": "String" },
-      "organization": { "type": "String" }
+      "distance": {
+        "type": "String"
+      },
+      "organization": {
+        "type": "String"
+      }
     }
   },
-
   "registrationBismillahArabic": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "registrationBismillahTranslation": "Rahman ve Rahim olan Allah'ın adıyla",
   "registrationJoinUmmah": "Ümmete Katıl",
@@ -284,7 +276,9 @@
   "eventDetailsAttending": "{count} katılımcı",
   "@eventDetailsAttending": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventDetailsDateTime": "Tarih ve Saat",
@@ -295,7 +289,9 @@
   "eventDetailsSeatsLeft": "{count} koltuk kaldı",
   "@eventDetailsSeatsLeft": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventDetailsJoin": "Etkinliğe Katıl",
@@ -304,7 +300,9 @@
   "eventDetailsJoinedSeeYou": "🎉 \"{title}\" etkinliğine katıldınız! Orada görüşürüz.",
   "@eventDetailsJoinedSeeYou": {
     "placeholders": {
-      "title": { "type": "String" }
+      "title": {
+        "type": "String"
+      }
     }
   },
   "eventDetailsJoinFailed": "Etkinliğe katılma başarısız",
@@ -317,7 +315,9 @@
   "joinModalSeatsRemaining": "{count} koltuk kaldı",
   "@joinModalSeatsRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "joinModalStep1": "Kimlik",
@@ -345,8 +345,12 @@
   "eventCardSeatsRatio": "{reserved} / {capacity} koltuk",
   "@eventCardSeatsRatio": {
     "placeholders": {
-      "reserved": { "type": "int" },
-      "capacity": { "type": "int" }
+      "reserved": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
     }
   },
   "categoryKnowledge": "İlim",
@@ -394,8 +398,12 @@
   "createEventStepCount": "Adım {current} / {total}",
   "@createEventStepCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "createEventBack": "Geri",
@@ -504,7 +512,6 @@
   "registrationLevelBeginner": "Başlangıç",
   "registrationLevelIntermediate": "Orta",
   "registrationLevelAdvanced": "İleri",
-  "registrationCommunityGroupName": "Topluluk / Grup Adı",
   "registrationCommunityFocus": "Topluluk Odak Alanı",
   "registrationCommunityFocusHint": "ör: Gençlik programları, davet, sosyal hizmetler",
   "registrationSelectRolePrompt": "Devam etmek için lütfen bir rol seçin",
@@ -526,7 +533,9 @@
   "registrationVerificationEmailWillBeSent": "{email} adresine doğrulama e-postası gönderilecektir",
   "@registrationVerificationEmailWillBeSent": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "registrationCompleteRegistration": "Kaydı Tamamla",
@@ -553,7 +562,6 @@
   "registrationRoleDescNewMuslim": "Yeni Müslüman olmuş, rehberlik arıyor",
   "registrationRoleDescStudent": "Kur'an, Arapça veya Fıkıh bilgisi arıyor",
   "registrationRoleDescCommunityOrganizer": "Müslüman topluluk grupları kurmak ve yönetmek",
-
   "registrationProgressRole": "Rol",
   "registrationProgressAccount": "Hesap",
   "registrationProgressProfile": "Profil",
@@ -589,7 +597,9 @@
   "adminPendingApproval": "Onay Bekliyor ({count})",
   "@adminPendingApproval": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminType": "Tür",
@@ -601,13 +611,17 @@
   "adminRejectTitle": "{name} Reddet",
   "@adminRejectTitle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "adminRejectConfirm": "\"{name}\" adlı kişiyi reddetmek istediğinizden emin misiniz?",
   "@adminRejectConfirm": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "adminRejectionReason": "Reddetme nedeni",
@@ -620,7 +634,9 @@
   "adminPendingReview": "İnceleme Bekliyor ({count})",
   "@adminPendingReview": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminDate": "Tarih",
@@ -638,7 +654,9 @@
   "orgTotalCount": "{count} toplam",
   "@orgTotalCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "orgViewAll": "Tümünü Görüntüle",
@@ -683,21 +701,24 @@
   "ownerDelete": "Sil",
   "ownerDeletePost": "Gönderiyi Sil",
   "ownerDeleteConfirm": "Emin misiniz?",
-
   "greeting": "Esselamu Aleyküm",
   "featuredEvents": "Öne Çıkan Etkinlikler",
   "joinNow": "Şimdi Katıl",
   "byOrganizer": "{name} tarafından",
   "@byOrganizer": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "communityActivity": "Topluluk Etkinliği",
   "peopleJoinedEvents": "{count} kişi etkinliklere katıldı",
   "@peopleJoinedEvents": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recommendedForYou": "Sizin İçin Önerilen",
@@ -706,7 +727,9 @@
   "moreEventsToGold": "Altın'ın kilidini açmak için {count} etkinlik daha",
   "@moreEventsToGold": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "viewProgress": "İlerlemeyi Görüntüle",
@@ -721,7 +744,6 @@
   "catMasjid": "Cami",
   "becomeOrganizerTitle": "Organizatör Olun",
   "becomeOrganizerDesc": "Yalnızca organizatörler panele erişebilir.\n\nİslami etkinlikler oluşturup yönetmeye başlamak için organizatör olarak kayıt olun!",
-
   "mapPickerTitle": "Haritada Konum Seçin",
   "mapPickerSearchHint": "Yer veya adres ara...",
   "mapPickerUseCurrentLocation": "Mevcut konumumu kullan",
@@ -731,7 +753,6 @@
   "mapPickerRefineAddress": "Gerekirse aşağıdaki adres detaylarını düzenleyin",
   "eventDetailsGetDirections": "Yol Tarifi Al",
   "eventDetailsOpenInMaps": "Haritada Aç",
-
   "editProfile": "Profili Düzenle",
   "displayName": "Görünen Ad",
   "bio": "Biyografi",
@@ -752,14 +773,15 @@
   "failedProcessImage": "Resim işlenemedi",
   "imageMustBeUnder5MB": "Resim 5 MB'ın altında olmalıdır",
   "aiModerationNotice": "İçeriğiniz, Hayır topluluğunu güvenli ve saygılı tutmak için yapay zeka tarafından incelenir.",
-
   "mapSearchHint": "Şehir veya etkinlik ara",
   "mapFindKhairNearYou": "Yakınında hayır bul",
   "mapSearchThisArea": "Bu alanı ara",
   "mapEventsNearby": "{count} yakın etkinlik",
   "@mapEventsNearby": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapClearFilters": "Filtreleri temizle",
@@ -790,7 +812,6 @@
   "verifiedByKhair": "Hayır Tarafından Onaylı",
   "visit": "Ziyaret",
   "seeAllEvents": "Tümünü Gör",
-
   "discoverNoEventsNearYou": "Yakınında etkinlik bulunamadı",
   "discoverExploreOtherCities": "Diğer şehirlerdeki etkinlikleri keşfedin.",
   "discoverExploreAllEvents": "Tüm Etkinlikleri Keşfet",
@@ -799,16 +820,19 @@
   "discoverEventsCount": "{count} etkinlik",
   "@discoverEventsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "sheikhLocation": "Konum",
   "sheikhExperience": "Deneyim",
   "sheikhYearsExperience": "{count} yıl",
   "@sheikhYearsExperience": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhStatus": "Durum",
@@ -830,7 +854,9 @@
   "sheikhSendLessonRequest": "{name} adlı hocaya ders talebi gönderin",
   "@sheikhSendLessonRequest": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "sheikhWhatToLearn": "Ne öğrenmek istersiniz?",
@@ -848,7 +874,9 @@
   "sheikhReviewsCount": "{count} değerlendirme",
   "@sheikhReviewsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhNoReviewsYet": "Henüz değerlendirme yok",
@@ -861,15 +889,8 @@
   "sheikhProfileNotFound": "Alim bulunamadı",
   "sheikhProfileUnavailableMessage": "Bu profil kaldırılmış olabilir veya bağlantı hatalı olabilir.",
   "sheikhAllCities": "Tüm Şehirler",
-  "catLectures": "Dersler",
-  "catCommunity": "Topluluk",
-  "retry": "Tekrar Dene",
-  "email": "E-posta",
-  "welcomeBack": "Tekrar\nHoşgeldiniz",
-  "searchEventsHint": "Etkinlik, konu, şehir ara...",
   "allCities": "Tüm Şehirler",
   "mapNoEventsFoundHere": "Burada henüz etkinlik yok",
-
   "guestHeroTitle": "Yakınındaki anlamlı\netkinlikleri keşfet",
   "guestHeroSubtitle": "Çevrenizdeki derslere, seminerlere ve topluluk etkinliklerine katılın",
   "guestBenefitEvents": "Yakınındaki etkinlikleri bul",
@@ -878,19 +899,16 @@
   "guestGetStarted": "Başlayın",
   "guestAlreadyHaveAccount": "Zaten bir hesabım var",
   "guestSignUpToExplore": "Yakınındaki etkinlikleri keşfetmek için kaydol",
-
   "deleteAccountTitle": "Hesabı Sil",
   "deleteAccountWarning": "Bu işlem kalıcıdır. Tüm verileriniz, etkinlikleriniz ve aktiviteleriniz silinecektir. Bu geri alınamaz.",
   "deleteAccountConfirm": "Hesabımı Sil",
   "deleteAccountSuccess": "Hesabınız silindi.",
   "deleteAccountError": "Hesap silinemedi. Lütfen tekrar deneyin.",
-
   "createEventSelectCurrency": "Para Birimi Seçin",
   "eventDetailsPaymentInfo": "Ödeme Bilgisi",
   "eventDetailsTicketPrice": "BİLET FİYATI",
   "eventDetailsPayAtLocation": "Ödeme etkinlik yerinde nakit olarak yapılır. Lütfen tam tutarı getirin.",
   "eventDetailsFree": "Ücretsiz Etkinlik",
-
   "myLearning": "Öğrenmem",
   "myLearningGreeting": "Esselamu Aleyküm",
   "myLearningSubtitle": "Öğrenme yolculuğunuz bir bakışta",
@@ -920,5 +938,46 @@
   "statusAccepted": "Kabul Edildi",
   "statusScheduled": "Planlandı",
   "yes": "Evet",
-  "no": "Hayır"
+  "no": "Hayır",
+  "shareEventIntro": "Khair'deki {eventTitle} etkinliğine katıl 👋",
+  "@shareEventIntro": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOnlineLocation": "💻 Çevrim içi",
+  "shareEventPhysicalLocation": "📍 {location}",
+  "@shareEventPhysicalLocation": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOrganizer": "🎤 Düzenleyen: {name}",
+  "@shareEventOrganizer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseYourArea": "Bölgenizi seçin",
+  "discoverEventsNearYou": "Yakınınızdaki etkinlikleri keşfedin.",
+  "useYourLocation": "Konumunuzu kullanın veya bir şehir arayın.",
+  "useCurrentLocation": "Mevcut konumu kullan. Khair sadece bunu seçtiğinizde sorar.",
+  "showEvents": "Etkinlikleri göster",
+  "findSomethingToDo": "Yapacak bir şey bulun",
+  "searchEventsOrCities": "Etkinlik, konu veya şehir arayın",
+  "howCanWeHelpYou": "Size nasıl yardımcı olabiliriz?",
+  "askKhairAi": "Khair AI'a sorun veya destek ekibimizle iletişime geçin.",
+  "supportCategory": "Kategori",
+  "supportCategoryHint": "örn. Ödeme, Hesap, Genel",
+  "howCanWeHelp": "Nasıl yardımcı olabiliriz?",
+  "startChat": "Sohbeti Başlat",
+  "talkToHuman": "İnsanla Konuş",
+  "resolveTicket": "Çöz",
+  "waitingForSupportAgent": "Müsait bir destek görevlisi bekleniyor..."
 }

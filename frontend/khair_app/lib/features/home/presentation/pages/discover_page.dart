@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
+import 'package:khair_app/core/theme/khair_theme.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/layout/app_breakpoints.dart';
@@ -162,24 +164,24 @@ class _DiscoverPageState extends State<DiscoverPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Align(
+            Align(
               alignment: AlignmentDirectional.centerStart,
-              child: Text('Choose your area',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+              child: Text(AppLocalizations.of(context)!.chooseYourArea,
+                  style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: 6),
-            const Align(
+            Align(
               alignment: AlignmentDirectional.centerStart,
-              child: Text('Use your location or search a city.',
-                  style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(AppLocalizations.of(context)!.useYourLocation,
+                  style: const TextStyle(color: AppColors.textSecondary)),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.my_location_rounded,
                   color: AppColors.primary),
-              title: const Text('Use current location'),
-              subtitle: const Text('Khair only asks when you choose this.'),
+              title: const Text('Use current location'), // Todo: Localize if needed
+              subtitle: Text(AppLocalizations.of(context)!.useCurrentLocation),
               onTap: () {
                 Navigator.of(sheetContext).pop();
                 _requestCurrentLocation();
@@ -232,7 +234,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   _applyCity(controller.text);
                   Navigator.of(sheetContext).pop();
                 },
-                child: const Text('Show events'),
+                child: Text(AppLocalizations.of(context)!.showEvents),
               ),
             ),
           ]),
@@ -440,24 +442,19 @@ class _MobileDiscoveryLead extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                auth.isAuthenticated ? _timeGreeting() : 'Find something to do',
-                style: const TextStyle(
+                auth.isAuthenticated
+                    ? _timeGreeting()
+                    : AppLocalizations.of(context)!.findSomethingToDo,
+                style: KhairTypography.labelLarge.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 8),
               Text(
                 auth.isAuthenticated
                     ? 'What are you up for?'
-                    : 'Discover events near you.',
-                style: const TextStyle(
-                  fontSize: 28,
-                  height: 1.12,
-                  letterSpacing: -0.7,
-                  fontWeight: FontWeight.w800,
-                ),
+                    : AppLocalizations.of(context)!.discoverEventsNearYou,
+                style: KhairTypography.h2,
               ),
               const SizedBox(height: 16),
               _EventSearchField(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khair_app/core/theme/khair_theme.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../bloc/support_cubit.dart';
 import '../../data/models/support_model.dart';
@@ -17,6 +18,17 @@ class SupportChatPage extends StatefulWidget {
 class _SupportChatPageState extends State<SupportChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _catController = TextEditingController();
+  final TextEditingController _subjController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _catController.dispose();
+    _subjController.dispose();
+    super.dispose();
+  }
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
@@ -44,7 +56,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                   onPressed: () {
                     context.read<SupportCubit>().escalate();
                   },
-                  child: const Text('Talk to Human', style: TextStyle(color: KhairColors.primary)),
+                  child: Text(AppLocalizations.of(context)!.talkToHuman, style: const TextStyle(color: KhairColors.primary)),
                 );
               }
               if (state is SupportSessionActive && state.ticket.status != 'resolved') {
@@ -52,7 +64,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                   onPressed: () {
                     context.read<SupportCubit>().resolve();
                   },
-                  child: const Text('Resolve', style: TextStyle(color: KhairColors.success)),
+                  child: Text(AppLocalizations.of(context)!.resolveTicket, style: const TextStyle(color: KhairColors.success)),
                 );
               }
               return const SizedBox();
@@ -62,8 +74,13 @@ class _SupportChatPageState extends State<SupportChatPage> {
       ),
       body: BlocConsumer<SupportCubit, SupportState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is SupportSessionActive) {
             _scrollToBottom();
+          } else if (state is SupportError) {
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+            );
           }
         },
         builder: (context, state) {
@@ -102,33 +119,31 @@ class _SupportChatPageState extends State<SupportChatPage> {
   }
 
   Widget _buildStartSession(BuildContext context) {
-    final catController = TextEditingController();
-    final subjController = TextEditingController();
-
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('How can we help you?', style: KhairTypography.h3, textAlign: TextAlign.center),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          Text(AppLocalizations.of(context)!.howCanWeHelpYou, style: KhairTypography.h3, textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          const Text('Ask Khair AI or connect with our support team.', style: KhairTypography.bodyLarge, textAlign: TextAlign.center),
+          Text(AppLocalizations.of(context)!.askKhairAi, style: KhairTypography.bodyLarge, textAlign: TextAlign.center),
           const SizedBox(height: 32),
           TextField(
-            controller: catController,
-            decoration: const InputDecoration(
-              labelText: 'Category',
-              hintText: 'e.g., Payment, Account, General',
-              border: OutlineInputBorder(),
+            controller: _catController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.supportCategory,
+              hintText: AppLocalizations.of(context)!.supportCategoryHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: subjController,
-            decoration: const InputDecoration(
-              labelText: 'How can we help?',
-              border: OutlineInputBorder(),
+            controller: _subjController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.howCanWeHelp,
+              border: const OutlineInputBorder(),
             ),
             maxLines: 3,
           ),
@@ -139,16 +154,17 @@ class _SupportChatPageState extends State<SupportChatPage> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
             onPressed: () {
-              if (subjController.text.isNotEmpty) {
+              if (_subjController.text.isNotEmpty) {
                 context.read<SupportCubit>().startSession(
-                  catController.text.isEmpty ? 'General' : catController.text,
-                  subjController.text,
+                  _catController.text.isEmpty ? 'General' : _catController.text,
+                  _subjController.text,
                 );
               }
             },
-            child: const Text('Start Chat', style: TextStyle(color: Colors.white, fontSize: 16)),
+            child: Text(AppLocalizations.of(context)!.startChat, style: const TextStyle(color: Colors.white, fontSize: 16)),
           ),
         ],
+      ),
       ),
     );
   }
@@ -172,10 +188,12 @@ class _SupportChatPageState extends State<SupportChatPage> {
         color: KhairColors.warningLight,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
-          children: const [
-            Icon(Icons.hourglass_empty, color: KhairColors.warning, size: 16),
-            SizedBox(width: 8),
-            Text('Waiting for an available support agent...', style: TextStyle(color: KhairColors.warningDark)),
+          children: [
+            const Icon(Icons.support_agent, color: KhairColors.warningDark, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(AppLocalizations.of(context)!.waitingForSupportAgent, style: const TextStyle(color: KhairColors.warningDark)),
+            ),
           ],
         ),
       );

@@ -140,13 +140,13 @@ class _OrganizerHubPageState extends State<OrganizerHubPage> {
                                       setState(
                                           () => _performanceMetric = metric),
                                   onCreateEvent: () =>
-                                      context.go('/organizer/events/create'),
+                                      context.push('/organizer/events/create'),
                                   onManageEvents: () =>
-                                      context.go('/organizer/events'),
+                                      context.push('/organizer/events'),
                                   onProfile: () =>
-                                      context.go('/organizer/profile'),
+                                      context.push('/organizer/profile'),
                                   onNotifications: () =>
-                                      context.go('/notifications'),
+                                      context.push('/notifications'),
                                   onAttendees: _showAttendees,
                                   onSendUpdate: _showAnnouncement,
                                 ),

@@ -182,7 +182,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
                 child: _MarkerPreview(
                     event: state.selectedEvent!,
                     onOpen: () =>
-                        context.go('/events/${state.selectedEvent!.id}')),
+                        context.push('/events/${state.selectedEvent!.id}')),
               )),
             ),
           PositionedDirectional(
@@ -233,7 +233,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
 
   void _select(MapEvent event) =>
       context.read<MapStateManager>().onMarkerTapped(event);
-  void _open(MapEvent event) => context.go('/events/${event.id}');
+  void _open(MapEvent event) => context.push('/events/${event.id}');
 
   void _showFilters(MapState state) => showModalBottomSheet<void>(
         context: context,

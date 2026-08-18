@@ -52,7 +52,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            onPressed: () => context.go('/organizer/events/create'),
+            onPressed: () => context.push('/organizer/events/create'),
             tooltip: 'Create Event',
           ),
         ],
@@ -145,7 +145,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                       actionLabel:
                           _selectedFilter == 'all' ? 'Create Event' : null,
                       onAction: _selectedFilter == 'all'
-                          ? () => context.go('/organizer/events/create')
+                          ? () => context.push('/organizer/events/create')
                           : null,
                     ),
                   )
@@ -278,7 +278,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     _openEvent(context, event);
                     break;
                   case 'edit':
-                    context.go('/organizer/events/${event.id}/edit');
+                    context.push('/organizer/events/${event.id}/edit');
                     break;
                   case 'notify':
                     _showNotifyAttendeesDialog(context, event);

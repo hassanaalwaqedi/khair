@@ -1,8 +1,6 @@
 {
   "@@locale": "en",
-  
   "appTitle": "Khair",
-
   "discoverTitle": "Discover Meaningful Gatherings",
   "discoverSubtitle": "Connect with knowledge, community, and purposeful events",
   "searchGatherings": "Search gatherings...",
@@ -13,7 +11,6 @@
   "motivationalLine2": "And We made you peoples and tribes so that you may know one another 🤍",
   "motivationalLine3": "Allah is Gentle with His servants 🌙",
   "dateLabel": "Date",
-
   "heroTagline": "🌍 Connecting Communities Worldwide",
   "heroTitle": "Discover Islamic Events\nNear You",
   "heroSubtitle": "Find verified Islamic events, lectures, and gatherings in your community. Connect with trusted organizers and stay informed.",
@@ -22,7 +19,6 @@
   "events": "Events",
   "organizations": "Organizations",
   "cities": "Cities",
-
   "catKnowledge": "Knowledge",
   "catQuran": "Quran",
   "catLectures": "Lectures",
@@ -30,7 +26,6 @@
   "catYouth": "Youth",
   "catCharity": "Charity",
   "catFamily": "Family",
-
   "whyChooseKhair": "Why Choose Khair?",
   "whyChooseSubtitle": "A trusted platform designed for the Muslim community",
   "featureVerifiedTitle": "Verified Organizers",
@@ -45,7 +40,6 @@
   "featureSafeDesc": "Content is reviewed to maintain community standards.",
   "featureCommunityTitle": "Global Community",
   "featureCommunityDesc": "Connect with Muslims worldwide through shared events.",
-
   "howItWorks": "How It Works",
   "step1Title": "Browse Events",
   "step1Desc": "Explore upcoming events in your city or nearby.",
@@ -53,17 +47,14 @@
   "step2Desc": "Check event info, organizer profile, and location.",
   "step3Title": "Attend",
   "step3Desc": "Join the event and connect with your community.",
-
   "ctaTitle": "Are You an Organization?",
   "ctaSubtitle": "Register your mosque, center, or organization to publish events and reach your community.",
-
   "footerAbout": "About",
   "footerPrivacy": "Privacy Policy",
   "footerTerms": "Terms of Use",
   "footerContent": "Content Policy",
   "footerVerification": "Verification Policy",
   "footerCopyright": "© 2026 Khair. All rights reserved.",
-
   "welcomeBack": "Welcome\nBack",
   "signInToContinue": "Sign in to continue",
   "email": "Email",
@@ -79,7 +70,6 @@
   "enterEmail": "Please enter your email",
   "validEmail": "Please enter a valid email",
   "enterPassword": "Please enter your password",
-
   "createAccount": "Create\nAccount",
   "joinCommunity": "Join the Khair community",
   "organizationName": "Organization Name",
@@ -88,7 +78,6 @@
   "passwordTooShort": "Password must be at least 8 characters",
   "passwordsNoMatch": "Passwords do not match",
   "alreadyHaveAccount": "Already have an account? ",
-
   "profile": "Profile",
   "notSignedIn": "Not signed in",
   "accountInformation": "Account Information",
@@ -112,9 +101,7 @@
   "createNewEvent": "Create New Event",
   "becomeOrganizer": "Become an Organizer",
   "adminPanel": "Admin Panel",
-
   "mapTab": "Map",
-
   "createEvent": "Create Event",
   "basicInfo": "Basic Info",
   "eventTitle": "Event Title",
@@ -131,7 +118,6 @@
   "address": "Address",
   "submit": "Submit",
   "save": "Save",
-
   "reserveSeat": "Reserve Seat",
   "attendGathering": "Attend Gathering",
   "emptyGatheringsTitle": "No gatherings available at the moment",
@@ -140,23 +126,22 @@
   "seatsRemaining": "{count} seats remaining",
   "@seatsRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reservationSuccess": "May this gathering bring benefit to you",
   "refreshEvents": "Refresh",
   "filterByDate": "Filter by Date",
   "clearDateFilter": "Clear Date Filter",
-
   "noInternetConnection": "No internet connection",
   "backOnline": "Back online",
-
   "eventNotFound": "Event not found",
   "loading": "Loading...",
   "error": "Error",
   "retry": "Retry",
   "noEventsFound": "No events found",
-
   "language": "Language",
   "english": "English",
   "arabic": "العربية",
@@ -194,7 +179,9 @@
   "mapRemainingSeats": "Remaining seats: {count}",
   "@mapRemainingSeats": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapReserveSeat": "Reserve Seat",
@@ -203,7 +190,9 @@
   "mapKmAway": "{distance} km away",
   "@mapKmAway": {
     "placeholders": {
-      "distance": { "type": "String" }
+      "distance": {
+        "type": "String"
+      }
     }
   },
   "mapRecommended": "Recommended",
@@ -214,11 +203,14 @@
   "mapDistanceOrg": "{distance} km • {organization}",
   "@mapDistanceOrg": {
     "placeholders": {
-      "distance": { "type": "String" },
-      "organization": { "type": "String" }
+      "distance": {
+        "type": "String"
+      },
+      "organization": {
+        "type": "String"
+      }
     }
   },
-
   "registrationBismillahArabic": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "registrationBismillahTranslation": "In the name of God, the Most Gracious, the Most Merciful",
   "registrationJoinUmmah": "Join the Ummah",
@@ -251,9 +243,7 @@
   "registrationCenterName": "Center Name",
   "registrationCommunityGroupName": "Community / Group Name",
   "registrationPhoneOptional": "Phone (optional)",
-  "confirmPassword": "Confirm Password",
   "passwordsDoNotMatch": "Passwords do not match",
-  "city": "City",
   "name": "Name",
   "registrationEnterFullName": "Please enter your full name",
   "registrationGoalsTitle": "What Are You Hoping\nto Achieve?",
@@ -286,7 +276,9 @@
   "eventDetailsAttending": "{count} attending",
   "@eventDetailsAttending": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventDetailsDateTime": "Date & Time",
@@ -297,7 +289,9 @@
   "eventDetailsSeatsLeft": "{count} seats left",
   "@eventDetailsSeatsLeft": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventDetailsJoin": "Join Event",
@@ -306,7 +300,9 @@
   "eventDetailsJoinedSeeYou": "🎉 You've joined \"{title}\"! See you there.",
   "@eventDetailsJoinedSeeYou": {
     "placeholders": {
-      "title": { "type": "String" }
+      "title": {
+        "type": "String"
+      }
     }
   },
   "eventDetailsJoinFailed": "Failed to join event",
@@ -319,7 +315,9 @@
   "joinModalSeatsRemaining": "{count} seats remaining",
   "@joinModalSeatsRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "joinModalStep1": "Identity",
@@ -347,8 +345,12 @@
   "eventCardSeatsRatio": "{reserved} / {capacity} seats",
   "@eventCardSeatsRatio": {
     "placeholders": {
-      "reserved": { "type": "int" },
-      "capacity": { "type": "int" }
+      "reserved": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
     }
   },
   "categoryKnowledge": "Knowledge",
@@ -396,8 +398,12 @@
   "createEventStepCount": "Step {current} of {total}",
   "@createEventStepCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "createEventBack": "Back",
@@ -468,7 +474,7 @@
   "createEventFinalConfirm": "I confirm all information is accurate. I understand events are reviewed before publishing.",
   "createEventRiskLow": "Low Risk — Likely auto-approved",
   "createEventRiskMedium": "Medium Risk — Manual review required",
-  "createEventRiskHigh": "High Risk — Additional review needed",
+  "createEventRiskHigh": "High Risk — Additional review required",
   "createEventReviewConfirmed": "Confirmed",
   "createEventReviewIncluded": "Included",
   "createEventReviewYes": "Yes",
@@ -506,7 +512,6 @@
   "registrationLevelBeginner": "Beginner",
   "registrationLevelIntermediate": "Intermediate",
   "registrationLevelAdvanced": "Advanced",
-  "registrationCommunityGroupName": "Community / Group Name",
   "registrationCommunityFocus": "Community Focus Area",
   "registrationCommunityFocusHint": "e.g., Youth programs, da'wah, social services",
   "registrationSelectRolePrompt": "Please select a role to continue",
@@ -528,7 +533,9 @@
   "registrationVerificationEmailWillBeSent": "A verification email will be sent to {email}",
   "@registrationVerificationEmailWillBeSent": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "registrationCompleteRegistration": "Complete Registration",
@@ -555,7 +562,6 @@
   "registrationRoleDescNewMuslim": "Recently embraced Islam, seeking guidance",
   "registrationRoleDescStudent": "Seeking knowledge of Quran, Arabic, or Fiqh",
   "registrationRoleDescCommunityOrganizer": "Building and leading Muslim community groups",
-
   "registrationProgressRole": "Role",
   "registrationProgressAccount": "Account",
   "registrationProgressProfile": "Profile",
@@ -591,7 +597,9 @@
   "adminPendingApproval": "Pending Approval ({count})",
   "@adminPendingApproval": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminType": "Type",
@@ -603,13 +611,17 @@
   "adminRejectTitle": "Reject {name}",
   "@adminRejectTitle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "adminRejectConfirm": "Are you sure you want to reject \"{name}\"?",
   "@adminRejectConfirm": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "adminRejectionReason": "Rejection reason",
@@ -622,7 +634,9 @@
   "adminPendingReview": "Pending Review ({count})",
   "@adminPendingReview": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminDate": "Date",
@@ -640,7 +654,9 @@
   "orgTotalCount": "{count} total",
   "@orgTotalCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "orgViewAll": "View All",
@@ -685,21 +701,24 @@
   "ownerDelete": "Delete",
   "ownerDeletePost": "Delete Post",
   "ownerDeleteConfirm": "Are you sure?",
-
   "greeting": "Assalamu Alaikum",
   "featuredEvents": "Featured Events",
   "joinNow": "Join Now",
   "byOrganizer": "by {name}",
   "@byOrganizer": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "communityActivity": "Community Activity",
   "peopleJoinedEvents": "{count} people have joined events",
   "@peopleJoinedEvents": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recommendedForYou": "Recommended For You",
@@ -708,7 +727,9 @@
   "moreEventsToGold": "{count} more events to unlock Gold",
   "@moreEventsToGold": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "viewProgress": "View Progress",
@@ -723,7 +744,6 @@
   "catMasjid": "Masjid",
   "becomeOrganizerTitle": "Become an Organizer",
   "becomeOrganizerDesc": "Only organizers can access the dashboard.\n\nRegister as an organizer to start creating and managing Islamic events!",
-
   "mapPickerTitle": "Pick Location on Map",
   "mapPickerSearchHint": "Search for a place or address...",
   "mapPickerUseCurrentLocation": "Use my current location",
@@ -733,7 +753,6 @@
   "mapPickerRefineAddress": "Fine-tune the address details below if needed",
   "eventDetailsGetDirections": "Get Directions",
   "eventDetailsOpenInMaps": "Open in Maps",
-
   "editProfile": "Edit Profile",
   "displayName": "Display Name",
   "bio": "Bio",
@@ -754,14 +773,15 @@
   "failedProcessImage": "Failed to process image",
   "imageMustBeUnder5MB": "Image must be under 5 MB",
   "aiModerationNotice": "Your content is reviewed by AI to keep the Khair community safe and respectful.",
-
   "mapSearchHint": "Search city or event",
   "mapFindKhairNearYou": "Find Khair near you",
   "mapSearchThisArea": "Search this area",
   "mapEventsNearby": "{count} events nearby",
   "@mapEventsNearby": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "mapClearFilters": "Clear filters",
@@ -792,7 +812,6 @@
   "verifiedByKhair": "Verified by Khair",
   "visit": "Visit",
   "seeAllEvents": "See All",
-
   "discoverNoEventsNearYou": "No events found near you",
   "discoverExploreOtherCities": "Explore events happening in other cities.",
   "discoverExploreAllEvents": "Explore All Events",
@@ -801,16 +820,19 @@
   "discoverEventsCount": "{count} events",
   "@discoverEventsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "sheikhLocation": "Location",
   "sheikhExperience": "Experience",
   "sheikhYearsExperience": "{count} years",
   "@sheikhYearsExperience": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhStatus": "Status",
@@ -832,7 +854,9 @@
   "sheikhSendLessonRequest": "Send a lesson request to {name}",
   "@sheikhSendLessonRequest": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "sheikhWhatToLearn": "What would you like to learn?",
@@ -850,7 +874,9 @@
   "sheikhReviewsCount": "{count} reviews",
   "@sheikhReviewsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sheikhNoReviewsYet": "No reviews yet",
@@ -863,15 +889,8 @@
   "sheikhProfileNotFound": "Scholar Not Found",
   "sheikhProfileUnavailableMessage": "This profile may have been removed or the link is incorrect.",
   "sheikhAllCities": "All Cities",
-  "catLectures": "Lectures",
-  "catCommunity": "Community",
-  "retry": "Retry",
-  "email": "Email",
-  "welcomeBack": "Welcome\nBack",
-  "searchEventsHint": "Search events, topics, cities...",
   "allCities": "All Cities",
   "mapNoEventsFoundHere": "No events found here yet",
-
   "guestHeroTitle": "Discover meaningful\nevents near you",
   "guestHeroSubtitle": "Join classes, lectures, and community gatherings around you",
   "guestBenefitEvents": "Find events near you",
@@ -880,45 +899,16 @@
   "guestGetStarted": "Get Started",
   "guestAlreadyHaveAccount": "I already have an account",
   "guestSignUpToExplore": "Sign up to explore events near you",
-
   "deleteAccountTitle": "Delete Account",
   "deleteAccountWarning": "This action is permanent. All your data, events, and activity will be deleted. This cannot be undone.",
   "deleteAccountConfirm": "Delete My Account",
   "deleteAccountSuccess": "Your account has been deleted.",
   "deleteAccountError": "Failed to delete account. Please try again.",
-
-  "createEventMediaDetails": "Media & Details",
-  "createEventUploading": "Uploading...",
-  "createEventUploadPlaceholder": "Tap to upload cover image",
-  "createEventUploadLimits": "JPG, PNG • Max 5MB",
-  "createEventMaxAttendees": "Max Attendees",
-  "createEventTicketPrice": "Ticket Price",
-  "createEventTicketPriceHint": "0 = Free",
   "createEventSelectCurrency": "Select Currency",
-  "createEventRegistrationDeadline": "Registration Deadline",
-  "createEventSelectDeadline": "Select deadline",
-  "createEventAutoApproval": "Auto-Approval",
-  "createEventAutoApprovalDesc": "Automatically approve registrations",
-  "createEventReviewSubmit": "Review & Submit",
-  "createEventEventSummary": "Event Summary",
-  "createEventReviewCompliance": "Compliance",
-  "createEventReviewRiskAssessment": "Risk Assessment",
-  "createEventReviewTrustImpact": "Trust Impact",
-  "createEventTrustImpactDesc": "Successfully hosting this event will increase your trust score. Flagged events may decrease it.",
-  "createEventFinalConfirm": "I confirm all information is accurate. I understand events are reviewed before publishing.",
-  "createEventRiskLow": "Low Risk — Likely auto-approved",
-  "createEventRiskMedium": "Medium Risk — Manual review required",
-  "createEventRiskHigh": "High Risk — Additional review required",
-  "createEventReviewConfirmed": "Confirmed",
-  "createEventReviewIncluded": "Included",
-  "createEventReviewYes": "Yes",
-  "createEventReviewNo": "No",
-
   "eventDetailsPaymentInfo": "Payment Information",
   "eventDetailsTicketPrice": "TICKET PRICE",
   "eventDetailsPayAtLocation": "Payment is collected at the event location in cash. Please bring the exact amount.",
   "eventDetailsFree": "Free Event",
-
   "myLearning": "My Learning",
   "myLearningGreeting": "Assalamu Alaikum",
   "myLearningSubtitle": "Your learning journey at a glance",
@@ -948,5 +938,46 @@
   "statusAccepted": "Accepted",
   "statusScheduled": "Scheduled",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "shareEventIntro": "Join me at {eventTitle} on Khair 👋",
+  "@shareEventIntro": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOnlineLocation": "💻 Online",
+  "shareEventPhysicalLocation": "📍 {location}",
+  "@shareEventPhysicalLocation": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "shareEventOrganizer": "🎤 Hosted by {name}",
+  "@shareEventOrganizer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseYourArea": "Choose your area",
+  "discoverEventsNearYou": "Discover events near you.",
+  "useYourLocation": "Use your location or search a city.",
+  "useCurrentLocation": "Use current location. Khair only asks when you choose this.",
+  "showEvents": "Show events",
+  "findSomethingToDo": "Find something to do",
+  "searchEventsOrCities": "Search events, topics, or cities",
+  "howCanWeHelpYou": "How can we help you?",
+  "askKhairAi": "Ask Khair AI or connect with our support team.",
+  "supportCategory": "Category",
+  "supportCategoryHint": "e.g., Payment, Account, General",
+  "howCanWeHelp": "How can we help?",
+  "startChat": "Start Chat",
+  "talkToHuman": "Talk to Human",
+  "resolveTicket": "Resolve",
+  "waitingForSupportAgent": "Waiting for an available support agent..."
 }

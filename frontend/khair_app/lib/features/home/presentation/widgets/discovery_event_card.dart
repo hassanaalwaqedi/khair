@@ -74,7 +74,7 @@ class _DiscoveryEventCardState extends State<DiscoveryEventCard> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => context.go('/events/${event.id}'),
+              onTap: () => context.push('/events/${event.id}'),
               borderRadius: BorderRadius.circular(20),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

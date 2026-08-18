@@ -1273,23 +1273,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       if (!mounted) return;
       final data = response.data['data'] ?? response.data;
       final url = (data['public_url'] ?? fallback).toString();
-      final description =
-          (data['description'] ?? event.description).toString().trim();
-      final message = [
-        event.title,
-        if (description.isNotEmpty) description,
-        url,
-      ].join('\n');
-      await ShareHelper.share(context, message);
+      await ShareHelper.shareEvent(context, event, url);
     } catch (_) {
       if (mounted) {
-        final description = event.description?.trim() ?? '';
-        final message = [
-          event.title,
-          if (description.isNotEmpty) description,
-          fallback,
-        ].join('\n');
-        await ShareHelper.share(context, message);
+        await ShareHelper.shareEvent(context, event, fallback);
       }
     }
   }

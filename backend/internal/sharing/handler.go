@@ -22,8 +22,11 @@ type EventShareData struct {
 	Description string    `json:"description"`
 	Slug        string    `json:"slug"`
 	ImageURL    *string   `json:"image_url"`
-	StartDate   string    `json:"start_date"`
+	StartDate   time.Time `json:"start_date"`
 	Organizer   string    `json:"organizer"`
+	IsOnline    bool      `json:"is_online"`
+	City        string    `json:"city"`
+	Country     string    `json:"country"`
 	PublicURL   string    `json:"public_url"`
 	ShareURLs   ShareURLs `json:"share_urls"`
 }
@@ -42,8 +45,15 @@ type Service struct {
 }
 
 func NewService(db *sql.DB) *Service {
-	base := strings.TrimRight(os.Getenv("PUBLIC_BASE_URL"), "/")
-	frontend := strings.TrimRight(os.Getenv("FRONTEND_URL"), "/")
+	base := strings.TrimRight(os.Getenv("PUBLIC_APP_URL"), "/")
+	if base == "" {
+		base = strings.TrimRight(os.Getenv("PUBLIC_BASE_URL"), "/")
+	}
+	frontendRaw := os.Getenv("FRONTEND_URL")
+	if strings.Contains(frontendRaw, ",") {
+		frontendRaw = strings.Split(frontendRaw, ",")[0]
+	}
+	frontend := strings.TrimRight(frontendRaw, "/")
 	return &Service{db: db, baseURL: base, frontendURL: frontend}
 }
 
@@ -51,12 +61,13 @@ func NewService(db *sql.DB) *Service {
 // in production and inferred from the request only for local development.
 func (s *Service) GetShareData(eventID uuid.UUID, publicBaseURL string) (*EventShareData, error) {
 	var data EventShareData
-	var description, organizer, slug sql.NullString
+	var description, organizer, slug, city, country sql.NullString
+	var isOnline sql.NullBool
 	var date time.Time
-	err := s.db.QueryRow(`SELECT e.id, e.title, e.description, e.slug, e.image_url, e.start_date, o.name
+	err := s.db.QueryRow(`SELECT e.id, e.title, e.description, e.slug, e.image_url, e.start_date, o.name, e.is_online, e.city, e.country
 		FROM events e LEFT JOIN organizers o ON o.id = e.organizer_id
 		WHERE e.id = $1 AND e.status = 'approved' AND e.is_published = true`, eventID).
-		Scan(&data.EventID, &data.Title, &description, &slug, &data.ImageURL, &date, &organizer)
+		Scan(&data.EventID, &data.Title, &description, &slug, &data.ImageURL, &date, &organizer, &isOnline, &city, &country)
 	if err != nil {
 		return nil, fmt.Errorf("event not found")
 	}
@@ -69,19 +80,60 @@ func (s *Service) GetShareData(eventID uuid.UUID, publicBaseURL string) (*EventS
 	if organizer.Valid {
 		data.Organizer = organizer.String
 	}
-	data.StartDate = date.Format(time.RFC3339)
+	if isOnline.Valid {
+		data.IsOnline = isOnline.Bool
+	}
+	if city.Valid {
+		data.City = city.String
+	}
+	if country.Valid {
+		data.Country = country.String
+	}
+	data.StartDate = date
 	data.PublicURL = fmt.Sprintf("%s/events/%s", strings.TrimRight(publicBaseURL, "/"), data.EventID)
-	text := fmt.Sprintf("Check out %q on Khair! %s", data.Title, data.PublicURL)
+	var textParts []string
+	textParts = append(textParts, fmt.Sprintf("Join me at %s on Khair 👋\n", data.Title))
+	textParts = append(textParts, fmt.Sprintf("📅 %s", data.StartDate.Format("Mon, Jan 2 · 3:04 PM")))
+	if data.IsOnline {
+		textParts = append(textParts, "💻 Online")
+	} else if data.City != "" {
+		if data.Country != "" {
+			textParts = append(textParts, fmt.Sprintf("📍 %s, %s", data.City, data.Country))
+		} else {
+			textParts = append(textParts, fmt.Sprintf("📍 %s", data.City))
+		}
+	}
+	if data.Organizer != "" {
+		textParts = append(textParts, fmt.Sprintf("🎤 Hosted by %s", data.Organizer))
+	}
+	textParts = append(textParts, "\n"+data.PublicURL)
+	text := strings.Join(textParts, "\n")
 	data.ShareURLs = ShareURLs{WhatsApp: "https://wa.me/?text=" + urlEncode(text), Twitter: "https://twitter.com/intent/tweet?text=" + urlEncode(text), Telegram: "https://t.me/share/url?url=" + urlEncode(data.PublicURL), Facebook: "https://www.facebook.com/sharer/sharer.php?u=" + urlEncode(data.PublicURL)}
 	_, _ = s.db.Exec(`UPDATE events SET view_count = view_count + 1 WHERE id = $1`, eventID)
 	return &data, nil
 }
 
 func (s *Service) ogPage(data *EventShareData) string {
-	title, desc := html.EscapeString(data.Title), html.EscapeString(truncate(data.Description, 200))
-	if desc == "" {
-		desc = "Discover meaningful events on Khair"
+	title := html.EscapeString(data.Title)
+	
+	// Build descriptive OG tag
+	parts := []string{data.StartDate.Format("Mon, Jan 2 · 3:04 PM")}
+	if data.IsOnline {
+		parts = append(parts, "Online")
+	} else if data.City != "" {
+		parts = append(parts, data.City)
 	}
+	if data.Organizer != "" {
+		parts = append(parts, "Hosted by "+data.Organizer)
+	}
+	
+	desc := strings.Join(parts, " · ")
+	if data.Description != "" {
+		shortDesc := truncate(data.Description, 60)
+		desc = desc + " - " + shortDesc
+	}
+	desc = html.EscapeString(desc)
+
 	image := s.frontendURL + "/icons/Icon-512.png?v=khair-k1"
 	if s.frontendURL == "" {
 		image = strings.TrimRight(s.baseURL, "/") + "/icons/Icon-512.png?v=khair-k1"
@@ -103,10 +155,25 @@ type Handler struct{ service *Service }
 // the response body of the link that users share.
 func (s *Service) socialPreviewPage(data *EventShareData) string {
 	title := html.EscapeString(data.Title)
-	description := html.EscapeString(truncate(data.Description, 200))
-	if description == "" {
-		description = "Discover meaningful events on Khair"
+	
+	// Build descriptive OG tag
+	parts := []string{data.StartDate.Format("Mon, Jan 2 · 3:04 PM")}
+	if data.IsOnline {
+		parts = append(parts, "Online")
+	} else if data.City != "" {
+		parts = append(parts, data.City)
 	}
+	if data.Organizer != "" {
+		parts = append(parts, "Hosted by "+data.Organizer)
+	}
+	
+	description := strings.Join(parts, " · ")
+	if data.Description != "" {
+		shortDesc := truncate(data.Description, 60)
+		description = description + " - " + shortDesc
+	}
+	description = html.EscapeString(description)
+
 
 	publicOrigin := data.PublicURL
 	if index := strings.LastIndex(publicOrigin, "/events/"); index >= 0 {
@@ -183,10 +250,11 @@ func (h *Handler) PublicEventPage(c *gin.Context) {
 	response.Success(c, data)
 }
 func truncate(value string, max int) string {
-	if len(value) <= max {
-		return value
+	runes := []rune(value)
+	if len(runes) <= max {
+		return string(runes)
 	}
-	return value[:max] + "..."
+	return string(runes[:max]) + "..."
 }
 func urlEncode(value string) string {
 	return url.QueryEscape(value)

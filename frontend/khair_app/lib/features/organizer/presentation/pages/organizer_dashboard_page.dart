@@ -315,7 +315,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           title: context.l10n.orgRecentEvents,
           subtitle: context.l10n.orgTotalCount(state.events.length),
           action: TextButton.icon(
-            onPressed: () => context.go('/organizer/events'),
+            onPressed: () => context.push('/organizer/events'),
             icon: const Icon(Icons.arrow_forward, size: 16),
             label: Text(context.l10n.orgViewAll),
           ),
@@ -437,28 +437,28 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                   : context.l10n.orgApprovalRequired,
               disabled: !isApproved,
               iconColor: KhairColors.primary,
-              onTap: () => context.go('/organizer/events/create'),
+              onTap: () => context.push('/organizer/events/create'),
             ),
             DashboardCard(
               icon: Icons.list_alt_rounded,
               title: context.l10n.orgMyEvents,
               subtitle: context.l10n.orgViewAllEvents,
               iconColor: KhairColors.info,
-              onTap: () => context.go('/organizer/events'),
+              onTap: () => context.push('/organizer/events'),
             ),
             DashboardCard(
               icon: Icons.person_outline_rounded,
               title: context.l10n.orgEditProfile,
               subtitle: context.l10n.orgUpdateInfo,
               iconColor: KhairColors.secondary,
-              onTap: () => context.go('/organizer/profile'),
+              onTap: () => context.push('/organizer/profile'),
             ),
             DashboardCard(
               icon: Icons.analytics_outlined,
               title: context.l10n.orgAnalytics,
               subtitle: context.l10n.orgViewStats,
               iconColor: KhairColors.accent,
-              onTap: () => context.go('/organizer/analytics'),
+              onTap: () => context.push('/organizer/analytics'),
             ),
           ],
         );
@@ -647,7 +647,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           const SizedBox(height: 16),
           KhairButton(
             label: context.l10n.orgCreateEvent,
-            onPressed: () => context.go('/organizer/events/create'),
+            onPressed: () => context.push('/organizer/events/create'),
             icon: Icons.add,
           ),
         ],
@@ -717,7 +717,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     _openEvent(event);
                     break;
                   case 'edit':
-                    context.go('/organizer/events/${event.id}/edit');
+                    context.push('/organizer/events/${event.id}/edit');
                     break;
                 }
               },

@@ -4,6 +4,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -16,6 +17,7 @@ func TestSocialPreviewPageIncludesShareMetadata(t *testing.T) {
 		EventID:     eventID,
 		Title:       "AI Hackathon",
 		Description: "Build useful things with your community.",
+		StartDate:   time.Date(2026, 8, 21, 17, 0, 0, 0, time.UTC),
 		ImageURL:    &imageURL,
 		PublicURL:   "https://api.example/events/" + eventID.String(),
 	})

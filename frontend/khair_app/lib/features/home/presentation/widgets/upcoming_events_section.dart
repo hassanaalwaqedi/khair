@@ -50,7 +50,7 @@ class UpcomingEventsSection extends StatelessWidget {
         else
           ...events.map((e) => _UpcomingEventRow(
                 event: e,
-                onTap: () => context.go('/events/${e.id}'),
+                onTap: () => context.push('/events/${e.id}'),
               )),
       ],
     );

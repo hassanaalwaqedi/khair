@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:khair_app/l10n/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
+import '../../features/events/domain/entities/event.dart';
 
 /// Cross-platform share helper.
 /// Uses native share on mobile, falls back to clipboard + snackbar on web/desktop.
@@ -22,7 +25,9 @@ class ShareHelper {
       } catch (_) {
         // Web Share API not available — fall through to clipboard
       }
-      _copyToClipboard(context, text);
+      if (context.mounted) {
+        _copyToClipboard(context, text);
+      }
       return;
     }
 
@@ -30,9 +35,47 @@ class ShareHelper {
     try {
       await SharePlus.instance.share(ShareParams(text: text));
     } catch (_) {
-      _copyToClipboard(context, text);
+      if (context.mounted) {
+        _copyToClipboard(context, text);
+      }
     }
   }
+
+  /// Specialized method to share a Khair event using clean OpenGraph metadata.
+  /// It builds a short localized string containing only the title and canonical URL.
+  static Future<void> shareEvent(BuildContext context, Event event, String publicUrl) async {
+    final l10n = AppLocalizations.of(context)!;
+    
+    final List<String> lines = [];
+    lines.add(l10n.shareEventIntro(event.title));
+    lines.add('');
+    
+    // Date & Time
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateStr = DateFormat.yMMMEd(locale).format(event.startDate);
+    final timeStr = DateFormat.jm(locale).format(event.startDate);
+    lines.add('📅 $dateStr · $timeStr');
+    
+    // Location
+    if (event.isOnline) {
+      lines.add(l10n.shareEventOnlineLocation);
+    } else if (event.city != null) {
+      final loc = event.country != null ? '${event.city}, ${event.country}' : event.city!;
+      lines.add(l10n.shareEventPhysicalLocation(loc));
+    }
+    
+    // Organizer
+    if (event.organizerName != null && event.organizerName!.trim().isNotEmpty) {
+      lines.add(l10n.shareEventOrganizer(event.organizerName!));
+    }
+    
+    lines.add('');
+    lines.add(publicUrl);
+    
+    final text = lines.join('\n');
+    await share(context, text);
+  }
+
 
   static void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
