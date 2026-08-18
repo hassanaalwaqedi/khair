@@ -66,6 +66,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
   late final TextEditingController _onlineLink;
   late final TextEditingController _onlineInstructions;
   late final TextEditingController _capacity;
+  late final TextEditingController _guidelines;
   late final TextEditingController _priceAmount;
   late final TextEditingController _currency;
   final _countriesSource = CountriesDataSource(getIt<ApiClient>());

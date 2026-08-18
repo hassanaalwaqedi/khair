@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/organizer.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/data/models/event_model.dart';
 
 /// Remote data source for organizer API calls
 abstract class OrganizerRemoteDataSource {
@@ -41,31 +42,7 @@ class OrganizerRemoteDataSourceImpl implements OrganizerRemoteDataSource {
   Future<List<Event>> getMyEvents() async {
     final response = await _apiClient.get('/my/events');
     final List<dynamic> eventsList = response.data['data'] ?? [];
-    return eventsList
-        .map((json) => Event(
-              id: json['id'],
-              organizerId: json['organizer_id'],
-              title: json['title'],
-              description: json['description'],
-              eventType: json['event_type'],
-              language: json['language'],
-              country: json['country'],
-              city: json['city'],
-              address: json['address'],
-              latitude: json['latitude']?.toDouble(),
-              longitude: json['longitude']?.toDouble(),
-              startDate: DateTime.parse(json['start_date']),
-              endDate: json['end_date'] != null
-                  ? DateTime.parse(json['end_date'])
-                  : null,
-              imageUrl: json['image_url'],
-              status: json['status'],
-              rejectionReason: json['rejection_reason'],
-              organizerName: json['organizer_name'],
-              createdAt: DateTime.parse(json['created_at']),
-              updatedAt: DateTime.parse(json['updated_at']),
-            ))
-        .toList();
+    return eventsList.map((json) => EventModel.fromJson(json)).toList();
   }
 
   @override

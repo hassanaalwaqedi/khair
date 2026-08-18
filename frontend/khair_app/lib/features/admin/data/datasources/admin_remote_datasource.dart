@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../../organizer/domain/entities/organizer.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/data/models/event_model.dart';
 import '../../domain/entities/admin_entities.dart';
 
 /// Remote data source for admin API calls
@@ -68,83 +69,21 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   Future<List<Event>> getPendingEvents() async {
     final response = await _apiClient.get('/admin/events/pending');
     final List<dynamic> list = response.data['data'] ?? [];
-    return list
-        .map((json) => Event(
-              id: json['id'],
-              organizerId: json['organizer_id'],
-              title: json['title'],
-              description: json['description'],
-              eventType: json['event_type'],
-              language: json['language'],
-              country: json['country'],
-              city: json['city'],
-              address: json['address'],
-              latitude: json['latitude']?.toDouble(),
-              longitude: json['longitude']?.toDouble(),
-              startDate: DateTime.parse(json['start_date']),
-              endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
-              imageUrl: json['image_url'],
-              status: json['status'],
-              rejectionReason: json['rejection_reason'],
-              organizerName: json['organizer_name'],
-              createdAt: DateTime.parse(json['created_at']),
-              updatedAt: DateTime.parse(json['updated_at']),
-            ))
-        .toList();
+    return list.map((json) => EventModel.fromJson(json)).toList();
   }
 
   @override
   Future<Event> getEventById(String id) async {
     final response = await _apiClient.get('/admin/events/$id');
     final json = response.data['data'];
-    return Event(
-      id: json['id'],
-      organizerId: json['organizer_id'],
-      title: json['title'],
-      description: json['description'],
-      eventType: json['event_type'],
-      language: json['language'],
-      country: json['country'],
-      city: json['city'],
-      address: json['address'],
-      latitude: json['latitude']?.toDouble(),
-      longitude: json['longitude']?.toDouble(),
-      startDate: DateTime.parse(json['start_date']),
-      endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
-      imageUrl: json['image_url'],
-      status: json['status'],
-      rejectionReason: json['rejection_reason'],
-      organizerName: json['organizer_name'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-    );
+    return EventModel.fromJson(json);
   }
 
   @override
   Future<Event> updateEventStatus(String id, Map<String, dynamic> data) async {
     final response = await _apiClient.put('/admin/events/$id/status', data: data);
     final json = response.data['data'];
-    return Event(
-      id: json['id'],
-      organizerId: json['organizer_id'],
-      title: json['title'],
-      description: json['description'],
-      eventType: json['event_type'],
-      language: json['language'],
-      country: json['country'],
-      city: json['city'],
-      address: json['address'],
-      latitude: json['latitude']?.toDouble(),
-      longitude: json['longitude']?.toDouble(),
-      startDate: DateTime.parse(json['start_date']),
-      endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
-      imageUrl: json['image_url'],
-      status: json['status'],
-      rejectionReason: json['rejection_reason'],
-      organizerName: json['organizer_name'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-    );
+    return EventModel.fromJson(json);
   }
 
   @override
