@@ -7,6 +7,7 @@ class AppColors {
   static const Color primary = Color(0xFFF43F75);
   static const Color primaryLight = Color(0xFFFF7AA2);
   static const Color primaryDark = Color(0xFFE63268);
+  static const Color primarySoft = Color(0xFFFFF1F5);
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   // ── Secondary (Gold — premium feel) ──
