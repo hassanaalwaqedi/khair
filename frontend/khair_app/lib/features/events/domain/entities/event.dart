@@ -203,18 +203,18 @@ class EventFilter extends Equatable {
     );
   }
 
-  /// Clear all filters except location (country/city)
+  /// Clear all temporary filters (including temporary location)
   EventFilter clearFilters() {
     return EventFilter(
-      country: country,
-      city: city,
       page: 1,
       pageSize: pageSize,
     );
   }
 
-  /// Check if any non-location filter is active
+  /// Check if any temporary filter is active
   bool get hasActiveFilters =>
+      country != null ||
+      city != null ||
       eventType != null ||
       language != null ||
       dateFilter != null ||

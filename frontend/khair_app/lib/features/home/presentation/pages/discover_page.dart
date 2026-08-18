@@ -251,10 +251,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   void _applyCity(String value) {
     final city = value.trim();
-    final filter = context.read<EventsBloc>().state.filter;
-    context.read<EventsBloc>().add(UpdateFilter(
-          filter.copyWith(city: city, clearCity: city.isEmpty),
-        ));
+    context.read<EventsBloc>().add(UpdateBaseCity(city));
   }
 
   void _toggleQuickFilter(_QuickFilter quickFilter) {
@@ -1288,7 +1285,18 @@ class _EmptyDiscovery extends StatelessWidget {
             FilledButton(
                 onPressed: onMap, child: const Text('Explore another city')),
             OutlinedButton(
-                onPressed: onMap,
+                onPressed: onlineOnly
+                    ? onMap
+                    : () {
+                        final filter = context.read<EventsBloc>().state.filter;
+                        context.read<EventsBloc>().add(UpdateFilter(
+                              filter.copyWith(
+                                onlineOnly: true,
+                                clearCity: true,
+                                clearCountry: true,
+                              ),
+                            ));
+                      },
                 child: Text(onlineOnly
                     ? 'Explore all events'
                     : 'Browse online events')),

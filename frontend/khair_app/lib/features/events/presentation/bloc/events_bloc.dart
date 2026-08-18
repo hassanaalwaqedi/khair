@@ -28,6 +28,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     on<LoadNearbyEvents>(_onLoadNearbyEvents);
     on<CreateEvent>(_onCreateEvent);
     on<UpdateLocation>(_onUpdateLocation);
+    on<UpdateBaseCity>(_onUpdateBaseCity);
     on<UpdateCategoryFilter>(_onUpdateCategoryFilter);
     on<UpdateDateFilter>(_onUpdateDateFilter);
     on<ToggleTrending>(_onToggleTrending);
@@ -80,6 +81,34 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
   ) {
     _currentLocation = event.location;
     // Reload events with location filter
+    add(LoadEvents());
+  }
+
+  void _onUpdateBaseCity(
+    UpdateBaseCity event,
+    Emitter<EventsState> emit,
+  ) {
+    if (_currentLocation != null) {
+      _currentLocation = LocationEntity(
+        country: _currentLocation!.country,
+        countryCode: _currentLocation!.countryCode,
+        city: event.city,
+        timezone: _currentLocation!.timezone,
+        latitude: _currentLocation!.latitude,
+        longitude: _currentLocation!.longitude,
+      );
+    } else {
+      _currentLocation = LocationEntity(
+        country: '',
+        countryCode: '',
+        city: event.city,
+        timezone: '',
+      );
+    }
+    // Clear the temporary filter city so that base city takes effect
+    emit(state.copyWith(
+      filter: state.filter.copyWith(city: null, clearCity: true),
+    ));
     add(LoadEvents());
   }
 
@@ -162,6 +191,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
   ) {
     final newFilter = state.filter.clearFilters();
     emit(state.copyWith(
+      status: EventsStatus.loading,
       filter: newFilter,
       events: [],
       hasReachedMax: false,
@@ -180,7 +210,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     if (_currentLocation != null) {
       filter = filter.copyWith(
         country: filter.country ?? _currentLocation!.countryCode,
-        // city is NOT auto-injected to avoid empty pages in small cities
+        city: filter.city ?? _currentLocation!.city,
       );
     }
 
@@ -277,6 +307,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
   ) async {
     final newFilter = event.filter.copyWith(page: 1);
     emit(state.copyWith(
+      status: EventsStatus.loading,
       filter: newFilter,
       events: [],
       hasReachedMax: false,

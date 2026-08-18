@@ -64,6 +64,15 @@ class UpdateLocation extends EventsEvent {
   List<Object?> get props => [location];
 }
 
+class UpdateBaseCity extends EventsEvent {
+  final String city;
+
+  const UpdateBaseCity(this.city);
+
+  @override
+  List<Object?> get props => [city];
+}
+
 // --- Smart Filtering Events ---
 
 class UpdateCategoryFilter extends EventsEvent {
