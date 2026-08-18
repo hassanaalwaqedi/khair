@@ -13,6 +13,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/media_url_helper.dart';
+import '../../../../core/utils/calendar_service.dart';
 import '../../../../core/utils/share_helper.dart';
 import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -502,25 +503,47 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   }
 
   Widget _buildInlineActions(Event event, _PageColors colors) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _outlineAction(
-            icon: _isSaved
-                ? Icons.favorite_rounded
-                : Icons.favorite_border_rounded,
-            label: _isSaved ? 'Saved' : 'Save',
-            colors: colors,
-            onPressed: _saveLoading ? null : () => _toggleSaved(event),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _outlineAction(
+                icon: _isSaved
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                label: _isSaved ? 'Saved' : 'Save',
+                colors: colors,
+                onPressed: _saveLoading ? null : () => _toggleSaved(event),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _outlineAction(
+                icon: Icons.ios_share_outlined,
+                label: 'Share',
+                colors: colors,
+                onPressed: () => _shareEvent(event),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
           child: _outlineAction(
-            icon: Icons.ios_share_outlined,
-            label: 'Share',
+            icon: Icons.calendar_month_outlined,
+            label: 'Add to Google Calendar',
             colors: colors,
-            onPressed: () => _shareEvent(event),
+            onPressed: () {
+              final hasAccess = _meetingAccess?['available'] == true && _meetingAccess?['url'] != null;
+              final meetingUrl = hasAccess ? _meetingAccess!['url'] as String : null;
+              CalendarService.openGoogleCalendar(
+                context,
+                event,
+                authorizedMeetingUrl: meetingUrl,
+              );
+            },
           ),
         ),
       ],

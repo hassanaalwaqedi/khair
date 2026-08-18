@@ -279,8 +279,26 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 	}
 
 	if event.Status != "approved" {
-		response.NotFound(c, "Event not found")
-		return
+		isAdmin := false
+		if rolesVal, exists := c.Get("roles"); exists {
+			if roles, ok := rolesVal.([]string); ok {
+				for _, r := range roles {
+					if r == "admin" || r == "super_admin" {
+						isAdmin = true
+						break
+					}
+				}
+			}
+		} else if roleVal, exists := c.Get("role"); exists {
+			if role, ok := roleVal.(string); ok && (role == "admin" || role == "super_admin") {
+				isAdmin = true
+			}
+		}
+		
+		if !isAdmin {
+			response.NotFound(c, "Event not found")
+			return
+		}
 	}
 
 	userID := c.MustGet("user_id").(uuid.UUID)
@@ -368,7 +386,7 @@ func (h *Handler) GetMeetingAccess(c *gin.Context) {
 		return
 	}
 
-	if !event.IsOnline {
+	if !event.IsOnline && event.EventType != "online" {
 		response.BadRequest(c, "Not an online event")
 		return
 	}
@@ -379,6 +397,8 @@ func (h *Handler) GetMeetingAccess(c *gin.Context) {
 
 	// Organizer check
 	if event.OrganizerID == userID {
+		isAuthorized = true
+	} else if org, err := h.service.organizerRepo.GetByID(event.OrganizerID); err == nil && org.UserID == userID {
 		isAuthorized = true
 	}
 

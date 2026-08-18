@@ -48,6 +48,8 @@ import '../../features/notifications/data/datasources/notification_remote_dataso
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../../features/profile/data/profile_overview_datasource.dart';
+import '../../features/support/data/support_repository.dart';
+import '../../features/support/presentation/bloc/support_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -211,5 +213,13 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
+  );
+
+  // Support Feature
+  getIt.registerLazySingleton<SupportRepository>(
+    () => SupportRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<SupportCubit>(
+    () => SupportCubit(getIt<SupportRepository>()),
   );
 }

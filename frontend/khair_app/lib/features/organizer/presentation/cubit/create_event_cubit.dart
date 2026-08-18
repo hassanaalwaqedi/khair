@@ -262,6 +262,16 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   Future<void> suggestDescription() async {
     if (state.formData.title.trim().isEmpty) return;
+    
+    final words = state.formData.description.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+    if (words < 5) {
+      emit(state.copyWith(
+        status: CreateEventStatus.failure,
+        errorMessage: 'Please write at least 5 words about your event to give Khair AI some context.',
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: CreateEventStatus.aiGenerating));
     try {
       final response =
@@ -465,7 +475,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   bool _isValidUrl(String? value) {
-    final uri = Uri.tryParse(value ?? '');
+    final uri = Uri.tryParse((value ?? '').trim());
     return uri != null &&
         (uri.scheme == 'https' || uri.scheme == 'http') &&
         uri.host.isNotEmpty;

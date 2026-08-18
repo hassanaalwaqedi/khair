@@ -57,6 +57,7 @@ import (
 	"github.com/khair/backend/internal/verification"
 	"github.com/khair/backend/internal/waitlist"
 	"github.com/khair/backend/internal/ws"
+	"github.com/khair/backend/internal/support"
 	"github.com/khair/backend/pkg/brand"
 	"github.com/khair/backend/pkg/cache"
 	"github.com/khair/backend/pkg/config"
@@ -278,6 +279,11 @@ func main() {
 	descriptionService := ai.NewDescriptionService(geminiClient)
 	aiHandler := ai.NewHandler(rankingService, descriptionService, interactionRepo, geminiClient)
 
+	// Initialize Support service
+	supportRepo := support.NewRepository(db)
+	supportService := support.NewService(supportRepo, geminiClient, wsHub, fcmClient, db)
+	supportHandler := support.NewHandler(supportService)
+
 	if geminiClient.IsEnabled() {
 		appLogger.Info("AI Personalization enabled", logger.String("model", cfg.Gemini.Model))
 	} else {
@@ -306,6 +312,7 @@ func main() {
 	registrationHandler.RegisterRoutes(v1, registerRL, verifyRL, resendRL)
 	uploadHandler.RegisterRoutes(v1, authMiddleware)
 	organizerApplicationHandler.RegisterRoutes(v1, authMiddleware)
+	supportHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
 
 	// WebSocket endpoint (JWT via query param)
 	v1.GET("/ws", wsHub.HandleUpgrade)

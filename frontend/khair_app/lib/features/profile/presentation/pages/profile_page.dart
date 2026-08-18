@@ -416,6 +416,8 @@ class _QuickActions extends StatelessWidget {
       if (overview.user.email == 'hassan@khair.com' || context.read<AuthBloc>().state.isAdmin)
         const _Action(Icons.admin_panel_settings_outlined, 'Admin Dashboard',
             'Khair platform management', '/admin'),
+      const _Action(Icons.help_outline_rounded, 'Help & Support',
+          'Chat with Khair AI or agents', '/support'),
     ];
     return LayoutBuilder(builder: (context, constraints) {
       final cols = constraints.maxWidth >= 800

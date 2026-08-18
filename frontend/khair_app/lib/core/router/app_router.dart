@@ -13,12 +13,15 @@ import '../../features/admin/presentation/pages/organizer_application_list_page.
 import '../../features/admin/presentation/pages/organizer_application_review_page.dart';
 import '../../features/admin/presentation/pages/organizer_trust_page.dart';
 import '../../features/admin/presentation/pages/reports_page.dart';
+import '../../features/admin/presentation/pages/admin_event_review_page.dart';
+import '../../features/admin/presentation/pages/admin_support_inbox_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/events/presentation/pages/event_details_page.dart';
+import '../../features/events/domain/entities/event.dart';
 import '../../features/events/presentation/pages/my_events_page.dart';
 import '../../features/events/presentation/pages/saved_events_page.dart';
 import '../../features/home/presentation/pages/discover_page.dart';
@@ -42,6 +45,8 @@ import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart'
 import '../../features/profile/presentation/pages/profile_edit_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/static/presentation/pages/static_page.dart';
+import '../../features/support/presentation/bloc/support_cubit.dart';
+import '../../features/support/presentation/pages/support_chat_page.dart';
 import '../../features/verification/presentation/pages/verification_page.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -179,6 +184,19 @@ final GoRouter appRouter = GoRouter(
           child: const AdminDashboardPage()),
       routes: [
         GoRoute(
+          path: 'events/:id',
+          builder: (context, state) {
+            final event = state.extra as Event?;
+            if (event == null) {
+              return const Scaffold(body: Center(child: Text('Event not found')));
+            }
+            return BlocProvider.value(
+              value: getIt<AdminBloc>(),
+              child: AdminEventReviewPage(event: event),
+            );
+          },
+        ),
+        GoRoute(
           path: 'organizer-applications',
           builder: (_, __) => const OrganizerApplicationListPage(),
           routes: [
@@ -196,6 +214,9 @@ final GoRouter appRouter = GoRouter(
             path: 'organizers/:id/trust',
             builder: (_, state) =>
                 OrganizerTrustPage(organizerId: state.pathParameters['id']!)),
+        GoRoute(
+            path: 'support',
+            builder: (_, __) => const AdminSupportInboxPage()),
       ],
     ),
     GoRoute(
@@ -222,6 +243,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
         path: '/verification-policy',
         builder: (_, __) => const StaticPage(pageType: 'verification')),
+    GoRoute(
+        path: '/support',
+        builder: (_, __) => BlocProvider(
+            create: (_) => getIt<SupportCubit>(),
+            child: const SupportChatPage())),
   ],
   errorBuilder: (context, state) =>
       _NotFoundPage(message: state.error?.toString()),

@@ -403,12 +403,10 @@ class _LocationButton extends StatelessWidget {
               return TextButton.icon(
                 onPressed: onPressed,
                 icon: const Icon(Icons.location_on_outlined, size: 17),
-                label: Flexible(
-                  child: Text(
-                    city.isEmpty ? 'Choose area' : city,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
+                label: Text(
+                  city.isEmpty ? 'Choose area' : city,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,

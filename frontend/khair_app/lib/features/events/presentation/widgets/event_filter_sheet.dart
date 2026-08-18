@@ -203,7 +203,7 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
           );
         });
       },
-      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? AppTheme.primaryColor : null,
         fontWeight: isSelected ? FontWeight.bold : null,
@@ -223,7 +223,7 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
           );
         });
       },
-      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? AppTheme.primaryColor : null,
         fontWeight: isSelected ? FontWeight.bold : null,

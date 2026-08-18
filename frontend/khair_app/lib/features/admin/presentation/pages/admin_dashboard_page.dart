@@ -74,6 +74,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             onPressed: () => context.go('/admin/organizer-applications'),
           ),
           IconButton(
+            icon: const Icon(Icons.support_agent_outlined),
+            tooltip: 'Support Inbox',
+            onPressed: () => context.go('/admin/support'),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: context.l10n.adminRefresh,
             onPressed: () {
@@ -649,18 +654,23 @@ class _EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? KhairColors.darkCard : KhairColors.surface,
+    return Material(
+      color: isDark ? KhairColors.darkCard : KhairColors.surface,
+      borderRadius: KhairRadius.medium,
+      child: InkWell(
+        onTap: () => context.push('/admin/events/${event.id}', extra: event),
         borderRadius: KhairRadius.medium,
-        border: Border.all(
-          color: isDark ? KhairColors.darkBorder : KhairColors.border,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: KhairRadius.medium,
+            border: Border.all(
+              color: isDark ? KhairColors.darkBorder : KhairColors.border,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           Row(
             children: [
               Container(
@@ -765,6 +775,8 @@ class _EventCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+      ),
       ),
     );
   }
