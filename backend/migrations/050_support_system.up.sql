@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS support_articles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_support_articles_published ON support_articles(is_published, language);
+CREATE INDEX IF NOT EXISTS idx_support_articles_published ON support_articles(is_published, language);
 
 -- Support Tickets
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     closed_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_support_tickets_user ON support_tickets(user_id);
-CREATE INDEX idx_support_tickets_status ON support_tickets(status);
-CREATE INDEX idx_support_tickets_assigned ON support_tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_assigned ON support_tickets(assigned_to);
 
 -- Support Messages
 CREATE TABLE IF NOT EXISTS support_messages (
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS support_messages (
     read_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_support_messages_ticket ON support_messages(ticket_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_support_messages_ticket ON support_messages(ticket_id, created_at);
 
 -- Support Attachments
 CREATE TABLE IF NOT EXISTS support_attachments (
@@ -80,11 +80,13 @@ CREATE TABLE IF NOT EXISTS support_attachments (
 );
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS trigger_support_articles_updated_at ON support_articles;
 CREATE TRIGGER trigger_support_articles_updated_at
     BEFORE UPDATE ON support_articles
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trigger_support_tickets_updated_at ON support_tickets;
 CREATE TRIGGER trigger_support_tickets_updated_at
     BEFORE UPDATE ON support_tickets
     FOR EACH ROW
