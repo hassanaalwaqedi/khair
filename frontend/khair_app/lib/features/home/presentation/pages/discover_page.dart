@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../tokens/tokens.dart';
-import '../../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../../events/domain/entities/event.dart';
-import '../../../../events/presentation/bloc/events_bloc.dart';
-import '../../../../location/presentation/bloc/location_bloc.dart';
+import '../../../../tokens/tokens.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../events/domain/entities/event.dart';
+import '../../../events/presentation/bloc/events_bloc.dart';
+import '../../../location/presentation/bloc/location_bloc.dart';
 import '../widgets/discover/compact_event_card.dart';
 import '../widgets/discover/discover_header.dart';
 import '../widgets/discover/discover_search_bar.dart';
@@ -81,7 +81,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       children: [
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, auth) {
-                            final name = auth.user?.firstName ?? '';
+                            // Khair User currently doesn't have a firstName, so we use empty or parse from email.
+                            final name = '';
                             final greeting = name.isNotEmpty
                                 ? '${_timeGreeting()}, $name \uD83D\uDC4B'
                                 : '${_timeGreeting()} \uD83D\uDC4B';
