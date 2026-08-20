@@ -1048,6 +1048,8 @@
   "createEvent1": "Create event",
   "organizerApplicationReviewQueu": "Organizer application review queue",
   "supportInbox": "Support Inbox",
+  "supportInboxLoadFailed": "Destek gelen kutusu yüklenemedi.",
+  "supportInboxEmpty": "Yanıt bekleyen destek görüşmesi yok.",
   "verification": "Verification",
   "areYouSureYouWantToReject": "Are you sure you want to reject ",
   "noUsers": "No Users",

@@ -2671,6 +2671,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportInbox => 'صندوق الدعم';
 
   @override
+  String get supportInboxLoadFailed => 'تعذر تحميل صندوق الدعم.';
+
+  @override
+  String get supportInboxEmpty => 'لا توجد محادثات دعم بانتظار الرد.';
+
+  @override
   String get verification => 'التحقق';
 
   @override

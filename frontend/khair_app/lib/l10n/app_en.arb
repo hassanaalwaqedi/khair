@@ -1055,6 +1055,8 @@
   "createEvent1": "Create event",
   "organizerApplicationReviewQueu": "Organizer application review queue",
   "supportInbox": "Support Inbox",
+  "supportInboxLoadFailed": "We could not load the support inbox.",
+  "supportInboxEmpty": "No support conversations are waiting.",
   "verification": "Verification",
   "areYouSureYouWantToReject": "Are you sure you want to reject ",
   "noUsers": "No Users",

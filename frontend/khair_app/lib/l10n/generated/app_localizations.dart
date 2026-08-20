@@ -5200,6 +5200,18 @@ abstract class AppLocalizations {
   /// **'Support Inbox'**
   String get supportInbox;
 
+  /// No description provided for @supportInboxLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not load the support inbox.'**
+  String get supportInboxLoadFailed;
+
+  /// No description provided for @supportInboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No support conversations are waiting.'**
+  String get supportInboxEmpty;
+
   /// No description provided for @verification.
   ///
   /// In en, this message translates to:
