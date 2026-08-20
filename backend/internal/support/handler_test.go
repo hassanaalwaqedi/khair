@@ -124,3 +124,43 @@ func TestHandler_OpenConversationKeepsMessengerAvailableWhenHistoryFails(t *test
 	assert.Empty(t, body["messages"])
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestHandler_GetTicketMessagesKeepsHandoffUsableWhenHistoryFails(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	userID := uuid.New()
+	ticketID := uuid.New()
+	now := time.Now().UTC()
+	mock.ExpectQuery(`SELECT id, user_id, assigned_to, category`).
+		WithArgs(ticketID).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id", "user_id", "assigned_to", "category", "subject", "status",
+			"priority", "ai_summary", "created_at", "updated_at", "first_human_response_at",
+			"resolved_at", "closed_at", "language", "context_type", "context_id",
+		}).AddRow(
+			ticketID, userID, nil, "general", "Khair support conversation", "waiting_for_agent",
+			"normal", nil, now, now, nil, nil, nil, "en", nil, nil,
+		))
+	mock.ExpectQuery(`SELECT m.id, m.ticket_id, m.sender_type`).
+		WithArgs(ticketID).
+		WillReturnError(errors.New("legacy attachment relation unavailable"))
+
+	handler := support.NewHandler(support.NewService(support.NewRepository(db), nil, nil, nil, db))
+	r := gin.New()
+	handler.RegisterRoutes(r.Group("/api/v1"), mockAuthMiddleware(userID, []string{"user"}), mockAdminMiddleware())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/support/tickets/"+ticketID.String()+"/messages", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var body map[string]interface{}
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.Equal(t, false, body["history_available"])
+	assert.Empty(t, body["messages"])
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

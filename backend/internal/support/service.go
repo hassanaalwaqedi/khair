@@ -315,6 +315,12 @@ func (s *Service) escalateTicket(ctx context.Context, ticketID uuid.UUID, includ
 		return nil, err
 	}
 
+	// Repeating the handoff action after a network retry must be safe. The
+	// conversation is already visible to human support in either of these
+	// states, so report success instead of sending the user back to the AI.
+	if ticket.Status == statusWaitingForAgent || ticket.Status == statusHumanActive {
+		return nil, nil
+	}
 	if ticket.Status != statusAIActive {
 		return nil, fmt.Errorf("conversation is already escalated or resolved")
 	}

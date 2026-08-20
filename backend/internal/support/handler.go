@@ -155,9 +155,13 @@ func (h *Handler) GetTicketMessages(c *gin.Context) {
 	}
 
 	msgs, err := h.service.GetTicketMessages(ticketID, isSupport)
+	historyAvailable := err == nil
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
-		return
+		// A bad legacy history row must not prevent a user from reaching a
+		// human agent. Return the usable conversation shell and retain the exact
+		// database failure in server logs for follow-up.
+		log.Printf("[SUPPORT] failed to load ticket history %s: %v", ticketID, err)
+		msgs = make([]*models.SupportMessage, 0)
 	}
 
 	excludeSenderType := "user"
@@ -166,7 +170,10 @@ func (h *Handler) GetTicketMessages(c *gin.Context) {
 	}
 	h.service.repo.MarkMessagesAsRead(ticketID, excludeSenderType)
 
-	c.JSON(http.StatusOK, gin.H{"messages": msgs})
+	c.JSON(http.StatusOK, gin.H{
+		"messages":          msgs,
+		"history_available": historyAvailable,
+	})
 }
 
 func (h *Handler) EscalateTicket(c *gin.Context) {
