@@ -80,7 +80,7 @@ func (h *Handler) JoinEvent(c *gin.Context) {
 	}
 
 	// Send notifications in background
-	go h.sendJoinNotifications(uid, eventID, reg.ID)
+	go h.sendStructuredJoinNotifications(uid, eventID)
 
 	response.SuccessWithMessage(c, "Seat reserved! Verify your email to confirm.", map[string]interface{}{
 		"registration_id": reg.ID,
@@ -207,53 +207,6 @@ func (h *Handler) GetMyReservations(c *gin.Context) {
 	}
 
 	response.Success(c, reservations)
-}
-
-// sendJoinNotifications sends DB + push notifications to user and organizer
-func (h *Handler) sendJoinNotifications(userID, eventID, regID uuid.UUID) {
-	// Get event details for the notification message
-	evt, err := h.eventSvc.GetByID(eventID)
-	if err != nil {
-		log.Printf("[NOTIFICATION] Failed to get event for join notification: %v", err)
-		return
-	}
-
-	title := evt.Title
-
-	// 1. Notify the user
-	userTitle := "Event Registration Confirmed | تم تأكيد التسجيل"
-	userMsg := fmt.Sprintf("You successfully joined: %s | لقد انضممت بنجاح إلى: %s", title, title)
-
-	if h.notifSvc != nil {
-		if err := h.notifSvc.Create(userID, userTitle, userMsg); err != nil {
-			log.Printf("[NOTIFICATION] Failed to create user join notification: %v", err)
-		}
-	}
-	if h.pushSvc != nil {
-		h.pushSvc.SendToUser(userID, userTitle, userMsg, map[string]string{
-			"type":     "event_joined",
-			"event_id": eventID.String(),
-		})
-	}
-
-	// 2. Notify the organizer
-	orgUserID := h.getOrganizerUserID(evt.OrganizerID)
-	if orgUserID != uuid.Nil {
-		orgTitle := "New Participant Joined | انضم مشارك جديد"
-		orgMsg := fmt.Sprintf("A new participant joined your event: %s | انضم مشارك جديد إلى فعاليتك: %s", title, title)
-
-		if h.notifSvc != nil {
-			if err := h.notifSvc.Create(orgUserID, orgTitle, orgMsg); err != nil {
-				log.Printf("[NOTIFICATION] Failed to create organizer join notification: %v", err)
-			}
-		}
-		if h.pushSvc != nil {
-			h.pushSvc.SendToUser(orgUserID, orgTitle, orgMsg, map[string]string{
-				"type":     "new_participant",
-				"event_id": eventID.String(),
-			})
-		}
-	}
 }
 
 // getOrganizerUserID gets the user_id for an organizer

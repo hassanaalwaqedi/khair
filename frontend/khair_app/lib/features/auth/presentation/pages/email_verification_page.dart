@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -34,7 +35,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             padding: EdgeInsets.fromLTRB(
                 24, 24, 24, 32 + MediaQuery.viewInsetsOf(context).bottom),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+              constraints: BoxConstraints(maxWidth: 460),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -42,46 +43,47 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         alignment: AlignmentDirectional.centerStart,
                         child: IconButton(
                             onPressed: () => context.go('/register'),
-                            icon: const BackButtonIcon())),
-                    const SizedBox(height: 32),
-                    const Icon(Icons.mark_email_read_outlined,
+                            icon: BackButtonIcon())),
+                    SizedBox(height: 32),
+                    Icon(Icons.mark_email_read_outlined,
                         color: Color(0xFFF43F75), size: 46),
-                    const SizedBox(height: 18),
-                    Text('Check your email',
+                    SizedBox(height: 18),
+                    Text(context.l10n.checkYourEmail,
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
                             .headlineLarge
                             ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 10),
-                    Text('Enter the six-digit code we sent to $email.',
+                    SizedBox(height: 10),
+                    Text(context.l10n.verificationCodeSentTo(email),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     TextField(
                         controller: _code,
                         keyboardType: TextInputType.number,
+                        textDirection: TextDirection.ltr,
                         textAlign: TextAlign.center,
                         maxLength: 6,
                         autofocus: true,
-                        decoration: const InputDecoration(
-                            labelText: 'Verification code',
+                        decoration: InputDecoration(
+                            labelText: context.l10n.verificationCode,
                             hintText: '000000',
                             counterText: ''),
                         onSubmitted: (_) => _verify(email)),
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22),
                     SizedBox(
                         height: 54,
                         child: FilledButton(
                             onPressed: _loading ? null : () => _verify(email),
                             child: _loading
-                                ? const CircularProgressIndicator(
+                                ? CircularProgressIndicator(
                                     color: Colors.white)
-                                : const Text('Verify email'))),
-                    const SizedBox(height: 12),
+                                : Text(context.l10n.verifyEmail))),
+                    SizedBox(height: 12),
                     TextButton(
                         onPressed: _loading ? null : () => _resend(email),
-                        child: const Text('Resend code')),
+                        child: Text(context.l10n.resendCode)),
                   ]),
             ),
           ),

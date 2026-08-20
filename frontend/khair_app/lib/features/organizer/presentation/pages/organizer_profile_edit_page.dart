@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -62,7 +63,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
     // Load profile if not already loaded
     final state = context.read<OrganizerBloc>().state;
     if (state.organizer == null) {
-      context.read<OrganizerBloc>().add(const LoadOrganizerProfile());
+      context.read<OrganizerBloc>().add(LoadOrganizerProfile());
     } else {
       _populateFields(state.organizer!);
     }
@@ -196,8 +197,8 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
         setState(() {
           _uploadingImage = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Failed to upload image. Please try again.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.l10n.failedToUploadImagePleaseTryAg),
           backgroundColor: KhairColors.error,
         ));
       }
@@ -211,7 +212,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Profile'),
+          title: Text(context.l10n.editProfile),
         ),
         body: BlocConsumer<OrganizerBloc, OrganizerState>(
           listener: (context, state) {
@@ -230,9 +231,9 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.white),
-                      const SizedBox(width: 12),
-                      const Text('Profile updated successfully'),
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 12),
+                      Text(context.l10n.profileUpdatedSuccessfully),
                     ],
                   ),
                   backgroundColor: KhairColors.success,
@@ -252,8 +253,8 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.white),
-                      const SizedBox(width: 12),
+                      Icon(Icons.error_outline, color: Colors.white),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Text(
                             state.errorMessage ?? 'Failed to update profile'),
@@ -272,7 +273,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
           builder: (context, state) {
             // Loading profile
             if (state.isProfileLoading && state.organizer == null) {
-              return const KhairLoadingState(message: 'Loading profile...');
+              return KhairLoadingState(message: context.l10n.loadingProfile);
             }
 
             // Error loading profile
@@ -283,7 +284,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                 onRetry: () {
                   context
                       .read<OrganizerBloc>()
-                      .add(const LoadOrganizerProfile());
+                      .add(LoadOrganizerProfile());
                 },
               );
             }
@@ -337,7 +338,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                     ),
                                     child: _logoPreview == null &&
                                             _logoUrl == null
-                                        ? const Icon(Icons.business_rounded,
+                                        ? Icon(Icons.business_rounded,
                                             color: KhairColors.primary,
                                             size: 32)
                                         : null,
@@ -350,7 +351,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                         color: Colors.black45,
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: const Center(
+                                      child: Center(
                                         child: SizedBox(
                                           width: 24,
                                           height: 24,
@@ -364,7 +365,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +374,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                     state.organizer!.name,
                                     style: KhairTypography.h3,
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4),
                                   StatusBadge(
                                     status:
                                         state.organizer!.status.toUpperCase(),
@@ -383,7 +384,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
                       ],
 
                       // Form fields
@@ -439,7 +440,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                         Icons.flag_outlined,
                       ),
 
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Save button
                       SizedBox(
@@ -448,7 +449,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                         child: ElevatedButton(
                           onPressed: isSaving ? null : _onSave,
                           child: isSaving
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 22,
                                   height: 22,
                                   child: CircularProgressIndicator(
@@ -456,10 +457,10 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text('Save Changes'),
+                              : Text(context.l10n.ownerSaveChanges),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -485,6 +486,10 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        textDirection: (keyboardType == TextInputType.phone ||
+                        keyboardType == TextInputType.emailAddress ||
+                        keyboardType == TextInputType.url)
+                       ? TextDirection.ltr : null,
         validator: validator,
         decoration: InputDecoration(
           labelText: label,

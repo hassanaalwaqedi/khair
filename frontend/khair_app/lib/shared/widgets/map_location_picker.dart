@@ -285,8 +285,8 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                 ),
 
                 // Zoom controls
-                Positioned(
-                  right: 12,
+                PositionedDirectional(
+                  end: 12,
                   bottom: 12,
                   child: Column(
                     children: [
@@ -311,10 +311,10 @@ class _MapLocationPickerState extends State<MapLocationPicker>
 
                 // Tap hint overlay
                 if (_selectedPoint == null)
-                  Positioned(
+                  PositionedDirectional(
                     bottom: 12,
-                    left: 12,
-                    right: 60,
+                    start: 12,
+                    end: 60,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
@@ -378,7 +378,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
             fontSize: 14,
           ),
           prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 12, right: 8),
+            padding: EdgeInsetsDirectional.only(start: 12, end: 8),
             child: Text('🔍', style: TextStyle(fontSize: 18)),
           ),
           prefixIconConstraints:

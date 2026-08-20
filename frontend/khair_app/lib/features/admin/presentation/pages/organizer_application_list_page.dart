@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,14 +31,14 @@ class _OrganizerApplicationListPageState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xfffdfbfc),
+        backgroundColor: Color(0xfffdfbfc),
         appBar: AppBar(
-          title: const Text('Organizer applications'),
+          title: Text(context.l10n.organizerApplications),
           actions: [
             IconButton(
-              tooltip: 'Refresh queue',
+              tooltip: context.l10n.refreshQueue,
               onPressed: _refresh,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: Icon(Icons.refresh_rounded),
             ),
           ],
         ),
@@ -47,12 +48,12 @@ class _OrganizerApplicationListPageState
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'pending', label: Text('Pending')),
+                segments: [
+                  ButtonSegment(value: 'pending', label: Text(context.l10n.statusPending)),
                   ButtonSegment(
-                      value: 'needs_revision', label: Text('Needs changes')),
-                  ButtonSegment(value: 'approved', label: Text('Approved')),
-                  ButtonSegment(value: 'rejected', label: Text('Rejected')),
+                      value: 'needs_revision', label: Text(context.l10n.needsChanges)),
+                  ButtonSegment(value: 'approved', label: Text(context.l10n.orgApproved)),
+                  ButtonSegment(value: 'rejected', label: Text(context.l10n.statusRejected)),
                 ],
                 selected: {_filter},
                 onSelectionChanged: (value) {
@@ -67,25 +68,25 @@ class _OrganizerApplicationListPageState
               future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) return _QueueError(onRetry: _refresh);
                 final applications = snapshot.data ?? const [];
                 if (applications.isEmpty) {
                   return RefreshIndicator(
                     onRefresh: () async => _refresh(),
-                    child: ListView(children: const [
+                    child: ListView(children: [
                       SizedBox(height: 170),
                       Icon(Icons.task_alt_outlined,
                           size: 48, color: Color(0xff8a8492)),
                       SizedBox(height: 12),
                       Center(
-                          child: Text('No applications in this queue',
+                          child: Text(context.l10n.noApplicationsInThisQueue,
                               style: TextStyle(
                                   fontWeight: FontWeight.w800, fontSize: 18))),
                       SizedBox(height: 6),
                       Center(
-                          child: Text('New submissions will appear here.',
+                          child: Text(context.l10n.newSubmissionsWillAppearHere,
                               style: TextStyle(color: Color(0xff716b7d)))),
                     ]),
                   );
@@ -95,7 +96,7 @@ class _OrganizerApplicationListPageState
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
                     itemCount: applications.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, __) => SizedBox(height: 10),
                     itemBuilder: (context, index) => _ApplicationCard(
                       application: applications[index],
                       onTap: () async {
@@ -138,14 +139,14 @@ class _ApplicationCard extends StatelessWidget {
           child: Row(children: [
             CircleAvatar(
               radius: 25,
-              backgroundColor: const Color(0xffffe7ee),
+              backgroundColor: Color(0xffffe7ee),
               child: Text(initial,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: Color(0xfff43f75),
                       fontSize: 19)),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,24 +154,24 @@ class _ApplicationCard extends StatelessWidget {
                   Text(name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 16)),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                       '${_display(type)}${city.isEmpty ? '' : ' · $city'}${country.isEmpty ? '' : ', $country'}',
-                      style: const TextStyle(color: Color(0xff716b7d))),
+                      style: TextStyle(color: Color(0xff716b7d))),
                   if (submitted != null) ...[
-                    const SizedBox(height: 4),
-                    Text('Submitted ${_shortDate(submitted)}',
-                        style: const TextStyle(
+                    SizedBox(height: 4),
+                    Text(context.l10n.submittedOn(_shortDate(submitted)),
+                        style: TextStyle(
                             fontSize: 12, color: Color(0xff8a8492))),
                   ],
                 ])),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
               _StatusChip(status),
-              const SizedBox(height: 12),
-              const Icon(Icons.chevron_right_rounded),
+              SizedBox(height: 12),
+              Icon(Icons.chevron_right_rounded),
             ]),
           ]),
         ),
@@ -211,10 +212,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (status) {
-      'approved' => (const Color(0xff1f9d63), 'Approved'),
-      'needs_revision' => (const Color(0xffbd7411), 'Needs changes'),
-      'rejected' => (const Color(0xffc33a54), 'Rejected'),
-      _ => (const Color(0xfff43f75), 'Pending'),
+      'approved' => (Color(0xff1f9d63), 'Approved'),
+      'needs_revision' => (Color(0xffbd7411), 'Needs changes'),
+      'rejected' => (Color(0xffc33a54), 'Rejected'),
+      _ => (Color(0xfff43f75), 'Pending'),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -234,11 +235,11 @@ class _QueueError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.cloud_off_outlined, size: 44),
-          const SizedBox(height: 12),
-          const Text('The organizer queue could not be loaded.'),
-          const SizedBox(height: 12),
-          FilledButton(onPressed: onRetry, child: const Text('Try again')),
+          Icon(Icons.cloud_off_outlined, size: 44),
+          SizedBox(height: 12),
+          Text(context.l10n.theOrganizerQueueCouldNotBeLoa),
+          SizedBox(height: 12),
+          FilledButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
         ]),
       );
 }

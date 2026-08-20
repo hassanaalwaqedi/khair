@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 /// Event-only public information pages. Legal copy should be reviewed before a
@@ -19,13 +20,13 @@ class StaticPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(content.$1)),
       body: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
+        constraints: BoxConstraints(maxWidth: 760),
         child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(content.$1, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Text(content.$2, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.7)),
-          const SizedBox(height: 28),
-          const Text('Last updated: August 2026', style: TextStyle(color: Colors.grey)),
+          SizedBox(height: 28),
+          Text(context.l10n.lastUpdatedAugust2026, style: TextStyle(color: Colors.grey)),
         ])),
       )),
     );

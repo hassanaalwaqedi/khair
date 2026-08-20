@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khair_app/core/config/api_config.dart';
@@ -37,7 +38,7 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load tickets: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.adminActionFailed)));
       }
     }
   }
@@ -48,11 +49,11 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
       await apiClient.post('/admin/support/tickets/$ticketId/assign');
       _loadTickets();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ticket assigned')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.ticketAssigned)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to assign ticket: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.adminActionFailed)));
       }
     }
   }
@@ -61,16 +62,16 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Inbox'),
+        title: Text(context.l10n.supportInbox),
         actions: [
           DropdownButton<String>(
             value: _statusFilter,
-            items: const [
-              DropdownMenuItem(value: 'open', child: Text('Open')),
-              DropdownMenuItem(value: 'waiting_for_support', child: Text('Waiting for Support')),
-              DropdownMenuItem(value: 'in_progress', child: Text('In Progress')),
-              DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
-              DropdownMenuItem(value: 'all', child: Text('All')),
+            items: [
+              DropdownMenuItem(value: 'open', child: Text(context.l10n.open)),
+              DropdownMenuItem(value: 'waiting_for_support', child: Text(context.l10n.waitingForSupport)),
+              DropdownMenuItem(value: 'in_progress', child: Text(context.l10n.inProgress)),
+              DropdownMenuItem(value: 'resolved', child: Text(context.l10n.resolved)),
+              DropdownMenuItem(value: 'all', child: Text(context.l10n.mapFilterAll)),
             ],
             onChanged: (val) {
               if (val != null) {
@@ -79,28 +80,36 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
               }
             },
           ),
-          const SizedBox(width: 16),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadTickets),
+          SizedBox(width: 16),
+          IconButton(icon: Icon(Icons.refresh), onPressed: _loadTickets),
         ],
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? Center(child: CircularProgressIndicator())
         : ListView.builder(
             itemCount: _tickets.length,
             itemBuilder: (context, index) {
               final t = _tickets[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(t['subject'] ?? ''),
-                  subtitle: Text('${t['user_name']} (${t['user_email']})\nStatus: ${t['status']} | Priority: ${t['priority']}'),
+                  subtitle: Text(context.l10n.supportTicketSummary(
+                    t['user_name']?.toString() ?? '',
+                    t['user_email']?.toString() ?? '',
+                    t['status']?.toString() ?? '',
+                    t['priority']?.toString() ?? '',
+                  )),
                   isThreeLine: true,
                   trailing: t['status'] == 'waiting_for_support'
                     ? ElevatedButton(
                         onPressed: () => _assignTicket(t['id']),
-                        child: const Text('Assign to me'),
+                        child: Text(context.l10n.assignToMe),
                       )
-                    : (t['assigned_to_name'] != null ? Text('Assigned: ${t['assigned_to_name']}') : const SizedBox()),
+                    : (t['assigned_to_name'] != null
+                        ? Text(context.l10n.assignedTo(
+                            t['assigned_to_name'].toString()))
+                        : SizedBox()),
                   onTap: () {
                     // Open a dialog or new page for chat
                     _showChatDialog(t);
@@ -182,18 +191,22 @@ class _AdminChatDialogState extends State<_AdminChatDialog> {
           children: [
             AppBar(
               title: Text(widget.ticket['subject']),
-              leading: const CloseButton(),
+              leading: CloseButton(),
             ),
             if (widget.ticket['ai_summary'] != null)
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 color: KhairColors.neutral100,
                 width: double.infinity,
-                child: Text('AI Summary: ${widget.ticket['ai_summary']}', style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  context.l10n.aiSummary(
+                      widget.ticket['ai_summary']?.toString() ?? ''),
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
             Expanded(
               child: _isLoading && _messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _messages.length,
@@ -202,7 +215,7 @@ class _AdminChatDialogState extends State<_AdminChatDialog> {
                       final isAgent = m.senderType == 'support_agent' || m.senderType == 'system';
                       final isInternal = m.senderType == 'system';
                       return Align(
-                        alignment: isAgent ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: isAgent ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
@@ -213,9 +226,9 @@ class _AdminChatDialogState extends State<_AdminChatDialog> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(m.senderName ?? m.senderType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              Text(m.senderName ?? m.senderType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                               Text(m.body),
-                              Text(DateFormat.yMd().add_jm().format(m.createdAt), style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                              Text(DateFormat.yMd().add_jm().format(m.createdAt), style: TextStyle(fontSize: 10, color: Colors.black54)),
                             ],
                           ),
                         ),
@@ -230,16 +243,16 @@ class _AdminChatDialogState extends State<_AdminChatDialog> {
                   Expanded(
                     child: TextField(
                       controller: _msgController,
-                      decoration: const InputDecoration(hintText: 'Type reply...', border: OutlineInputBorder()),
+                      decoration: InputDecoration(hintText: context.l10n.typeReply, border: OutlineInputBorder()),
                       maxLines: 3,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Column(
                     children: [
-                      ElevatedButton(onPressed: () => _sendMessage(false), child: const Text('Reply to User')),
-                      const SizedBox(height: 8),
-                      TextButton(onPressed: () => _sendMessage(true), child: const Text('Internal Note')),
+                      ElevatedButton(onPressed: () => _sendMessage(false), child: Text(context.l10n.replyToUser)),
+                      SizedBox(height: 8),
+                      TextButton(onPressed: () => _sendMessage(true), child: Text(context.l10n.internalNote)),
                     ],
                   )
                 ],

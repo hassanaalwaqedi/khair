@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,14 +48,14 @@ class _ProfilePageState extends State<ProfilePage> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF101014)
+            ? Color(0xFF101014)
             : _warm,
         body: SafeArea(
           child: FutureBuilder<ProfileOverview>(
             future: _overview,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
-                return const _ProfileSkeleton();
+                return _ProfileSkeleton();
               }
               if (snapshot.hasError || !snapshot.hasData) {
                 return _ProfileError(onRetry: _reload);
@@ -98,12 +99,12 @@ class _ProfileContent extends StatelessWidget {
       color: _rose,
       onRefresh: onRefresh,
       child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
+                constraints: BoxConstraints(maxWidth: 1180),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                       wide ? 32 : 20, 18, wide ? 32 : 20, 100),
@@ -111,15 +112,15 @@ class _ProfileContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _TopBar(onEdit: () => _openEdit(context, onUpdated)),
-                        const SizedBox(height: 22),
+                        SizedBox(height: 22),
                         _ProfileHero(
                             overview: overview,
                             onEdit: () => _openEdit(context, onUpdated)),
-                        const SizedBox(height: 28),
-                        _SectionTitle('Quick actions'),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 28),
+                        _SectionTitle(context.l10n.quickActions),
+                        SizedBox(height: 12),
                         _QuickActions(overview: overview, onUpdated: onUpdated),
-                        const SizedBox(height: 30),
+                        SizedBox(height: 30),
                         if (wide)
                           Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,18 +129,18 @@ class _ProfileContent extends StatelessWidget {
                                     child: _DetailsColumn(
                                         overview: overview,
                                         onUpdated: onUpdated)),
-                                const SizedBox(width: 20),
+                                SizedBox(width: 20),
                                 Expanded(
                                     child: _UpcomingEvents(
                                         events: overview.upcomingEvents)),
                               ])
                         else ...[
                           _UpcomingEvents(events: overview.upcomingEvents),
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _DetailsColumn(
                               overview: overview, onUpdated: onUpdated),
                         ],
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _AccountSafety(),
                       ]),
                 ),
@@ -165,16 +166,16 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onEdit;
   @override
   Widget build(BuildContext context) => Row(children: [
-        Text('Profile',
+        Text(context.l10n.profileTooltip,
             style: Theme.of(context)
                 .textTheme
                 .headlineMedium
                 ?.copyWith(fontWeight: FontWeight.w700, color: _text(context))),
-        const Spacer(),
+        Spacer(),
         IconButton(
             onPressed: onEdit,
-            tooltip: 'Edit profile',
-            icon: const Icon(Icons.edit_outlined, color: _rose)),
+            tooltip: context.l10n.editProfile1,
+            icon: Icon(Icons.edit_outlined, color: _rose)),
       ]);
 }
 
@@ -199,13 +200,18 @@ class _ProfileHero extends StatelessWidget {
                 Text(user.name,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700, color: _text(context))),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(user.email, style: TextStyle(color: _muted, fontSize: 14)),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Wrap(spacing: 8, runSpacing: 8, children: [
-                  _Badge(label: user.accountType),
+                  _Badge(label: _accountTypeLabel(context, user.accountType)),
                   Text(
-                      'Member since ${DateFormat('MMM y').format(user.createdAt)}',
+                      context.l10n.memberSinceDate(
+                        context.l10n.memberSince,
+                        DateFormat('MMM y',
+                                Localizations.localeOf(context).languageCode)
+                            .format(user.createdAt),
+                      ),
                       style: TextStyle(color: _muted, fontSize: 13)),
                 ]),
               ]),
@@ -213,15 +219,15 @@ class _ProfileHero extends StatelessWidget {
     final stats = _Stats(overview: overview, onEdit: onEdit);
     return _Surface(
       color: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF21171E)
+          ? Color(0xFF21171E)
           : _roseSoft,
       child: compact
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [intro, const SizedBox(height: 22), stats])
+              children: [intro, SizedBox(height: 22), stats])
           : Row(children: [
               Expanded(child: intro),
-              const SizedBox(width: 24),
+              SizedBox(width: 24),
               Expanded(flex: 2, child: stats)
             ]),
     );
@@ -241,7 +247,7 @@ class _Avatar extends StatelessWidget {
           Container(
               width: size,
               height: size,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(colors: [_rose, Color(0xFFFF8AAF)])),
               child: ClipOval(
@@ -261,7 +267,7 @@ class _Avatar extends StatelessWidget {
                       color: _rose,
                       shape: BoxShape.circle,
                       border: Border.all(color: _surface(context), width: 3)),
-                  child: const Icon(Icons.camera_alt_outlined,
+                  child: Icon(Icons.camera_alt_outlined,
                       size: 15, color: Colors.white))),
         ]),
       );
@@ -290,7 +296,7 @@ class _Badge extends StatelessWidget {
           color: _rose.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(99)),
       child: Text(label,
-          style: const TextStyle(
+          style: TextStyle(
               color: _rose, fontWeight: FontWeight.w700, fontSize: 12)));
 }
 
@@ -301,9 +307,12 @@ class _Stats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (overview.stats.savedEvents.toString(), 'Saved events'),
-      (overview.stats.joinedEvents.toString(), 'Joined events'),
-      (overview.user.accountType, 'Account type')
+      (overview.stats.savedEvents.toString(), context.l10n.savedEvents),
+      (overview.stats.joinedEvents.toString(), context.l10n.joinedEventsLabel),
+      (
+        _accountTypeLabel(context, overview.user.accountType),
+        context.l10n.accountType
+      )
     ];
     return Row(children: [
       for (var i = 0; i < items.length; i++) ...[
@@ -333,7 +342,7 @@ class _Metric extends StatelessWidget {
                 color: _text(context),
                 fontSize: 17,
                 fontWeight: FontWeight.w800)),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(label,
             textAlign: TextAlign.center,
             style: TextStyle(color: _muted, fontSize: 11))
@@ -370,54 +379,64 @@ class _QuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final organizer = overview.organizer;
     final organizerAction = switch (organizer.status) {
-      'approved' => _Action(Icons.dashboard_outlined, 'Organizer dashboard',
-          'Manage your events', '/organizer'),
+      'approved' => _Action(
+          Icons.dashboard_outlined,
+          context.l10n.organizerDashboard,
+          context.l10n.manageEvent,
+          '/organizer'),
       'pending' => _Action(
           Icons.hourglass_top_rounded,
-          'Application under review',
-          'We will let you know',
+          context.l10n.applicationUnderReview,
+          context.l10n.contactSupportForMoreInformation,
           '/organizer/apply'),
       'needs_revision' => _Action(
           Icons.edit_note_outlined,
-          'Update application',
-          'A few details need attention',
+          context.l10n.updateApplication,
+          context.l10n.reviewFeedbackAndResubmit,
           '/organizer/apply'),
       'rejected' => _Action(
           Icons.refresh_rounded,
-          'Resubmit application',
-          organizer.rejectionReason ?? 'Review feedback and apply again',
+          context.l10n.updateApplication,
+          organizer.rejectionReason ?? context.l10n.reviewFeedbackAndResubmit,
           '/organizer/apply'),
       'suspended' => _Action(
           Icons.block_flipped,
-          'Account suspended',
-          'Contact Khair support',
+          context.l10n.organizerAccountSuspended,
+          context.l10n.contactSupportForMoreInformation,
           '/organizer/apply'),
       'draft' => _Action(
           Icons.edit_document,
-          'Continue application',
-          'Finish your organizer profile',
+          context.l10n.applicationIncomplete,
+          context.l10n.organizerToolsAvailable,
           '/organizer/apply'),
-      _ => const _Action(
+      _ => _Action(
           Icons.volunteer_activism_outlined,
-          'Become an organizer',
-          'Create events for your community',
+          context.l10n.becomeOrganizer,
+          context.l10n.createNewEvent,
           '/organizer/apply'),
     };
     final actions = [
-      const _Action(Icons.edit_outlined, 'Edit profile', 'Personal details',
-          '/profile/edit'),
-      _Action(Icons.bookmark_border_rounded, 'Saved events',
-          '${overview.stats.savedEvents} saved', '/saved'),
-      _Action(Icons.event_available_outlined, 'My events',
-          '${overview.stats.joinedEvents} joined', '/my-events'),
-      const _Action(Icons.explore_outlined, 'Browse events',
-          'Find something meaningful', '/'),
+      _Action(Icons.edit_outlined, context.l10n.editProfile1,
+          context.l10n.personalDetails, '/profile/edit'),
+      _Action(
+          Icons.bookmark_border_rounded,
+          context.l10n.savedEvents,
+          '${overview.stats.savedEvents} ${context.l10n.savedEvents}',
+          '/saved'),
+      _Action(
+          Icons.event_available_outlined,
+          context.l10n.myEvents,
+          '${overview.stats.joinedEvents} ${context.l10n.joinedEventsLabel}',
+          '/my-events'),
+      _Action(Icons.explore_outlined, context.l10n.browseEvents,
+          context.l10n.findSomethingToDo, '/'),
       organizerAction,
-      if (overview.user.email == 'hassan@khair.com' || context.read<AuthBloc>().state.isAdmin)
-        const _Action(Icons.admin_panel_settings_outlined, 'Admin Dashboard',
-            'Khair platform management', '/admin'),
-      const _Action(Icons.help_outline_rounded, 'Help & Support',
-          'Chat with Khair AI or agents', '/support'),
+      if (overview.user.email == 'hassan@khair.com' ||
+          context.read<AuthBloc>().state.isAdmin)
+        _Action(Icons.admin_panel_settings_outlined, context.l10n.adminPanel,
+            context.l10n.organizerDashboard, '/admin'),
+      _Action(Icons.help_outline_rounded, context.l10n.khairSupport,
+          context.l10n.contactSupportForMoreInformation, '/support'),
     ];
     return LayoutBuilder(builder: (context, constraints) {
       final cols = constraints.maxWidth >= 800
@@ -427,7 +446,7 @@ class _QuickActions extends StatelessWidget {
               : 2;
       return GridView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           itemCount: actions.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: cols,
@@ -470,7 +489,7 @@ class _ActionCard extends StatelessWidget {
             decoration: BoxDecoration(
                 color: _roseSoft, borderRadius: BorderRadius.circular(10)),
             child: Icon(action.icon, color: _rose, size: 19)),
-        const Spacer(),
+        Spacer(),
         Text(action.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -478,7 +497,7 @@ class _ActionCard extends StatelessWidget {
                 color: _text(context),
                 fontSize: 13,
                 fontWeight: FontWeight.w700)),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(action.subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -493,7 +512,7 @@ class _DetailsColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(children: [
         _AccountInfo(user: overview.user, onUpdated: onUpdated),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         _Preferences(overview: overview, onUpdated: onUpdated)
       ]);
 }
@@ -504,18 +523,23 @@ class _AccountInfo extends StatelessWidget {
   final VoidCallback onUpdated;
   @override
   Widget build(BuildContext context) => _Panel(
-          title: 'Account information',
+          title: context.l10n.accountInformation1,
           action: TextButton(
               onPressed: () async {
                 final changed = await context.push<bool>('/profile/edit');
                 if (changed == true) onUpdated();
               },
-              child: const Text('Edit')),
+              child: Text(context.l10n.ownerEdit)),
           children: [
-            _DetailRow(Icons.mail_outline, 'Email', user.email),
-            _DetailRow(Icons.badge_outlined, 'Account type', user.accountType),
-            _DetailRow(Icons.calendar_today_outlined, 'Member since',
-                DateFormat('MMMM d, y').format(user.createdAt))
+            _DetailRow(Icons.mail_outline, context.l10n.email, user.email),
+            _DetailRow(Icons.badge_outlined, context.l10n.accountType,
+                _accountTypeLabel(context, user.accountType)),
+            _DetailRow(
+                Icons.calendar_today_outlined,
+                context.l10n.memberSince,
+                DateFormat('MMMM d, y',
+                        Localizations.localeOf(context).languageCode)
+                    .format(user.createdAt))
           ]);
 }
 
@@ -524,29 +548,30 @@ class _Preferences extends StatelessWidget {
   final ProfileOverview overview;
   final VoidCallback onUpdated;
   @override
-  Widget build(BuildContext context) => _Panel(title: 'Preferences', children: [
+  Widget build(BuildContext context) =>
+      _Panel(title: context.l10n.preferences, children: [
         _PreferenceSwitch(
             icon: Icons.notifications_none_rounded,
-            title: 'Notifications',
+            title: context.l10n.orgNotifications,
             subtitle: overview.preferences.pushNotifications
-                ? 'Push notifications on'
-                : 'Push notifications off',
+                ? context.l10n.pushNotificationsOn
+                : context.l10n.pushNotificationsOff,
             value: overview.preferences.pushNotifications,
             onChanged: (value) => _save(context, push: value)),
         _PreferenceSwitch(
             icon: Icons.email_outlined,
-            title: 'Email updates',
+            title: context.l10n.emailUpdates,
             subtitle: overview.preferences.emailNotifications
-                ? 'Email notifications on'
-                : 'Email notifications off',
+                ? context.l10n.emailNotificationsOn
+                : context.l10n.emailNotificationsOff,
             value: overview.preferences.emailNotifications,
             onChanged: (value) => _save(context, email: value)),
-        _DetailRow(Icons.language_outlined, 'Language',
-            _language(overview.preferences.language), onTap: () async {
+        _DetailRow(Icons.language_outlined, context.l10n.language,
+            _language(context, overview.preferences.language), onTap: () async {
           final changed = await context.push<bool>('/profile/edit');
           if (changed == true) onUpdated();
         }),
-        _DetailRow(Icons.location_on_outlined, 'Location',
+        _DetailRow(Icons.location_on_outlined, context.l10n.location,
             overview.preferences.locationLabel, onTap: () async {
           final changed = await context.push<bool>('/profile/edit');
           if (changed == true) onUpdated();
@@ -559,15 +584,17 @@ class _Preferences extends StatelessWidget {
       onUpdated();
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content:
-                Text('Could not update your preference. Please try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(context.l10n.couldNotUpdateYourPreferencePl)));
       }
     }
   }
 
-  String _language(String value) =>
-      switch (value) { 'ar' => 'Arabic', 'tr' => 'Turkish', _ => 'English' };
+  String _language(BuildContext context, String value) => switch (value) {
+        'ar' => context.l10n.registrationLanguageArabic,
+        'tr' => context.l10n.registrationLanguageTurkish,
+        _ => context.l10n.registrationLanguageEnglish,
+      };
 }
 
 class _UpcomingEvents extends StatelessWidget {
@@ -575,10 +602,10 @@ class _UpcomingEvents extends StatelessWidget {
   final List<UpcomingProfileEvent> events;
   @override
   Widget build(BuildContext context) => _Panel(
-      title: 'Upcoming events',
+      title: context.l10n.upcomingEvents,
       action: TextButton(
           onPressed: () => context.push('/my-events'),
-          child: const Text('View all')),
+          child: Text(context.l10n.viewAll)),
       children: events.isEmpty
           ? [_EmptyUpcoming()]
           : events.map((event) => _UpcomingRow(event: event)).toList());
@@ -604,7 +631,7 @@ class _UpcomingRow extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => _EventFallback())
                         : _EventFallback())),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,11 +643,13 @@ class _UpcomingRow extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: _text(context),
                           fontSize: 14)),
-                  const SizedBox(height: 5),
+                  SizedBox(height: 5),
                   Text(
-                      DateFormat('EEE, MMM d · h:mm a').format(event.startDate),
+                      DateFormat('EEE, MMM d · h:mm a',
+                              Localizations.localeOf(context).languageCode)
+                          .format(event.startDate),
                       style: TextStyle(color: _muted, fontSize: 12)),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Row(children: [
                     Icon(
                         event.isOnline
@@ -628,7 +657,7 @@ class _UpcomingRow extends StatelessWidget {
                             : Icons.location_on_outlined,
                         color: _rose,
                         size: 13),
-                    const SizedBox(width: 3),
+                    SizedBox(width: 3),
                     Expanded(
                         child: Text(event.location,
                             maxLines: 1,
@@ -636,32 +665,35 @@ class _UpcomingRow extends StatelessWidget {
                             style: TextStyle(color: _muted, fontSize: 12)))
                   ]),
                 ])),
-            const SizedBox(width: 8),
-            _Badge(label: event.status == 'confirmed' ? 'Going' : event.status)
+            SizedBox(width: 8),
+            _Badge(
+                label: event.status == 'confirmed'
+                    ? context.l10n.joined
+                    : event.status)
           ])));
 }
 
 class _EventFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
-      color: _roseSoft, child: const Icon(Icons.event_outlined, color: _rose));
+      color: _roseSoft, child: Icon(Icons.event_outlined, color: _rose));
 }
 
 class _EmptyUpcoming extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: EdgeInsets.symmetric(vertical: 10),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('No upcoming events yet',
+        Text(context.l10n.noUpcomingEventsYet,
             style:
                 TextStyle(color: _text(context), fontWeight: FontWeight.w700)),
-        const SizedBox(height: 4),
-        Text('Discover something worth showing up for.',
+        SizedBox(height: 4),
+        Text(context.l10n.discoverSomethingWorthShowingU,
             style: TextStyle(color: _muted, fontSize: 13)),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         OutlinedButton(
             onPressed: () => context.go('/'),
-            child: const Text('Explore events'))
+            child: Text(context.l10n.exploreEvents))
       ]));
 }
 
@@ -680,10 +712,10 @@ class _Panel extends StatelessWidget {
                   color: _text(context),
                   fontSize: 17,
                   fontWeight: FontWeight.w800)),
-          const Spacer(),
+          Spacer(),
           if (action != null) action!
         ]),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         ...children
       ]));
 }
@@ -701,13 +733,13 @@ class _DetailRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(children: [
             Icon(icon, color: _rose, size: 19),
-            const SizedBox(width: 11),
+            SizedBox(width: 11),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label, style: TextStyle(color: _muted, fontSize: 12)),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -716,8 +748,7 @@ class _DetailRow extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600))
                 ])),
-            if (onTap != null)
-              const Icon(Icons.chevron_right_rounded, color: _muted)
+            if (onTap != null) Icon(Icons.chevron_right_rounded, color: _muted)
           ])));
 }
 
@@ -737,7 +768,7 @@ class _PreferenceSwitch extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(children: [
         Icon(icon, color: _rose, size: 19),
-        const SizedBox(width: 11),
+        SizedBox(width: 11),
         Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -760,8 +791,8 @@ class _AccountSafety extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TextButton.icon(
       onPressed: () => context.read<AuthBloc>().add(LogoutRequested()),
-      icon: const Icon(Icons.logout_outlined),
-      label: const Text('Sign out'));
+      icon: Icon(Icons.logout_outlined),
+      label: Text(context.l10n.signOut1));
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -787,7 +818,7 @@ class _Surface extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Material(
-        color: color ?? (dark ? const Color(0xFF19181E) : Colors.white),
+        color: color ?? (dark ? Color(0xFF19181E) : Colors.white),
         borderRadius: BorderRadius.circular(18),
         child: InkWell(
             onTap: onTap,
@@ -796,8 +827,8 @@ class _Surface extends StatelessWidget {
                 padding: padding,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                        color: dark ? const Color(0xFF302D35) : _border)),
+                    border:
+                        Border.all(color: dark ? Color(0xFF302D35) : _border)),
                 child: child)));
   }
 }
@@ -807,15 +838,15 @@ class _ProfileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       ListView(padding: const EdgeInsets.all(20), children: [
-        const SizedBox(height: 18),
-        _Skeleton(height: 28, width: 110),
-        const SizedBox(height: 22),
+        SizedBox(height: 18),
+        const _Skeleton(height: 28, width: 110),
+        SizedBox(height: 22),
         const _Skeleton(height: 190),
-        const SizedBox(height: 28),
-        _Skeleton(height: 24, width: 150),
-        const SizedBox(height: 12),
+        SizedBox(height: 28),
+        const _Skeleton(height: 24, width: 150),
+        SizedBox(height: 12),
         const _Skeleton(height: 170),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         const _Skeleton(height: 240)
       ]);
 }
@@ -829,8 +860,8 @@ class _Skeleton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF211F26)
-              : const Color(0xFFF2EDF0),
+              ? Color(0xFF211F26)
+              : Color(0xFFF2EDF0),
           borderRadius: BorderRadius.circular(18)));
 }
 
@@ -842,29 +873,43 @@ class _ProfileError extends StatelessWidget {
       child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off_outlined, size: 42, color: _rose),
-            const SizedBox(height: 14),
-            Text('We couldn’t load your profile.',
+            Icon(Icons.cloud_off_outlined, size: 42, color: _rose),
+            SizedBox(height: 14),
+            Text(context.l10n.weCouldntLoadYourProfile,
                 style: TextStyle(
                     color: _text(context),
                     fontSize: 18,
                     fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text('Check your connection and try again.',
+            SizedBox(height: 8),
+            Text(context.l10n.checkYourConnectionAndTryAgain,
                 style: TextStyle(color: _muted)),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(backgroundColor: _rose),
-                child: const Text('Try again'))
+                child: Text(context.l10n.tryAgain))
           ])));
 }
 
+String _accountTypeLabel(BuildContext context, String value) {
+  switch (value.trim().toLowerCase()) {
+    case 'admin':
+    case 'administrator':
+      return context.l10n.roleAdmin;
+    case 'organizer':
+      return context.l10n.roleOrganizer;
+    case 'member':
+    case 'user':
+    case 'attendee':
+      return context.l10n.roleMember;
+    default:
+      return value;
+  }
+}
+
 Color _text(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFFF9F7FA)
-        : _ink;
+    Theme.of(context).brightness == Brightness.dark ? Color(0xFFF9F7FA) : _ink;
 Color _surface(BuildContext context) =>
     Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF101014)
+        ? Color(0xFF101014)
         : Colors.white;

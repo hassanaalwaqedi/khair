@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/email"
 )
@@ -26,15 +27,20 @@ type Service struct {
 	repo     *Repository
 	cfg      *config.Config
 	emailSvc *email.Service
+	notifSvc *notification.Service
 }
 
 // NewService creates a new registration service
-func NewService(db *sql.DB, cfg *config.Config, emailSvc *email.Service) *Service {
-	return &Service{
+func NewService(db *sql.DB, cfg *config.Config, emailSvc *email.Service, notificationServices ...*notification.Service) *Service {
+	service := &Service{
 		repo:     NewRepository(db),
 		cfg:      cfg,
 		emailSvc: emailSvc,
 	}
+	if len(notificationServices) > 0 {
+		service.notifSvc = notificationServices[0]
+	}
+	return service
 }
 
 // --- Request types ---
@@ -599,16 +605,6 @@ func (s *Service) logAudit(userID *uuid.UUID, email *string, step *int, action, 
 	})
 }
 
-func getWelcomeMessage(role string) string {
-	messages := map[string]string{
-		models.RoleUser: "Welcome to Khair. Discover meaningful events and join your community.",
-	}
-	if msg, ok := messages[role]; ok {
-		return msg
-	}
-	return "You are now part of a growing Ummah of knowledge and service."
-}
-
 // Utility functions
 func getString(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok {
@@ -642,57 +638,21 @@ func intPtr(i int) *int {
 // sendWelcomeNotification inserts a role-appropriate welcome notification.
 // Authority roles get an "under review" message; normal roles get an instant welcome.
 func (s *Service) sendWelcomeNotification(userID uuid.UUID, role, displayName string) {
-	var title, message string
-
-	name := displayName
+	notifSvc := s.notifSvc
+	if notifSvc == nil {
+		notifSvc = notification.NewService(s.repo.db)
+	}
+	name := strings.TrimSpace(displayName)
 	if name == "" {
 		name = "there"
 	}
-
-	switch role {
-	case "sheikh":
-		title = "Welcome to Khair – Account Under Review"
-		message = fmt.Sprintf(
-			"Assalamu Alaikum %s! Thank you for registering as a Sheikh on Khair. "+
-				"Your account is currently under review by the Khair team. "+
-				"This process usually takes a few hours. "+
-				"We will notify you once your account has been approved. JazakAllahu Khairan!",
-			name,
-		)
-	case "organization":
-		title = "Welcome to Khair – Account Under Review"
-		message = fmt.Sprintf(
-			"Assalamu Alaikum %s! Thank you for registering your organization on Khair. "+
-				"Your account is currently under review by the Khair team. "+
-				"This process usually takes a few hours. "+
-				"You will be notified once your account is approved and you can start creating events.",
-			name,
-		)
-	case "community_organizer":
-		title = "Welcome to Khair – Account Under Review"
-		message = fmt.Sprintf(
-			"Assalamu Alaikum %s! Thank you for joining Khair as a Community Organizer. "+
-				"Your account is currently under review by the Khair team. "+
-				"This usually takes a few hours. "+
-				"Once approved, you'll be able to organize and manage community events.",
-			name,
-		)
-	default:
-		// Normal users: student, new_muslim, etc.
-		title = "Welcome to Khair! 🎉"
-		message = fmt.Sprintf(
-			"Assalamu Alaikum %s! Welcome to Khair – your Islamic community platform. "+
-				"Explore events, connect with scholars, and grow your faith journey. "+
-				"May Allah bless your path! 🤲",
-			name,
-		)
-	}
-
-	_, err := s.repo.db.Exec(
-		`INSERT INTO notifications (user_id, title, message) VALUES ($1, $2, $3)`,
-		userID, title, message,
-	)
+	_, err := notifSvc.CreateLocalized(userID, "welcome", map[string]string{
+		"entity_type": "user",
+		"entity_id":   userID.String(),
+		"first_name":  name,
+		"role":        role,
+	})
 	if err != nil {
-		log.Printf("[WARN] Failed to send welcome notification to %s: %v", userID, err)
+		log.Printf("[WARN] Failed to send localized welcome notification to %s: %v", userID, err)
 	}
 }

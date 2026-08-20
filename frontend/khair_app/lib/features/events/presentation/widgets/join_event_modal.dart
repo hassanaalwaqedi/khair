@@ -102,10 +102,10 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
                 ),
                 // Header
                 _buildHeader(state),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 // Progress indicator
                 _buildProgress(state),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 // Form content
                 if (state.currentStep == 1) _buildStep1(context, state),
                 if (state.currentStep == 2) _buildStep2(context, state),
@@ -129,19 +129,19 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
                 color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.event_seat_rounded, color: AppTheme.primaryColor, size: 24),
+              child: Icon(Icons.event_seat_rounded, color: AppTheme.primaryColor, size: 24),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     widget.eventTitle,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     context.l10n.joinModalSubtitle,
                     style: TextStyle(fontSize: 13, color: Colors.grey[600]),
@@ -152,7 +152,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
           ],
         ),
         if (state.remaining != null) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -210,7 +210,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           step == 1 ? context.l10n.joinModalStep1 : context.l10n.joinModalStep2,
           style: TextStyle(
@@ -233,15 +233,15 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
         children: [
           Text(
             context.l10n.joinModalNameEmailTitle,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           TextFormField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: context.l10n.registrationFullName,
-              prefixIcon: const Icon(Icons.person_outlined),
+              prefixIcon: Icon(Icons.person_outlined),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return context.l10n.joinModalNameRequired;
@@ -249,13 +249,13 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
               return null;
             },
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               labelText: context.l10n.email,
-              prefixIcon: const Icon(Icons.email_outlined),
+              prefixIcon: Icon(Icons.email_outlined),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return context.l10n.joinModalEmailRequired;
@@ -263,7 +263,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
               return null;
             },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -282,14 +282,14 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: state.status == JoinStatus.loading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22, height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : Text(context.l10n.registrationContinue, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : Text(context.l10n.registrationContinue, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _buildLoginLink(context),
         ],
       ),
@@ -306,15 +306,15 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
         children: [
           Text(
             context.l10n.joinModalSecureAccount,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: context.l10n.password,
-              prefixIcon: const Icon(Icons.lock_outlined),
+              prefixIcon: Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -330,33 +330,33 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
             },
           ),
           PasswordStrengthIndicator(password: _passwordController.text),
-          const SizedBox(height: 20),
-          Text(context.l10n.joinModalGender, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
+          SizedBox(height: 20),
+          Text(context.l10n.joinModalGender, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          SizedBox(height: 8),
           Row(
             children: [
               _genderChip('Male', context.l10n.joinModalMale, Icons.male_rounded),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _genderChip('Female', context.l10n.joinModalFemale, Icons.female_rounded),
             ],
           ),
           if (_selectedGender.isEmpty) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(context.l10n.joinModalGenderRequired,
                 style: TextStyle(fontSize: 12, color: Colors.red[400])),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           TextFormField(
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: context.l10n.joinModalAgeOptional,
-              prefixIcon: const Icon(Icons.cake_outlined),
+              prefixIcon: Icon(Icons.cake_outlined),
             ),
             onChanged: (v) {
               if (v.isNotEmpty) _age = int.tryParse(v);
             },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -376,12 +376,12 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
                 backgroundColor: AppTheme.successColor,
               ),
               child: state.status == JoinStatus.loading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22, height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : Text(context.l10n.joinModalCreateReserve,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
         ],
@@ -395,7 +395,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
       child: GestureDetector(
         onTap: () => setState(() => _selectedGender = id),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: selected
@@ -412,7 +412,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
             children: [
               Icon(icon, size: 20,
                   color: selected ? AppTheme.primaryColor : Colors.grey[500]),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(label,
                   style: TextStyle(
                     fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
@@ -437,7 +437,7 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
           },
           child: Text(
             context.l10n.joinModalSignIn,
-            style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+            style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
           ),
         ),
       ],
@@ -459,21 +459,21 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
                 color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.mark_email_read_rounded, size: 40, color: AppTheme.primaryColor),
+              child: Icon(Icons.mark_email_read_rounded, size: 40, color: AppTheme.primaryColor),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               context.l10n.joinModalAlmostThere,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               context.l10n.joinModalVerifyEmailMsg,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.4),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -482,8 +482,8 @@ class _JoinEventSheetState extends State<_JoinEventSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined, size: 16, color: AppTheme.warningColor),
-                  const SizedBox(width: 8),
+                  Icon(Icons.timer_outlined, size: 16, color: AppTheme.warningColor),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       context.l10n.joinModalSeatHeld,

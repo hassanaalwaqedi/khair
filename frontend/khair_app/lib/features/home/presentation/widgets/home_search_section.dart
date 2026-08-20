@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/khair_theme.dart';
@@ -26,7 +27,7 @@ class HomeSearchSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF0A1E14),
+      color: Color(0xFF0A1E14),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       child: Column(
         children: [
@@ -41,9 +42,9 @@ class HomeSearchSection extends StatelessWidget {
             ),
             child: TextField(
               onChanged: onSearch,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Search for Halal events, workshops, or circles...',
+                hintText: context.l10n.searchForHalalEventsWorkshopsO,
                 hintStyle: TextStyle(
                   color: Colors.white.withValues(alpha: 0.3),
                   fontSize: 13,
@@ -57,7 +58,7 @@ class HomeSearchSection extends StatelessWidget {
                   ),
                 ),
                 prefixIconConstraints:
-                    const BoxConstraints(minWidth: 0, minHeight: 0),
+                    BoxConstraints(minWidth: 0, minHeight: 0),
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -65,7 +66,7 @@ class HomeSearchSection extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // ── Filter chips ──
           SizedBox(
@@ -73,7 +74,7 @@ class HomeSearchSection extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, __) => SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final label = filters[index];
                 final isSelected = label == selectedFilter;

@@ -275,7 +275,8 @@ func (s *Service) Submit(ctx context.Context, userID uuid.UUID, resubmission boo
 	if err := s.appendRevision(ctx, tx, app.ID, &userID, action, snapshot, "", ""); err != nil {
 		return nil, err
 	}
-	if _, err := tx.ExecContext(ctx, `
+	if s.notifications == nil {
+		if _, err := tx.ExecContext(ctx, `
 		INSERT INTO notifications (user_id, title, message, notification_type, data)
 		SELECT DISTINCT reviewer.user_id, 'Organizer application submitted', 'A new organizer application is ready for review.', 'organizer_application',
 		       jsonb_build_object('application_id', $1::text, 'path', '/admin/organizer-applications/' || $1::text)
@@ -285,11 +286,13 @@ func (s *Service) Submit(ctx context.Context, userID uuid.UUID, resubmission boo
 			SELECT ur.user_id FROM user_roles ur JOIN roles r ON r.id = ur.role_id
 			WHERE r.name IN ('admin', 'super_admin')
 		) AS reviewer`, app.ID); err != nil {
-		return nil, fmt.Errorf("notify administrators: %w", err)
+			return nil, fmt.Errorf("notify administrators: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit organizer submission: %w", err)
 	}
+	s.notifyReviewers(app.ID)
 	return s.GetMine(ctx, userID)
 }
 
@@ -723,9 +726,24 @@ func (s *Service) deliverDecision(app *Application, decision, message string) {
 	if err != nil {
 		return
 	}
-	title, body := localizedDecision(decision, app.PublicName, message, identity.Language)
-	data := map[string]string{"application_id": app.ID.String(), "path": "/organizer/apply"}
+	data := map[string]string{
+		"status":         decision,
+		"organizer_name": app.PublicName,
+		"reason":         message,
+		"entity_type":    "organizer_application",
+		"entity_id":      app.ID.String(),
+		"application_id": app.ID.String(),
+		"path":           "/organizer/apply",
+	}
+	copy := notification.Render("organizer_application", data, identity.Language)
+	title, body := copy.Title, copy.Message
+	if title == "" || body == "" {
+		title, body = localizedDecision(decision, app.PublicName, message, identity.Language)
+	}
 	if s.notifications != nil {
+		if localized, err := s.notifications.LocalizeForUser(app.UserID, "organizer_application", data); err == nil {
+			title, body = localized.Title, localized.Message
+		}
 		_ = s.notifications.CreateTyped(app.UserID, title, body, "organizer_application", data)
 	}
 	if s.push != nil {
@@ -733,6 +751,41 @@ func (s *Service) deliverDecision(app *Application, decision, message string) {
 	}
 	if s.email != nil {
 		_ = s.email.SendNotificationEmail(identity.Email, title, body, identity.Language)
+	}
+}
+
+// notifyReviewers creates one localized notification per reviewer after the
+// application transaction commits. Reviewer language is resolved from each
+// account rather than using the applicant's language.
+func (s *Service) notifyReviewers(applicationID uuid.UUID) {
+	if s.notifications == nil {
+		return
+	}
+	rows, err := s.db.Query(`
+		SELECT DISTINCT reviewer.user_id
+		FROM (
+			SELECT id AS user_id FROM users WHERE role IN ('admin', 'super_admin')
+			UNION
+			SELECT ur.user_id FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+			WHERE r.name IN ('admin', 'super_admin')
+		) AS reviewer`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	data := map[string]string{
+		"status":         "submitted",
+		"entity_type":    "organizer_application",
+		"entity_id":      applicationID.String(),
+		"application_id": applicationID.String(),
+		"path":           "/admin/organizer-applications/" + applicationID.String(),
+	}
+	for rows.Next() {
+		var reviewerID uuid.UUID
+		if err := rows.Scan(&reviewerID); err == nil {
+			_, _ = s.notifications.CreateLocalized(reviewerID, "organizer_application", data)
+		}
 	}
 }
 

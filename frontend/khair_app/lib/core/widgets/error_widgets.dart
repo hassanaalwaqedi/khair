@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 /// Network error widget with retry functionality
@@ -41,15 +42,15 @@ class NetworkError extends StatelessWidget {
                 color: Colors.red[400],
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'Connection Error',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               message ?? 'Unable to connect. Please check your internet connection and try again.',
               style: TextStyle(
@@ -59,11 +60,11 @@ class NetworkError extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                icon: Icon(Icons.refresh),
+                label: Text(context.l10n.tryAgain1),
               ),
             ],
           ],
@@ -84,7 +85,7 @@ class NetworkError extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.wifi_off, color: Colors.red[400]),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               message ?? 'No internet connection',
@@ -94,7 +95,7 @@ class NetworkError extends StatelessWidget {
           if (onRetry != null)
             TextButton(
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: Text(context.l10n.retry),
             ),
         ],
       ),
@@ -130,17 +131,17 @@ class ErrorDisplay extends StatelessWidget {
               size: 64,
               color: Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
             if (message != null) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 message!,
                 style: TextStyle(
@@ -151,11 +152,11 @@ class ErrorDisplay extends StatelessWidget {
               ),
             ],
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                icon: Icon(Icons.refresh),
+                label: Text(context.l10n.tryAgain1),
               ),
             ],
           ],
@@ -187,7 +188,7 @@ class ErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.error_outline, color: Colors.red[700], size: 20),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
@@ -200,14 +201,14 @@ class ErrorBanner extends StatelessWidget {
           if (onRetry != null)
             TextButton(
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: Text(context.l10n.retry),
             ),
           if (onDismiss != null)
             IconButton(
-              icon: const Icon(Icons.close, size: 18),
+              icon: Icon(Icons.close, size: 18),
               onPressed: onDismiss,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              constraints: BoxConstraints(),
             ),
         ],
       ),
@@ -224,7 +225,7 @@ void showErrorSnackbar(BuildContext context, String message, {VoidCallback? onRe
       behavior: SnackBarBehavior.floating,
       action: onRetry != null
           ? SnackBarAction(
-              label: 'Retry',
+              label: context.l10n.retry,
               textColor: Colors.white,
               onPressed: onRetry,
             )

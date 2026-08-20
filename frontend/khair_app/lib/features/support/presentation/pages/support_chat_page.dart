@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khair_app/core/theme/khair_theme.dart';
@@ -32,10 +33,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(Duration(milliseconds: 100), () {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          duration: Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
       });
@@ -46,7 +47,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Khair Support', style: KhairTypography.headlineSmall),
+        title: Text(context.l10n.khairSupport, style: KhairTypography.headlineSmall),
         centerTitle: true,
         actions: [
           BlocBuilder<SupportCubit, SupportState>(
@@ -56,7 +57,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                   onPressed: () {
                     context.read<SupportCubit>().escalate();
                   },
-                  child: Text(AppLocalizations.of(context)!.talkToHuman, style: const TextStyle(color: KhairColors.primary)),
+                  child: Text(AppLocalizations.of(context)!.talkToHuman, style: TextStyle(color: KhairColors.primary)),
                 );
               }
               if (state is SupportSessionActive && state.ticket.status != 'resolved') {
@@ -64,10 +65,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
                   onPressed: () {
                     context.read<SupportCubit>().resolve();
                   },
-                  child: Text(AppLocalizations.of(context)!.resolveTicket, style: const TextStyle(color: KhairColors.success)),
+                  child: Text(AppLocalizations.of(context)!.resolveTicket, style: TextStyle(color: KhairColors.success)),
                 );
               }
-              return const SizedBox();
+              return SizedBox();
             },
           )
         ],
@@ -85,10 +86,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
         },
         builder: (context, state) {
           if (state is SupportLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           }
           if (state is SupportError) {
-            return Center(child: Text(state.error, style: const TextStyle(color: Colors.red)));
+            return Center(child: Text(state.error, style: TextStyle(color: Colors.red)));
           }
           if (state is SupportInitial) {
             return _buildStartSession(context);
@@ -112,7 +113,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
               ],
             );
           }
-          return const SizedBox();
+          return SizedBox();
         },
       ),
     );
@@ -127,27 +128,27 @@ class _SupportChatPageState extends State<SupportChatPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
           Text(AppLocalizations.of(context)!.howCanWeHelpYou, style: KhairTypography.h3, textAlign: TextAlign.center),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(AppLocalizations.of(context)!.askKhairAi, style: KhairTypography.bodyLarge, textAlign: TextAlign.center),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           TextField(
             controller: _catController,
             decoration: InputDecoration(
               labelText: AppLocalizations.of(context)!.supportCategory,
               hintText: AppLocalizations.of(context)!.supportCategoryHint,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           TextField(
             controller: _subjController,
             decoration: InputDecoration(
               labelText: AppLocalizations.of(context)!.howCanWeHelp,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(),
             ),
             maxLines: 3,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: KhairColors.primary,
@@ -161,7 +162,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 );
               }
             },
-            child: Text(AppLocalizations.of(context)!.startChat, style: const TextStyle(color: Colors.white, fontSize: 16)),
+            child: Text(AppLocalizations.of(context)!.startChat, style: TextStyle(color: Colors.white, fontSize: 16)),
           ),
         ],
       ),
@@ -175,10 +176,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
         color: KhairColors.primarySurface,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
-          children: const [
+          children: [
             Icon(Icons.auto_awesome, color: KhairColors.primary, size: 16),
             SizedBox(width: 8),
-            Text('You are chatting with Khair AI', style: TextStyle(color: KhairColors.primaryDark, fontWeight: FontWeight.bold)),
+            Text(context.l10n.youAreChattingWithKhairAi, style: TextStyle(color: KhairColors.primaryDark, fontWeight: FontWeight.bold)),
           ],
         ),
       );
@@ -189,10 +190,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
           children: [
-            const Icon(Icons.support_agent, color: KhairColors.warningDark, size: 20),
-            const SizedBox(width: 8),
+            Icon(Icons.support_agent, color: KhairColors.warningDark, size: 20),
+            SizedBox(width: 8),
             Expanded(
-              child: Text(AppLocalizations.of(context)!.waitingForSupportAgent, style: const TextStyle(color: KhairColors.warningDark)),
+              child: Text(AppLocalizations.of(context)!.waitingForSupportAgent, style: TextStyle(color: KhairColors.warningDark)),
             ),
           ],
         ),
@@ -203,15 +204,15 @@ class _SupportChatPageState extends State<SupportChatPage> {
         color: KhairColors.successLight,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
-          children: const [
+          children: [
             Icon(Icons.check_circle, color: KhairColors.success, size: 16),
             SizedBox(width: 8),
-            Text('This ticket has been resolved.', style: TextStyle(color: KhairColors.successDark)),
+            Text(context.l10n.thisTicketHasBeenResolved, style: TextStyle(color: KhairColors.successDark)),
           ],
         ),
       );
     }
-    return const SizedBox();
+    return SizedBox();
   }
 
   Widget _buildMessageBubble(SupportMessage msg) {
@@ -228,7 +229,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
               color: KhairColors.neutral100,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(msg.body, style: const TextStyle(color: KhairColors.neutral600, fontSize: 12)),
+            child: Text(msg.body, style: TextStyle(color: KhairColors.neutral600, fontSize: 12)),
           ),
         ),
       );
@@ -239,18 +240,18 @@ class _SupportChatPageState extends State<SupportChatPage> {
     final textColor = isMe ? Colors.white : KhairColors.neutral900;
     
     return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isMe ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 16),
+          borderRadius: BorderRadiusDirectional.only(
+            topStart: const Radius.circular(16),
+            topEnd: const Radius.circular(16),
+            bottomStart: Radius.circular(isMe ? 16 : 0),
+            bottomEnd: Radius.circular(isMe ? 0 : 16),
           ),
         ),
         child: Column(
@@ -262,8 +263,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (isAi) const Icon(Icons.auto_awesome, size: 12, color: KhairColors.primary),
-                    if (isAi) const SizedBox(width: 4),
+                    if (isAi) Icon(Icons.auto_awesome, size: 12, color: KhairColors.primary),
+                    if (isAi) SizedBox(width: 4),
                     Text(
                       isAi ? 'Khair AI' : (msg.senderName ?? 'Support Agent'),
                       style: TextStyle(
@@ -288,7 +289,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 ),
               ),
             Text(msg.body, style: TextStyle(color: textColor, fontSize: 15)),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               DateFormat.jm().format(msg.createdAt),
               style: TextStyle(
@@ -308,7 +309,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), offset: const Offset(0, -2), blurRadius: 4),
+          BoxShadow(color: Colors.black.withOpacity(0.05), offset: Offset(0, -2), blurRadius: 4),
         ],
       ),
       child: SafeArea(
@@ -337,9 +338,9 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 },
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             IconButton(
-              icon: const Icon(Icons.attach_file, color: KhairColors.neutral500),
+              icon: Icon(Icons.attach_file, color: KhairColors.neutral500),
               onPressed: isLoading ? null : () async {
                 final picker = ImagePicker();
                 final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -352,8 +353,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
               backgroundColor: KhairColors.primary,
               child: IconButton(
                 icon: isLoading 
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.send, color: Colors.white, size: 20),
+                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Icon(Icons.send, color: Colors.white, size: 20),
                 onPressed: isLoading ? null : () {
                   final text = _messageController.text.trim();
                   if (text.isNotEmpty) {

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +72,7 @@ class _RegisterPageState extends State<RegisterPage> {
             },
             builder: (context, registration) => AuthResponsiveShell(
               topBar: _RegisterTopBar(onBack: () => context.go('/')),
-              visualPanel: const AuthVisualPanel(
+              visualPanel: AuthVisualPanel(
                 heading: 'Find your next gathering',
                 description:
                     'Join Khair to discover meaningful events and communities near you.',
@@ -160,8 +161,8 @@ class _RegisterTopBar extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) => Row(children: [
           IconButton(
-              onPressed: onBack, tooltip: 'Back', icon: const BackButtonIcon()),
-          const Spacer(),
+              onPressed: onBack, tooltip: context.l10n.createEventBack, icon: BackButtonIcon()),
+          Spacer(),
           LanguageSwitcher(showLabel: constraints.maxWidth >= 480),
         ]),
       );
@@ -204,7 +205,7 @@ class _SignupForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final metrics = AuthMetrics(MediaQuery.sizeOf(context).width);
     return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
       tween: Tween(begin: 0, end: 1),
       curve: Curves.easeOutCubic,
       builder: (context, value, child) => Opacity(
@@ -215,16 +216,16 @@ class _SignupForm extends StatelessWidget {
       child: AutofillGroup(
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (metrics.isMobile) const _SignupBrand(),
-          if (metrics.isMobile) const SizedBox(height: 26),
-          Text('Create your Khair account',
+          if (metrics.isMobile) _SignupBrand(),
+          if (metrics.isMobile) SizedBox(height: 26),
+          Text(context.l10n.createYourKhairAccount,
               textAlign: metrics.isMobile ? TextAlign.center : TextAlign.start,
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontSize: metrics.titleSize,
                   fontWeight: FontWeight.w800,
                   height: 1.08,
                   letterSpacing: -.7)),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
               'Discover events. Join communities. Be part of something meaningful.',
               textAlign: metrics.isMobile ? TextAlign.center : TextAlign.start,
@@ -243,35 +244,35 @@ class _SignupForm extends StatelessWidget {
               onPressed: onGoogle ?? () {},
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Row(children: [
             Expanded(
                 child: Divider(
                     color: Theme.of(context).colorScheme.outlineVariant)),
-            const Padding(
+            Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('or continue with email')),
+                child: Text(context.l10n.orContinueWithEmail)),
             Expanded(
                 child: Divider(
                     color: Theme.of(context).colorScheme.outlineVariant)),
           ]),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Form(
             key: formKey,
             child: Column(children: [
               KhairAuthField(
                   controller: name,
-                  label: 'Name',
+                  label: context.l10n.registrationReviewName,
                   hint: 'Your name',
                   prefixIcon: Icons.person_outline_rounded,
                   autofillHints: const [AutofillHints.name],
                   validator: (value) => value == null || value.trim().isEmpty
                       ? 'Enter your name.'
                       : null),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               KhairAuthField(
                   controller: email,
-                  label: 'Email',
+                  label: context.l10n.email,
                   hint: 'you@example.com',
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
@@ -292,10 +293,10 @@ class _SignupForm extends StatelessWidget {
                     }
                     return null;
                   }),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               KhairAuthField(
                   controller: password,
-                  label: 'Password',
+                  label: context.l10n.password,
                   prefixIcon: Icons.lock_outline_rounded,
                   obscureText: obscure,
                   textInputAction: TextInputAction.done,
@@ -313,9 +314,9 @@ class _SignupForm extends StatelessWidget {
                       : null),
             ]),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           _PasswordHint(password: password.text),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           SizedBox(
               height: 54,
               child: FilledButton(
@@ -326,7 +327,7 @@ class _SignupForm extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14))),
                   child: loading
-                      ? const Row(
+                      ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                               SizedBox(
@@ -335,16 +336,16 @@ class _SignupForm extends StatelessWidget {
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: Colors.white)),
                               SizedBox(width: 10),
-                              Text('Creating your account…')
+                              Text(context.l10n.creatingYourAccount)
                             ])
-                      : const Text('Create account'))),
-          const SizedBox(height: 22),
+                      : Text(context.l10n.createAccount1))),
+          SizedBox(height: 22),
           Wrap(
               alignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                const Text('Already have an account?'),
-                TextButton(onPressed: onLogin, child: const Text('Sign in'))
+                Text(context.l10n.alreadyHaveAnAccount),
+                TextButton(onPressed: onLogin, child: Text(context.l10n.signIn1))
               ]),
         ]),
       ),
@@ -356,9 +357,9 @@ class _SignupBrand extends StatelessWidget {
   const _SignupBrand();
   @override
   Widget build(BuildContext context) => Column(children: [
-        const KhairBrandMark(size: 64, decorative: true),
-        const SizedBox(height: 10),
-        Text('Khair',
+        KhairBrandMark(size: 64, decorative: true),
+        SizedBox(height: 10),
+        Text(context.l10n.appTitle,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -375,8 +376,8 @@ class _PasswordHint extends StatelessWidget {
     return Row(children: [
       Icon(hasLength ? Icons.check_circle_rounded : Icons.info_outline_rounded,
           color: hasLength ? Colors.green : AppColors.textTertiary, size: 16),
-      const SizedBox(width: 7),
-      Text('Use 8 or more characters.',
+      SizedBox(width: 7),
+      Text(context.l10n.use8OrMoreCharacters,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: hasLength ? Colors.green : AppColors.textSecondary))
     ]);

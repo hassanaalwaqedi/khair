@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 /// The single in-app representation of Khair's approved white-K / rose mark.
@@ -28,7 +29,7 @@ class KhairBrandMark extends StatelessWidget {
 
     return decorative
         ? ExcludeSemantics(child: image)
-        : Semantics(label: 'Khair', image: true, child: image);
+        : Semantics(label: context.l10n.appTitle, image: true, child: image);
   }
 }
 

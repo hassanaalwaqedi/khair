@@ -113,7 +113,7 @@ class _LandingPageState extends State<LandingPage> {
                     color: KhairColors.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'خ',
                       style: TextStyle(
@@ -124,7 +124,7 @@ class _LandingPageState extends State<LandingPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Text(
                   'Khair',
                   style: KhairTypography.headlineSmall.copyWith(
@@ -138,12 +138,12 @@ class _LandingPageState extends State<LandingPage> {
                 IconButton(
                   tooltip: context.l10n.events,
                   onPressed: () => context.go('/'),
-                  icon: const Icon(Icons.event_outlined),
+                  icon: Icon(Icons.event_outlined),
                 ),
                 IconButton(
                   tooltip: context.l10n.mapTab,
                   onPressed: () => context.go('/map'),
-                  icon: const Icon(Icons.map_outlined),
+                  icon: Icon(Icons.map_outlined),
                 ),
               ] else ...[
                 TextButton(
@@ -155,16 +155,16 @@ class _LandingPageState extends State<LandingPage> {
                   child: Text(context.l10n.mapTab),
                 ),
               ],
-              const LanguageSwitcher(showLabel: false),
+              LanguageSwitcher(showLabel: false),
               if (compact)
                 IconButton(
                   tooltip: context.l10n.signIn,
                   onPressed: () => context.go('/login'),
-                  icon: const Icon(Icons.login_rounded),
+                  icon: Icon(Icons.login_rounded),
                 )
               else
                 Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 16),
+                  padding: EdgeInsetsDirectional.only(end: 16),
                   child: ElevatedButton(
                     onPressed: () => context.go('/login'),
                     child: Text(context.l10n.signIn),
@@ -212,7 +212,7 @@ class _LandingPageState extends State<LandingPage> {
             )
           else
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -252,7 +252,7 @@ class _LandingPageState extends State<LandingPage> {
                     letterSpacing: -1,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   context.l10n.discoverSubtitle,
                   style: KhairTypography.bodyLarge.copyWith(
@@ -306,7 +306,7 @@ class _LandingPageState extends State<LandingPage> {
         horizontal: isWide ? 80 : 24,
         vertical: isWide ? 80 : 48,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -320,14 +320,14 @@ class _LandingPageState extends State<LandingPage> {
           ? Row(
               children: [
                 Expanded(child: _buildHeroContent(context)),
-                const SizedBox(width: 64),
+                SizedBox(width: 64),
                 Expanded(child: _buildHeroImage()),
               ],
             )
           : Column(
               children: [
                 _buildHeroContent(context),
-                const SizedBox(height: 48),
+                SizedBox(height: 48),
                 _buildHeroImage(),
               ],
             ),
@@ -351,21 +351,21 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Text(
           context.l10n.heroTitle,
           style: KhairTypography.displayLarge.copyWith(
             color: KhairColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           context.l10n.heroSubtitle,
           style: KhairTypography.bodyLarge.copyWith(
             color: KhairColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -383,7 +383,7 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         // Real stats from API
         Row(
           children: [
@@ -391,12 +391,12 @@ class _LandingPageState extends State<LandingPage> {
               _statsLoaded ? '$_eventCount' : '...',
               context.l10n.events,
             ),
-            const SizedBox(width: 32),
+            SizedBox(width: 32),
             _buildStatItem(
               _statsLoaded ? '$_organizationCount' : '...',
               context.l10n.organizations,
             ),
-            const SizedBox(width: 32),
+            SizedBox(width: 32),
             _buildStatItem(
               _statsLoaded ? '$_cityCount' : '...',
               context.l10n.cities,
@@ -516,9 +516,9 @@ class _LandingPageState extends State<LandingPage> {
               borderRadius: BorderRadius.circular(8),
             ),
             child:
-                const Icon(Icons.event, color: KhairColors.primary, size: 20),
+                Icon(Icons.event, color: KhairColors.primary, size: 20),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -559,7 +559,7 @@ class _LandingPageState extends State<LandingPage> {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -572,7 +572,7 @@ class _LandingPageState extends State<LandingPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Container(
                 width: 80,
                 height: 12,
@@ -603,7 +603,7 @@ class _LandingPageState extends State<LandingPage> {
             style: KhairTypography.displaySmall,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             context.l10n.whyChooseSubtitle,
             style: KhairTypography.bodyLarge.copyWith(
@@ -611,7 +611,7 @@ class _LandingPageState extends State<LandingPage> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 48),
+          SizedBox(height: 48),
           Wrap(
             spacing: 24,
             runSpacing: 24,
@@ -675,9 +675,9 @@ class _LandingPageState extends State<LandingPage> {
             ),
             child: Icon(icon, color: KhairColors.primary),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(title, style: KhairTypography.headlineSmall),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             description,
             style: KhairTypography.bodyMedium,
@@ -703,7 +703,7 @@ class _LandingPageState extends State<LandingPage> {
             style: KhairTypography.displaySmall,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 48),
+          SizedBox(height: 48),
           isWide
               ? Row(
                   children: [
@@ -724,10 +724,10 @@ class _LandingPageState extends State<LandingPage> {
                   children: [
                     _buildStep(
                         '1', context.l10n.step1Title, context.l10n.step1Desc),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     _buildStep(
                         '2', context.l10n.step2Title, context.l10n.step2Desc),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     _buildStep(
                         '3', context.l10n.step3Title, context.l10n.step3Desc),
                   ],
@@ -756,9 +756,9 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(title, style: KhairTypography.headlineSmall),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           description,
           style: KhairTypography.bodyMedium,
@@ -783,7 +783,7 @@ class _LandingPageState extends State<LandingPage> {
       child: Container(
         padding: const EdgeInsets.all(48),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [KhairColors.primary, KhairColors.primaryDark],
           ),
           borderRadius: KhairRadius.extraLarge,
@@ -797,7 +797,7 @@ class _LandingPageState extends State<LandingPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               context.l10n.ctaSubtitle,
               style: KhairTypography.bodyLarge.copyWith(
@@ -805,14 +805,14 @@ class _LandingPageState extends State<LandingPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.go('/organizer/apply'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: KhairColors.primary,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: Text(context.l10n.registerOrganization),
             ),
@@ -860,7 +860,7 @@ class _LandingPageState extends State<LandingPage> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             context.l10n.footerCopyright,
             style: KhairTypography.bodySmall.copyWith(

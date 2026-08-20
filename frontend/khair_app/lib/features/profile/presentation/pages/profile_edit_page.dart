@@ -1,8 +1,12 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../../../core/locale/locale_bloc.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
@@ -146,6 +150,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         'preferred_language': _language,
       });
       if (mounted) {
+        context.read<LocaleBloc>().add(ChangeLocale(Locale(_language)));
         _captureInitialValues();
         Navigator.of(context).pop(true);
       }
@@ -199,7 +204,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final background = dark ? const Color(0xFF101014) : const Color(0xFFFCFAFB);
+    final background = dark ? Color(0xFF101014) : Color(0xFFFCFAFB);
     return PopScope(
       canPop: _allowPop || !_hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
@@ -207,7 +212,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         backgroundColor: background,
         appBar: AppBar(
           backgroundColor: background,
-          title: Text('Edit profile',
+          title: Text(context.l10n.editProfile1,
               style: TextStyle(
                   color: dark ? Colors.white : _ink,
                   fontWeight: FontWeight.w700)),
@@ -215,21 +220,21 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             TextButton(
                 onPressed: _saving || _loading ? null : _save,
                 child: _saving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: _rose))
-                    : const Text('Save',
+                    : Text(context.l10n.save,
                         style: TextStyle(
                             color: _rose, fontWeight: FontWeight.w800)))
           ],
         ),
         body: _loading
-            ? const _EditSkeleton()
+            ? _EditSkeleton()
             : Center(
                 child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 620),
+                    constraints: BoxConstraints(maxWidth: 620),
                     child: Form(
                         key: _form,
                         child: ListView(
@@ -238,21 +243,21 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             padding: EdgeInsets.fromLTRB(20, 16, 20,
                                 80 + MediaQuery.viewInsetsOf(context).bottom),
                             children: [
-                              Text('Your event profile',
+                              Text(context.l10n.yourEventProfile,
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineSmall
                                       ?.copyWith(
                                           fontWeight: FontWeight.w800,
                                           color: dark ? Colors.white : _ink)),
-                              const SizedBox(height: 6),
+                              SizedBox(height: 6),
                               Text(
                                   'Keep these details current so Khair can personalize your event experience.',
                                   style: TextStyle(
                                       color: dark
-                                          ? const Color(0xFFC5BEC8)
+                                          ? Color(0xFFC5BEC8)
                                           : _muted)),
-                              const SizedBox(height: 26),
+                              SizedBox(height: 26),
                               Center(
                                   child: _AvatarEditor(
                                       preview: _preview,
@@ -260,43 +265,43 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                       name: _name.text,
                                       loading: _uploading,
                                       onTap: _pickAvatar)),
-                              const SizedBox(height: 26),
+                              SizedBox(height: 26),
                               if (_error != null) _Error(message: _error!),
-                              if (_error != null) const SizedBox(height: 14),
+                              if (_error != null) SizedBox(height: 14),
                               _Field(
                                   controller: _name,
-                                  label: 'Display name',
+                                  label: context.l10n.displayName1,
                                   icon: Icons.person_outline,
                                   validator: (v) =>
                                       v == null || v.trim().isEmpty
                                           ? 'Enter your display name.'
                                           : null),
-                              const SizedBox(height: 14),
+                              SizedBox(height: 14),
                               _Field(
                                   controller: _country,
-                                  label: 'Country',
+                                  label: context.l10n.createEventCountry,
                                   icon: Icons.public_outlined),
-                              const SizedBox(height: 14),
+                              SizedBox(height: 14),
                               _Field(
                                   controller: _city,
-                                  label: 'City',
+                                  label: context.l10n.city,
                                   icon: Icons.location_city_outlined),
-                              const SizedBox(height: 14),
+                              SizedBox(height: 14),
                               DropdownButtonFormField<String>(
                                   initialValue: _language,
                                   decoration: _decoration('Preferred language',
                                       Icons.language_outlined),
-                                  items: const [
+                                  items: [
                                     DropdownMenuItem(
-                                        value: 'en', child: Text('English')),
+                                        value: 'en', child: Text(context.l10n.registrationLanguageEnglish)),
                                     DropdownMenuItem(
-                                        value: 'ar', child: Text('Arabic')),
+                                        value: 'ar', child: Text(context.l10n.registrationLanguageArabic)),
                                     DropdownMenuItem(
-                                        value: 'tr', child: Text('Turkish'))
+                                        value: 'tr', child: Text(context.l10n.registrationLanguageTurkish))
                                   ],
                                   onChanged: (value) => setState(
                                       () => _language = value ?? 'en')),
-                              const SizedBox(height: 28),
+                              SizedBox(height: 28),
                               FilledButton(
                                   onPressed: _saving ? null : _save,
                                   style: FilledButton.styleFrom(
@@ -330,12 +335,12 @@ class _AvatarEditor extends StatelessWidget {
         Container(
             width: 100,
             height: 100,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(colors: [_rose, Color(0xFFFF8AAF)])),
             child: ClipOval(
                 child: loading
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(color: Colors.white))
                     : preview != null
                         ? Image.memory(preview!,
@@ -360,7 +365,7 @@ class _AvatarEditor extends StatelessWidget {
                     color: _rose,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 3)),
-                child: const Icon(Icons.camera_alt_outlined,
+                child: Icon(Icons.camera_alt_outlined,
                     color: Colors.white, size: 16)))
       ]));
 }
@@ -371,7 +376,7 @@ class _AvatarInitial extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
       child: Text(name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?',
-          style: const TextStyle(
+          style: TextStyle(
               color: Colors.white, fontWeight: FontWeight.w800, fontSize: 34)));
 }
 
@@ -399,13 +404,13 @@ InputDecoration _decoration(String label, IconData icon) => InputDecoration(
     fillColor: _roseSoft.withValues(alpha: .45),
     border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border)),
+        borderSide: BorderSide(color: _border)),
     enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border)),
+        borderSide: BorderSide(color: _border)),
     focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _rose, width: 2)));
+        borderSide: BorderSide(color: _rose, width: 2)));
 
 class _Error extends StatelessWidget {
   const _Error({required this.message});
@@ -418,9 +423,9 @@ class _Error extends StatelessWidget {
           border: Border.all(color: _rose.withValues(alpha: .25)),
           borderRadius: BorderRadius.circular(14)),
       child: Row(children: [
-        const Icon(Icons.info_outline, color: _rose),
-        const SizedBox(width: 10),
-        Expanded(child: Text(message, style: const TextStyle(color: _ink)))
+        Icon(Icons.info_outline, color: _rose),
+        SizedBox(width: 10),
+        Expanded(child: Text(message, style: TextStyle(color: _ink)))
       ]));
 }
 
@@ -428,12 +433,12 @@ class _EditSkeleton extends StatelessWidget {
   const _EditSkeleton();
   @override
   Widget build(BuildContext context) => Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: const [
+           child: Column(mainAxisSize: MainAxisSize.min, children: [
         SizedBox(
             width: 96,
             height: 96,
             child: CircularProgressIndicator(color: _rose)),
         SizedBox(height: 16),
-        Text('Loading your profile…')
+        Text(context.l10n.loadingYourProfile)
       ]));
 }

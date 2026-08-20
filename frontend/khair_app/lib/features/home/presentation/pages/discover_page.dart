@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -56,7 +57,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               );
         } else if (location is LocationError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('We could not update your location.')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.locationUpdateError)),
           );
         }
       },
@@ -83,9 +84,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           builder: (context, auth) {
                             // Khair User currently doesn't have a firstName, so we use empty or parse from email.
                             final name = '';
+                            final l10n = AppLocalizations.of(context)!;
                             final greeting = name.isNotEmpty
-                                ? '${_timeGreeting()}, $name \uD83D\uDC4B'
-                                : '${_timeGreeting()} \uD83D\uDC4B';
+                                ? '${_timeGreeting(l10n)}, $name \uD83D\uDC4B'
+                                : '${_timeGreeting(l10n)} \uD83D\uDC4B';
                             return Text(
                               greeting,
                               style: const TextStyle(
@@ -97,25 +99,30 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           },
                         ),
                         const SizedBox(height: 8),
-                        RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              fontFamily: 'Poppins',
-                              height: 1.15,
-                              letterSpacing: -0.5,
-                            ),
-                            children: [
-                              TextSpan(text: 'Find events that\n'),
-                              TextSpan(
-                                text: 'inspire',
-                                style: TextStyle(color: AppColors.primary),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  fontFamily: 'Poppins',
+                                  height: 1.15,
+                                  letterSpacing: -0.5,
+                                ),
+                                children: [
+                                  TextSpan(text: '${l10n.discoverHeadlinePre}\n'),
+                                  TextSpan(
+                                    text: l10n.discoverHeadlineHighlight,
+                                    style: const TextStyle(color: AppColors.primary),
+                                  ),
+                                  TextSpan(text: l10n.discoverHeadlinePost),
+                                ],
                               ),
-                              TextSpan(text: ' you'),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
                         DiscoverSearchBar(
@@ -161,9 +168,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: DiscoverSectionHeader(
-                              title: isSearching ? 'Results for “$searchQuery”' : 'Featured near you',
-                              subtitle: isSearching ? 'Matching events' : 'Events worth making time for',
-                              action: isSearching ? 'Explore map' : 'See all',
+                              title: isSearching
+                                  ? AppLocalizations.of(context)!.resultsForQuery(searchQuery!)
+                                  : AppLocalizations.of(context)!.featuredNearYou,
+                              subtitle: isSearching
+                                  ? AppLocalizations.of(context)!.matchingEvents
+                                  : AppLocalizations.of(context)!.eventsWorthTimeFor,
+                              action: isSearching
+                                  ? AppLocalizations.of(context)!.exploreMap
+                                  : AppLocalizations.of(context)!.seeAll,
                               onAction: () => context.go('/map'),
                             ),
                           ),
@@ -192,9 +205,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: DiscoverSectionHeader(
-                                title: 'Happening this weekend',
-                                subtitle: 'Plan something meaningful',
-                                action: 'See all',
+                                title: AppLocalizations.of(context)!.happeningThisWeekend,
+                                subtitle: AppLocalizations.of(context)!.planSomethingMeaningful,
+                                action: AppLocalizations.of(context)!.seeAll,
                                 onAction: () => context.go('/map'),
                               ),
                             ),
@@ -229,11 +242,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  String _timeGreeting() {
+  String _timeGreeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return l10n.greetingGoodMorning;
+    if (hour < 18) return l10n.greetingGoodAfternoon;
+    return l10n.greetingGoodEvening;
   }
 
   bool _isThisWeekend(Event event) {
@@ -256,7 +269,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   void _openFilters() {
     // Ideally this opens the same modal as before, we can leave a snackbar for now or replicate the existing logic
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Filters coming soon in Style 2')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.filtersComingSoon)),
+    );
   }
 
   void _toggleQuickFilter(QuickFilter quickFilter) {
@@ -279,6 +294,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Future<void> _openLocationPicker() async {
     final controller = TextEditingController(text: context.read<EventsBloc>().state.filter.city ?? '');
+    final sheetL10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -289,15 +305,16 @@ class _DiscoverPageState extends State<DiscoverPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Align(
+              Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: Text('Choose your area', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+                child: Text(sheetL10n.chooseYourArea,
+                    style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
               ),
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.my_location_rounded, color: AppColors.primary),
-                title: const Text('Use current location'),
+                title: Text(sheetL10n.useCurrentLocationShort),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   setState(() => _locationRequestInFlight = true);
@@ -312,9 +329,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
                   Navigator.of(sheetContext).pop();
                 },
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  prefixIcon: Icon(Icons.location_city_outlined),
+                decoration: InputDecoration(
+                  labelText: sheetL10n.city,
+                  prefixIcon: const Icon(Icons.location_city_outlined),
                 ),
               ),
               const SizedBox(height: 20),
@@ -325,7 +342,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     context.read<EventsBloc>().add(UpdateBaseCity(controller.text.trim()));
                     Navigator.of(sheetContext).pop();
                   },
-                  child: const Text('Show events'),
+                  child: Text(sheetL10n.showEvents),
                 ),
               ),
             ],
@@ -344,6 +361,7 @@ class _EmptyDiscovery extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 52),
       child: Center(
@@ -351,15 +369,15 @@ class _EmptyDiscovery extends StatelessWidget {
           children: [
             const Icon(Icons.explore_off_outlined, color: AppColors.primary, size: 44),
             const SizedBox(height: 14),
-            const Text('No events found', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+            Text(l10n.noEventsFound, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            const Text('Try adjusting your filters or area.', style: TextStyle(color: AppColors.textSecondary)),
+            Text(l10n.adjustFiltersHint, style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 18),
             if (hasActiveFilters)
               OutlinedButton.icon(
                 onPressed: onClearFilters,
                 icon: const Icon(Icons.close_rounded),
-                label: const Text('Clear filters'),
+                label: Text(l10n.clearFilters),
               ),
           ],
         ),
@@ -374,6 +392,7 @@ class _LoadError extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Center(
@@ -381,8 +400,8 @@ class _LoadError extends StatelessWidget {
           children: [
             const Icon(Icons.cloud_off_outlined, size: 42, color: AppColors.primary),
             const SizedBox(height: 12),
-            const Text('We couldn’t load events right now.'),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
+            Text(l10n.loadEventsError),
+            TextButton(onPressed: onRetry, child: Text(l10n.tryAgain)),
           ],
         ),
       ),

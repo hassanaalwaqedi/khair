@@ -48,7 +48,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   bool _isSaved = false;
   bool _saveLoading = false;
   bool _joinLoading = false;
-  
+
   Map<String, dynamic>? _meetingAccess;
   bool _isLoadingMeeting = false;
 
@@ -92,10 +92,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   Future<void> _fetchMeetingAccess() async {
     final auth = context.read<AuthBloc>().state;
     if (!auth.isAuthenticated) return;
-    
+
     if (mounted) setState(() => _isLoadingMeeting = true);
     try {
-      final result = await getIt<EventsRepository>().getMeetingAccess(widget.eventId);
+      final result =
+          await getIt<EventsRepository>().getMeetingAccess(widget.eventId);
       result.fold(
         (_) {
           if (mounted) setState(() => _isLoadingMeeting = false);
@@ -126,7 +127,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             ? (result['status'] as String? ?? 'confirmed')
             : null;
       });
-      
+
       if (_registrationStatus == 'confirmed') {
         _fetchMeetingAccess();
       }
@@ -176,7 +177,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         builder: (context, state) {
           if (state.detailsStatus == EventsStatus.loading ||
               state.detailsStatus == EventsStatus.initial) {
-            return const EventDetailsSkeleton();
+            return EventDetailsSkeleton();
           }
           if (state.detailsStatus == EventsStatus.failure ||
               state.selectedEvent == null) {
@@ -224,23 +225,23 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSummary(event, colors),
-                    const SizedBox(height: 25),
+                    SizedBox(height: 25),
                     _buildKeyInformation(event, colors),
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22),
                     _buildInlineActions(event, colors),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28),
                     if (_isOnline(event))
                       _buildOnlineLocation(event, colors)
                     else
                       _buildMapLocation(event, colors),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     _buildAbout(event, colors),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     _buildOrganizer(event, colors),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18),
                     _buildAttendees(event, colors),
                     if (_relatedEvents.isNotEmpty) ...[
-                      const SizedBox(height: 36),
+                      SizedBox(height: 36),
                       _buildRelatedEvents(colors),
                     ],
                   ],
@@ -302,14 +303,16 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     icon: _isSaved
                         ? Icons.favorite_rounded
                         : Icons.favorite_border_rounded,
-                    label: _isSaved ? 'Remove from saved' : 'Save event',
+                    label: _isSaved
+                        ? context.l10n.removeFromSaved
+                        : context.l10n.saveEvent,
                     onPressed: _saveLoading ? null : () => _toggleSaved(event),
                     active: _isSaved,
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   _heroButton(
                     icon: Icons.ios_share_rounded,
-                    label: 'Share event',
+                    label: context.l10n.shareEvent,
                     onPressed: () => _shareEvent(event),
                   ),
                 ],
@@ -322,7 +325,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   }
 
   Widget _heroFallback(_PageColors colors) => DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF2A1220), Color(0xFFF43F75)],
             begin: Alignment.topLeft,
@@ -346,7 +349,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       label: label,
       child: Material(
         color: Colors.black.withValues(alpha: .48),
-        shape: const CircleBorder(),
+        shape: CircleBorder(),
         child: IconButton(
           onPressed: onPressed,
           icon: Icon(icon, color: active ? AppColors.primary : Colors.white),
@@ -358,7 +361,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   Widget _buildSummary(Event event, _PageColors colors) {
     final category = _label(
-        event.category?.isNotEmpty == true ? event.category! : event.eventType);
+        event.category?.isNotEmpty == true ? event.category! : event.eventType,
+        context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,12 +375,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               _isOnline(event)
                   ? Icons.videocam_outlined
                   : Icons.people_alt_outlined,
-              _isOnline(event) ? 'ONLINE' : 'IN-PERSON',
+              _isOnline(event)
+                  ? context.l10n.online.toUpperCase()
+                  : context.l10n.createEventInPerson.toUpperCase(),
               colors,
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         Text(
           event.title,
           style: TextStyle(
@@ -402,9 +408,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 17, color: AppColors.primary),
-          const SizedBox(width: 7),
+          SizedBox(width: 7),
           Text(label.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppColors.primaryDark,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -418,31 +424,36 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     final items = [
       _EventMeta(
         icon: Icons.calendar_month_outlined,
-        title: _dateLabel(event),
-        detail: _timeLabel(event),
+        title: _dateLabel(event, context),
+        detail: _timeLabel(event, context),
       ),
       _EventMeta(
         icon:
             _isOnline(event) ? Icons.wifi_rounded : Icons.location_on_outlined,
-        title: _isOnline(event) ? 'Online event' : _locationLabel(event),
+        title: _isOnline(event)
+            ? context.l10n.onlineEvent
+            : _locationLabel(event, context),
         detail: _isOnline(event)
-            ? (event.onlinePlatform ?? 'Meeting access after joining')
+            ? (event.onlinePlatform ?? context.l10n.meetingAccessAfterJoining)
             : (event.venueName ?? event.address ?? ''),
       ),
       _EventMeta(
         icon: Icons.groups_outlined,
         title: event.reservedCount == 0
-            ? 'Be the first to join'
-            : '${event.reservedCount} going',
+            ? context.l10n.beFirstToJoin
+            : context.l10n.eventDetailsAttending(event.reservedCount),
         detail: event.capacity == null
-            ? 'Community event'
-            : '${event.capacity} spots total',
+            ? context.l10n.communityEvent
+            : context.l10n
+                .eventCardSeatsRatio(event.reservedCount, event.capacity!),
       ),
       _EventMeta(
         icon: Icons.payments_outlined,
-        title: event.pricing.isFree ? 'Free Event' : 'Paid Event',
+        title: event.pricing.isFree
+            ? context.l10n.eventDetailsFree
+            : context.l10n.paidEvent,
         detail: event.pricing.isFree
-            ? 'No cost to attend'
+            ? context.l10n.noCostToAttend
             : '${(event.pricing.amountCents! / 100).toStringAsFixed(2)} ${event.pricing.currency ?? ""}',
       ),
     ];
@@ -482,7 +493,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(item.icon, color: AppColors.primary, size: 25),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +506,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
               if (item.detail.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(item.detail,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -519,32 +530,35 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 icon: _isSaved
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                label: _isSaved ? 'Saved' : 'Save',
+                label:
+                    _isSaved ? context.l10n.savedLabel : context.l10n.saveEvent,
                 colors: colors,
                 onPressed: _saveLoading ? null : () => _toggleSaved(event),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: _outlineAction(
                 icon: Icons.ios_share_outlined,
-                label: 'Share',
+                label: context.l10n.share,
                 colors: colors,
                 onPressed: () => _shareEvent(event),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: _outlineAction(
             icon: Icons.calendar_month_outlined,
-            label: 'Add to Google Calendar',
+            label: context.l10n.addToGoogleCalendar,
             colors: colors,
             onPressed: () {
-              final hasAccess = _meetingAccess?['available'] == true && _meetingAccess?['url'] != null;
-              final meetingUrl = hasAccess ? _meetingAccess!['url'] as String : null;
+              final hasAccess = _meetingAccess?['available'] == true &&
+                  _meetingAccess?['url'] != null;
+              final meetingUrl =
+                  hasAccess ? _meetingAccess!['url'] as String : null;
               CalendarService.openGoogleCalendar(
                 context,
                 event,
@@ -571,7 +585,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         foregroundColor: AppColors.primary,
         side: BorderSide(color: AppColors.primary.withValues(alpha: .25)),
         padding: const EdgeInsets.symmetric(vertical: 14),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
       ),
     );
@@ -591,8 +605,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Location', colors),
-        const SizedBox(height: 13),
+        _sectionTitle(context.l10n.eventDetailsLocation, colors),
+        SizedBox(height: 13),
         if (hasCoordinates)
           ClipRRect(
             borderRadius: BorderRadius.circular(22),
@@ -604,7 +618,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     options: MapOptions(
                       initialCenter: LatLng(event.latitude!, event.longitude!),
                       initialZoom: 13.5,
-                      interactionOptions: const InteractionOptions(
+                      interactionOptions: InteractionOptions(
                         flags: InteractiveFlag.none,
                       ),
                     ),
@@ -620,7 +634,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                             point: LatLng(event.latitude!, event.longitude!),
                             width: 52,
                             height: 52,
-                            child: const Icon(Icons.location_on_rounded,
+                            child: Icon(Icons.location_on_rounded,
                                 color: AppColors.primary, size: 46),
                           ),
                         ],
@@ -632,8 +646,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     end: 12,
                     child: FilledButton.icon(
                       onPressed: () => _openDirections(event),
-                      icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                      label: const Text('View on map'),
+                      icon: Icon(Icons.open_in_new_rounded, size: 17),
+                      label: Text(context.l10n.viewOnMap),
                       style: FilledButton.styleFrom(
                         backgroundColor: colors.surface,
                         foregroundColor: colors.primaryText,
@@ -651,12 +665,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         else
           _locationFallback(colors),
         if (address.isNotEmpty) ...[
-          const SizedBox(height: 13),
+          SizedBox(height: 13),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Icons.place_outlined, color: AppColors.primary, size: 21),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: Text(address.join('\n'),
                     style: TextStyle(
@@ -680,7 +694,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         borderRadius: BorderRadius.circular(22),
       ),
       child: Center(
-        child: Text('Map preview is unavailable for this event.',
+        child: Text(context.l10n.mapPreviewIsUnavailableForThis,
             style: TextStyle(color: colors.secondaryText, fontSize: 13)),
       ),
     );
@@ -688,10 +702,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   Widget _buildOnlineLocation(Event event, _PageColors colors) {
     final isJoined = _registrationStatus == 'confirmed';
-    final hasAccess = _meetingAccess?['available'] == true && _meetingAccess?['url'] != null;
+    final hasAccess =
+        _meetingAccess?['available'] == true && _meetingAccess?['url'] != null;
     final meetingUrl = hasAccess ? _meetingAccess!['url'] as String : null;
-    final provider = hasAccess && _meetingAccess!['provider'] != null 
-        ? _meetingAccess!['provider'] as String 
+    final provider = hasAccess && _meetingAccess!['provider'] != null
+        ? _meetingAccess!['provider'] as String
         : event.onlinePlatform ?? 'Online';
 
     String statusText = 'Meeting access becomes available after you join.';
@@ -718,24 +733,27 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                     color: AppColors.primary, shape: BoxShape.circle),
-                child: const Icon(Icons.videocam_outlined, color: Colors.white),
+                child: Icon(Icons.videocam_outlined, color: Colors.white),
               ),
-              const SizedBox(width: 13),
+              SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Online event',
+                    Text(context.l10n.onlineEvent,
                         style: TextStyle(
                             color: colors.primaryText,
                             fontSize: 16,
                             fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      hasAccess ? provider : '${event.onlinePlatform ?? 'Online'} · $statusText',
-                      style: TextStyle(color: colors.secondaryText, fontSize: 13),
+                      hasAccess
+                          ? provider
+                          : '${event.onlinePlatform ?? 'Online'} · $statusText',
+                      style:
+                          TextStyle(color: colors.secondaryText, fontSize: 13),
                     ),
                   ],
                 ),
@@ -743,7 +761,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             ],
           ),
           if (hasAccess) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -753,8 +771,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   }
                 },
-                icon: const Icon(Icons.video_call),
-                label: Text('Join $provider meeting'),
+                icon: Icon(Icons.video_call),
+                label: Text(context.l10n.joinProviderMeeting(provider)),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -776,25 +794,25 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       ...event.tags,
       if (event.genderRestriction != null &&
           event.genderRestriction!.trim().isNotEmpty)
-        _label(event.genderRestriction!),
+        _label(event.genderRestriction!, context),
       if (event.language != null && event.language!.trim().isNotEmpty)
-        _label(event.language!),
+        _label(event.language!, context),
     ].where((tag) => tag.trim().isNotEmpty).take(6).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('About this event', colors),
-        const SizedBox(height: 11),
+        _sectionTitle(context.l10n.eventDetailsAbout, colors),
+        SizedBox(height: 11),
         if (description != null && description.isNotEmpty)
           Text(description,
               style: TextStyle(
                   color: colors.secondaryText, fontSize: 15.5, height: 1.65))
         else
-          Text('The organizer has not added a description yet.',
+          Text(context.l10n.theOrganizerHasNotAddedADescri,
               style: TextStyle(color: colors.secondaryText, fontSize: 15.5)),
         if (extras.isNotEmpty) ...[
-          const SizedBox(height: 17),
+          SizedBox(height: 17),
           Wrap(
             spacing: 9,
             runSpacing: 9,
@@ -802,14 +820,17 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           ),
         ],
         if (event.registrationDeadline != null) ...[
-          const SizedBox(height: 17),
+          SizedBox(height: 17),
           Row(
             children: [
-              const Icon(Icons.schedule_outlined,
-                  color: AppColors.primary, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.schedule_outlined, color: AppColors.primary, size: 18),
+              SizedBox(width: 8),
               Text(
-                'Registration closes ${DateFormat('MMM d · h:mm a').format(event.registrationDeadline!.toLocal())}',
+                context.l10n.registrationCloses(
+                  DateFormat('MMM d · h:mm a',
+                          Localizations.localeOf(context).languageCode)
+                      .format(event.registrationDeadline!.toLocal()),
+                ),
                 style: TextStyle(color: colors.secondaryText, fontSize: 13),
               ),
             ],
@@ -826,8 +847,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         color: colors.softRose,
         borderRadius: BorderRadius.circular(99),
       ),
-      child: Text(_label(text),
-          style: const TextStyle(
+      child: Text(_label(text, context),
+          style: TextStyle(
               color: AppColors.primaryDark,
               fontSize: 12.5,
               fontWeight: FontWeight.w700)),
@@ -842,8 +863,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Hosted by', colors),
-        const SizedBox(height: 12),
+        _sectionTitle(context.l10n.eventDetailsOrganizedBy, colors),
+        SizedBox(height: 12),
         InkWell(
           onTap: () => context.push('/organizers/${event.organizerId}'),
           borderRadius: BorderRadius.circular(22),
@@ -857,7 +878,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             child: Row(
               children: [
                 _organizerAvatar(name, logo, colors),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -869,33 +890,32 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                               color: colors.primaryText,
                               fontSize: 17,
                               fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 5),
+                      SizedBox(height: 5),
                       if (verified)
                         Row(
                           children: [
-                            const Icon(Icons.verified_rounded,
+                            Icon(Icons.verified_rounded,
                                 color: AppColors.primary, size: 16),
-                            const SizedBox(width: 5),
-                            Text('Verified organizer',
+                            SizedBox(width: 5),
+                            Text(context.l10n.verifiedOrganizer,
                                 style: TextStyle(
                                     color: colors.secondaryText, fontSize: 13)),
                           ],
                         )
                       else
-                        Text('Event organizer',
+                        Text(context.l10n.eventOrganizer,
                             style: TextStyle(
                                 color: colors.secondaryText, fontSize: 13)),
                     ],
                   ),
                 ),
-                Text('View profile',
-                    style: const TextStyle(
+                Text(context.l10n.viewProfile,
+                    style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
                         fontSize: 13)),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppColors.primary),
+                SizedBox(width: 4),
+                Icon(Icons.chevron_right_rounded, color: AppColors.primary),
               ],
             ),
           ),
@@ -922,10 +942,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       width: 54,
       height: 54,
       decoration:
-          const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+          BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
               color: Colors.white, fontSize: 23, fontWeight: FontWeight.w800)),
     );
   }
@@ -947,31 +967,31 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             height: 44,
             decoration:
                 BoxDecoration(color: colors.softRose, shape: BoxShape.circle),
-            child: const Icon(Icons.groups_outlined, color: AppColors.primary),
+            child: Icon(Icons.groups_outlined, color: AppColors.primary),
           ),
-          const SizedBox(width: 13),
+          SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Attendees',
+                Text(context.l10n.attendees,
                     style: TextStyle(
                         color: colors.primaryText,
                         fontSize: 17,
                         fontWeight: FontWeight.w800)),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   count == 0
-                      ? 'Be one of the first to join this event.'
-                      : '$count ${count == 1 ? 'person is' : 'people are'} going',
+                      ? context.l10n.beFirstToJoin
+                      : context.l10n.eventDetailsAttending(count),
                   style: TextStyle(color: colors.secondaryText, fontSize: 13.5),
                 ),
               ],
             ),
           ),
           if (event.capacity != null)
-            Text('$count / ${event.capacity}',
-                style: const TextStyle(
+            Text(context.l10n.eventCardSeatsRatio(count, event.capacity!),
+                style: TextStyle(
                     color: AppColors.primary, fontWeight: FontWeight.w800)),
         ],
       ),
@@ -982,14 +1002,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('You may also like', colors),
-        const SizedBox(height: 13),
+        _sectionTitle(context.l10n.youMayAlsoLike, colors),
+        SizedBox(height: 13),
         SizedBox(
           height: 250,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _relatedEvents.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => SizedBox(width: 12),
             itemBuilder: (_, index) =>
                 _relatedCard(_relatedEvents[index], colors),
           ),
@@ -1031,12 +1051,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_dateLabel(event),
-                        style: const TextStyle(
+                    Text(_dateLabel(event, context),
+                        style: TextStyle(
                             color: AppColors.primaryDark,
                             fontSize: 11,
                             fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
                     Text(event.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1044,8 +1064,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                             color: colors.primaryText,
                             fontWeight: FontWeight.w800,
                             fontSize: 15)),
-                    const SizedBox(height: 7),
-                    Text(_locationLabel(event),
+                    SizedBox(height: 7),
+                    Text(_locationLabel(event, context),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1072,14 +1092,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     final closed = _isRegistrationClosed(event);
     final canJoin = !ended && !closed && !joined && !(_isFull(event));
     final label = ended
-        ? 'Event ended'
+        ? context.l10n.eventDetailsEventEnded
         : closed
-            ? 'Registration closed'
+            ? context.l10n.registrationClosed
             : joined
-                ? "You're going"
+                ? context.l10n.joined
                 : _isFull(event)
-                    ? 'Event full'
-                    : 'Join event';
+                    ? context.l10n.eventDetailsEventFull
+                    : context.l10n.eventDetailsJoin;
     return Material(
       color: colors.surface,
       elevation: 12,
@@ -1110,7 +1130,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                         : Icons.bookmark_border_rounded),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: SizedBox(
                     height: 52,
@@ -1121,7 +1141,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                               ? _showLeaveDialog
                               : null,
                       icon: _joinLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
@@ -1138,7 +1158,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                 ? AppColors.success
                                 : colors.disabled,
                         foregroundColor: Colors.white,
-                        textStyle: const TextStyle(
+                        textStyle: TextStyle(
                             fontWeight: FontWeight.w800, fontSize: 16),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(17)),
@@ -1163,23 +1183,23 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           children: [
             Icon(Icons.event_busy_outlined,
                 size: 54, color: colors.secondaryText),
-            const SizedBox(height: 16),
-            Text('We couldn’t load this event.',
+            SizedBox(height: 16),
+            Text(context.l10n.weCouldntLoadThisEvent,
                 style: TextStyle(
                     color: colors.primaryText,
                     fontSize: 20,
                     fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
                 'The event may have been removed or is temporarily unavailable.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colors.secondaryText, fontSize: 14)),
-            const SizedBox(height: 22),
+            SizedBox(height: 22),
             FilledButton(
               onPressed: () => context
                   .read<EventsBloc>()
                   .add(LoadEventDetails(widget.eventId)),
-              child: const Text('Try again'),
+              child: Text(context.l10n.tryAgain),
             ),
           ],
         ),
@@ -1233,14 +1253,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     final leave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Leave event?'),
-        content: const Text('Your reservation will be released.'),
+        title: Text(context.l10n.leaveEvent),
+        content: Text(context.l10n.yourReservationWillBeReleased),
         actions: [
           TextButton(
               onPressed: () => context.pop(false),
-              child: const Text('Keep reservation')),
+              child: Text(context.l10n.keepReservation)),
           FilledButton(
-              onPressed: () => context.pop(true), child: const Text('Leave')),
+              onPressed: () => context.pop(true),
+              child: Text(context.l10n.leave)),
         ],
       ),
     );
@@ -1326,31 +1347,60 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       event.capacity! > 0 &&
       event.reservedCount >= event.capacity!;
 
-  String _dateLabel(Event event) =>
-      DateFormat('EEE, MMM d, yyyy').format(event.startDate.toLocal());
+  String _dateLabel(Event event, BuildContext context) => DateFormat(
+        'EEE, MMM d, yyyy',
+        Localizations.localeOf(context).languageCode,
+      ).format(event.startDate.toLocal());
 
-  String _timeLabel(Event event) {
-    final start = DateFormat('h:mm a').format(event.startDate.toLocal());
+  String _timeLabel(Event event, BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final start =
+        DateFormat('h:mm a', locale).format(event.startDate.toLocal());
     if (event.endDate == null) return start;
-    return '$start – ${DateFormat('h:mm a').format(event.endDate!.toLocal())}';
+    return '$start – ${DateFormat('h:mm a', locale).format(event.endDate!.toLocal())}';
   }
 
-  String _locationLabel(Event event) {
-    if (_isOnline(event)) return 'Online event';
+  String _locationLabel(Event event, BuildContext context) {
+    if (_isOnline(event)) return context.l10n.onlineEvent;
     final parts = [event.city, event.country]
         .whereType<String>()
         .where((value) => value.trim().isNotEmpty)
         .toList();
-    return parts.isEmpty ? 'Location to be announced' : parts.join(', ');
+    return parts.isEmpty
+        ? context.l10n.locationToBeAnnounced
+        : parts.join(', ');
   }
 
-  String _label(String value) => value
-      .trim()
-      .split(RegExp(r'[_\s-]+'))
-      .where((part) => part.isNotEmpty)
-      .map((part) =>
-          '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
-      .join(' ');
+  String _label(String value, [BuildContext? context]) {
+    final normalized = value.trim().toLowerCase().replaceAll('-', '_');
+    if (context != null) {
+      final localized = switch (normalized) {
+        'technology' => context.l10n.technology,
+        'quran' => context.l10n.categoryQuran,
+        'lecture' || 'lectures' => context.l10n.categoryLectures,
+        'knowledge' => context.l10n.categoryKnowledge,
+        'community' => context.l10n.categoryCommunity,
+        'youth' => context.l10n.categoryYouth,
+        'charity' => context.l10n.categoryCharity,
+        'family' => context.l10n.categoryFamily,
+        'conference' => context.l10n.eventTypeConference,
+        'workshop' => context.l10n.eventTypeWorkshop,
+        'seminar' => context.l10n.eventTypeSeminar,
+        'festival' => context.l10n.eventTypeFestival,
+        'meetup' => context.l10n.eventTypeMeetup,
+        'other' => context.l10n.eventTypeOther,
+        _ => null,
+      };
+      if (localized != null) return localized;
+    }
+    return value
+        .trim()
+        .split(RegExp(r'[_\s-]+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) =>
+            '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+        .join(' ');
+  }
 }
 
 class _EventMeta {
@@ -1374,8 +1424,6 @@ class _PageColors {
   Color get secondaryText =>
       dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
   Color get border => dark ? AppColors.darkBorder : AppColors.border;
-  Color get softRose =>
-      dark ? const Color(0x332E1722) : const Color(0xFFFFF1F5);
-  Color get disabled =>
-      dark ? const Color(0xFF514B54) : const Color(0xFFB8B1B8);
+  Color get softRose => dark ? Color(0x332E1722) : Color(0xFFFFF1F5);
+  Color get disabled => dark ? Color(0xFF514B54) : Color(0xFFB8B1B8);
 }

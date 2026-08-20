@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -74,9 +75,8 @@ final GoRouter appRouter = GoRouter(
   refreshListenable: _AuthRefresh(_authBloc.stream),
   redirect: _guardRoute,
   routes: [
-    GoRoute(
-        path: '/auth-loading', builder: (_, __) => const _AuthLoadingPage()),
-    GoRoute(path: '/landing', builder: (_, __) => const LandingPage()),
+    GoRoute(path: '/auth-loading', builder: (_, __) => _AuthLoadingPage()),
+    GoRoute(path: '/landing', builder: (_, __) => LandingPage()),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) => MultiBlocProvider(
@@ -84,8 +84,7 @@ final GoRouter appRouter = GoRouter(
           BlocProvider(create: (_) => getIt<EventsBloc>()),
           BlocProvider(
               create: (_) => getIt<OwnerPostsBloc>()..add(LoadActivePosts())),
-          BlocProvider.value(
-              value: getIt<NotificationBloc>()..add(const LoadUnreadCount())),
+          BlocProvider.value(value: getIt<NotificationBloc>()),
           BlocProvider(
               create: (_) =>
                   getIt<LocationBloc>()..add(LoadCachedLocationEvent())),
@@ -95,23 +94,19 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
             path: '/',
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: DiscoverPage())),
+            pageBuilder: (_, __) => NoTransitionPage(child: DiscoverPage())),
         GoRoute(
             path: '/map',
-            pageBuilder: (_, __) => const NoTransitionPage(child: MapPage())),
+            pageBuilder: (_, __) => NoTransitionPage(child: MapPage())),
         GoRoute(
             path: '/profile',
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: ProfilePage())),
+            pageBuilder: (_, __) => NoTransitionPage(child: ProfilePage())),
         GoRoute(
             path: '/my-events',
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: MyEventsPage())),
+            pageBuilder: (_, __) => NoTransitionPage(child: MyEventsPage())),
         GoRoute(
             path: '/saved',
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: SavedEventsPage())),
+            pageBuilder: (_, __) => NoTransitionPage(child: SavedEventsPage())),
       ],
     ),
     GoRoute(
@@ -127,16 +122,14 @@ final GoRouter appRouter = GoRouter(
         organizerId: state.pathParameters['id']!,
       ),
     ),
-    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-    GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+    GoRoute(path: '/login', builder: (_, __) => LoginPage()),
+    GoRoute(path: '/register', builder: (_, __) => RegisterPage()),
     GoRoute(
-        path: '/register/verify',
-        builder: (_, __) => const EmailVerificationPage()),
-    GoRoute(
-        path: '/verification', builder: (_, __) => const VerificationPage()),
+        path: '/register/verify', builder: (_, __) => EmailVerificationPage()),
+    GoRoute(path: '/verification', builder: (_, __) => VerificationPage()),
     GoRoute(
       path: '/organizer/apply',
-      builder: (_, __) => const OrganizerAccessPage(),
+      builder: (_, __) => OrganizerAccessPage(),
     ),
     GoRoute(
       path: '/create-event',
@@ -144,51 +137,51 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/organizer',
-      builder: (_, __) => const OrganizerHubPage(),
+      builder: (_, __) => OrganizerHubPage(),
       routes: [
         GoRoute(
             path: 'events/create',
             builder: (_, __) => BlocProvider(
-                create: (_) => getIt<EventsBloc>(),
-                child: const CreateEventPage())),
+                create: (_) => getIt<EventsBloc>(), child: CreateEventPage())),
         GoRoute(
             path: 'events',
             builder: (_, __) => BlocProvider(
                 create: (_) => getIt<OrganizerBloc>(),
-                child: const OrganizerEventsPage())),
+                child: OrganizerEventsPage())),
         GoRoute(
             path: 'events/:id',
             builder: (_, state) => BlocProvider(
                 create: (_) =>
-                    getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
+                    getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
                 child: OrganizerEventStatusPage(
                     eventId: state.pathParameters['id']!))),
         GoRoute(
             path: 'profile',
             builder: (_, __) => BlocProvider(
                 create: (_) =>
-                    getIt<OrganizerBloc>()..add(const LoadOrganizerProfile()),
-                child: const OrganizerProfileEditPage())),
+                    getIt<OrganizerBloc>()..add(LoadOrganizerProfile()),
+                child: OrganizerProfileEditPage())),
         GoRoute(
             path: 'analytics',
             builder: (_, __) => BlocProvider(
                 create: (_) =>
-                    getIt<OrganizerBloc>()..add(const LoadOrganizerEvents()),
-                child: const OrganizerAnalyticsPage())),
+                    getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
+                child: OrganizerAnalyticsPage())),
       ],
     ),
     GoRoute(
       path: '/admin',
       builder: (_, __) => BlocProvider(
-          create: (_) => getIt<AdminBloc>()..add(const LoadAdminData()),
-          child: const AdminDashboardPage()),
+          create: (_) => getIt<AdminBloc>()..add(LoadAdminData()),
+          child: AdminDashboardPage()),
       routes: [
         GoRoute(
           path: 'events/:id',
           builder: (context, state) {
             final event = state.extra as Event?;
             if (event == null) {
-              return const Scaffold(body: Center(child: Text('Event not found')));
+              return Scaffold(
+                  body: Center(child: Text(context.l10n.eventNotFound)));
             }
             return BlocProvider.value(
               value: getIt<AdminBloc>(),
@@ -198,7 +191,7 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: 'organizer-applications',
-          builder: (_, __) => const OrganizerApplicationListPage(),
+          builder: (_, __) => OrganizerApplicationListPage(),
           routes: [
             GoRoute(
               path: ':id',
@@ -208,15 +201,13 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        GoRoute(path: 'reports', builder: (_, __) => const ReportsPage()),
-        GoRoute(path: 'audit-logs', builder: (_, __) => const AuditLogsPage()),
+        GoRoute(path: 'reports', builder: (_, __) => ReportsPage()),
+        GoRoute(path: 'audit-logs', builder: (_, __) => AuditLogsPage()),
         GoRoute(
             path: 'organizers/:id/trust',
             builder: (_, state) =>
                 OrganizerTrustPage(organizerId: state.pathParameters['id']!)),
-        GoRoute(
-            path: 'support',
-            builder: (_, __) => const AdminSupportInboxPage()),
+        GoRoute(path: 'support', builder: (_, __) => AdminSupportInboxPage()),
       ],
     ),
     GoRoute(
@@ -225,29 +216,22 @@ final GoRouter appRouter = GoRouter(
             create: (_) => getIt<OwnerPostsBloc>(),
             child: const owner.OwnerDashboardPage())),
     GoRoute(
-        path: '/notifications',
-        builder: (_, __) => const NotificationCenterPage()),
-    GoRoute(path: '/profile/edit', builder: (_, __) => const ProfileEditPage()),
+        path: '/notifications', builder: (_, __) => NotificationCenterPage()),
+    GoRoute(path: '/profile/edit', builder: (_, __) => ProfileEditPage()),
+    GoRoute(path: '/about', builder: (_, __) => StaticPage(pageType: 'about')),
     GoRoute(
-        path: '/about',
-        builder: (_, __) => const StaticPage(pageType: 'about')),
-    GoRoute(
-        path: '/privacy',
-        builder: (_, __) => const StaticPage(pageType: 'privacy')),
-    GoRoute(
-        path: '/terms',
-        builder: (_, __) => const StaticPage(pageType: 'terms')),
+        path: '/privacy', builder: (_, __) => StaticPage(pageType: 'privacy')),
+    GoRoute(path: '/terms', builder: (_, __) => StaticPage(pageType: 'terms')),
     GoRoute(
         path: '/content-policy',
-        builder: (_, __) => const StaticPage(pageType: 'content')),
+        builder: (_, __) => StaticPage(pageType: 'content')),
     GoRoute(
         path: '/verification-policy',
-        builder: (_, __) => const StaticPage(pageType: 'verification')),
+        builder: (_, __) => StaticPage(pageType: 'verification')),
     GoRoute(
         path: '/support',
         builder: (_, __) => BlocProvider(
-            create: (_) => getIt<SupportCubit>(),
-            child: const SupportChatPage())),
+            create: (_) => getIt<SupportCubit>(), child: SupportChatPage())),
   ],
   errorBuilder: (context, state) =>
       _NotFoundPage(message: state.error?.toString()),
@@ -292,10 +276,14 @@ String? _guardRoute(BuildContext context, GoRouterState routerState) {
     return state.isAdmin ? null : '/';
   }
   if (path.startsWith('/organizer/') && path != '/organizer/apply') {
-    return state.isAuthenticated ? null : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+    return state.isAuthenticated
+        ? null
+        : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
   }
   if (path == '/organizer') {
-    return state.isAuthenticated ? null : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+    return state.isAuthenticated
+        ? null
+        : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
   }
   return null;
 }
@@ -309,7 +297,7 @@ class _AuthLoadingPage extends StatelessWidget {
   const _AuthLoadingPage();
   @override
   Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
+      Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
 class _NotFoundPage extends StatelessWidget {
@@ -320,7 +308,7 @@ class _NotFoundPage extends StatelessWidget {
         body: Center(
             child: FilledButton.icon(
                 onPressed: () => context.go('/'),
-                icon: const Icon(Icons.explore_outlined),
-                label: const Text('Discover events'))),
+                icon: Icon(Icons.explore_outlined),
+                label: Text(context.l10n.discoverEvents))),
       );
 }

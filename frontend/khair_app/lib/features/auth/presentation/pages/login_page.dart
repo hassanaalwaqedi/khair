@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
         },
         builder: (context, state) => AuthResponsiveShell(
           topBar: _LoginTopBar(onBack: () => context.go('/')),
-          visualPanel: const AuthVisualPanel(),
+          visualPanel: AuthVisualPanel(),
           form: _LoginForm(
             formKey: _formKey,
             emailController: _emailController,
@@ -126,14 +126,14 @@ class _LoginTopBar extends StatelessWidget {
           children: [
             Semantics(
               button: true,
-              label: 'Back to event discovery',
+              label: context.l10n.backToEventDiscovery,
               child: IconButton(
-                tooltip: 'Back',
+                tooltip: context.l10n.createEventBack,
                 onPressed: onBack,
-                icon: const BackButtonIcon(),
+                icon: BackButtonIcon(),
               ),
             ),
-            const Spacer(),
+            Spacer(),
             LanguageSwitcher(showLabel: constraints.maxWidth >= 480),
           ],
         ),
@@ -173,7 +173,7 @@ class _LoginForm extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 320),
+      duration: Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
       tween: Tween(begin: 0, end: 1),
       builder: (context, value, child) => Opacity(
@@ -186,8 +186,8 @@ class _LoginForm extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (metrics.isMobile) const _MobileBrand(),
-              if (metrics.isMobile) const SizedBox(height: 28),
+              if (metrics.isMobile) _MobileBrand(),
+              if (metrics.isMobile) SizedBox(height: 28),
               Text(
                 context.l10n.welcomeBack,
                 textAlign:
@@ -199,7 +199,7 @@ class _LoginForm extends StatelessWidget {
                       height: 1.08,
                     ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 context.l10n.signInToContinue,
                 textAlign:
@@ -212,7 +212,7 @@ class _LoginForm extends StatelessWidget {
                     ),
               ),
               if (cameFromCreate) ...[
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 const _AuthContextNotice(),
               ],
               SizedBox(height: metrics.sectionGap),
@@ -241,7 +241,7 @@ class _LoginForm extends StatelessWidget {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     KhairAuthField(
                       controller: passwordController,
                       label: context.l10n.password,
@@ -269,10 +269,10 @@ class _LoginForm extends StatelessWidget {
                 alignment: AlignmentDirectional.centerEnd,
                 child: TextButton(
                   onPressed: onForgotPassword,
-                  child: const Text('Forgot password?'),
+                  child: Text(context.l10n.forgotPassword),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               SizedBox(
                 height: 54,
                 child: FilledButton(
@@ -284,9 +284,9 @@ class _LoginForm extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
+                    duration: Duration(milliseconds: 180),
                     child: loading
-                        ? const Row(
+                        ? Row(
                             key: ValueKey('loading'),
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -296,33 +296,33 @@ class _LoginForm extends StatelessWidget {
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: Colors.white)),
                               SizedBox(width: 10),
-                              Text('Signing in…'),
+                              Text(context.l10n.signingIn),
                             ],
                           )
                         : Text(context.l10n.signIn,
-                            key: const ValueKey('sign-in')),
+                            key: ValueKey('sign-in')),
                   ),
                 ),
               ),
-              const SizedBox(height: 26),
+              SizedBox(height: 26),
               Row(children: [
                 Expanded(child: Divider(color: colorScheme.outlineVariant)),
-                const Padding(
+                Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or continue with')),
+                    child: Text(context.l10n.orContinueWith)),
                 Expanded(child: Divider(color: colorScheme.outlineVariant)),
               ]),
-              const SizedBox(height: 22),
+              SizedBox(height: 22),
               SocialLoginButton(
-                  label: 'Continue with Google', onPressed: onGoogle),
-              const SizedBox(height: 26),
+                  label: context.l10n.continueWithGoogle, onPressed: onGoogle),
+              SizedBox(height: 26),
               Wrap(
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(context.l10n.noAccount),
                   TextButton(
-                      onPressed: onRegister, child: const Text('Create one')),
+                      onPressed: onRegister, child: Text(context.l10n.createOne)),
                 ],
               ),
             ],
@@ -337,9 +337,9 @@ class _MobileBrand extends StatelessWidget {
   const _MobileBrand();
   @override
   Widget build(BuildContext context) => Column(children: [
-        const KhairBrandMark(size: 72, decorative: true),
-        const SizedBox(height: 12),
-        Text('Khair',
+        KhairBrandMark(size: 72, decorative: true),
+        SizedBox(height: 12),
+        Text(context.l10n.appTitle,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -353,15 +353,15 @@ class _AuthContextNotice extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF1F5),
+          color: Color(0xFFFFF1F5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primary.withValues(alpha: .2)),
         ),
-        child: const Row(children: [
+        child: Row(children: [
           Icon(Icons.event_available_outlined,
               color: AppColors.primary, size: 19),
           SizedBox(width: 9),
-          Expanded(child: Text('Sign in to continue creating your event.')),
+          Expanded(child: Text(context.l10n.signInToContinueCreatingYourEv)),
         ]),
       );
 }

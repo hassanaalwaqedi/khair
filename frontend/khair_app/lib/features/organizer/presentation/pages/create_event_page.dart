@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,7 @@ class CreateEventPage extends StatelessWidget {
       create: (_) => getIt<CreateEventCubit>()
         ..loadCategories()
         ..loadLocalDraft(),
-      child: const _CreateEventView(),
+      child: _CreateEventView(),
     );
   }
 }
@@ -226,13 +227,13 @@ class _CreateEventViewState extends State<_CreateEventView> {
             () => context.go('/organizer'),
             dark,
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Create an event',
+                Text(context.l10n.createAnEvent,
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -248,8 +249,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
             onPressed: state.status == CreateEventStatus.saving
                 ? null
                 : () => context.read<CreateEventCubit>().saveDraft(),
-            icon: const Icon(Icons.bookmark_border_rounded, size: 18),
-            label: const Text('Save draft'),
+            icon: Icon(Icons.bookmark_border_rounded, size: 18),
+            label: Text(context.l10n.saveDraft),
             style: TextButton.styleFrom(foregroundColor: _CreateColors.rose),
           ),
         ],
@@ -265,16 +266,18 @@ class _CreateEventViewState extends State<_CreateEventView> {
           if (constraints.maxWidth < 640) {
             return Row(
               children: [
-                Text('Step ${state.currentStep + 1} of 5',
+                Text(context.l10n.createEventStep(state.currentStep + 1),
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: dark ? Colors.white : _CreateColors.text)),
-                Text(' · ${_stepLabels[state.currentStep]}',
+                Text(context.l10n.createEventStepLabel(
+                        _stepLabels[state.currentStep]),
                     style: TextStyle(
                         color: dark ? Colors.white60 : _CreateColors.muted)),
-                const Spacer(),
-                Text('${((state.currentStep + 1) / 5 * 100).round()}%',
-                    style: const TextStyle(
+                Spacer(),
+                Text(context.l10n.progressPercent(
+                        ((state.currentStep + 1) / 5 * 100).round()),
+                    style: TextStyle(
                         color: _CreateColors.rose,
                         fontWeight: FontWeight.w700)),
               ],
@@ -349,7 +352,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                               ? _CreateColors.darkBorder
                                               : _CreateColors.border)))),
                         ]),
-                        const SizedBox(height: 5),
+                        SizedBox(height: 5),
                         Text(
                             '${(index + 1).toString().padLeft(2, '0')}  ${entry.value}',
                             textAlign: TextAlign.center,
@@ -393,8 +396,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                           Expanded(child: _stepContent(context, state, dark)),
-                          const SizedBox(width: 28),
-                          const SizedBox(width: 330, child: _LivePreview())
+                          SizedBox(width: 28),
+                          SizedBox(width: 330, child: _LivePreview())
                         ])
                   : _stepContent(context, state, dark),
             ),
@@ -407,7 +410,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
 
   Widget _stepContent(BuildContext context, CreateEventState state, bool dark) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
+      duration: Duration(milliseconds: 180),
       child: KeyedSubtree(
           key: ValueKey(state.currentStep),
           child: switch (state.currentStep) {
@@ -426,20 +429,20 @@ class _CreateEventViewState extends State<_CreateEventView> {
         .where((value) => value.contains(_categoryQuery.toLowerCase()))
         .toList();
     return _stepFrame(
-      title: 'Let’s start with the basics',
-      subtitle: 'Tell people what your event is about.',
+      title: context.l10n.letsStartWithTheBasics,
+      subtitle: context.l10n.tellPeopleWhatYourEventIsAbout,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _field(
-            label: 'Event title',
+            label: context.l10n.eventTitle1,
             hint: 'Give your event a clear, memorable title',
             controller: _title,
             maxLength: 120,
             onChanged: cubit.updateTitle,
             dark: dark),
         _counter(_title.text.length, 120, dark),
-        const SizedBox(height: 22),
+        SizedBox(height: 22),
         _sectionLabel('Category', dark),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _field(
             label: '',
             hint: 'Search categories',
@@ -447,9 +450,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
             prefix: Icons.search_rounded,
             onChanged: (value) => setState(() => _categoryQuery = value),
             dark: dark),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         if (state.categoriesLoading)
-          const LinearProgressIndicator(
+          LinearProgressIndicator(
               color: _CreateColors.rose, minHeight: 2),
         if (!state.categoriesLoading && filtered.isEmpty)
           _hintBox(
@@ -484,13 +487,13 @@ class _CreateEventViewState extends State<_CreateEventView> {
                 onPressed: state.status == CreateEventStatus.aiGenerating
                     ? null
                     : cubit.suggestCategory,
-                icon: const Icon(Icons.auto_awesome_rounded, size: 17),
-                label: const Text('Suggest category with AI'),
+                icon: Icon(Icons.auto_awesome_rounded, size: 17),
+                label: Text(context.l10n.suggestCategoryWithAi),
                 style:
                     TextButton.styleFrom(foregroundColor: _CreateColors.rose))),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         _sectionLabel('Description', dark),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _field(
             label: '',
             hint:
@@ -502,9 +505,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
             dark: dark),
         _counter(_description.text.length, 2000, dark, minimum: 50),
         _aiSuggestionEditor(context, state, dark),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _sectionLabel('Tags', dark),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _field(
             label: '',
             hint: 'Add tags such as networking, family, charity…',
@@ -515,7 +518,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
               _tags.clear();
             },
             dark: dark),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -525,8 +528,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     onDeleted: () => cubit.removeTag(tag),
                     selected: true,
                     selectedColor: _CreateColors.softRose,
-                    side: const BorderSide(color: _CreateColors.rose),
-                    labelStyle: const TextStyle(color: _CreateColors.rose)))
+                    side: BorderSide(color: _CreateColors.rose),
+                    labelStyle: TextStyle(color: _CreateColors.rose)))
                 .toList()),
         if (state.aiTagSuggestions.isNotEmpty)
           Wrap(
@@ -535,11 +538,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   .map((tag) => ActionChip(
                       label: Text('+$tag'),
                       onPressed: () => cubit.useSuggestedTag(tag),
-                      side: const BorderSide(color: _CreateColors.border)))
+                      side: BorderSide(color: _CreateColors.border)))
                   .toList()),
-        const SizedBox(height: 22),
+        SizedBox(height: 22),
         _sectionLabel('Event format', dark),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         Row(children: [
           Expanded(
               child: _selectCard(
@@ -549,7 +552,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   state.formData.eventType == 'offline',
                   () => cubit.updateEventType('offline'),
                   dark)),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
               child: _selectCard(
                   Icons.laptop_mac_outlined,
@@ -559,9 +562,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   () => cubit.updateEventType('online'),
                   dark))
         ]),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         _sectionLabel('Event language', dark),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Wrap(spacing: 8, children: [
           _choiceChip('English', state.formData.language == 'en',
               () => cubit.updateLanguage('en'), dark),
@@ -579,11 +582,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
     final cubit = context.read<CreateEventCubit>();
     final data = state.formData;
     return _stepFrame(
-      title: 'When and where is it happening?',
-      subtitle: 'Give attendees the details they need to plan ahead.',
+      title: context.l10n.whenAndWhereIsItHappening,
+      subtitle: context.l10n.giveAttendeesTheDetailsTheyNee,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionLabel('Date and time', dark),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         Row(children: [
           Expanded(
               child: _dateButton(
@@ -593,7 +596,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   (value) =>
                       cubit.updateFormData(data.copyWith(startDate: value)),
                   dark)),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
               child: _timeButton(
                   context,
@@ -603,7 +606,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                       cubit.updateFormData(data.copyWith(startTime: value)),
                   dark))
         ]),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         Row(children: [
           Expanded(
               child: _dateButton(
@@ -613,7 +616,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   (value) =>
                       cubit.updateFormData(data.copyWith(endDate: value)),
                   dark)),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
               child: _timeButton(
                   context,
@@ -623,19 +626,19 @@ class _CreateEventViewState extends State<_CreateEventView> {
                       cubit.updateFormData(data.copyWith(endTime: value)),
                   dark))
         ]),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         _field(
-            label: 'Timezone',
+            label: context.l10n.timezone,
             hint: 'UTC',
             controller: TextEditingController(text: data.timezone),
             prefix: Icons.schedule_rounded,
             onChanged: (value) =>
                 cubit.updateFormData(data.copyWith(timezone: value)),
             dark: dark),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         if (data.eventType == 'offline') ...[
           _sectionLabel('Location', dark),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           if (_countries.isEmpty && !_loadingCountries)
             _hintBox(
                 'Country data could not be loaded. Check your connection and try again.',
@@ -650,21 +653,21 @@ class _CreateEventViewState extends State<_CreateEventView> {
                 cubit.updateFormData(data.copyWith(
                     countryCode: country.isoCode, countryName: country.name));
               }),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(children: [
             Expanded(
                 child: _field(
-                    label: 'City',
+                    label: context.l10n.city,
                     hint: 'Search or enter a city',
                     controller: _city,
                     prefix: Icons.location_city_outlined,
                     onChanged: (value) =>
                         cubit.updateFormData(data.copyWith(city: value)),
                     dark: dark)),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
                 child: _field(
-                    label: 'Venue name',
+                    label: context.l10n.venueName,
                     hint: 'Optional venue name',
                     controller: _venue,
                     prefix: Icons.business_outlined,
@@ -672,9 +675,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                         cubit.updateFormData(data.copyWith(venueName: value)),
                     dark: dark))
           ]),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _field(
-              label: 'Street address',
+              label: context.l10n.streetAddress,
               hint: 'Street, building, district',
               controller: _address,
               maxLines: 2,
@@ -682,12 +685,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
               onChanged: (value) =>
                   cubit.updateFormData(data.copyWith(address: value)),
               dark: dark),
-          const SizedBox(height: 16),
-          Text('Pinpoint the location',
+          SizedBox(height: 16),
+          Text(context.l10n.pinpointTheLocation,
               style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: dark ? Colors.white : _CreateColors.text)),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           ClipRRect(
               borderRadius: BorderRadius.circular(18),
               child: MapLocationPicker(
@@ -720,7 +723,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   })),
         ] else ...[
           _sectionLabel('Online event details', dark),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -732,9 +735,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                           .updateFormData(data.copyWith(onlinePlatform: value)),
                       dark))
                   .toList()),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           _field(
-              label: 'Meeting URL',
+              label: context.l10n.meetingUrl,
               hint: 'https://…',
               controller: _onlineLink,
               prefix: Icons.link_rounded,
@@ -742,9 +745,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
               onChanged: (value) =>
                   cubit.updateFormData(data.copyWith(onlineLink: value)),
               dark: dark),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _field(
-              label: 'Instructions (optional)',
+              label: context.l10n.instructionsOptional,
               hint: 'Anything attendees should know before joining',
               controller: _onlineInstructions,
               maxLines: 4,
@@ -752,7 +755,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
               onChanged: (value) => cubit
                   .updateFormData(data.copyWith(onlineInstructions: value)),
               dark: dark),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _hintBox(
               'The meeting link is protected and is only shared with eligible attendees according to Khair’s access policy.',
               Icons.lock_outline_rounded,
@@ -766,11 +769,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
     final cubit = context.read<CreateEventCubit>();
     final data = state.formData;
     return _stepFrame(
-        title: 'Who is this event for?',
-        subtitle: 'Set attendance and access preferences.',
+        title: context.l10n.whoIsThisEventFor,
+        subtitle: context.l10n.setAttendanceAndAccessPreferen,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _sectionLabel('Audience', dark),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(children: [
             Expanded(
                 child: _selectCard(
@@ -780,7 +783,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     data.genderPolicy == 'mixed',
                     () => cubit.updateGenderPolicy('mixed'),
                     dark)),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
                 child: _selectCard(
                     Icons.man_outlined,
@@ -789,7 +792,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     data.genderPolicy == 'male_only',
                     () => cubit.updateGenderPolicy('male_only'),
                     dark)),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
                 child: _selectCard(
                     Icons.woman_outlined,
@@ -799,9 +802,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     () => cubit.updateGenderPolicy('female_only'),
                     dark))
           ]),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _sectionLabel('Age preference', dark),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             _choiceChip('All ages', data.agePolicy == 'all_ages',
                 () => cubit.updateAgePolicy('all_ages'), dark),
@@ -812,12 +815,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
             _choiceChip('Custom', data.agePolicy == 'custom',
                 () => cubit.updateAgePolicy('custom'), dark),
           ]),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _sectionLabel('Maximum attendees', dark),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(children: [
             ChoiceChip(
-                label: const Text('Unlimited'),
+                label: Text(context.l10n.unlimited),
                 selected: data.unlimitedCapacity,
                 onSelected: (_) => cubit.updateCapacity(unlimited: true),
                 selectedColor: _CreateColors.softRose,
@@ -825,9 +828,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     color: data.unlimitedCapacity
                         ? _CreateColors.rose
                         : _CreateColors.border)),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             ChoiceChip(
-                label: const Text('Limited'),
+                label: Text(context.l10n.limited),
                 selected: !data.unlimitedCapacity,
                 onSelected: (_) => cubit.updateCapacity(
                     unlimited: false, value: int.tryParse(_capacity.text)),
@@ -838,7 +841,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                         : _CreateColors.border))
           ]),
           if (!data.unlimitedCapacity) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             _field(
                 label: '',
                 hint: '100',
@@ -849,9 +852,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     unlimited: false, value: int.tryParse(value)),
                 dark: dark)
           ],
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _sectionLabel('Registration', dark),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(children: [
             Expanded(
                 child: _choiceChip(
@@ -859,7 +862,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     data.registrationMode == 'instant',
                     () => cubit.updateRegistrationMode('instant'),
                     dark)),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Expanded(
                 child: _choiceChip(
                     'Approval required',
@@ -867,7 +870,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     () => cubit.updateRegistrationMode('approval_required'),
                     dark))
           ]),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           _dateButton(
               context,
               'Registration deadline (optional)',
@@ -875,9 +878,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
               (value) => cubit
                   .updateFormData(data.copyWith(registrationDeadline: value)),
               dark),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _sectionLabel('Pricing', dark),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(children: [
             Expanded(
                 child: _choiceChip(
@@ -885,7 +888,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     data.pricingType == 'free',
                     () => cubit.updatePricingType('free'),
                     dark)),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Expanded(
                 child: _choiceChip(
                     'Paid',
@@ -893,7 +896,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     () {
                       if (data.eventType == 'online') {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Paid online events are not supported yet.')),
+                          SnackBar(content: Text(context.l10n.paidOnlineEventsAreNotSupporte)),
                         );
                       } else {
                         cubit.updatePricingType('paid');
@@ -902,12 +905,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     dark))
           ]),
           if (data.pricingType == 'paid') ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(children: [
               Expanded(
                 flex: 2,
                 child: _field(
-                  label: 'Price',
+                  label: context.l10n.price,
                   hint: 'e.g. 50',
                   controller: _priceAmount,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -916,11 +919,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   dark: dark,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 flex: 1,
                 child: _field(
-                  label: 'Currency',
+                  label: context.l10n.currency,
                   hint: 'USD',
                   controller: _currency,
                   onChanged: (val) => cubit.updateCurrency(val),
@@ -928,15 +931,15 @@ class _CreateEventViewState extends State<_CreateEventView> {
                 ),
               ),
             ]),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _hintBox(
                 'Payment will be collected at the venue. Khair does not process payments.',
                 Icons.payments_outlined,
                 dark),
           ],
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           _field(
-              label: 'Anything attendees should know? (optional)',
+              label: context.l10n.anythingAttendeesShouldKnowOpt,
               hint: 'Bring ID, arrive 15 minutes early…',
               controller: _guidelines,
               maxLines: 4,
@@ -953,7 +956,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
     final previewBytes = state.formData.coverImagePreviewBytes;
     final uploading = state.status == CreateEventStatus.imageUploading;
     return _stepFrame(
-        title: 'Make your event stand out',
+        title: context.l10n.makeYourEventStandOut,
         subtitle:
             'Add a strong cover image so people instantly understand your event.',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -969,7 +972,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   },
             borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: Duration(milliseconds: 180),
                 height: 260,
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -983,11 +986,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                 : _CreateColors.border),
                         width: url != null ? 2 : 1)),
                 child: uploading
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(
                             color: _CreateColors.rose))
                     : url == null
-                        ? const _UploadEmpty()
+                        ? _UploadEmpty()
                         : ClipRRect(
                             borderRadius: BorderRadius.circular(19),
                             child: Stack(fit: StackFit.expand, children: [
@@ -1006,7 +1009,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                     errorBuilder: (_, __, ___) =>
                                         const _UploadEmpty()),
                               Container(
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
@@ -1014,28 +1017,28 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                     Colors.transparent,
                                     Color(0x66000000)
                                   ]))),
-                              const Positioned(
+                              Positioned(
                                   bottom: 16,
                                   left: 18,
-                                  child: Text('Replace cover image',
+                                  child: Text(context.l10n.replaceCoverImage,
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w700)))
                             ]))),
           ),
-          const SizedBox(height: 10),
-          Text('JPG, PNG or WebP · up to 10 MB · 16:9 recommended',
+          SizedBox(height: 10),
+          Text(context.l10n.jpgPngOrWebpUpTo10Mb169Recomme,
               style: TextStyle(
                   fontSize: 13,
                   color: dark ? Colors.white54 : _CreateColors.muted)),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           _hintBox(
               'A real image upload is required. The file is sent to Khair storage and the permanent URL is saved with your draft.',
               Icons.cloud_upload_outlined,
               dark),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           _sectionLabel('Preview', dark),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           const _LivePreview(compact: true),
         ]));
   }
@@ -1057,22 +1060,22 @@ class _CreateEventViewState extends State<_CreateEventView> {
       MapEntry('Capacity', data.unlimitedCapacity || (data.capacity ?? 0) > 0),
     ];
     return _stepFrame(
-        title: 'Review your event',
+        title: context.l10n.reviewYourEvent,
         subtitle:
             'Make sure everything looks right before sending it to Khair moderation.',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const _LivePreview(),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           _panel(dark,
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ready to submit',
+                    Text(context.l10n.readyToSubmit,
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             color: dark ? Colors.white : _CreateColors.text)),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     ...checks.map((item) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Row(children: [
@@ -1084,38 +1087,38 @@ class _CreateEventViewState extends State<_CreateEventView> {
                               color: item.value
                                   ? _CreateColors.rose
                                   : Colors.orange),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Text(item.key,
                               style: TextStyle(
                                   color: dark
                                       ? Colors.white70
                                       : _CreateColors.text,
                                   fontWeight: FontWeight.w600)),
-                          if (!item.value) const Spacer(),
+                          if (!item.value) Spacer(),
                           if (!item.value)
-                            Text('Add',
+                            Text(context.l10n.add,
                                 style: TextStyle(
                                     color: _CreateColors.rose,
                                     fontWeight: FontWeight.w700))
                         ])))
                   ])),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           _panel(dark,
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Submission',
+                    Text(context.l10n.submission,
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: dark ? Colors.white : _CreateColors.text)),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                         'Your event will be saved as pending review. It becomes discoverable only after admin approval.',
                         style: TextStyle(
                             color: dark ? Colors.white60 : _CreateColors.muted,
                             height: 1.45)),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         value: data.finalConfirmed,
@@ -1148,13 +1151,13 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.8,
                   color: dark ? Colors.white : _CreateColors.text)),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(subtitle,
               style: TextStyle(
                   fontSize: 15,
                   height: 1.45,
                   color: dark ? Colors.white60 : _CreateColors.muted)),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _panel(dark, child: child),
         ]);
   }
@@ -1217,7 +1220,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     color: dark ? Colors.white54 : _CreateColors.muted),
             counterText: '',
             filled: true,
-            fillColor: dark ? const Color(0x22101014) : const Color(0xFFFCFAFB),
+            fillColor: dark ? Color(0x22101014) : Color(0xFFFCFAFB),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
@@ -1235,7 +1238,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide:
-                    const BorderSide(color: _CreateColors.rose, width: 1.5))));
+                    BorderSide(color: _CreateColors.rose, width: 1.5))));
   }
 
   Widget _counter(int value, int max, bool dark, {int minimum = 0}) => Padding(
@@ -1273,12 +1276,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected
-              ? (dark ? const Color(0x22F43F75) : _CreateColors.softRose)
-              : (dark ? const Color(0x22101014) : _CreateColors.background),
+              ? (dark ? Color(0x22F43F75) : _CreateColors.softRose)
+              : (dark ? Color(0x22101014) : _CreateColors.background),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
@@ -1295,17 +1298,17 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   color: selected
                       ? _CreateColors.rose
                       : (dark ? Colors.white54 : _CreateColors.muted)),
-              const Spacer(),
+              Spacer(),
               if (selected)
-                const Icon(Icons.check_circle_rounded,
+                Icon(Icons.check_circle_rounded,
                     color: _CreateColors.rose, size: 19),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(title,
                 style: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: dark ? Colors.white : _CreateColors.text)),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(subtitle,
                 style: TextStyle(
                     fontSize: 12,
@@ -1323,9 +1326,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
             final picked = await showDatePicker(
                 context: context,
                 initialDate:
-                    value ?? DateTime.now().add(const Duration(days: 7)),
+                    value ?? DateTime.now().add(Duration(days: 7)),
                 firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 730)));
+                lastDate: DateTime.now().add(Duration(days: 730)));
             if (picked != null) onChanged(picked);
           },
           borderRadius: BorderRadius.circular(14),
@@ -1343,7 +1346,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
           onTap: () async {
             final picked = await showTimePicker(
                 context: context,
-                initialTime: value ?? const TimeOfDay(hour: 9, minute: 0));
+                initialTime: value ?? TimeOfDay(hour: 9, minute: 0));
             if (picked != null) onChanged(picked);
           },
           borderRadius: BorderRadius.circular(14),
@@ -1354,7 +1357,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
       Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           decoration: BoxDecoration(
-              color: dark ? const Color(0x22101014) : _CreateColors.background,
+              color: dark ? Color(0x22101014) : _CreateColors.background,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                   color:
@@ -1362,7 +1365,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
           child: Row(children: [
             Icon(icon,
                 size: 19, color: dark ? Colors.white54 : _CreateColors.muted),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1371,7 +1374,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                       style: TextStyle(
                           fontSize: 11,
                           color: dark ? Colors.white38 : _CreateColors.muted)),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(value,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1385,13 +1388,13 @@ class _CreateEventViewState extends State<_CreateEventView> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: dark ? const Color(0x22101014) : const Color(0xFFF8F4F6),
+          color: dark ? Color(0x22101014) : Color(0xFFF8F4F6),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
               color: dark ? _CreateColors.darkBorder : _CreateColors.border)),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 18, color: _CreateColors.rose),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
             child: Text(text,
                 style: TextStyle(
@@ -1411,22 +1414,22 @@ class _CreateEventViewState extends State<_CreateEventView> {
           margin: const EdgeInsets.only(top: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: dark ? const Color(0x22F43F75) : _CreateColors.softRose,
+              color: dark ? Color(0x22F43F75) : _CreateColors.softRose,
               borderRadius: BorderRadius.circular(14),
               border:
                   Border.all(color: _CreateColors.rose.withValues(alpha: .35))),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Icon(icon, color: _CreateColors.rose, size: 18),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: _CreateColors.rose,
                           fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(detail,
                       style: TextStyle(
                           fontSize: 12,
@@ -1435,7 +1438,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
             TextButton(
                 onPressed: onAction,
                 child: Text(action,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: _CreateColors.rose,
                         fontWeight: FontWeight.w800)))
           ]));
@@ -1452,7 +1455,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
               onPressed: state.status == CreateEventStatus.aiGenerating
                   ? null
                   : cubit.suggestDescription,
-              icon: const Icon(Icons.auto_awesome_rounded, size: 17),
+              icon: Icon(Icons.auto_awesome_rounded, size: 17),
               label: Text(state.status == CreateEventStatus.aiGenerating
                   ? 'Khair AI is thinking…'
                   : isDescriptionEmpty
@@ -1463,7 +1466,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
     }
     return _aiSuggestion(
         icon: Icons.auto_awesome_rounded,
-        title: 'AI suggestion',
+        title: context.l10n.aiSuggestion,
         detail: state.aiDescriptionSuggestion!,
         action: 'Use suggestion',
         onAction: () {
@@ -1499,14 +1502,14 @@ class _CreateEventViewState extends State<_CreateEventView> {
       child: Center(
         heightFactor: 1.0,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
+          constraints: BoxConstraints(maxWidth: 1180),
           child: Row(
             children: [
               if (!state.isFirstStep)
                 OutlinedButton.icon(
                   onPressed: busy ? null : cubit.previousStep,
-                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                  label: const Text('Back'),
+                  icon: Icon(Icons.arrow_back_rounded, size: 18),
+                  label: Text(context.l10n.createEventBack),
                   style: OutlinedButton.styleFrom(
                       foregroundColor:
                           dark ? Colors.white70 : _CreateColors.text,
@@ -1515,18 +1518,20 @@ class _CreateEventViewState extends State<_CreateEventView> {
                               ? _CreateColors.darkBorder
                               : _CreateColors.border)),
                 ),
-              const Spacer(),
+              Spacer(),
               if (state.isLastStep)
                 FilledButton.icon(
                   onPressed: busy ? null : cubit.submitEvent,
                   icon: busy
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 17,
                           height: 17,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.send_rounded, size: 17),
-                  label: Text(busy ? 'Posting…' : 'Post event'),
+                      : Icon(Icons.send_rounded, size: 17),
+                  label: Text(busy
+                      ? context.l10n.postingEvent
+                      : context.l10n.postEvent),
                   style: FilledButton.styleFrom(
                       backgroundColor: _CreateColors.rose,
                       foregroundColor: Colors.white,
@@ -1544,8 +1549,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                 error: true));
                           }
                         },
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                  label: const Text('Continue'),
+                  icon: Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: Text(context.l10n.createEventContinue),
                   style: FilledButton.styleFrom(
                       backgroundColor: _CreateColors.rose,
                       foregroundColor: Colors.white,
@@ -1572,7 +1577,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
 
   SnackBar _snack(String message, {required bool error}) => SnackBar(
       content: Text(message),
-      backgroundColor: error ? const Color(0xFFB4234B) : _CreateColors.rose,
+      backgroundColor: error ? Color(0xFFB4234B) : _CreateColors.rose,
       behavior: SnackBarBehavior.fixed);
 
   Future<void> _showSubmittedDialog() async {
@@ -1580,15 +1585,15 @@ class _CreateEventViewState extends State<_CreateEventView> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-                title: const Text('Your event is under review'),
-                content: const Text(
+                title: Text(context.l10n.yourEventIsUnderReview),
+                content: Text(
                     'Your event has been submitted for review. We will notify you when moderation is complete.'),
                 actions: [
                   TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      child: const Text('Back to Organizer Hub'))
+                      child: Text(context.l10n.backToOrganizerHub))
                 ]));
 
     if (mounted) {
@@ -1600,16 +1605,16 @@ class _CreateEventViewState extends State<_CreateEventView> {
 class _UploadEmpty extends StatelessWidget {
   const _UploadEmpty();
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.add_photo_alternate_outlined,
             size: 42, color: _CreateColors.rose),
         SizedBox(height: 12),
-        Text('Choose a cover image',
+        Text(context.l10n.chooseACoverImage,
             style: TextStyle(
                 fontWeight: FontWeight.w800, color: _CreateColors.text)),
         SizedBox(height: 5),
-        Text('Drag and drop or tap to browse',
+        Text(context.l10n.dragAndDropOrTapToBrowse,
             style: TextStyle(color: _CreateColors.muted))
       ]));
 }
@@ -1647,10 +1652,10 @@ class _LivePreview extends StatelessWidget {
                 Padding(
                     padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
                     child: Row(children: [
-                      const Icon(Icons.visibility_outlined,
+                      Icon(Icons.visibility_outlined,
                           color: _CreateColors.rose, size: 18),
-                      const SizedBox(width: 8),
-                      Text('Live preview',
+                      SizedBox(width: 8),
+                      Text(context.l10n.livePreview,
                           style: TextStyle(
                               fontWeight: FontWeight.w800,
                               color: dark ? Colors.white : _CreateColors.text))
@@ -1666,7 +1671,7 @@ class _LivePreview extends StatelessWidget {
                           cacheHeight: 405,
                         )
                       : image == null
-                          ? const ColoredBox(
+                          ? ColoredBox(
                               color: _CreateColors.softRose,
                               child: Center(
                                   child: Icon(Icons.event_outlined,
@@ -1675,7 +1680,7 @@ class _LivePreview extends StatelessWidget {
                               fit: BoxFit.cover,
                               cacheWidth: 720,
                               cacheHeight: 405,
-                              errorBuilder: (_, __, ___) => const ColoredBox(
+                              errorBuilder: (_, __, ___) => ColoredBox(
                                   color: _CreateColors.softRose,
                                   child: Center(
                                       child: Icon(Icons.event_outlined,
@@ -1689,11 +1694,11 @@ class _LivePreview extends StatelessWidget {
                       children: [
                         if (data.category.isNotEmpty)
                           Text(_titleCase(data.category),
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: _CreateColors.rose,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 7),
+                        SizedBox(height: 7),
                         Text(
                             data.title.isEmpty
                                 ? 'Your event title'
@@ -1706,13 +1711,13 @@ class _LivePreview extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                                 color:
                                     dark ? Colors.white : _CreateColors.text)),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         _previewLine(
                             Icons.calendar_today_outlined,
                             DateFormat('EEE, MMM d · h:mm a')
                                 .format(data.startDateTime),
                             dark),
-                        const SizedBox(height: 7),
+                        SizedBox(height: 7),
                         _previewLine(
                             data.eventType == 'online'
                                 ? Icons.videocam_outlined
@@ -1724,7 +1729,7 @@ class _LivePreview extends StatelessWidget {
                                     : 'Location to be added'),
                             dark),
                         if (data.genderPolicy.isNotEmpty) ...[
-                          const SizedBox(height: 7),
+                          SizedBox(height: 7),
                           _previewLine(
                               Icons.groups_outlined,
                               _titleCase(
@@ -1738,7 +1743,7 @@ class _LivePreview extends StatelessWidget {
   Widget _previewLine(IconData icon, String text, bool dark) => Row(children: [
         Icon(icon,
             size: 15, color: dark ? Colors.white54 : _CreateColors.muted),
-        const SizedBox(width: 7),
+        SizedBox(width: 7),
         Expanded(
             child: Text(text,
                 overflow: TextOverflow.ellipsis,

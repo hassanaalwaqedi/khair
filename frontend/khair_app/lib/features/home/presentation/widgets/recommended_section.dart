@@ -26,11 +26,11 @@ class RecommendedSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(children: [
             Text(context.l10n.recommendedForYou, style: TextStyle(
                 fontSize: 20, fontWeight: FontWeight.w700, color: tp, letterSpacing: -0.3)),
-            const Spacer(),
+            Spacer(),
             TextButton(
               onPressed: () {},
               child: Text(context.l10n.seeAll, style: TextStyle(
@@ -38,14 +38,14 @@ class RecommendedSection extends StatelessWidget {
             ),
           ]),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         SizedBox(
           height: 180,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: events.length.clamp(0, 8),
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => SizedBox(width: 12),
             itemBuilder: (context, i) {
               return _RecommendedCard(
                 event: events[i],
@@ -106,11 +106,11 @@ class _RecommendedCard extends StatelessWidget {
                 children: [
                   Text(event.title, maxLines: 2, overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tp, height: 1.3)),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Row(children: [
                     Icon(Icons.calendar_today_rounded, size: 11, color: ts),
-                    const SizedBox(width: 4),
-                    Expanded(child: Text('$dateStr · $timeStr',
+                    SizedBox(width: 4),
+                    Expanded(child: Text(context.l10n.eventDateTime(dateStr, timeStr),
                         style: TextStyle(fontSize: 11, color: ts), overflow: TextOverflow.ellipsis)),
                   ]),
                 ],

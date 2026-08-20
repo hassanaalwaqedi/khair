@@ -21,7 +21,7 @@ class AdminEventReviewPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Review Event'),
+        title: Text(context.l10n.reviewEvent),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -46,7 +46,8 @@ class AdminEventReviewPage extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: KhairColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -61,16 +62,17 @@ class AdminEventReviewPage extends StatelessWidget {
                         ),
                       ),
                       if (event.category != null) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             event.category!.toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -79,66 +81,75 @@ class AdminEventReviewPage extends StatelessWidget {
                       ]
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     event.title,
                     style: KhairTypography.headlineLarge.copyWith(
-                      color: isDark ? KhairColors.darkTextPrimary : KhairColors.textPrimary,
+                      color: isDark
+                          ? KhairColors.darkTextPrimary
+                          : KhairColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'by ${event.organizerName ?? 'Unknown Organizer'}',
                     style: KhairTypography.bodyLarge.copyWith(
                       color: KhairColors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   _buildSection(
                     icon: Icons.calendar_today,
-                    title: 'Date & Time',
+                    title: context.l10n.eventDetailsDateTime,
                     content: dateFormat.format(event.startDate),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   _buildSection(
                     icon: event.isOnline ? Icons.laptop_mac : Icons.location_on,
-                    title: event.isOnline ? 'Online Event' : 'Location',
+                    title: event.isOnline
+                        ? context.l10n.onlineEvent
+                        : context.l10n.location,
                     content: event.isOnline
                         ? (event.onlinePlatform ?? 'Virtual Platform')
-                        : (event.fullAddress ?? [event.city, event.country].where((e) => e != null).join(', ')),
+                        : (event.fullAddress ??
+                            [event.city, event.country]
+                                .where((e) => e != null)
+                                .join(', ')),
                   ),
                   if (event.capacity != null) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _buildSection(
                       icon: Icons.people_outline,
-                      title: 'Capacity',
+                      title: context.l10n.capacity,
                       content: '${event.capacity} attendees',
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
+                  Divider(),
+                  SizedBox(height: 24),
                   Text(
                     'Description',
                     style: KhairTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
                     event.description ?? 'No description provided.',
                     style: KhairTypography.bodyMedium,
                   ),
                   if (event.tags.isNotEmpty) ...[
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: event.tags.map((tag) => Chip(
-                        label: Text(tag),
-                        backgroundColor: KhairColors.surfaceVariant,
-                      )).toList(),
+                      children: event.tags
+                          .map((tag) => Chip(
+                                label: Text(tag),
+                                backgroundColor: KhairColors.surfaceVariant,
+                              ))
+                          .toList(),
                     ),
                   ],
                 ],
@@ -153,30 +164,37 @@ class AdminEventReviewPage extends StatelessWidget {
           child: BlocBuilder<AdminBloc, AdminState>(
             builder: (context, state) {
               final isLoading = state.isActionLoading;
-              
+
               return Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: isLoading ? null : () => _showRejectDialog(context),
+                      onPressed:
+                          isLoading ? null : () => _showRejectDialog(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         foregroundColor: KhairColors.error,
-                        side: const BorderSide(color: KhairColors.error),
+                        side: BorderSide(color: KhairColors.error),
                         shape: RoundedRectangleBorder(
                           borderRadius: KhairRadius.medium,
                         ),
                       ),
-                      child: const Text('Reject', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: Text(context.l10n.adminReject,
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : () {
-                        context.read<AdminBloc>().add(ApproveEvent(event.id));
-                        context.pop();
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              context
+                                  .read<AdminBloc>()
+                                  .add(ApproveEvent(event.id));
+                              context.pop();
+                            },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: KhairColors.success,
@@ -186,7 +204,7 @@ class AdminEventReviewPage extends StatelessWidget {
                         ),
                       ),
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
@@ -194,7 +212,9 @@ class AdminEventReviewPage extends StatelessWidget {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Approve', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          : Text(context.l10n.adminApprove,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -210,24 +230,29 @@ class AdminEventReviewPage extends StatelessWidget {
     return Container(
       height: 250,
       color: KhairColors.surfaceVariant,
-      child: const Center(
+      child: Center(
         child: Icon(Icons.event, size: 64, color: KhairColors.textTertiary),
       ),
     );
   }
 
-  Widget _buildSection({required IconData icon, required String title, required String content}) {
+  Widget _buildSection(
+      {required IconData icon,
+      required String title,
+      required String content}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: KhairColors.primary, size: 24),
-        const SizedBox(width: 16),
+        SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: KhairTypography.labelMedium.copyWith(color: KhairColors.textSecondary)),
-              const SizedBox(height: 4),
+              Text(title,
+                  style: KhairTypography.labelMedium
+                      .copyWith(color: KhairColors.textSecondary)),
+              SizedBox(height: 4),
               Text(content, style: KhairTypography.bodyLarge),
             ],
           ),
@@ -249,12 +274,12 @@ class AdminEventReviewPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(context.l10n.adminRejectConfirm(event.title)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Rejection reason',
-                hintText: 'Provide a reason...',
+              decoration: InputDecoration(
+                labelText: context.l10n.adminRejectionReason,
+                hintText: context.l10n.adminProvideReason,
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,

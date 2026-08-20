@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 import '../../../../../tokens/tokens.dart';
 
 class DiscoverSearchBar extends StatelessWidget {
@@ -39,10 +40,10 @@ class DiscoverSearchBar extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
-          hintText: 'Search events, topics, or cities',
+          hintText: AppLocalizations.of(context)!.searchEventsOrCities,
           hintStyle: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w400),
           prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 8.0),
+            padding: EdgeInsetsDirectional.only(start: 8.0),
             child: Icon(Icons.search_rounded, color: AppColors.textSecondary),
           ),
           suffixIcon: IconButton(

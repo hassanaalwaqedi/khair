@@ -248,35 +248,66 @@ func (h *Handler) Review(c *gin.Context) {
 }
 
 // sendReviewNotification sends in-app + push notification based on review status
+func (h *Handler) sendLegacyReviewNotification(userID uuid.UUID, status, notes string) {
+	/* legacy implementation retained only for source compatibility; the active
+		   path is sendReviewNotification below.
+		var title, message string
+		switch status {
+		case "approved":
+			title = "✅ Account Verified"
+			message = "Your account has been verified! You can now start teaching and creating events."
+		case "rejected":
+			title = "❌ Verification Rejected"
+			message = "Your verification request was rejected."
+			if notes != "" {
+				message += " Reason: " + notes
+			}
+		case "more_info_needed":
+			title = "⚠️ Additional Info Required"
+			message = "Please update your verification documents."
+			if notes != "" {
+				message += " Note: " + notes
+			}
+		}
+
+		// In-app notification
+		if h.notifSvc != nil {
+			if err := h.notifSvc.Create(userID, title, message); err != nil {
+				log.Printf("[VERIFICATION] Failed to create notification: %v", err)
+			}
+		}
+
+		// Push notification
+		if h.pushSvc != nil {
+			h.pushSvc.SendToUser(userID, title, message, map[string]string{
+				"type":   "verification_review",
+				"status": status,
+			})
+		}
+	}
+
+	*/
+}
+
+// sendReviewNotification sends a single-language in-app notification and push
+// using the shared notification renderer.
 func (h *Handler) sendReviewNotification(userID uuid.UUID, status, notes string) {
+	data := map[string]string{"status": status, "notes": notes}
 	var title, message string
-	switch status {
-	case "approved":
-		title = "✅ Account Verified"
-		message = "Your account has been verified! You can now start teaching and creating events."
-	case "rejected":
-		title = "❌ Verification Rejected"
-		message = "Your verification request was rejected."
-		if notes != "" {
-			message += " Reason: " + notes
-		}
-	case "more_info_needed":
-		title = "⚠️ Additional Info Required"
-		message = "Please update your verification documents."
-		if notes != "" {
-			message += " Note: " + notes
-		}
-	}
 
-	// In-app notification
 	if h.notifSvc != nil {
-		if err := h.notifSvc.Create(userID, title, message); err != nil {
-			log.Printf("[VERIFICATION] Failed to create notification: %v", err)
+		localized, err := h.notifSvc.LocalizeForUser(userID, "verification_review", data)
+		if err != nil {
+			log.Printf("[VERIFICATION] Failed to localize notification: %v", err)
+		} else {
+			title, message = localized.Title, localized.Message
+			if err := h.notifSvc.CreateTyped(userID, title, message, "verification_review", data); err != nil {
+				log.Printf("[VERIFICATION] Failed to create notification: %v", err)
+			}
 		}
 	}
 
-	// Push notification
-	if h.pushSvc != nil {
+	if h.pushSvc != nil && title != "" && message != "" {
 		h.pushSvc.SendToUser(userID, title, message, map[string]string{
 			"type":   "verification_review",
 			"status": status,

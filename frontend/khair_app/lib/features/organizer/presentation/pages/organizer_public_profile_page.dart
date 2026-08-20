@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -46,17 +47,17 @@ class _OrganizerPublicProfilePageState
         backgroundColor: background,
         foregroundColor: primary,
         elevation: 0,
-        title: const Text('Organizer profile'),
+        title: Text(context.l10n.organizerProfile1),
       ),
       body: FutureBuilder<Organizer>(
         future: _organizer,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData) {
             return Center(
-              child: Text('Organizer profile not found.',
+              child: Text(context.l10n.organizerProfileNotFound,
                   style: TextStyle(color: secondary)),
             );
           }
@@ -66,11 +67,11 @@ class _OrganizerPublicProfilePageState
             padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
+                constraints: BoxConstraints(maxWidth: 680),
                 child: Column(
                   children: [
                     _avatar(organizer, logo),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(organizer.name,
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -78,21 +79,21 @@ class _OrganizerPublicProfilePageState
                             fontSize: 28,
                             fontWeight: FontWeight.w800)),
                     if (organizer.isVerified) ...[
-                      const SizedBox(height: 8),
-                      const Row(
+                      SizedBox(height: 8),
+                      Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.verified_rounded,
                               color: AppColors.primary, size: 17),
                           SizedBox(width: 5),
-                          Text('Verified organizer',
+                          Text(context.l10n.verifiedOrganizer,
                               style: TextStyle(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(22),
@@ -111,12 +112,12 @@ class _OrganizerPublicProfilePageState
                                     fontSize: 15,
                                     height: 1.65)),
                           if (_location(organizer).isNotEmpty) ...[
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             _info(Icons.location_on_outlined,
                                 _location(organizer), secondary),
                           ],
                           if (organizer.website?.trim().isNotEmpty == true) ...[
-                            const SizedBox(height: 14),
+                            SizedBox(height: 14),
                             _info(Icons.language_outlined, organizer.website!,
                                 secondary),
                           ],
@@ -151,11 +152,11 @@ class _OrganizerPublicProfilePageState
   Widget _initial(String name) => Container(
         width: 96,
         height: 96,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             color: AppColors.primary, shape: BoxShape.circle),
         alignment: Alignment.center,
         child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white,
                 fontSize: 38,
                 fontWeight: FontWeight.w800)),
@@ -165,7 +166,7 @@ class _OrganizerPublicProfilePageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: AppColors.primary, size: 19),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
               child:
                   Text(text, style: TextStyle(color: secondary, fontSize: 14))),

@@ -14,7 +14,7 @@ class SocialProofSection extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 700),
+      duration: Duration(milliseconds: 700),
       curve: Curves.easeOut,
       builder: (context, value, child) => Opacity(
         opacity: value,
@@ -37,16 +37,16 @@ class SocialProofSection extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                color: Color(0xFF22C55E).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.people_alt_rounded,
                 color: Color(0xFF22C55E),
                 size: 22,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class SocialProofSection extends StatelessWidget {
                       color: AppColors.onSurfaceColor(context, 0.9),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     context.l10n.peopleJoinedEvents(totalReserved),
                     style: TextStyle(

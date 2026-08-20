@@ -1,5 +1,6 @@
 /// Centralized emoji constants and mapping for the Khair app.
 /// All UI emojis should be referenced from here — no inline hardcoding.
+library;
 
 const String locationEmoji = '📍';
 const String dateEmoji = '📅';

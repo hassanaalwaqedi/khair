@@ -23,18 +23,18 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1F16),
+      backgroundColor: Color(0xFF0A1F16),
       appBar: AppBar(
         title: Text(context.l10n.ownerDashboard,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
-        backgroundColor: const Color(0xFF0F3D2E),
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        backgroundColor: Color(0xFF0F3D2E),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFC8A951),
+        backgroundColor: Color(0xFFC8A951),
         onPressed: () => _showPostForm(context),
-        child: const Icon(Icons.add, color: Color(0xFF0A2E1F)),
+        child: Icon(Icons.add, color: Color(0xFF0A2E1F)),
       ),
       body: BlocConsumer<OwnerPostsBloc, OwnerPostsState>(
         listenWhen: (prev, curr) => prev.formStatus != curr.formStatus,
@@ -44,14 +44,14 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text(context.l10n.ownerPostSaved),
-                  backgroundColor: const Color(0xFF22C55E)),
+                  backgroundColor: Color(0xFF22C55E)),
             );
           }
         },
         builder: (context, state) {
           if (state.status == OwnerPostsStatus.loading &&
               state.allPosts.isEmpty) {
-            return const Center(
+            return Center(
               child:
                   CircularProgressIndicator(color: Color(0xFF22C55E)),
             );
@@ -65,12 +65,12 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                   Icon(Icons.article_outlined,
                       size: 64,
                       color: Colors.white.withValues(alpha: 0.2)),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(context.l10n.ownerNoPosts,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 16)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(context.l10n.ownerCreateFirstPost,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.3),
@@ -83,7 +83,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
           return ListView.separated(
             padding: const EdgeInsets.all(20),
             itemCount: state.allPosts.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => SizedBox(height: 12),
             itemBuilder: (context, i) =>
                 _PostCard(post: state.allPosts[i]),
           );
@@ -108,8 +108,8 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F2A1F),
-      shape: const RoundedRectangleBorder(
+      backgroundColor: Color(0xFF0F2A1F),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => Padding(
@@ -132,34 +132,34 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Text(
                   existing == null ? context.l10n.ownerNewPost : context.l10n.ownerEditPost,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 _field(context.l10n.ownerTitleLabel, titleCtrl, context, required: true),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _field(context.l10n.ownerShortDescLabel, descCtrl, context,
                     required: true, maxLines: 3),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _field(context.l10n.ownerImageUrlLabel, imageCtrl, context),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _field(context.l10n.ownerExtLinkLabel, linkCtrl, context),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _field(context.l10n.ownerLocationLabel, locationCtrl, context),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC8A951),
-                      foregroundColor: const Color(0xFF0A2E1F),
+                      backgroundColor: Color(0xFFC8A951),
+                      foregroundColor: Color(0xFF0A2E1F),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -199,7 +199,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                     },
                     child: Text(
                       existing == null ? context.l10n.ownerPublish : context.l10n.ownerSaveChanges,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),
@@ -219,7 +219,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white),
       validator: required
           ? (v) => (v == null || v.trim().isEmpty) ? context.l10n.ownerRequired : null
           : null,
@@ -239,7 +239,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFC8A951)),
+          borderSide: BorderSide(color: Color(0xFFC8A951)),
         ),
       ),
     );
@@ -267,7 +267,7 @@ class _PostCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   post.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -279,7 +279,7 @@ class _PostCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: post.isActive
-                      ? const Color(0xFF22C55E).withValues(alpha: 0.15)
+                      ? Color(0xFF22C55E).withValues(alpha: 0.15)
                       : Colors.red.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -289,14 +289,14 @@ class _PostCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: post.isActive
-                        ? const Color(0xFF22C55E)
+                        ? Color(0xFF22C55E)
                         : Colors.red,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             post.shortDescription,
             style: TextStyle(
@@ -307,13 +307,13 @@ class _PostCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           if (post.location != null) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Row(
               children: [
                 Icon(Icons.location_on_outlined,
                     size: 14,
                     color: Colors.white.withValues(alpha: 0.4)),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   post.location!,
                   style: TextStyle(
@@ -324,7 +324,7 @@ class _PostCard extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Row(
             children: [
               _actionBtn(Icons.edit_rounded, context.l10n.ownerEdit, () {
@@ -332,14 +332,14 @@ class _PostCard extends StatelessWidget {
                     .findAncestorStateOfType<_OwnerDashboardPageState>();
                 page?._showPostForm(context, post);
               }),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _actionBtn(Icons.delete_outline_rounded, context.l10n.ownerDelete, () {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    backgroundColor: const Color(0xFF0F2A1F),
+                    backgroundColor: Color(0xFF0F2A1F),
                     title: Text(context.l10n.ownerDeletePost,
-                        style: const TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Colors.white)),
                     content: Text(context.l10n.ownerDeleteConfirm,
                         style: TextStyle(color: Colors.white70)),
                     actions: [
@@ -355,7 +355,7 @@ class _PostCard extends StatelessWidget {
                               .add(DeleteOwnerPost(post.id));
                         },
                         child: Text(context.l10n.ownerDelete,
-                            style: const TextStyle(color: Colors.red)),
+                            style: TextStyle(color: Colors.red)),
                       ),
                     ],
                   ),
@@ -388,7 +388,7 @@ class _PostCard extends StatelessWidget {
                 color: isDestructive
                     ? Colors.red.withValues(alpha: 0.7)
                     : Colors.white.withValues(alpha: 0.6)),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(

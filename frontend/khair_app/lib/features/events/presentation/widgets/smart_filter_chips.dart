@@ -21,15 +21,15 @@ class SmartFilterChips extends StatelessWidget {
           height: 50,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
+            physics: ClampingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x1),
             children: [
               _locationChip(context),
-              const SizedBox(width: AppSpacing.x1),
+              SizedBox(width: AppSpacing.x1),
               ..._categoryChips(context, state.filter),
-              const SizedBox(width: AppSpacing.x1),
+              SizedBox(width: AppSpacing.x1),
               _dateChip(context, state.filter),
-              const SizedBox(width: AppSpacing.x1),
+              SizedBox(width: AppSpacing.x1),
               IslamicCategoryChip(
                 label: context.l10n.categoryTrending,
                 emoji: '🔥',
@@ -37,7 +37,7 @@ class SmartFilterChips extends StatelessWidget {
                 onTap: () => context.read<EventsBloc>().add(ToggleTrending()),
               ),
               if (state.filter.hasActiveFilters) ...[
-                const SizedBox(width: AppSpacing.x1),
+                SizedBox(width: AppSpacing.x1),
                 _clearChip(context),
               ],
             ],
@@ -134,7 +134,7 @@ class SmartFilterChips extends StatelessWidget {
     return GestureDetector(
       onTap: () => _showDatePicker(context, filter.dateFilter),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 240),
+        duration: Duration(milliseconds: 240),
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
@@ -153,7 +153,7 @@ class SmartFilterChips extends StatelessWidget {
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.14),
                     blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    offset: Offset(0, 3),
                   ),
                 ]
               : null,
@@ -179,7 +179,7 @@ class SmartFilterChips extends StatelessWidget {
             horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          color: const Color(0xFFFDE7E4),
+          color: Color(0xFFFDE7E4),
           border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
         ),
         child: Text(
@@ -197,7 +197,7 @@ class SmartFilterChips extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
@@ -214,10 +214,10 @@ class SmartFilterChips extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
               ),
-              const SizedBox(height: AppSpacing.x2),
+              SizedBox(height: AppSpacing.x2),
               _DateOption(
                 selected: current == DateFilter.today,
-                label: '📅 ${context.l10n.filterEventsToday}',
+                label: context.l10n.filterEventsToday,
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -227,7 +227,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisWeek,
-                label: '📅 ${context.l10n.filterEventsThisWeek}',
+                label: context.l10n.filterEventsThisWeek,
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -237,7 +237,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisWeekend,
-                label: '📅 ${context.l10n.filterEventsWeekend}',
+                label: context.l10n.filterEventsWeekend,
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -247,7 +247,7 @@ class SmartFilterChips extends StatelessWidget {
               ),
               _DateOption(
                 selected: current == DateFilter.thisMonth,
-                label: '📅 ${context.l10n.filterEventsThisMonth}',
+                label: context.l10n.filterEventsThisMonth,
                 onTap: () {
                   context
                       .read<EventsBloc>()
@@ -256,7 +256,7 @@ class SmartFilterChips extends StatelessWidget {
                 },
               ),
               if (current != null) ...[
-                const SizedBox(height: AppSpacing.x1),
+                SizedBox(height: AppSpacing.x1),
                 TextButton(
                   onPressed: () {
                     context.read<EventsBloc>().add(UpdateDateFilter(null));
@@ -300,7 +300,7 @@ class _DateOption extends StatelessWidget {
             ),
       ),
       trailing: selected
-          ? const Icon(
+          ? Icon(
               Icons.check_circle_rounded,
               color: AppColors.primary,
             )

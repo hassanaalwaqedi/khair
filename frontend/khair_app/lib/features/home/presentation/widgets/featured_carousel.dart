@@ -49,11 +49,11 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
       children: [
         // Section header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(children: [
             Text(context.l10n.featuredEvents, style: TextStyle(
                 fontSize: 20, fontWeight: FontWeight.w700, color: tp, letterSpacing: -0.3)),
-            const Spacer(),
+            Spacer(),
             TextButton(
               onPressed: () {},
               child: Text(context.l10n.seeAll, style: TextStyle(
@@ -61,7 +61,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
             ),
           ]),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         // Carousel
         SizedBox(
           height: 240,
@@ -71,7 +71,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
             itemBuilder: (context, i) {
               return AnimatedScale(
                 scale: _current == i ? 1.0 : 0.94,
-                duration: const Duration(milliseconds: 300),
+                duration: Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
                 child: GestureDetector(
                   onTap: () => context.push('/events/${widget.events[i].id}'),
@@ -81,14 +81,14 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
             },
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         // Dots
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             widget.events.length.clamp(0, 5),
             (i) => AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: Duration(milliseconds: 300),
               margin: const EdgeInsets.symmetric(horizontal: 3),
               width: _current == i ? 20 : 6, height: 4,
               decoration: BoxDecoration(
@@ -125,7 +125,7 @@ class _FeaturedCard extends StatelessWidget {
     final dateStr = DateFormat('EEE, MMM d · h:mm a').format(event.startDate);
     final imageUrl = resolveMediaUrl(event.imageUrl);
     final gradColors = _fallbackGradients[event.eventType.toLowerCase()] ??
-        [const Color(0xFF1E3A5F), KhairColors.primary];
+        [Color(0xFF1E3A5F), KhairColors.primary];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
@@ -134,7 +134,7 @@ class _FeaturedCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
-            blurRadius: 20, offset: const Offset(0, 8),
+            blurRadius: 20, offset: Offset(0, 8),
           ),
         ],
       ),
@@ -169,11 +169,11 @@ class _FeaturedCard extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(event.eventType.toUpperCase(), style: const TextStyle(
+                    child: Text(event.eventType.toUpperCase(), style: TextStyle(
                       fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.8,
                     )),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   if (event.reservedCount > 0) Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -181,37 +181,37 @@ class _FeaturedCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.people_rounded, color: Colors.white, size: 12),
-                      const SizedBox(width: 4),
-                      Text('${event.reservedCount}', style: const TextStyle(
+                      Icon(Icons.people_rounded, color: Colors.white, size: 12),
+                      SizedBox(width: 4),
+                      Text(context.l10n.eventDetailsAttending(event.reservedCount), style: TextStyle(
                         fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white,
                       )),
                     ]),
                   ),
                 ]),
-                const Spacer(),
+                Spacer(),
                 // Title
                 Text(event.title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white,
                       letterSpacing: -0.3, height: 1.2,
                     )),
                 if (event.organizerName != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(context.l10n.byOrganizer(event.organizerName!), style: TextStyle(
                     fontSize: 12, color: Colors.white.withValues(alpha: 0.7),
                   )),
                 ],
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 // Bottom row: date + CTA
                 Row(children: [
                   Icon(Icons.calendar_today_rounded, size: 13,
                       color: Colors.white.withValues(alpha: 0.7)),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Expanded(child: Text(dateStr, overflow: TextOverflow.ellipsis, style: TextStyle(
                     fontSize: 12, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w500,
                   ))),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(

@@ -429,6 +429,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
+  String get useDeviceLanguage => 'Use device language';
+
+  @override
   String get english => 'English';
 
   @override
@@ -1705,6 +1708,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orgNotifications => 'Notifications';
 
   @override
+  String get notifications => 'Notifications';
+
+  @override
+  String unreadNotificationsCount(Object count) {
+    return 'You have $count unread notifications';
+  }
+
+  @override
+  String get notificationsAllCaughtUp => 'You\'re all caught up!';
+
+  @override
+  String get pushNotificationsOn => 'Push notifications on';
+
+  @override
+  String get pushNotificationsOff => 'Push notifications off';
+
+  @override
   String get orgSettings => 'Settings';
 
   @override
@@ -2055,6 +2075,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapFilterCategory => 'Category';
+
+  @override
+  String get anyDate => 'Any date';
+
+  @override
+  String get tomorrow => 'Tomorrow';
 
   @override
   String get mapFilterAll => 'All';
@@ -2495,4 +2521,1898 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get waitingForSupportAgent =>
       'Waiting for an available support agent...';
+
+  @override
+  String get greetingGoodMorning => 'Good morning';
+
+  @override
+  String get greetingGoodAfternoon => 'Good afternoon';
+
+  @override
+  String get greetingGoodEvening => 'Good evening';
+
+  @override
+  String get discoverHeadlinePre => 'Find events that';
+
+  @override
+  String get discoverHeadlineHighlight => 'inspire';
+
+  @override
+  String get discoverHeadlinePost => ' you';
+
+  @override
+  String resultsForQuery(String query) {
+    return 'Results for \"$query\"';
+  }
+
+  @override
+  String get matchingEvents => 'Matching events';
+
+  @override
+  String get exploreMap => 'Explore map';
+
+  @override
+  String get featuredNearYou => 'Featured near you';
+
+  @override
+  String get eventsWorthTimeFor => 'Events worth making time for';
+
+  @override
+  String get happeningThisWeekend => 'Happening this weekend';
+
+  @override
+  String get planSomethingMeaningful => 'Plan something meaningful';
+
+  @override
+  String get thisWeekend => 'This weekend';
+
+  @override
+  String get nearMe => 'Near me';
+
+  @override
+  String get freeLabel => 'Free';
+
+  @override
+  String get chooseArea => 'Choose area';
+
+  @override
+  String get locationUpdateError => 'We could not update your location.';
+
+  @override
+  String get filtersComingSoon => 'Filters coming soon';
+
+  @override
+  String get adjustFiltersHint => 'Try adjusting your filters or area.';
+
+  @override
+  String get loadEventsError => 'We couldn\'t load events right now.';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get savedEventsUpdateError => 'We couldn\'t update your saved events.';
+
+  @override
+  String get discoverFreeEvents => 'Discover free events';
+
+  @override
+  String get freePromoSubtitle => 'Explore gatherings that don\'t cost a thing';
+
+  @override
+  String get useCurrentLocationShort => 'Use current location';
+
+  @override
+  String get clearFilters => 'Clear filters';
+
+  @override
+  String get profileTooltip => 'Profile';
+
+  @override
+  String get termsPrivacy => 'Terms & Privacy';
+
+  @override
+  String get pleaseReviewAndAcceptOurTermsT =>
+      'Please review and accept our terms to continue.';
+
+  @override
+  String get iAcceptThe => 'I accept the ';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get acceptContinue => 'Accept & Continue';
+
+  @override
+  String get organizerAgreement => 'Organizer Agreement';
+
+  @override
+  String get asAnEventOrganizerYouMustAgree =>
+      'As an event organizer, you must agree to additional terms.';
+
+  @override
+  String get iAgreeToTheOrganizerAgreement =>
+      'I agree to the Organizer Agreement';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get discoverEvents => 'Discover events';
+
+  @override
+  String get weCouldn => 'We couldn\\';
+
+  @override
+  String get linkCopiedToClipboard => 'Link copied to clipboard!';
+
+  @override
+  String get discardChanges => 'Discard changes?';
+
+  @override
+  String get yourUnsavedEditsWillBeLost => 'Your unsaved edits will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get noEventsFound1 => 'No Events Found';
+
+  @override
+  String get noResults => 'No Results';
+
+  @override
+  String get noReports => 'No Reports';
+
+  @override
+  String get noNotifications => 'No Notifications';
+
+  @override
+  String get noOrganizers => 'No Organizers';
+
+  @override
+  String get noAuditLogs => 'No Audit Logs';
+
+  @override
+  String get locationUnavailable => 'Location Unavailable';
+
+  @override
+  String get connectionError => 'Connection Error';
+
+  @override
+  String get tryAgain1 => 'Try Again';
+
+  @override
+  String get myEvents => 'My events';
+
+  @override
+  String get signIn1 => 'Sign in';
+
+  @override
+  String get signInOrRegisterToCreateAnEven =>
+      'Sign in or register to create an event.';
+
+  @override
+  String get createEvent1 => 'Create event';
+
+  @override
+  String get organizerApplicationReviewQueu =>
+      'Organizer application review queue';
+
+  @override
+  String get supportInbox => 'Support Inbox';
+
+  @override
+  String get verification => 'Verification';
+
+  @override
+  String get areYouSureYouWantToReject => 'Are you sure you want to reject ';
+
+  @override
+  String get noUsers => 'No Users';
+
+  @override
+  String get noUsersFound => 'No users found.';
+
+  @override
+  String get verified => 'VERIFIED';
+
+  @override
+  String get verifyUser => 'Verify User';
+
+  @override
+  String get promoteToOrganizer => 'Promote to Organizer';
+
+  @override
+  String get promoteToAdmin => 'Promote to Admin';
+
+  @override
+  String get suspend => 'Suspend';
+
+  @override
+  String get ban => 'Ban';
+
+  @override
+  String get activate => 'Activate';
+
+  @override
+  String get reasonOptional => 'Reason (optional)';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get deleteQuote => 'Delete Quote';
+
+  @override
+  String get areYouSureYouWantToDeleteThisQ =>
+      'Are you sure you want to delete this quote?';
+
+  @override
+  String get quoteDeleted => 'Quote deleted';
+
+  @override
+  String get failedToDelete => 'Failed to delete';
+
+  @override
+  String get arabicText => 'Arabic Text';
+
+  @override
+  String get source => 'Source';
+
+  @override
+  String get reference => 'Reference';
+
+  @override
+  String get showOnHome => 'Show on Home';
+
+  @override
+  String get showOnDashboard => 'Show on Dashboard';
+
+  @override
+  String get showOnLogin => 'Show on Login';
+
+  @override
+  String get failedToSave => 'Failed to save';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get noQuotesYet => 'No quotes yet';
+
+  @override
+  String get titleAndMessageAreRequired => 'Title and message are required';
+
+  @override
+  String get pleaseSelectAUser => 'Please select a user';
+
+  @override
+  String get sendNotification => 'Send Notification';
+
+  @override
+  String get sendPushNotificationsToYourUse =>
+      'Send push notifications to your users';
+
+  @override
+  String get allUsers => 'All Users';
+
+  @override
+  String get individual => 'Individual';
+
+  @override
+  String get searchUserByNameOrEmail => 'Search user by name or email...';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get notificationTitle => 'Notification title...';
+
+  @override
+  String get writeYourNotificationMessage =>
+      'Write your notification message...';
+
+  @override
+  String get noPendingVerificationRequests =>
+      'No Pending Verification Requests';
+
+  @override
+  String get allVerificationRequestsHaveBee =>
+      'All verification requests have been reviewed';
+
+  @override
+  String get userNotes => 'User Notes:';
+
+  @override
+  String get viewCertificate => 'View Certificate';
+
+  @override
+  String get viewPhoto => 'View Photo';
+
+  @override
+  String get changes => 'Changes';
+
+  @override
+  String get adminReviewNotes => 'Admin Review Notes:';
+
+  @override
+  String get failedToLoadImage => 'Failed to load image';
+
+  @override
+  String get pleaseProvideAReason => 'Please provide a reason';
+
+  @override
+  String get reviewEvent => 'Review Event';
+
+  @override
+  String get review => 'Review';
+
+  @override
+  String get capacity => 'Capacity';
+
+  @override
+  String get ticketAssigned => 'Ticket assigned';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get waitingForSupport => 'Waiting for Support';
+
+  @override
+  String get inProgress => 'In Progress';
+
+  @override
+  String get resolved => 'Resolved';
+
+  @override
+  String get assignToMe => 'Assign to me';
+
+  @override
+  String get typeReply => 'Type reply...';
+
+  @override
+  String get replyToUser => 'Reply to User';
+
+  @override
+  String get internalNote => 'Internal Note';
+
+  @override
+  String get noAuditLogsFound => 'No audit logs found';
+
+  @override
+  String get filterLogs => 'Filter Logs';
+
+  @override
+  String get system => 'System';
+
+  @override
+  String get organizerApplications => 'Organizer applications';
+
+  @override
+  String get refreshQueue => 'Refresh queue';
+
+  @override
+  String get needsChanges => 'Needs changes';
+
+  @override
+  String get noApplicationsInThisQueue => 'No applications in this queue';
+
+  @override
+  String get newSubmissionsWillAppearHere =>
+      'New submissions will appear here.';
+
+  @override
+  String get theOrganizerQueueCouldNotBeLoa =>
+      'The organizer queue could not be loaded.';
+
+  @override
+  String get organizerApplication => 'Organizer application';
+
+  @override
+  String get refreshDossier => 'Refresh dossier';
+
+  @override
+  String get organizationDescription => 'Organization description';
+
+  @override
+  String get eventPlan => 'Event plan';
+
+  @override
+  String get applicantMessage => 'Applicant message';
+
+  @override
+  String get internalReviewNote => 'Internal review note';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get viewPublicImage => 'View public image';
+
+  @override
+  String get viewRepresentativePhoto => 'View representative photo';
+
+  @override
+  String get officialPublicLinks => 'Official public links';
+
+  @override
+  String get noOfficialLinksProvided => 'No official links provided';
+
+  @override
+  String get evidenceEntries => 'Evidence entries';
+
+  @override
+  String get noAdditionalEvidenceProvided => 'No additional evidence provided';
+
+  @override
+  String get privateVerificationDocuments => 'Private verification documents';
+
+  @override
+  String get noPrivateDocumentsUploaded => 'No private documents uploaded';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get requestChanges => 'Request changes';
+
+  @override
+  String get approveOrganizer => 'Approve organizer';
+
+  @override
+  String get reasonCode => 'Reason code';
+
+  @override
+  String get egIdentityunverified => 'e.g. identity_unverified';
+
+  @override
+  String get internalNoteNotShownToApplican =>
+      'Internal note (not shown to applicant)';
+
+  @override
+  String get theSecureImageCouldNotBeDispla =>
+      'The secure image could not be displayed.';
+
+  @override
+  String get organizerTrustProfile => 'Organizer Trust Profile';
+
+  @override
+  String get trustActions => 'Trust Actions';
+
+  @override
+  String get trustScore => 'Trust Score';
+
+  @override
+  String get reasonRequired => 'Reason (required)';
+
+  @override
+  String get reportDismissed => 'Report dismissed';
+
+  @override
+  String get resolveReport => 'Resolve Report';
+
+  @override
+  String get approveNoAction => 'Approve (No Action)';
+
+  @override
+  String get issueWarning => 'Issue Warning';
+
+  @override
+  String get removeContent => 'Remove Content';
+
+  @override
+  String get recommendedForYou1 => 'Recommended for You';
+
+  @override
+  String get ai => '✨ AI';
+
+  @override
+  String get viewEvent => 'View event →';
+
+  @override
+  String get checkYourEmail => 'Check your email';
+
+  @override
+  String get verificationCode => 'Verification code';
+
+  @override
+  String get verifyEmail => 'Verify email';
+
+  @override
+  String get resendCode => 'Resend code';
+
+  @override
+  String get backToEventDiscovery => 'Back to event discovery';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get signingIn => 'Signing in…';
+
+  @override
+  String get orContinueWith => 'or continue with';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get createOne => 'Create one';
+
+  @override
+  String get signInToContinueCreatingYourEv =>
+      'Sign in to continue creating your event.';
+
+  @override
+  String get createYourKhairAccount => 'Create your Khair account';
+
+  @override
+  String get discoverEventsJoinCommunitiesB =>
+      'Discover events. Join communities. Be part of something meaningful.';
+
+  @override
+  String get orContinueWithEmail => 'or continue with email';
+
+  @override
+  String get creatingYourAccount => 'Creating your account…';
+
+  @override
+  String get createAccount1 => 'Create account';
+
+  @override
+  String get alreadyHaveAnAccount => 'Already have an account?';
+
+  @override
+  String get use8OrMoreCharacters => 'Use 8 or more characters.';
+
+  @override
+  String get g => 'G';
+
+  @override
+  String get khairEvents => 'Khair events';
+
+  @override
+  String get selectCountry => 'Select country';
+
+  @override
+  String get shareEvent => 'Share event';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get addToGoogleCalendar => 'Add to Google Calendar';
+
+  @override
+  String get viewOnMap => 'View on map';
+
+  @override
+  String get mapPreviewIsUnavailableForThis =>
+      'Map preview is unavailable for this event.';
+
+  @override
+  String get onlineEvent => 'Online event';
+
+  @override
+  String joinProviderMeeting(Object provider) {
+    return 'Join $provider meeting';
+  }
+
+  @override
+  String verificationCodeSentTo(Object email) {
+    return 'Enter the six-digit code we sent to $email.';
+  }
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get noAttentionNeeded => 'Nothing needs your attention right now.';
+
+  @override
+  String get organizerActivityWillAppear =>
+      'Your organizer activity will appear here.';
+
+  @override
+  String get noConfirmedAttendees => 'No confirmed attendees yet.';
+
+  @override
+  String get loadingAnalytics => 'Loading analytics...';
+
+  @override
+  String get loadingProfile => 'Loading profile...';
+
+  @override
+  String get theOrganizerHasNotAddedADescri =>
+      'The organizer has not added a description yet.';
+
+  @override
+  String get verifiedOrganizer => 'Verified organizer';
+
+  @override
+  String get eventOrganizer => 'Event organizer';
+
+  @override
+  String get viewProfile => 'View profile';
+
+  @override
+  String get attendees => 'Attendees';
+
+  @override
+  String get weCouldntLoadThisEvent => 'We couldn’t load this event.';
+
+  @override
+  String get theEventMayHaveBeenRemovedOrIs =>
+      'The event may have been removed or is temporarily unavailable.';
+
+  @override
+  String get leaveEvent => 'Leave event?';
+
+  @override
+  String get yourReservationWillBeReleased =>
+      'Your reservation will be released.';
+
+  @override
+  String get keepReservation => 'Keep reservation';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get noJoinedEventsYet => 'No joined events yet';
+
+  @override
+  String get youAreRegistered => 'You are registered!';
+
+  @override
+  String get mayThisGatheringBenefitYounyou =>
+      'May this gathering benefit you.\\nYour seat has been confirmed.';
+
+  @override
+  String get thisIsAPaidEventPleaseRemember =>
+      'This is a paid event. Please remember to bring payment to the venue.';
+
+  @override
+  String get viewMyEvents => 'View My Events';
+
+  @override
+  String get savedEvents => 'Saved events';
+
+  @override
+  String get noSavedEventsYet => 'No saved events yet';
+
+  @override
+  String get saveEventsYouWantToRevisit => 'Save events you want to revisit.';
+
+  @override
+  String get exploreEvents => 'Explore events';
+
+  @override
+  String get communityImpact => 'COMMUNITY IMPACT';
+
+  @override
+  String get joinTheMovement => 'JOIN THE MOVEMENT';
+
+  @override
+  String get noFeaturedEventsRightNow => 'No featured events right now.';
+
+  @override
+  String get searchForHalalEventsWorkshopsO =>
+      'Search for Halal events, workshops, or circles...';
+
+  @override
+  String get toUnlockOrganizerMode => 'to unlock organizer mode';
+
+  @override
+  String get viewDashboard => 'VIEW DASHBOARD';
+
+  @override
+  String get upcomingForYou => 'Upcoming for You';
+
+  @override
+  String get noUpcomingEventsFound => 'No upcoming events found.';
+
+  @override
+  String get attendees1 => 'attendees';
+
+  @override
+  String get weCouldntUpdateYourSavedEvents =>
+      'We couldn’t update your saved events.';
+
+  @override
+  String get recommendedForYou2 => 'Recommended for you';
+
+  @override
+  String get searchEventsOrPlaces => 'Search events or places';
+
+  @override
+  String get exploreWhatsHappeningNearby => 'Explore what’s happening nearby';
+
+  @override
+  String get saveEvent => 'Save event';
+
+  @override
+  String get nothingHappeningHereYet => 'Nothing happening here yet';
+
+  @override
+  String get moveTheMapOrExploreAWiderArea =>
+      'Move the map or explore a wider area.';
+
+  @override
+  String get exploreOnlineEvents => 'Explore online events';
+
+  @override
+  String get when => 'When';
+
+  @override
+  String get freeOnly => 'Free only';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get signInToSaveEventsAndKeepThemI =>
+      'Sign in to save events and keep them in sync.';
+
+  @override
+  String get readAll => 'Read all';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get you => 'You\\';
+
+  @override
+  String get failedToLoadNotifications => 'Failed to load notifications';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get notificationEventJoinTitle => 'You\'re registered 🎉';
+
+  @override
+  String notificationEventJoinBody(Object eventTitle) {
+    return 'You\'ve successfully joined\n$eventTitle';
+  }
+
+  @override
+  String get notificationEventParticipantJoinedTitle =>
+      'New participant joined';
+
+  @override
+  String notificationEventParticipantJoinedBody(Object eventTitle) {
+    return 'A new participant joined your event:\n$eventTitle';
+  }
+
+  @override
+  String get notificationViewEvent => 'View event details';
+
+  @override
+  String get notificationOnline => 'Online';
+
+  @override
+  String notificationLocation(Object location) {
+    return '$location';
+  }
+
+  @override
+  String get notificationFree => 'Free';
+
+  @override
+  String notificationPayAtVenue(Object price) {
+    return '$price · Pay at venue';
+  }
+
+  @override
+  String get notificationWelcomeTitle => 'Welcome to Khair 🎉';
+
+  @override
+  String notificationWelcomeBody(Object firstName) {
+    return 'Assalamu Alaikum $firstName,\nWe\'re glad you\'re here. Start discovering events and communities that interest you.';
+  }
+
+  @override
+  String get notificationWelcomeUnderReviewTitle =>
+      'Welcome to Khair – Account under review';
+
+  @override
+  String notificationWelcomeUnderReviewBody(Object firstName) {
+    return 'Assalamu Alaikum $firstName,\\nYour account is under review by the Khair team. We will notify you when the review is complete.';
+  }
+
+  @override
+  String notificationReceivedAt(Object time) {
+    return 'Received $time';
+  }
+
+  @override
+  String get notificationEventReminderTitle => 'Event reminder';
+
+  @override
+  String notificationEventReminderBody(
+      Object eventTitle, Object reminderLabel) {
+    return '$eventTitle starts in $reminderLabel.';
+  }
+
+  @override
+  String get notificationUnread => 'Unread notification';
+
+  @override
+  String get notificationClose => 'Close notification';
+
+  @override
+  String get createAnEvent => 'Create an event';
+
+  @override
+  String get saveDraft => 'Save draft';
+
+  @override
+  String get letsStartWithTheBasics => 'Let’s start with the basics';
+
+  @override
+  String get tellPeopleWhatYourEventIsAbout =>
+      'Tell people what your event is about.';
+
+  @override
+  String get eventTitle1 => 'Event title';
+
+  @override
+  String get suggestCategoryWithAi => 'Suggest category with AI';
+
+  @override
+  String get whenAndWhereIsItHappening => 'When and where is it happening?';
+
+  @override
+  String get giveAttendeesTheDetailsTheyNee =>
+      'Give attendees the details they need to plan ahead.';
+
+  @override
+  String get timezone => 'Timezone';
+
+  @override
+  String get venueName => 'Venue name';
+
+  @override
+  String get streetAddress => 'Street address';
+
+  @override
+  String get pinpointTheLocation => 'Pinpoint the location';
+
+  @override
+  String get meetingUrl => 'Meeting URL';
+
+  @override
+  String get instructionsOptional => 'Instructions (optional)';
+
+  @override
+  String get whoIsThisEventFor => 'Who is this event for?';
+
+  @override
+  String get setAttendanceAndAccessPreferen =>
+      'Set attendance and access preferences.';
+
+  @override
+  String get unlimited => 'Unlimited';
+
+  @override
+  String get limited => 'Limited';
+
+  @override
+  String get paidOnlineEventsAreNotSupporte =>
+      'Paid online events are not supported yet.';
+
+  @override
+  String get price => 'Price';
+
+  @override
+  String get currency => 'Currency';
+
+  @override
+  String get anythingAttendeesShouldKnowOpt =>
+      'Anything attendees should know? (optional)';
+
+  @override
+  String get makeYourEventStandOut => 'Make your event stand out';
+
+  @override
+  String get addAStrongCoverImageSoPeopleIn =>
+      'Add a strong cover image so people instantly understand your event.';
+
+  @override
+  String get replaceCoverImage => 'Replace cover image';
+
+  @override
+  String get jpgPngOrWebpUpTo10Mb169Recomme =>
+      'JPG, PNG or WebP · up to 10 MB · 16:9 recommended';
+
+  @override
+  String get reviewYourEvent => 'Review your event';
+
+  @override
+  String get makeSureEverythingLooksRightBe =>
+      'Make sure everything looks right before sending it to Khair moderation.';
+
+  @override
+  String get readyToSubmit => 'Ready to submit';
+
+  @override
+  String get submission => 'Submission';
+
+  @override
+  String get yourEventWillBeSavedAsPendingR =>
+      'Your event will be saved as pending review. It becomes discoverable only after admin approval.';
+
+  @override
+  String get iConfirmTheseEventDetailsAreAc =>
+      'I confirm these event details are accurate.';
+
+  @override
+  String get aiSuggestion => 'AI suggestion';
+
+  @override
+  String get yourEventIsUnderReview => 'Your event is under review';
+
+  @override
+  String get yourEventHasBeenSubmittedForRe =>
+      'Your event has been submitted for review. We will notify you when moderation is complete.';
+
+  @override
+  String get backToOrganizerHub => 'Back to Organizer Hub';
+
+  @override
+  String get chooseACoverImage => 'Choose a cover image';
+
+  @override
+  String get dragAndDropOrTapToBrowse => 'Drag and drop or tap to browse';
+
+  @override
+  String get livePreview => 'Live preview';
+
+  @override
+  String get whatDoesThisDocumentVerify => 'What does this document verify?';
+
+  @override
+  String get closeOrganizerApplication => 'Close organizer application';
+
+  @override
+  String get becomeAnOrganizer => 'Become an organizer';
+
+  @override
+  String get countryCode => 'Country code';
+
+  @override
+  String get tr => 'TR';
+
+  @override
+  String get publicLogoOrProfileImage => 'Public logo or profile image';
+
+  @override
+  String get jpgPngOrWebpUpTo5MbPrivateUnti =>
+      'JPG, PNG, or WebP · up to 5 MB. Private until approved.';
+
+  @override
+  String get publicRepresentativePhoto => 'Public representative photo';
+
+  @override
+  String get requiredForIndividualOrganizer =>
+      'Required for individual organizers. Visible only after approval.';
+
+  @override
+  String get officialLinks => 'Official links';
+
+  @override
+  String get optionalButUsefulForAFasterRev =>
+      'Optional, but useful for a faster review. Only add official public links.';
+
+  @override
+  String get verificationEvidence => 'Verification evidence';
+
+  @override
+  String get documentsAreEncryptedInPrivate =>
+      'Documents are encrypted in private storage and are accessible only to authorized Khair reviewers.';
+
+  @override
+  String get uploadVerificationDocument => 'Upload verification document';
+
+  @override
+  String get plannedEventCategories => 'Planned event categories';
+
+  @override
+  String get typicalAudience => 'Typical audience';
+
+  @override
+  String get iAcceptTheKhairOrganizerStanda =>
+      'I accept the Khair Organizer Standards';
+
+  @override
+  String get iWillKeepEventsSafeRespectfulA =>
+      'I will keep events safe, respectful, accurate, and inclusive. Version 2026-08.';
+
+  @override
+  String get readOrganizerStandardsV202608 =>
+      'Read Organizer Standards · v2026-08';
+
+  @override
+  String get khairOrganizerStandards => 'Khair Organizer Standards';
+
+  @override
+  String get version202608 => 'Version 2026-08';
+
+  @override
+  String get iUnderstand => 'I understand';
+
+  @override
+  String get evidenceType => 'Evidence type';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get timeline => 'Timeline';
+
+  @override
+  String get past => 'Past';
+
+  @override
+  String get eventsByType => 'Events by Type';
+
+  @override
+  String get noEventDataToDisplay => 'No event data to display';
+
+  @override
+  String get notifyAttendees => 'Notify Attendees';
+
+  @override
+  String get sendMessageToAttendees => 'Send Message to Attendees';
+
+  @override
+  String get messageWillBeSentAsPushNotific =>
+      'Message will be sent as push notification and in-app notification to all confirmed attendees of ';
+
+  @override
+  String get typeYourMessageToAttendees => 'Type your message to attendees...';
+
+  @override
+  String get includeEventLinkInNotification =>
+      'Include event link in notification';
+
+  @override
+  String get messageSentToAllAttendees => 'Message sent to all attendees!';
+
+  @override
+  String get eventStatus => 'Event status';
+
+  @override
+  String get backToMyEvents => 'Back to My Events';
+
+  @override
+  String get organizerHub => 'Organizer Hub';
+
+  @override
+  String get draftEvents => 'Drafts';
+
+  @override
+  String get noDraftEvents => 'No draft events.';
+
+  @override
+  String get noPastEvents => 'No past events.';
+
+  @override
+  String get organizerRangeLast7Days => 'in the last 7 days';
+
+  @override
+  String get organizerRangeThisMonth => 'this month';
+
+  @override
+  String get organizerRangeLastMonth => 'last month';
+
+  @override
+  String get organizerRangeSelected => 'in your selected range';
+
+  @override
+  String get organizerRangeLast30Days => 'in the last 30 days';
+
+  @override
+  String organizerSummaryNoUpcoming(Object attendees, Object range) {
+    return 'You don\'t have an upcoming event yet. You have $attendees confirmed attendees $range.';
+  }
+
+  @override
+  String organizerSummaryUpcoming(
+      Object attendees, Object eventsLabel, Object range, Object upcoming) {
+    return 'You have $upcoming upcoming $eventsLabel and $attendees confirmed attendees $range.';
+  }
+
+  @override
+  String get organizerEvent => 'event';
+
+  @override
+  String get organizerEvents => 'events';
+
+  @override
+  String get performanceViewsRange =>
+      'Unique event-detail viewers in the selected range';
+
+  @override
+  String get performanceJoinsRange =>
+      'Confirmed unique joins in the selected range';
+
+  @override
+  String get yourNextEvent => 'Your next event';
+
+  @override
+  String get upcomingEvents => 'Upcoming events';
+
+  @override
+  String get confirmedAttendees => 'Confirmed attendees';
+
+  @override
+  String get eventViews => 'Event views';
+
+  @override
+  String get joinRate => 'Join rate';
+
+  @override
+  String get manageEvent => 'Manage event';
+
+  @override
+  String get sendUpdate => 'Send update';
+
+  @override
+  String get readyToHostYourNextEvent => 'Ready to host your next event?';
+
+  @override
+  String get createAnEventAndStartBuildingY =>
+      'Create an event and start building your community.';
+
+  @override
+  String get yourEvents => 'Your events';
+
+  @override
+  String get eventActions => 'Event actions';
+
+  @override
+  String get viewAttendees => 'View attendees';
+
+  @override
+  String get needsYourAttention => 'Needs your attention';
+
+  @override
+  String get performance => 'Performance';
+
+  @override
+  String get views => 'Views';
+
+  @override
+  String get joins => 'Joins';
+
+  @override
+  String get noPerformanceDataYet => 'No performance data yet.';
+
+  @override
+  String get recentActivity => 'Recent activity';
+
+  @override
+  String get noAttendeesYetTheyWillAppearHe =>
+      'No attendees yet. They will appear here.';
+
+  @override
+  String get weCouldntLoadYourOrganizerHub =>
+      'We couldn’t load your Organizer Hub.';
+
+  @override
+  String get sendAnEventUpdate => 'Send an event update';
+
+  @override
+  String get aShortUpdateTitle => 'A short update title';
+
+  @override
+  String get updateType => 'Update type';
+
+  @override
+  String get generalUpdate => 'General update';
+
+  @override
+  String get scheduleUpdate => 'Schedule update';
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get importantUpdate => 'Important update';
+
+  @override
+  String get writeTheUpdateForAttendees => 'Write the update for attendees';
+
+  @override
+  String get failedToUploadImagePleaseTryAg =>
+      'Failed to upload image. Please try again.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profile updated successfully';
+
+  @override
+  String get organizerProfile1 => 'Organizer profile';
+
+  @override
+  String get organizerProfileNotFound => 'Organizer profile not found.';
+
+  @override
+  String get editProfile1 => 'Edit profile';
+
+  @override
+  String get yourEventProfile => 'Your event profile';
+
+  @override
+  String get keepTheseDetailsCurrentSoKhair =>
+      'Keep these details current so Khair can personalize your event experience.';
+
+  @override
+  String get displayName1 => 'Display name';
+
+  @override
+  String get loadingYourProfile => 'Loading your profile…';
+
+  @override
+  String get accountInformation1 => 'Account information';
+
+  @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get emailUpdates => 'Email updates';
+
+  @override
+  String get emailNotificationsOn => 'Email notifications on';
+
+  @override
+  String get emailNotificationsOff => 'Email notifications off';
+
+  @override
+  String get couldNotUpdateYourPreferencePl =>
+      'Could not update your preference. Please try again.';
+
+  @override
+  String get viewAll => 'View all';
+
+  @override
+  String get noUpcomingEventsYet => 'No upcoming events yet';
+
+  @override
+  String get discoverSomethingWorthShowingU =>
+      'Discover something worth showing up for.';
+
+  @override
+  String get signOut1 => 'Sign out';
+
+  @override
+  String get weCouldntLoadYourProfile => 'We couldn’t load your profile.';
+
+  @override
+  String get checkYourConnectionAndTryAgain =>
+      'Check your connection and try again.';
+
+  @override
+  String get lastUpdatedAugust2026 => 'Last updated: August 2026';
+
+  @override
+  String get khairSupport => 'Khair Support';
+
+  @override
+  String get youAreChattingWithKhairAi => 'You are chatting with Khair AI';
+
+  @override
+  String get thisTicketHasBeenResolved => 'This ticket has been resolved.';
+
+  @override
+  String get applyForOfficialnorganizerStat =>
+      'Apply for Official\\nOrganizer Status';
+
+  @override
+  String get uploadYourDocumentsSoOurTeamCa =>
+      'Upload your documents so our team can verify your identity';
+
+  @override
+  String get officialProfileImage => 'Official Profile Image';
+
+  @override
+  String get qualificationDocument => 'Qualification Document';
+
+  @override
+  String get iConfirmThatAllProvidedDocumen =>
+      'I confirm that all provided documents are authentic and I am authorized to represent this organization.';
+
+  @override
+  String get skipForNowI => 'Skip for now — I\\';
+
+  @override
+  String get submitted => 'Submitted!';
+
+  @override
+  String get yourVerificationRequestHasBeen =>
+      'Your verification request has been submitted. Our team will review it within 24–48 hours. You\\';
+
+  @override
+  String get startExploring => 'Start Exploring';
+
+  @override
+  String revisionCount(int count) {
+    return '$count revisions';
+  }
+
+  @override
+  String supportTicketSummary(
+      Object name, Object email, Object status, Object priority) {
+    return '$name ($email)\\nStatus: $status | Priority: $priority';
+  }
+
+  @override
+  String assignedTo(Object name) {
+    return 'Assigned: $name';
+  }
+
+  @override
+  String aiSummary(Object summary) {
+    return 'AI summary: $summary';
+  }
+
+  @override
+  String privateDocumentType(Object type) {
+    return '$type · private';
+  }
+
+  @override
+  String countryDisplayName(Object flag, Object name) {
+    return '$flag $name';
+  }
+
+  @override
+  String eventsInArea(int count) {
+    return '$count events in this area';
+  }
+
+  @override
+  String eventDateTime(Object date, Object time) {
+    return '$date · $time';
+  }
+
+  @override
+  String createEventStep(int step) {
+    return 'Step $step of 5';
+  }
+
+  @override
+  String createEventStepLabel(Object label) {
+    return ' · $label';
+  }
+
+  @override
+  String progressPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String organizerApplicationStep(int step) {
+    return 'Organizer application step $step of 4';
+  }
+
+  @override
+  String stepNumber(int number) {
+    return '$number';
+  }
+
+  @override
+  String submittedOn(Object date) {
+    return 'Submitted $date';
+  }
+
+  @override
+  String documentType(Object type) {
+    return 'Doc: $type';
+  }
+
+  @override
+  String get reportsManagement => 'Reports Management';
+
+  @override
+  String filterLabelCount(Object label, int count) {
+    return '$label ($count)';
+  }
+
+  @override
+  String get organizerAccessDenied =>
+      'Your account does not have access to the organizer application.';
+
+  @override
+  String get organizerApplicationLoadFailed =>
+      'We could not load your organizer application. Try again.';
+
+  @override
+  String get draftSaveFailed => 'We could not save your draft.';
+
+  @override
+  String get enterPublicOrganizerName => 'Enter your public organizer name.';
+
+  @override
+  String get enterResponsibleRepresentative =>
+      'Enter the responsible representative.';
+
+  @override
+  String get enterVerifiedAccountEmail => 'Enter your verified account email.';
+
+  @override
+  String get enterCity => 'Enter your city.';
+
+  @override
+  String get organizationDescriptionMinLength =>
+      'Add at least 50 characters about your organization.';
+
+  @override
+  String get uploadLogoRequired => 'Upload a public logo or profile image.';
+
+  @override
+  String get uploadRepresentativePhotoRequired =>
+      'Upload your public profile photo.';
+
+  @override
+  String get eventPlanMinLength =>
+      'Describe your event plan in at least 50 characters.';
+
+  @override
+  String get chooseEventCategory =>
+      'Choose at least one planned event category.';
+
+  @override
+  String get acceptOrganizerStandards =>
+      'Accept the Khair Organizer Standards to continue.';
+
+  @override
+  String get organizerApplicationSubmitFailed =>
+      'We could not submit your application.';
+
+  @override
+  String get imageUploadComplete =>
+      'Upload complete. Your image remains private until approval.';
+
+  @override
+  String get imageUploadFailed => 'Image upload failed.';
+
+  @override
+  String get documentUploadComplete =>
+      'Verification document uploaded securely.';
+
+  @override
+  String get documentUploadFailed => 'Document upload failed.';
+
+  @override
+  String get organizationRegistration => 'Organization registration';
+
+  @override
+  String get charityRegistration => 'Charity registration';
+
+  @override
+  String get communityDocument => 'Community document';
+
+  @override
+  String get schoolCompanyDocument => 'School or company document';
+
+  @override
+  String get otherSupportingDocument => 'Other supporting document';
+
+  @override
+  String get addHttpsLink => 'Add a complete https:// link.';
+
+  @override
+  String get addEvidenceUrlOrNote =>
+      'Add a URL or a short note for this evidence.';
+
+  @override
+  String get addHttpsEvidenceUrl => 'Add a complete https:// evidence URL.';
+
+  @override
+  String get savingDraft => 'Saving?';
+
+  @override
+  String get draftSavedSecurely => 'Draft saved securely';
+
+  @override
+  String get submitForReview => 'Submit for review';
+
+  @override
+  String get tellUsAboutYou => 'Tell us about you';
+
+  @override
+  String get buildTrust => 'Build trust';
+
+  @override
+  String get reviewYourApplication => 'Review your application';
+
+  @override
+  String get tellUsAboutYouDescription =>
+      'Set up the public identity people will see on Khair.';
+
+  @override
+  String get buildTrustDescription =>
+      'Add the image and optional evidence that help us verify your application.';
+
+  @override
+  String get yourEventsDescription =>
+      'Show the kinds of safe, meaningful events you plan to host.';
+
+  @override
+  String get reviewYourApplicationDescription =>
+      'Confirm the details before sending your application to the Khair review team.';
+
+  @override
+  String get organizerType => 'Organizer type';
+
+  @override
+  String get company => 'Company';
+
+  @override
+  String get school => 'School';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get publicOrganizerName => 'Public organizer name';
+
+  @override
+  String get responsibleRepresentative => 'Responsible representative';
+
+  @override
+  String get verifiedAccountEmail => 'Verified account email';
+
+  @override
+  String get phoneInternationalOptional =>
+      'Phone (optional, international format)';
+
+  @override
+  String get aboutYourOrganization => 'About your organization';
+
+  @override
+  String get aboutYourOrganizationHint =>
+      'Who are you, what is your purpose, and why should the Khair community trust your events?';
+
+  @override
+  String get eventPlanDescriptionHint =>
+      'Describe your event ideas, frequency, safety plan, and the value for your community.';
+
+  @override
+  String get lecture => 'Lecture';
+
+  @override
+  String get workshop => 'Workshop';
+
+  @override
+  String get conference => 'Conference';
+
+  @override
+  String get technology => 'Technology';
+
+  @override
+  String get education => 'Education';
+
+  @override
+  String get socialGathering => 'Social gathering';
+
+  @override
+  String get everyone => 'Everyone';
+
+  @override
+  String get families => 'Families';
+
+  @override
+  String get students => 'Students';
+
+  @override
+  String get professionals => 'Professionals';
+
+  @override
+  String get men => 'Men';
+
+  @override
+  String get women => 'Women';
+
+  @override
+  String get secureDocument => 'Secure document';
+
+  @override
+  String get organizerRuleAccurate =>
+      'Publish accurate, complete event information and update attendees promptly when plans change.';
+
+  @override
+  String get organizerRuleSafe =>
+      'Create safe, respectful gatherings. Do not discriminate, harass, mislead, or facilitate harmful activity.';
+
+  @override
+  String get organizerRuleRights =>
+      'Use only images, names, documents, and links you are entitled to share.';
+
+  @override
+  String get organizerRulePrivacy =>
+      'Protect attendee privacy and never use Khair data for unsolicited contact or unrelated marketing.';
+
+  @override
+  String get organizerRuleLaw =>
+      'Follow local law, venue requirements, and Khair content and community policies.';
+
+  @override
+  String get organizerRuleReview =>
+      'Cooperate with review requests and keep your organizer profile and verification material current.';
+
+  @override
+  String get publicProfile => 'Public profile';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get representative => 'Representative';
+
+  @override
+  String get contactEmail => 'Contact email';
+
+  @override
+  String get trustMaterial => 'Trust material';
+
+  @override
+  String get publicImage => 'Public image';
+
+  @override
+  String get uploaded => 'Uploaded';
+
+  @override
+  String get missing => 'Missing';
+
+  @override
+  String get added => 'added';
+
+  @override
+  String get evidence => 'Evidence';
+
+  @override
+  String get privateDocuments => 'Private documents';
+
+  @override
+  String itemsCount(int count, String label) {
+    return '$count $label';
+  }
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get audience => 'Audience';
+
+  @override
+  String get standards => 'Standards';
+
+  @override
+  String get accepted => 'Accepted';
+
+  @override
+  String get notAccepted => 'Not accepted';
+
+  @override
+  String get reviewNotice =>
+      'A Khair admin will review this application. You will receive an in-app notification, push notification when available, and an email after a decision.';
+
+  @override
+  String get organizerApproved => 'You are approved to organize';
+
+  @override
+  String get applicationNeedsChanges => 'Your application needs changes';
+
+  @override
+  String get applicationNotApproved => 'Your application was not approved';
+
+  @override
+  String get organizerAccountSuspended => 'Your organizer account is suspended';
+
+  @override
+  String get applicationIncomplete => 'Your application is incomplete';
+
+  @override
+  String get applicationUnderReview => 'Your application is under review';
+
+  @override
+  String get organizerToolsAvailable =>
+      'Organizer tools are now available on your account.';
+
+  @override
+  String get reviewFeedbackAndResubmit =>
+      'Review the feedback, update your draft, and submit again when ready.';
+
+  @override
+  String get applicationClosedContactSupport =>
+      'This application is closed. Contact Khair support if you need help with the decision.';
+
+  @override
+  String get contactSupportForMoreInformation =>
+      'Contact Khair support for more information.';
+
+  @override
+  String get completeApplicationToOrganize =>
+      'Complete and submit your application to start organizing events.';
+
+  @override
+  String get applicationWithReviewTeam =>
+      'Your details, evidence, and event plan are securely with the Khair review team.';
+
+  @override
+  String get reasonLabel => 'Reason:';
+
+  @override
+  String get openOrganizerHub => 'Open organizer hub';
+
+  @override
+  String get updateApplication => 'Update application';
+
+  @override
+  String get backToDiscover => 'Back to discover';
+
+  @override
+  String get refreshStatus => 'Refresh status';
+
+  @override
+  String get uploadedSecurelyTapToReplace =>
+      'Uploaded securely. Tap to replace.';
+
+  @override
+  String get replaceImage => 'Replace image';
+
+  @override
+  String get chooseImage => 'Choose image';
+
+  @override
+  String get httpsLinkHint => 'https://?';
+
+  @override
+  String get evidenceUrlOptional => 'Evidence URL (optional)';
+
+  @override
+  String get shortNoteOptional => 'Short note (optional)';
+
+  @override
+  String get instagram => 'Instagram';
+
+  @override
+  String get facebook => 'Facebook';
+
+  @override
+  String get linkedin => 'LinkedIn';
+
+  @override
+  String get officialWebsite => 'Official website';
+
+  @override
+  String get verifiedSocial => 'Verified social account';
+
+  @override
+  String get notProvided => 'Not provided';
+
+  @override
+  String get optionalButUsefulForFasterReview =>
+      'Optional, but useful for a faster review. Only add official public links.';
+
+  @override
+  String get whatEventsWillYouHost => 'What events will you host?';
+
+  @override
+  String get sending => 'Sending…';
+
+  @override
+  String get passwordWeak => 'Weak';
+
+  @override
+  String get passwordGood => 'Good';
+
+  @override
+  String get passwordStrong => 'Strong';
+
+  @override
+  String get postEvent => 'Post event';
+
+  @override
+  String get postingEvent => 'Posting…';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get eventFallback => 'Event';
+
+  @override
+  String get dateToBeAnnounced => 'Date to be announced';
+
+  @override
+  String get locationToBeAnnounced => 'Location to be announced';
+
+  @override
+  String notificationSentTo(int count) {
+    return 'Notification sent to $count user(s)';
+  }
+
+  @override
+  String get failedToSendNotification => 'Failed to send notification';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get editQuote => 'Edit Quote';
+
+  @override
+  String get addQuote => 'Add Quote';
+
+  @override
+  String get quoteUpdated => 'Quote updated';
+
+  @override
+  String get quoteAdded => 'Quote added';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get joinedEventsLabel => 'Joined events';
+
+  @override
+  String get personalDetails => 'Personal details';
+
+  @override
+  String get communityEvent => 'Community event';
+
+  @override
+  String get paidEvent => 'Paid Event';
+
+  @override
+  String get noCostToAttend => 'No cost to attend';
+
+  @override
+  String get removeFromSaved => 'Remove from saved';
+
+  @override
+  String get registrationClosed => 'Registration closed';
+
+  @override
+  String registrationCloses(Object date) {
+    return 'Registration closes $date';
+  }
+
+  @override
+  String get youMayAlsoLike => 'You may also like';
+
+  @override
+  String memberSinceDate(Object label, Object date) {
+    return '$label $date';
+  }
+
+  @override
+  String get beFirstToJoin => 'Be the first to join';
+
+  @override
+  String get meetingAccessAfterJoining => 'Meeting access after joining';
+
+  @override
+  String get savedLabel => 'Saved';
 }

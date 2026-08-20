@@ -20,7 +20,7 @@ class _Cat {
 /// Selecting a chip dispatches the correct [EventsBloc] event
 /// so the events list reloads in real time from the API.
 class CategoryScroller extends StatelessWidget {
-  const CategoryScroller({super.key});
+  CategoryScroller({super.key});
 
   List<_Cat> _categories(BuildContext context) => [
         _Cat(id: '_trending', emoji: '🔥', label: context.l10n.catTrending),
@@ -86,14 +86,14 @@ class CategoryScroller extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: cats.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, __) => SizedBox(width: 8),
             itemBuilder: (context, i) {
               final cat = cats[i];
               final isSelected = cat.id == selectedId;
               return GestureDetector(
                 onTap: () => _onTap(context, cat.id),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
+                  duration: Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -109,10 +109,10 @@ class CategoryScroller extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(cat.emoji,
-                          style: const TextStyle(fontSize: 15)),
-                      const SizedBox(width: 6),
+                          style: TextStyle(fontSize: 15)),
+                      SizedBox(width: 6),
                       AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 200),
+                        duration: Duration(milliseconds: 200),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight:

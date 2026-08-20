@@ -38,19 +38,19 @@ class HeroSection extends StatelessWidget {
           // ── TOP ROW: Brand + Actions ──
           Row(
             children: [
-              const KhairBrandMark(size: 36, decorative: true),
-              const SizedBox(width: 10),
-              Text('Khair',
+              KhairBrandMark(size: 36, decorative: true),
+              SizedBox(width: 10),
+              Text(context.l10n.appTitle,
                   style: TextStyle(
                     fontSize: 22,
                     color: tp,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.3,
                   )),
-              const Spacer(),
+              Spacer(),
               // Language switcher
-              const LanguageSwitcher(showLabel: false, lightStyle: false),
-              const SizedBox(width: 6),
+              LanguageSwitcher(showLabel: false, lightStyle: false),
+              SizedBox(width: 6),
               // Theme toggle
               BlocBuilder<ThemeBloc, ThemeState>(
                 builder: (context, _) {
@@ -62,11 +62,11 @@ class HeroSection extends StatelessWidget {
                     bgColor: searchBg,
                     border: bdr,
                     onTap: () =>
-                        context.read<ThemeBloc>().add(const ToggleTheme()),
+                        context.read<ThemeBloc>().add(ToggleTheme()),
                   );
                 },
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               // Notifications
               BlocConsumer<NotificationBloc, NotificationState>(
                 listenWhen: (prev, curr) => curr.unreadCount > prev.unreadCount,
@@ -93,7 +93,7 @@ class HeroSection extends StatelessWidget {
                                   state.unreadCount > 9
                                       ? '9+'
                                       : '${state.unreadCount}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 9, fontWeight: FontWeight.w700),
                                 ),
                                 child: Icon(Icons.notifications_outlined,
@@ -109,12 +109,12 @@ class HeroSection extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
 
           // ── GREETING ──
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 600),
+            duration: Duration(milliseconds: 600),
             curve: Curves.easeOut,
             builder: (context, value, child) => Opacity(
               opacity: value,
@@ -132,7 +132,7 @@ class HeroSection extends StatelessWidget {
                       fontSize: 14, color: ts, fontWeight: FontWeight.w500),
                 ),
                 if (userName.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(userName,
                       style: TextStyle(
                         fontSize: 24,
@@ -145,13 +145,13 @@ class HeroSection extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // ── SEARCH BAR ──
           GestureDetector(
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const EventSearchPage()),
+                MaterialPageRoute(builder: (_) => EventSearchPage()),
               );
             },
             child: Container(
@@ -164,7 +164,7 @@ class HeroSection extends StatelessWidget {
               ),
               child: Row(children: [
                 Icon(Icons.search_rounded, color: tt, size: 22),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                     child: Text(
                   context.l10n.searchEventsHint,
@@ -181,7 +181,7 @@ class HeroSection extends StatelessWidget {
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.location_on_rounded,
                         color: KhairColors.primary, size: 14),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(context.l10n.allCities,
                         style: TextStyle(
                             color: KhairColors.primary,

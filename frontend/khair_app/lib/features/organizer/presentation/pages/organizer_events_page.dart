@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +26,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   @override
   void initState() {
     super.initState();
-    context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
+    context.read<OrganizerBloc>().add(LoadOrganizerEvents());
   }
 
   List<Event> _filterEvents(List<Event> events) {
@@ -38,7 +39,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
     final completed = bloc.stream.firstWhere(
       (state) => state.eventsStatus != OrganizerStatus.loading,
     );
-    bloc.add(const LoadOrganizerEvents());
+    bloc.add(LoadOrganizerEvents());
     await completed;
   }
 
@@ -48,12 +49,12 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Events'),
+        title: Text(context.l10n.orgMyEvents),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline),
+            icon: Icon(Icons.add_circle_outline),
             onPressed: () => context.push('/organizer/events/create'),
-            tooltip: 'Create Event',
+            tooltip: context.l10n.mapCreateEvent,
           ),
         ],
       ),
@@ -61,13 +62,13 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
         builder: (context, state) {
           // Loading
           if (state.isEventsLoading && state.events.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Loading events...'),
+                  Text(context.l10n.mapLoadingEvents),
                 ],
               ),
             );
@@ -80,7 +81,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
               message:
                   state.errorMessage ?? 'Failed to load events. Please retry.',
               onRetry: () {
-                context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
+                context.read<OrganizerBloc>().add(LoadOrganizerEvents());
               },
             );
           }
@@ -101,7 +102,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                       child: Row(
                         children: [
                           _buildFilterChip('all', 'All', state.events.length),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           _buildFilterChip(
                             'approved',
                             'Approved',
@@ -109,7 +110,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                 .where((e) => e.status == 'approved')
                                 .length,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           _buildFilterChip(
                             'pending',
                             'Pending',
@@ -117,7 +118,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                 .where((e) => e.status == 'pending')
                                 .length,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           _buildFilterChip(
                             'rejected',
                             'Rejected',
@@ -177,7 +178,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   Widget _buildFilterChip(String value, String label, int count) {
     final isSelected = _selectedFilter == value;
     return KhairFilterChip(
-      label: '$label ($count)',
+      label: context.l10n.filterLabelCount(label, count),
       isSelected: isSelected,
       onTap: () => setState(() => _selectedFilter = value),
     );
@@ -216,7 +217,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             // Content
             Expanded(
               child: Column(
@@ -228,15 +229,15 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Row(
                     children: [
                       StatusBadge(status: _mapStatus(event.status)),
                       if (event.city != null) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Icon(Icons.location_on_outlined,
                             size: 14, color: KhairColors.textTertiary),
-                        const SizedBox(width: 2),
+                        SizedBox(width: 2),
                         Text(
                           event.city!,
                           style: KhairTypography.bodySmall,
@@ -250,25 +251,25 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
             // Actions
             PopupMenuButton(
               icon:
-                  const Icon(Icons.more_vert, color: KhairColors.textTertiary),
+                  Icon(Icons.more_vert, color: KhairColors.textTertiary),
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'view', child: Text('View')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'view', child: Text(context.l10n.view)),
+                PopupMenuItem(value: 'edit', child: Text(context.l10n.ownerEdit)),
                 if (event.status == 'approved')
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'notify',
                     child: Row(
                       children: [
                         Icon(Icons.campaign_rounded,
                             size: 18, color: KhairColors.primary),
                         SizedBox(width: 8),
-                        Text('Notify Attendees'),
+                        Text(context.l10n.notifyAttendees),
                       ],
                     ),
                   ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
-                  child: Text('Delete',
+                  child: Text(context.l10n.ownerDelete,
                       style: TextStyle(color: KhairColors.error)),
                 ),
               ],
@@ -346,13 +347,13 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Title
                     Row(children: [
                       Icon(Icons.campaign_rounded,
                           color: KhairColors.primary, size: 22),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                           child: Text(
                         'Send Message to Attendees',
@@ -362,12 +363,12 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                             fontWeight: FontWeight.w700),
                       )),
                     ]),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       'Message will be sent as push notification and in-app notification to all confirmed attendees of "${event.title}".',
                       style: TextStyle(color: ts, fontSize: 13, height: 1.4),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Message input
                     TextField(
@@ -376,7 +377,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                       maxLength: 500,
                       style: TextStyle(color: tp, fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'Type your message to attendees...',
+                        hintText: context.l10n.typeYourMessageToAttendees,
                         hintStyle: TextStyle(color: ts.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: isDark
@@ -398,7 +399,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                         contentPadding: const EdgeInsets.all(14),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
 
                     // Include link checkbox
                     if (event.isOnline)
@@ -421,7 +422,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                     borderRadius: BorderRadius.circular(4)),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Text(
                               'Include event link in notification',
                               style: TextStyle(color: tp, fontSize: 13),
@@ -429,7 +430,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                           ]),
                         ),
                       ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Send button
                     SizedBox(
@@ -454,7 +455,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                   if (ctx.mounted) {
                                     ScaffoldMessenger.of(ctx).showSnackBar(
                                       SnackBar(
-                                        content: const Text(
+                                        content: Text(
                                             'Message sent to all attendees!'),
                                         backgroundColor: KhairColors.success,
                                         behavior: SnackBarBehavior.floating,
@@ -469,7 +470,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                   if (ctx.mounted) {
                                     ScaffoldMessenger.of(ctx).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to send: $e'),
+                                        content: Text(context.l10n.adminActionFailed),
                                         backgroundColor: KhairColors.error,
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
@@ -481,14 +482,16 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                 }
                               },
                         icon: isSending
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : const Icon(Icons.send_rounded, size: 18),
-                        label: Text(isSending ? 'Sending...' : 'Send Message',
-                            style: const TextStyle(
+                            : Icon(Icons.send_rounded, size: 18),
+                        label: Text(isSending
+                            ? context.l10n.sending
+                            : context.l10n.sendMessageToAttendees,
+                            style: TextStyle(
                                 fontWeight: FontWeight.w600, fontSize: 14)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: KhairColors.primary,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/utils/media_url_helper.dart';
 import '../../../events/domain/entities/event.dart';
@@ -344,7 +345,7 @@ class _FeaturedCard extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 5),
                         Text(
-                          _formatDate(event.startDate),
+                          _formatDate(context, event.startDate),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 11,
@@ -396,12 +397,17 @@ class _FeaturedCard extends StatelessWidget {
     return type.replaceAll('_', ' ').toUpperCase();
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final diff = date.difference(now).inDays;
-    if (diff == 0) return 'Today • ${DateFormat('h:mm a').format(date)}';
-    if (diff == 1) return 'Tomorrow • ${DateFormat('h:mm a').format(date)}';
-    return DateFormat('EEE, MMM d • h:mm a').format(date);
+    final locale = Localizations.localeOf(context).languageCode;
+    if (diff == 0) {
+      return '${context.l10n.today} • ${DateFormat('h:mm a', locale).format(date)}';
+    }
+    if (diff == 1) {
+      return '${context.l10n.tomorrow} • ${DateFormat('h:mm a', locale).format(date)}';
+    }
+    return DateFormat('EEE, MMM d • h:mm a', locale).format(date);
   }
 
   static _CategoryData _getCategoryData(String eventType) {
@@ -409,49 +415,83 @@ class _FeaturedCard extends StatelessWidget {
     if (type.contains('quran') || type.contains('recit')) {
       return _CategoryData(
         icon: Icons.menu_book_rounded,
-        colors: [const Color(0xFF1A5B4B), const Color(0xFF2D8E75), const Color(0xFF4DB89A)],
+        colors: [
+          const Color(0xFF1A5B4B),
+          const Color(0xFF2D8E75),
+          const Color(0xFF4DB89A)
+        ],
       );
     }
     if (type.contains('lecture') || type.contains('know')) {
       return _CategoryData(
         icon: Icons.school_rounded,
-        colors: [const Color(0xFF1B4332), const Color(0xFF2D6A4F), const Color(0xFF40916C)],
+        colors: [
+          const Color(0xFF1B4332),
+          const Color(0xFF2D6A4F),
+          const Color(0xFF40916C)
+        ],
       );
     }
     if (type.contains('charity') || type.contains('donat')) {
       return _CategoryData(
         icon: Icons.volunteer_activism_rounded,
-        colors: [const Color(0xFF4A2040), const Color(0xFF7B3F6B), const Color(0xFFA0588D)],
+        colors: [
+          const Color(0xFF4A2040),
+          const Color(0xFF7B3F6B),
+          const Color(0xFFA0588D)
+        ],
       );
     }
-    if (type.contains('masjid') || type.contains('mosque') || type.contains('prayer')) {
+    if (type.contains('masjid') ||
+        type.contains('mosque') ||
+        type.contains('prayer')) {
       return _CategoryData(
         icon: Icons.mosque_rounded,
-        colors: [const Color(0xFF1A3A5C), const Color(0xFF2C6B97), const Color(0xFF4A90C2)],
+        colors: [
+          const Color(0xFF1A3A5C),
+          const Color(0xFF2C6B97),
+          const Color(0xFF4A90C2)
+        ],
       );
     }
     if (type.contains('youth') || type.contains('commun')) {
       return _CategoryData(
         icon: Icons.groups_rounded,
-        colors: [const Color(0xFF2D4A22), const Color(0xFF4A7C3F), const Color(0xFF6BA55C)],
+        colors: [
+          const Color(0xFF2D4A22),
+          const Color(0xFF4A7C3F),
+          const Color(0xFF6BA55C)
+        ],
       );
     }
     if (type.contains('confer') || type.contains('seminar')) {
       return _CategoryData(
         icon: Icons.mic_rounded,
-        colors: [const Color(0xFF3D2E1E), const Color(0xFF6B5240), const Color(0xFF9A7A5F)],
+        colors: [
+          const Color(0xFF3D2E1E),
+          const Color(0xFF6B5240),
+          const Color(0xFF9A7A5F)
+        ],
       );
     }
     if (type.contains('workshop') || type.contains('class')) {
       return _CategoryData(
         icon: Icons.auto_stories_rounded,
-        colors: [const Color(0xFF1E3A3A), const Color(0xFF2C5E5E), const Color(0xFF4A8B8B)],
+        colors: [
+          const Color(0xFF1E3A3A),
+          const Color(0xFF2C5E5E),
+          const Color(0xFF4A8B8B)
+        ],
       );
     }
     // Default — Islamic green
     return _CategoryData(
       icon: Icons.event_rounded,
-      colors: [const Color(0xFF0D3522), const Color(0xFF14553A), const Color(0xFF1E7A52)],
+      colors: [
+        const Color(0xFF0D3522),
+        const Color(0xFF14553A),
+        const Color(0xFF1E7A52)
+      ],
     );
   }
 }

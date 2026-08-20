@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../domain/entities/notification_entity.dart';
 import '../../data/repositories/notification_repository_impl.dart';
@@ -23,6 +24,14 @@ class LoadNotifications extends NotificationEvent {
 
 class LoadUnreadCount extends NotificationEvent {
   const LoadUnreadCount();
+}
+
+class NotificationSessionChanged extends NotificationEvent {
+  final bool isAuthenticated;
+  const NotificationSessionChanged(this.isAuthenticated);
+
+  @override
+  List<Object?> get props => [isAuthenticated];
 }
 
 class MarkNotificationRead extends NotificationEvent {
@@ -73,33 +82,62 @@ class NotificationState extends Equatable {
 
 // ── BLoC ──
 
-class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
+class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
+    with WidgetsBindingObserver {
   final NotificationRepository _repository;
   Timer? _pollTimer;
   int _lastUnreadCount = 0;
+  bool _isAuthenticated = false;
 
-  NotificationBloc(this._repository) : super(const NotificationState()) {
+  NotificationBloc(this._repository, {bool enablePolling = true})
+      : super(const NotificationState()) {
     on<LoadNotifications>(_onLoadNotifications);
     on<LoadUnreadCount>(_onLoadUnreadCount);
+    on<NotificationSessionChanged>(_onSessionChanged);
     on<MarkNotificationRead>(_onMarkRead);
     on<MarkAllNotificationsRead>(_onMarkAllRead);
+    WidgetsBinding.instance.addObserver(this);
 
-    // Start periodic polling for new notifications
-    _pollTimer = Timer.periodic(_notifPollInterval, (_) {
-      if (!isClosed) add(const LoadUnreadCount());
-    });
+    if (enablePolling) {
+      // Start periodic polling for new notifications.
+      _pollTimer = Timer.periodic(_notifPollInterval, (_) {
+        if (!isClosed) add(const LoadUnreadCount());
+      });
+    }
   }
 
   @override
   Future<void> close() {
     _pollTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     return super.close();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isAuthenticated && !isClosed) {
+      add(const LoadUnreadCount());
+    }
+  }
+
+  void _onSessionChanged(
+    NotificationSessionChanged event,
+    Emitter<NotificationState> emit,
+  ) {
+    _isAuthenticated = event.isAuthenticated;
+    _lastUnreadCount = 0;
+    if (!_isAuthenticated) {
+      emit(const NotificationState());
+      return;
+    }
+    add(const LoadUnreadCount());
   }
 
   Future<void> _onLoadNotifications(
     LoadNotifications event,
     Emitter<NotificationState> emit,
   ) async {
+    if (!_isAuthenticated) return;
     emit(state.copyWith(status: NotificationStatus.loading));
 
     final result = await _repository.getNotifications();
@@ -113,7 +151,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         ));
       },
       (notifications) {
-        dev.log('[NotifBloc] LoadNotifications OK: ${notifications.length} items');
+        dev.log(
+            '[NotifBloc] LoadNotifications OK: ${notifications.length} items');
         final unread = notifications.where((n) => !n.isRead).length;
         emit(state.copyWith(
           status: NotificationStatus.success,
@@ -128,6 +167,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     LoadUnreadCount event,
     Emitter<NotificationState> emit,
   ) async {
+    if (!_isAuthenticated) return;
     final result = await _repository.getUnreadCount();
     result.fold(
       (failure) {
@@ -154,6 +194,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     MarkNotificationRead event,
     Emitter<NotificationState> emit,
   ) async {
+    if (!_isAuthenticated) return;
     final result = await _repository.markAsRead(event.notificationId);
     result.fold(
       (_) {},
@@ -165,6 +206,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
               userId: n.userId,
               title: n.title,
               message: n.message,
+              notificationType: n.notificationType,
+              data: n.data,
               isRead: true,
               createdAt: n.createdAt,
             );
@@ -184,6 +227,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     MarkAllNotificationsRead event,
     Emitter<NotificationState> emit,
   ) async {
+    if (!_isAuthenticated) return;
     final result = await _repository.markAllRead();
     result.fold(
       (_) {},

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,29 +56,29 @@ class _OrganizerApplicationReviewPageState
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null || _application == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Organizer application')),
+        appBar: AppBar(title: Text(context.l10n.organizerApplication)),
         body: Center(
             child: FilledButton.icon(
                 onPressed: _load,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try again'))),
+                icon: Icon(Icons.refresh),
+                label: Text(context.l10n.tryAgain))),
       );
     }
     final app = _application!;
     final isPending = app['status'] == 'pending';
     return Scaffold(
-      backgroundColor: const Color(0xfffdfbfc),
+      backgroundColor: Color(0xfffdfbfc),
       appBar: AppBar(
-        title: const Text('Organizer application'),
+        title: Text(context.l10n.organizerApplication),
         actions: [
           IconButton(
               onPressed: _load,
-              tooltip: 'Refresh dossier',
-              icon: const Icon(Icons.refresh_rounded))
+              tooltip: context.l10n.refreshDossier,
+              icon: Icon(Icons.refresh_rounded))
         ],
       ),
       body: SafeArea(
@@ -88,12 +89,12 @@ class _OrganizerApplicationReviewPageState
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 920),
+                  constraints: BoxConstraints(maxWidth: 920),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _header(app),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         _section('Applicant and public profile', [
                           _line('Organizer type',
                               _display(_string(app['organizer_type']))),
@@ -116,35 +117,35 @@ class _OrganizerApplicationReviewPageState
                           _line('Application submitted',
                               _date(app['submitted_at'])),
                           _line('Resubmitted', _date(app['resubmitted_at'])),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           _richText(
                               'Organization description',
                               _string(app['description'],
                                   fallback: 'Not provided')),
                         ]),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         _section('Trust evidence and public material', [
                           _mediaButtons(app),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           _links(app),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           _evidence(app),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           _documents(app),
                         ]),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         _section('Event plan and standards', [
                           _richText(
                               'Event plan',
                               _string(app['event_plan'],
                                   fallback: 'Not provided')),
-                          const SizedBox(height: 14),
+                          SizedBox(height: 14),
                           _chips('Planned categories',
                               _strings(app['event_categories'])),
-                          const SizedBox(height: 14),
+                          SizedBox(height: 14),
                           _chips('Typical audience',
                               _strings(app['typical_audience'])),
-                          const SizedBox(height: 14),
+                          SizedBox(height: 14),
                           _line(
                               'Khair Organizer Standards',
                               app['guidelines_accepted_at'] == null
@@ -152,7 +153,7 @@ class _OrganizerApplicationReviewPageState
                                   : 'Accepted · v${_string(app['guidelines_version'])}'),
                         ]),
                         if (!isPending) ...[
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           _section('Review outcome', [
                             _line('Status', _display(_string(app['status']))),
                             _line(
@@ -191,7 +192,7 @@ class _OrganizerApplicationReviewPageState
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
             colors: [Color(0xffffe8ef), Color(0xfffff7f9)]),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -199,30 +200,32 @@ class _OrganizerApplicationReviewPageState
             radius: 31,
             backgroundColor: _pink,
             child: Text(initial,
-                style: const TextStyle(
+                style: TextStyle(
                     color: Colors.white,
                     fontSize: 23,
                     fontWeight: FontWeight.w800))),
-        const SizedBox(width: 15),
+        SizedBox(width: 15),
         Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: Color(0xff1d1832))),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
               '${_display(_string(app['organizer_type']))} · ${_string(app['city'])}, ${_string(app['country_code'])}',
-              style: const TextStyle(color: Color(0xff716b7d))),
-          const SizedBox(height: 12),
+              style: TextStyle(color: Color(0xff716b7d))),
+          SizedBox(height: 12),
           _StatusChip(_string(app['status'])),
         ])),
         if ((app['revision_count'] as num? ?? 0) > 0)
           Chip(
-              avatar: const Icon(Icons.history, size: 17),
-              label: Text('${app['revision_count']} revision(s)')),
+              avatar: Icon(Icons.history, size: 17),
+              label: Text(context.l10n.revisionCount(
+                  (app['revision_count'] as num? ?? 0).toInt())),
+          ),
       ]),
     );
   }
@@ -232,15 +235,15 @@ class _OrganizerApplicationReviewPageState
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(color: const Color(0xffeee9ee)),
+            border: Border.all(color: Color(0xffeee9ee)),
             borderRadius: BorderRadius.circular(20)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.w800,
                   color: Color(0xff1d1832))),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...children,
         ]),
       );
@@ -250,13 +253,13 @@ class _OrganizerApplicationReviewPageState
         child: LayoutBuilder(builder: (context, box) {
           final narrow = box.maxWidth < 510;
           final labelWidget =
-              Text(label, style: const TextStyle(color: Color(0xff716b7d)));
+              Text(label, style: TextStyle(color: Color(0xff716b7d)));
           final valueWidget = SelectableText(value,
-              style: const TextStyle(fontWeight: FontWeight.w600));
+              style: TextStyle(fontWeight: FontWeight.w600));
           return narrow
               ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   labelWidget,
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   valueWidget
                 ])
               : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -268,18 +271,18 @@ class _OrganizerApplicationReviewPageState
 
   Widget _richText(String label, String value) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(color: Color(0xff716b7d))),
-        const SizedBox(height: 5),
+        Text(label, style: TextStyle(color: Color(0xff716b7d))),
+        SizedBox(height: 5),
         SelectableText(value,
-            style: const TextStyle(height: 1.5, fontWeight: FontWeight.w500)),
+            style: TextStyle(height: 1.5, fontWeight: FontWeight.w500)),
       ]);
 
   Widget _chips(String label, List<String> values) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(color: Color(0xff716b7d))),
-        const SizedBox(height: 8),
+        Text(label, style: TextStyle(color: Color(0xff716b7d))),
+        SizedBox(height: 8),
         if (values.isEmpty)
-          const Text('Not specified')
+          Text(context.l10n.notSpecified)
         else
           Wrap(
               spacing: 8,
@@ -295,26 +298,26 @@ class _OrganizerApplicationReviewPageState
           onPressed: app['has_public_logo'] == true
               ? () => _viewMedia('logo', 'Public logo / image')
               : null,
-          icon: const Icon(Icons.image_outlined),
-          label: const Text('View public image'),
+          icon: Icon(Icons.image_outlined),
+          label: Text(context.l10n.viewPublicImage),
         ),
         if (app['has_representative_photo'] == true)
           OutlinedButton.icon(
             onPressed: () =>
                 _viewMedia('representative-photo', 'Representative photo'),
-            icon: const Icon(Icons.account_circle_outlined),
-            label: const Text('View representative photo'),
+            icon: Icon(Icons.account_circle_outlined),
+            label: Text(context.l10n.viewRepresentativePhoto),
           ),
       ]);
 
   Widget _links(Map<String, dynamic> app) {
     final links = _mapList(app['links']);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Official public links',
+      Text(context.l10n.officialPublicLinks,
           style: TextStyle(color: Color(0xff716b7d))),
-      const SizedBox(height: 6),
+      SizedBox(height: 6),
       if (links.isEmpty)
-        const Text('No official links provided')
+        Text(context.l10n.noOfficialLinksProvided)
       else
         ...links.map((link) => Padding(
               padding: const EdgeInsets.only(bottom: 4),
@@ -327,18 +330,18 @@ class _OrganizerApplicationReviewPageState
   Widget _evidence(Map<String, dynamic> app) {
     final evidence = _mapList(app['evidence']);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Evidence entries',
+      Text(context.l10n.evidenceEntries,
           style: TextStyle(color: Color(0xff716b7d))),
-      const SizedBox(height: 6),
+      SizedBox(height: 6),
       if (evidence.isEmpty)
-        const Text('No additional evidence provided')
+        Text(context.l10n.noAdditionalEvidenceProvided)
       else
         ...evidence.map((entry) => Container(
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: const Color(0xfffaf7f9),
+                  color: Color(0xfffaf7f9),
                   borderRadius: BorderRadius.circular(12)),
               child: Text(
                   '${_display(_string(entry['evidence_type']))}\n${_string(entry['url'])}${_string(entry['note']).isEmpty ? '' : '\n${_string(entry['note'])}'}'),
@@ -349,23 +352,23 @@ class _OrganizerApplicationReviewPageState
   Widget _documents(Map<String, dynamic> app) {
     final documents = _mapList(app['verification_files']);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Private verification documents',
+      Text(context.l10n.privateVerificationDocuments,
           style: TextStyle(color: Color(0xff716b7d))),
-      const SizedBox(height: 6),
+      SizedBox(height: 6),
       if (documents.isEmpty)
-        const Text('No private documents uploaded')
+        Text(context.l10n.noPrivateDocumentsUploaded)
       else
         ...documents.map((file) => ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.lock_outline, color: _pink),
+              leading: Icon(Icons.lock_outline, color: _pink),
               title: Text(_string(file['original_filename'],
                   fallback: 'Verification document')),
               subtitle: Text(
                   '${_display(_string(file['file_type']))} · ${_fileSize(file['size_bytes'])}'),
               trailing: OutlinedButton.icon(
                 onPressed: () => _openDocument(_string(file['id'])),
-                icon: const Icon(Icons.visibility_outlined, size: 18),
-                label: const Text('View'),
+                icon: Icon(Icons.visibility_outlined, size: 18),
+                label: Text(context.l10n.view),
               ),
             )),
     ]);
@@ -374,7 +377,7 @@ class _OrganizerApplicationReviewPageState
   Widget _decisionBar() => SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-          decoration: const BoxDecoration(color: Colors.white, boxShadow: [
+          decoration: BoxDecoration(color: Colors.white, boxShadow: [
             BoxShadow(
                 color: Color(0x18000000), blurRadius: 14, offset: Offset(0, -3))
           ]),
@@ -386,28 +389,28 @@ class _OrganizerApplicationReviewPageState
                 OutlinedButton.icon(
                   onPressed:
                       _acting ? null : () => _decisionDialog('needs_revision'),
-                  icon: const Icon(Icons.edit_note_outlined),
-                  label: const Text('Request changes'),
+                  icon: Icon(Icons.edit_note_outlined),
+                  label: Text(context.l10n.requestChanges),
                 ),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xffc33a54)),
+                      foregroundColor: Color(0xffc33a54)),
                   onPressed: _acting ? null : () => _decisionDialog('rejected'),
-                  icon: const Icon(Icons.close_rounded),
-                  label: const Text('Reject'),
+                  icon: Icon(Icons.close_rounded),
+                  label: Text(context.l10n.adminReject),
                 ),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xff1f9d63)),
+                      backgroundColor: Color(0xff1f9d63)),
                   onPressed: _acting ? null : () => _decisionDialog('approved'),
                   icon: _acting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.verified_rounded),
-                  label: const Text('Approve organizer'),
+                      : Icon(Icons.verified_rounded),
+                  label: Text(context.l10n.approveOrganizer),
                 ),
               ]),
         ),
@@ -431,11 +434,11 @@ class _OrganizerApplicationReviewPageState
           if (decision == 'rejected') ...[
             TextField(
                 controller: reason,
-                decoration: const InputDecoration(
-                    labelText: 'Reason code',
-                    hintText: 'e.g. identity_unverified'),
+                decoration: InputDecoration(
+                    labelText: context.l10n.reasonCode,
+                    hintText: context.l10n.egIdentityunverified),
                 textCapitalization: TextCapitalization.none),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
           ],
           TextField(
             controller: message,
@@ -448,17 +451,17 @@ class _OrganizerApplicationReviewPageState
                     ? 'State exactly what needs to be updated.'
                     : 'Explain the decision clearly and respectfully.'),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TextField(
               controller: note,
               maxLines: 3,
-              decoration: const InputDecoration(
-                  labelText: 'Internal note (not shown to applicant)')),
+              decoration: InputDecoration(
+                labelText: context.l10n.internalNoteNotShownToApplican)),
         ])),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel')),
+              child: Text(context.l10n.adminCancel)),
           FilledButton(
             onPressed: () {
               if (decision == 'rejected' && reason.text.trim().isEmpty) {
@@ -473,7 +476,7 @@ class _OrganizerApplicationReviewPageState
             },
             style: FilledButton.styleFrom(
                 backgroundColor:
-                    decision == 'approved' ? const Color(0xff1f9d63) : _pink),
+                    decision == 'approved' ? Color(0xff1f9d63) : _pink),
             child: Text(label),
           ),
         ],
@@ -511,18 +514,18 @@ class _OrganizerApplicationReviewPageState
         context: context,
         builder: (context) => Dialog(
             child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
+          constraints: BoxConstraints(maxWidth: 720, maxHeight: 760),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
                 title: Text(title),
                 trailing: IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close))),
+                    icon: Icon(Icons.close))),
             Flexible(
                 child: InteractiveViewer(
                     child: Image.network(url.toString(),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Padding(
+                        errorBuilder: (_, __, ___) => Padding(
                             padding: EdgeInsets.all(28),
                             child: Text(
                                 'The secure image could not be displayed.'))))),
@@ -590,10 +593,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (status) {
-      'approved' => (const Color(0xff1f9d63), 'Approved'),
-      'needs_revision' => (const Color(0xffbd7411), 'Needs changes'),
-      'rejected' => (const Color(0xffc33a54), 'Rejected'),
-      _ => (const Color(0xfff43f75), 'Pending review'),
+      'approved' => (Color(0xff1f9d63), 'Approved'),
+      'needs_revision' => (Color(0xffbd7411), 'Needs changes'),
+      'rejected' => (Color(0xffc33a54), 'Rejected'),
+      _ => (Color(0xfff43f75), 'Pending review'),
     };
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

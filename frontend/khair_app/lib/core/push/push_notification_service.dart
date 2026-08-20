@@ -7,6 +7,7 @@ import 'local_notification_service.dart';
 import '../di/injection.dart';
 import '../network/api_client.dart';
 import '../router/app_router.dart' as router_lib;
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 
 /// Handles FCM push notification setup, token management, and message handling.
 class PushNotificationService {
@@ -64,6 +65,9 @@ class PushNotificationService {
     // 4. Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint('[FCM] Foreground message: ${message.notification?.title}');
+      // The notification is persisted by the backend; refresh the existing
+      // notification source of truth so the header badge updates immediately.
+      getIt<NotificationBloc>().add(const LoadUnreadCount());
       // Show local notification with route payload
       await LocalNotificationService.instance.showNotification(
         title: message.notification?.title,
@@ -81,12 +85,13 @@ class PushNotificationService {
     // 6. Check if app was opened from a terminated state notification
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint('[FCM] App opened from terminated state: ${initialMessage.data}');
+      debugPrint(
+          '[FCM] App opened from terminated state: ${initialMessage.data}');
       _handleNotificationTap(initialMessage.data);
     }
   }
 
-  /// Navigate to the appropriate screen based on notification data. 
+  /// Navigate to the appropriate screen based on notification data.
   void _handleNotificationTap(Map<String, dynamic> data) {
     final route = _buildRouteFromData(data);
     if (route != null) {
@@ -103,9 +108,11 @@ class PushNotificationService {
     final type = data['type'] as String?;
     switch (type) {
       case 'event_joined':
+      case 'event_join_confirmed':
       case 'event_reminder':
       case 'event_updated':
       case 'event_cancelled':
+      case 'event_participant_joined':
       case 'organizer_announcement':
       case 'organizer_message':
       case 'new_participant':

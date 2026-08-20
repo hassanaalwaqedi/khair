@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,11 +22,11 @@ class KhairRecommendsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionTitle(
-          title: 'Khair Recommends',
+        AppSectionTitle(
+          title: context.l10n.khairRecommends,
           icon: Icons.verified_rounded,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         SizedBox(
           height: 210,
           child: ListView.separated(
@@ -33,11 +34,11 @@ class KhairRecommendsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             itemCount: posts.length,
             separatorBuilder: (_, __) =>
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
             itemBuilder: (context, i) {
               return AppFadeSlideIn(
                 delayMs: i * 100,
-                slideOffset: const Offset(20, 0),
+                slideOffset: Offset(20, 0),
                 child: _RecommendCard(post: posts[i]),
               );
             },
@@ -95,7 +96,7 @@ class _RecommendCard extends StatelessWidget {
                       color: AppColors.goldAccent,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.verified,
@@ -130,7 +131,7 @@ class _RecommendCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     post.shortDescription,
                     style: TextStyle(
@@ -141,11 +142,11 @@ class _RecommendCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
+                  Spacer(),
                   Row(
                     children: [
                       Text(dateStr, style: AppTypography.caption),
-                      const Spacer(),
+                      Spacer(),
                       if (post.externalLink != null)
                         GestureDetector(
                           onTap: () async {
@@ -163,7 +164,7 @@ class _RecommendCard extends StatelessWidget {
                               borderRadius:
                                   BorderRadius.circular(8),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Visit',
                               style: TextStyle(
                                 fontSize: 10,
@@ -173,7 +174,7 @@ class _RecommendCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       GestureDetector(
                         onTap: () {
                           final text = StringBuffer();

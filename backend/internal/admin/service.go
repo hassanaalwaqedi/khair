@@ -111,21 +111,24 @@ func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) 
 	if s.notificationService != nil {
 		switch req.Status {
 		case "approved":
-			_ = s.notificationService.Create(
-				org.UserID,
-				"Application Approved",
-				fmt.Sprintf("Your organizer application for \"%s\" has been approved. You can now create and manage events.", org.Name),
-			)
+			_, _ = s.notificationService.CreateLocalized(org.UserID, "organizer_application", map[string]string{
+				"status":         "approved",
+				"organizer_name": org.Name,
+				"entity_type":    "organizer",
+				"entity_id":      org.ID.String(),
+			})
 		case "rejected":
 			reason := "No reason provided"
 			if req.RejectionReason != nil && *req.RejectionReason != "" {
 				reason = *req.RejectionReason
 			}
-			_ = s.notificationService.Create(
-				org.UserID,
-				"Application Update",
-				fmt.Sprintf("Your organizer application for \"%s\" requires attention: %s", org.Name, reason),
-			)
+			_, _ = s.notificationService.CreateLocalized(org.UserID, "organizer_application", map[string]string{
+				"status":         "rejected",
+				"organizer_name": org.Name,
+				"reason":         reason,
+				"entity_type":    "organizer",
+				"entity_id":      org.ID.String(),
+			})
 		}
 	}
 
@@ -199,31 +202,36 @@ func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, revi
 		if err == nil {
 			switch req.Status {
 			case "approved", "published":
-				_ = s.notificationService.Create(
-					orgUserID,
-					"Event Approved",
-					fmt.Sprintf("Your event \"%s\" has been approved and is now visible to users.", evt.Title),
-				)
+				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
+					"status":      req.Status,
+					"event_title": evt.Title,
+					"entity_type": "event",
+					"entity_id":   id.String(),
+				})
 			case "rejected":
 				reason := "No reason provided"
 				if req.RejectionReason != nil && *req.RejectionReason != "" {
 					reason = *req.RejectionReason
 				}
-				_ = s.notificationService.Create(
-					orgUserID,
-					"Event Update",
-					fmt.Sprintf("Your event \"%s\" requires attention: %s", evt.Title, reason),
-				)
+				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
+					"status":      "rejected",
+					"event_title": evt.Title,
+					"reason":      reason,
+					"entity_type": "event",
+					"entity_id":   id.String(),
+				})
 			case "needs_revision":
 				notes := ""
 				if req.RejectionReason != nil {
 					notes = *req.RejectionReason
 				}
-				_ = s.notificationService.Create(
-					orgUserID,
-					"Event Revision Requested",
-					fmt.Sprintf("Your event \"%s\" needs revisions: %s", evt.Title, notes),
-				)
+				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
+					"status":      "needs_revision",
+					"event_title": evt.Title,
+					"reason":      notes,
+					"entity_type": "event",
+					"entity_id":   id.String(),
+				})
 			}
 		}
 	}
@@ -247,11 +255,10 @@ func (s *Service) SuspendUser(userID uuid.UUID, reason string, adminID uuid.UUID
 
 	// Notify user about suspension
 	if s.notificationService != nil {
-		_ = s.notificationService.Create(
-			userID,
-			"Account Suspended",
-			fmt.Sprintf("Your account has been suspended. Reason: %s", reason),
-		)
+		_, _ = s.notificationService.CreateLocalized(userID, "account_status", map[string]string{
+			"status": "suspended",
+			"reason": reason,
+		})
 	}
 
 	return nil
@@ -270,11 +277,9 @@ func (s *Service) UnsuspendUser(userID uuid.UUID) error {
 
 	// Notify user about unsuspension
 	if s.notificationService != nil {
-		_ = s.notificationService.Create(
-			userID,
-			"Account Restored",
-			"Your account suspension has been lifted. You can now access all features.",
-		)
+		_, _ = s.notificationService.CreateLocalized(userID, "account_status", map[string]string{
+			"status": "restored",
+		})
 	}
 
 	return nil

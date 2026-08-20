@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../locale/locale_bloc.dart';
 import '../locale/l10n_extension.dart';
+import '../locale/locale_bloc.dart';
 
 /// A compact language switcher widget supporting English, Arabic, and Turkish.
 class LanguageSwitcher extends StatelessWidget {
+  static const _deviceLocaleOption = '__device_locale__';
   final bool showLabel;
 
   /// If true, uses a light style (white border/text) suitable for dark backgrounds.
@@ -34,31 +35,52 @@ class LanguageSwitcher extends StatelessWidget {
 
         return PopupMenuButton<String>(
           onSelected: (code) {
-            context.read<LocaleBloc>().add(ChangeLocale(Locale(code)));
+            if (code == _deviceLocaleOption) {
+              context.read<LocaleBloc>().add(const UseDeviceLocale());
+            } else {
+              context.read<LocaleBloc>().add(ChangeLocale(Locale(code)));
+            }
           },
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          itemBuilder: (context) => _languages
-              .where((l) => l.code != current.code)
-              .map(
-                (l) => PopupMenuItem<String>(
-                  value: l.code,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l.flag, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 8),
-                      Text(
-                        l.label,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: _deviceLocaleOption,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('🌐', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.useDeviceLanguage,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ..._languages.where((l) => l.code != current.code).map(
+                  (l) => PopupMenuItem<String>(
+                    value: l.code,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l.flag, style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 8),
+                        Text(
+                          l.label,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              )
-              .toList(),
+          ],
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

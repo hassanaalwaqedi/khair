@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:khair_app/core/locale/l10n_extension.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -39,7 +41,7 @@ class _DiscoveryEventCardState extends State<DiscoveryEventCard> {
     final secondary =
         dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
     final location = event.isOnline
-        ? 'Online event'
+        ? context.l10n.onlineEvent
         : [event.city, event.country]
             .whereType<String>()
             .where((value) => value.isNotEmpty)
@@ -99,8 +101,9 @@ class _DiscoveryEventCardState extends State<DiscoveryEventCard> {
                             color: Colors.white.withValues(alpha: .94),
                             shape: const CircleBorder(),
                             child: IconButton(
-                              tooltip:
-                                  _saved ? 'Remove from saved' : 'Save event',
+                              tooltip: _saved
+                                  ? context.l10n.removeFromSaved
+                                  : context.l10n.saveEvent,
                               onPressed: _saving ? null : _toggleSave,
                               icon: Icon(
                                   _saved
@@ -175,8 +178,9 @@ class _DiscoveryEventCardState extends State<DiscoveryEventCard> {
       if (mounted) setState(() => _saved = saved);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('We couldn’t update your saved events.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.savedEventsUpdateError)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);

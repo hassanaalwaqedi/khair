@@ -1,12 +1,14 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_brand.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../bloc/notification_bloc.dart';
+import '../notification_presentation.dart';
+import '../widgets/notification_detail_sheet.dart';
 
 class NotificationCenterPage extends StatelessWidget {
   const NotificationCenterPage({super.key});
@@ -15,8 +17,8 @@ class NotificationCenterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Provide the singleton NotificationBloc for this page
     return BlocProvider.value(
-      value: getIt<NotificationBloc>()..add(const LoadNotifications()),
-      child: const _NotificationCenterView(),
+      value: getIt<NotificationBloc>()..add(LoadNotifications()),
+      child: _NotificationCenterView(),
     );
   }
 }
@@ -29,10 +31,9 @@ class _NotificationCenterView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F0F1E) : const Color(0xFFF5F5F8),
+      backgroundColor: isDark ? Color(0xFF0F0F1E) : Color(0xFFF5F5F8),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: isDark ? Color(0xFF1A1A2E) : Colors.white,
         elevation: 0,
         title: BlocBuilder<NotificationBloc, NotificationState>(
           buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
@@ -41,11 +42,11 @@ class _NotificationCenterView extends StatelessWidget {
               children: [
                 Icon(Icons.notifications_rounded,
                     color: KhairColors.primary, size: 24),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   state.unreadCount > 0
-                      ? 'Notifications (${state.unreadCount})'
-                      : 'Notifications',
+                      ? '${context.l10n.notifications} (${state.unreadCount})'
+                      : context.l10n.notifications,
                   style: KhairTypography.headlineSmall.copyWith(
                     color: isDark ? Colors.white : KhairColors.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -63,9 +64,9 @@ class _NotificationCenterView extends StatelessWidget {
               return TextButton.icon(
                 onPressed: () => context
                     .read<NotificationBloc>()
-                    .add(const MarkAllNotificationsRead()),
-                icon: const Icon(Icons.done_all_rounded, size: 18),
-                label: const Text('Read all'),
+                    .add(MarkAllNotificationsRead()),
+                icon: Icon(Icons.done_all_rounded, size: 18),
+                label: Text(context.l10n.readAll),
                 style: TextButton.styleFrom(
                   foregroundColor: KhairColors.primary,
                 ),
@@ -78,7 +79,7 @@ class _NotificationCenterView extends StatelessWidget {
         builder: (context, state) {
           if (state.status == NotificationStatus.loading &&
               state.notifications.isEmpty) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: KhairColors.primary),
             );
           }
@@ -89,13 +90,13 @@ class _NotificationCenterView extends StatelessWidget {
           }
 
           if (state.notifications.isEmpty) {
-            return _buildEmptyState(isDark);
+            return _buildEmptyState(context, isDark);
           }
 
           return RefreshIndicator(
             color: KhairColors.primary,
             onRefresh: () async {
-              context.read<NotificationBloc>().add(const LoadNotifications());
+              context.read<NotificationBloc>().add(LoadNotifications());
               await context.read<NotificationBloc>().stream.firstWhere(
                     (s) => s.status != NotificationStatus.loading,
                   );
@@ -115,7 +116,7 @@ class _NotificationCenterView extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(bool isDark) {
+  Widget _buildEmptyState(BuildContext context, bool isDark) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -130,16 +131,16 @@ class _NotificationCenterView extends StatelessWidget {
             child: Icon(Icons.notifications_none_rounded,
                 size: 40, color: KhairColors.primary.withValues(alpha: 0.5)),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
-            'No notifications yet',
+            context.l10n.noNotificationsYet,
             style: KhairTypography.labelLarge.copyWith(
               color: isDark ? Colors.white70 : KhairColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
-            'You\'re all caught up!',
+            context.l10n.notificationsAllCaughtUp,
             style: KhairTypography.bodySmall.copyWith(
               color: KhairColors.textTertiary,
             ),
@@ -164,27 +165,27 @@ class _NotificationCenterView extends StatelessWidget {
             child: Icon(Icons.error_outline_rounded,
                 size: 40, color: Colors.red.withValues(alpha: 0.5)),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
-            'Failed to load notifications',
+            context.l10n.failedToLoadNotifications,
             style: KhairTypography.labelLarge.copyWith(
               color: isDark ? Colors.white70 : KhairColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
-            error ?? 'Please try again',
+            error ?? context.l10n.tryAgain1,
             style: KhairTypography.bodySmall.copyWith(
               color: KhairColors.textTertiary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () =>
-                context.read<NotificationBloc>().add(const LoadNotifications()),
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Retry'),
+                context.read<NotificationBloc>().add(LoadNotifications()),
+            icon: Icon(Icons.refresh_rounded, size: 18),
+            label: Text(context.l10n.retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: KhairColors.primary,
               foregroundColor: Colors.white,
@@ -200,122 +201,160 @@ class _NotificationCenterView extends StatelessWidget {
     AppNotification notif,
     bool isDark,
   ) {
-    return GestureDetector(
-      onTap: () => _openNotification(context, notif, isDark),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark
-              ? (notif.isRead
-                  ? const Color(0xFF1A1A2E)
-                  : const Color(0xFF1E2A3A))
-              : (notif.isRead
-                  ? Colors.white
-                  : KhairColors.primary.withValues(alpha: 0.04)),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: notif.isRead
-                ? (isDark
-                    ? Colors.white10
-                    : Colors.grey.withValues(alpha: 0.15))
-                : KhairColors.primary.withValues(alpha: 0.2),
-            width: notif.isRead ? 0.5 : 1,
+    final presentation = NotificationPresentationResolver.resolve(
+      notif,
+      context.l10n,
+      Localizations.localeOf(context),
+    );
+    final receivedAt = NotificationPresentationResolver.formatReceivedAt(
+      notif.createdAt,
+      context.l10n,
+      Localizations.localeOf(context),
+    );
+
+    return Semantics(
+      button: true,
+      label:
+          '${presentation.title}. ${notif.isRead ? '' : context.l10n.notificationUnread}',
+      child: GestureDetector(
+        onTap: () => _openNotification(context, notif, isDark),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark
+                ? (notif.isRead ? Color(0xFF1A1A2E) : Color(0xFF1E2A3A))
+                : (notif.isRead
+                    ? Colors.white
+                    : KhairColors.primary.withValues(alpha: 0.04)),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: notif.isRead
+                  ? (isDark
+                      ? Colors.white10
+                      : Colors.grey.withValues(alpha: 0.15))
+                  : KhairColors.primary.withValues(alpha: 0.2),
+              width: notif.isRead ? 0.5 : 1,
+            ),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+            ],
           ),
-          boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Khair logo avatar
-            _KhairAvatar(isRead: notif.isRead),
-            const SizedBox(width: 12),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Sender label
-                  Text(
-                    'Khair',
-                    style: KhairTypography.labelSmall.copyWith(
-                      color: KhairColors.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      letterSpacing: 0.3,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Khair logo avatar
+              _KhairAvatar(isRead: notif.isRead),
+              SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sender label
+                    Text(
+                      'Khair',
+                      style: KhairTypography.labelSmall.copyWith(
+                        color: KhairColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        letterSpacing: 0.3,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    notif.title,
-                    style: KhairTypography.labelMedium.copyWith(
-                      fontWeight:
-                          notif.isRead ? FontWeight.w500 : FontWeight.w700,
-                      color: isDark ? Colors.white : KhairColors.textPrimary,
+                    SizedBox(height: 3),
+                    Text(
+                      presentation.title,
+                      style: KhairTypography.labelMedium.copyWith(
+                        fontWeight:
+                            notif.isRead ? FontWeight.w500 : FontWeight.w700,
+                        color: isDark ? Colors.white : KhairColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notif.message,
-                    style: KhairTypography.bodySmall.copyWith(
-                      color:
-                          isDark ? Colors.white60 : KhairColors.textSecondary,
-                      height: 1.3,
+                    SizedBox(height: 4),
+                    Text(
+                      presentation.body,
+                      style: KhairTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white60 : KhairColors.textSecondary,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time_rounded,
-                          size: 12, color: KhairColors.textTertiary),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('MMM d, y • HH:mm').format(notif.createdAt),
-                        style: KhairTypography.labelSmall.copyWith(
-                          color: KhairColors.textTertiary,
-                          fontSize: 11,
+                    if (presentation.metadata.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 7),
+                        child: Row(
+                          children: [
+                            Icon(
+                              presentation.metadata.first.icon,
+                              size: 13,
+                              color: KhairColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                presentation.metadata.first.text,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: KhairTypography.labelSmall.copyWith(
+                                  color: KhairColors.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Spacer(),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: isDark ? Colors.white30 : Colors.grey[400],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Unread dot
-            if (!notif.isRead) ...[
-              const SizedBox(width: 8),
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: KhairColors.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: KhairColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 6,
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_rounded,
+                            size: 12, color: KhairColors.textTertiary),
+                        SizedBox(width: 4),
+                        Text(
+                          receivedAt ?? '',
+                          style: KhairTypography.labelSmall.copyWith(
+                            color: KhairColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white30 : Colors.grey[400],
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              // Unread dot
+              if (!notif.isRead) ...[
+                SizedBox(width: 8),
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: KhairColors.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: KhairColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -334,7 +373,7 @@ class _NotificationCenterView extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _NotificationDetailSheet(notif: notif),
+      builder: (_) => NotificationDetailSheet(notification: notif),
     );
   }
 }
@@ -349,125 +388,7 @@ class _KhairAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Opacity(
       opacity: isRead ? .56 : 1,
-      child: const KhairBrandMark(size: 42, decorative: true),
-    );
-  }
-}
-
-// ─── Notification Detail Sheet ──────────────────
-
-class _NotificationDetailSheet extends StatelessWidget {
-  final AppNotification notif;
-  const _NotificationDetailSheet({required this.notif});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            // Header with Khair branding
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Row(
-                children: [
-                  const KhairBrandMark(size: 48, decorative: true),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Khair',
-                          style: KhairTypography.headlineSmall.copyWith(
-                            color: KhairColors.primary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(Icons.access_time_rounded,
-                                size: 13, color: KhairColors.textTertiary),
-                            const SizedBox(width: 4),
-                            Text(
-                              DateFormat('EEEE, MMM d, y • HH:mm')
-                                  .format(notif.createdAt),
-                              style: KhairTypography.labelSmall.copyWith(
-                                color: KhairColors.textTertiary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close_rounded,
-                        color: isDark ? Colors.white54 : Colors.grey[500]),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Divider(
-              color: isDark ? Colors.white10 : Colors.grey[200],
-              height: 1,
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Text(
-                notif.title,
-                style: KhairTypography.h2.copyWith(
-                  color: isDark ? Colors.white : KhairColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                  height: 1.3,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Message body
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-              child: Text(
-                notif.message,
-                style: KhairTypography.bodyLarge.copyWith(
-                  color: isDark ? Colors.white70 : KhairColors.textSecondary,
-                  height: 1.7,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: KhairBrandMark(size: 42, decorative: true),
     );
   }
 }

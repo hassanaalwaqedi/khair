@@ -264,7 +264,7 @@ func sendEventReminders(db *sql.DB, notifSvc *notification.Service, pushSvc *pus
 func sendRemindersForWindow(db *sql.DB, notifSvc *notification.Service, pushSvc *push.Service, windowStart, windowEnd time.Time, label string) {
 	// Find events starting in this window
 	rows, err := db.Query(`
-		SELECT e.id, e.title
+		SELECT e.id, e.title, e.start_date, e.timezone
 		FROM events e
 		WHERE e.status IN ('approved', 'published')
 		  AND e.start_date >= $1
@@ -279,7 +279,9 @@ func sendRemindersForWindow(db *sql.DB, notifSvc *notification.Service, pushSvc 
 	for rows.Next() {
 		var eventID uuid.UUID
 		var title string
-		if err := rows.Scan(&eventID, &title); err != nil {
+		var startAt time.Time
+		var timezone string
+		if err := rows.Scan(&eventID, &title, &startAt, &timezone); err != nil {
 			continue
 		}
 
@@ -300,14 +302,29 @@ func sendRemindersForWindow(db *sql.DB, notifSvc *notification.Service, pushSvc 
 				continue
 			}
 
-			remTitle := "Event Reminder"
-			remMsg := fmt.Sprintf("Your event \"%s\" starts in %s.", title, label)
-
-			if notifSvc != nil {
-				_ = notifSvc.Create(userID, remTitle, remMsg)
+			data := map[string]string{
+				"entity_type":    "event",
+				"entity_id":      eventID.String(),
+				"event_id":       eventID.String(),
+				"event_title":    title,
+				"start_at":       startAt.Format(time.RFC3339),
+				"reminder_label": label,
 			}
-			if pushSvc != nil {
-				pushSvc.SendToUser(userID, remTitle, remMsg, map[string]string{
+			if location, err := time.LoadLocation(timezone); err == nil {
+				data["event_local_start"] = startAt.In(location).Format("2006-01-02T15:04:05")
+			}
+
+			var reminder notification.LocalizedNotification
+			if notifSvc != nil {
+				var err error
+				reminder, err = notifSvc.CreateLocalized(userID, "event_reminder", data)
+				if err != nil {
+					log.Printf("[WORKER] Reminder notification error for %s: %v", userID, err)
+					continue
+				}
+			}
+			if pushSvc != nil && reminder.Title != "" {
+				pushSvc.SendToUser(userID, reminder.Title, reminder.Message, map[string]string{
 					"type":     "event_reminder",
 					"event_id": eventID.String(),
 				})

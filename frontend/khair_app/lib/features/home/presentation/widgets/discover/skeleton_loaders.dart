@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import '../../../../../tokens/tokens.dart';
 import 'discover_section_header.dart';
@@ -13,7 +14,7 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1500),
+    duration: Duration(milliseconds: 1500),
   )..repeat(reverse: true);
 
   late final Animation<double> _animation =
@@ -34,10 +35,10 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: DiscoverSectionHeader(
-              title: 'Featured near you',
+              title: context.l10n.featuredNearYou,
               subtitle: '',
               action: '',
               onAction: _noop,
@@ -49,10 +50,10 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 3,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              separatorBuilder: (_, __) => SizedBox(width: 16),
               itemBuilder: (_, __) => Container(
                 width: MediaQuery.sizeOf(context).width * 0.82,
-                constraints: const BoxConstraints(maxWidth: 360),
+                constraints: BoxConstraints(maxWidth: 360),
                 decoration: BoxDecoration(
                   color: AppColors.border.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
@@ -60,10 +61,10 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
               ),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: DiscoverSectionHeader(
-              title: 'Recommended for you',
+              title: context.l10n.recommendedForYou2,
               subtitle: '',
               action: '',
               onAction: _noop,
@@ -75,7 +76,7 @@ class _SkeletonLoadersState extends State<SkeletonLoaders>
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 4,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              separatorBuilder: (_, __) => SizedBox(width: 14),
               itemBuilder: (_, __) => Container(
                 width: 250,
                 decoration: BoxDecoration(

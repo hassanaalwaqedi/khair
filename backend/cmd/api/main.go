@@ -48,6 +48,7 @@ import (
 	"github.com/khair/backend/internal/sharing"
 	"github.com/khair/backend/internal/spiritualquote"
 	"github.com/khair/backend/internal/sse"
+	"github.com/khair/backend/internal/support"
 	"github.com/khair/backend/internal/trust"
 	"github.com/khair/backend/internal/trust/audit"
 	"github.com/khair/backend/internal/trust/moderation"
@@ -57,7 +58,6 @@ import (
 	"github.com/khair/backend/internal/verification"
 	"github.com/khair/backend/internal/waitlist"
 	"github.com/khair/backend/internal/ws"
-	"github.com/khair/backend/internal/support"
 	"github.com/khair/backend/pkg/brand"
 	"github.com/khair/backend/pkg/cache"
 	"github.com/khair/backend/pkg/config"
@@ -227,9 +227,9 @@ func main() {
 	organizerService := organizer.NewService(db)
 	eventService := event.NewService(db, &organizerRepoAdapter{repo: organizerRepo})
 	mapService := mapservice.NewService(db)
-	registrationService := registration.NewService(db, cfg, emailSvc)
 
 	notificationService := notification.NewService(db)
+	registrationService := registration.NewService(db, cfg, emailSvc, notificationService)
 	cacheService := cache.NewService(redisClient)
 	sseHub := sse.NewHub()
 
@@ -281,7 +281,7 @@ func main() {
 
 	// Initialize Support service
 	supportRepo := support.NewRepository(db)
-	supportService := support.NewService(supportRepo, geminiClient, wsHub, fcmClient, db)
+	supportService := support.NewService(supportRepo, geminiClient, wsHub, fcmClient, db, notificationService)
 	supportHandler := support.NewHandler(supportService)
 
 	if geminiClient.IsEnabled() {

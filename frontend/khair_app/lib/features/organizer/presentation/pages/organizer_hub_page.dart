@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -75,8 +76,7 @@ class _OrganizerHubPageState extends State<OrganizerHubPage> {
       lastDate: DateTime(now.year + 1, 12, 31),
       initialDateRange: _customStart != null && _customEnd != null
           ? DateTimeRange(start: _customStart!, end: _customEnd!)
-          : DateTimeRange(
-              start: now.subtract(const Duration(days: 29)), end: now),
+          : DateTimeRange(start: now.subtract(Duration(days: 29)), end: now),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).colorScheme.copyWith(
@@ -109,54 +109,52 @@ class _OrganizerHubPageState extends State<OrganizerHubPage> {
                     message: _friendlyError(_error!),
                     onRetry: _load,
                   )
-                : const Center(
+                : Center(
                     child: CircularProgressIndicator(color: _HubColors.rose),
                   )
             : RefreshIndicator(
-                    color: _HubColors.rose,
-                    onRefresh: _load,
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1240),
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(24, 22, 24, 54),
-                                child: _HubContent(
-                                  dashboard: _dashboard!,
-                                  range: _range,
-                                  eventTab: _eventTab,
-                                  performanceMetric: _performanceMetric,
-                                  refreshing: _loading,
-                                  onRangeChanged: (range) => range == 'custom'
-                                      ? _chooseCustomRange()
-                                      : _load(range: range),
-                                  onEventTabChanged: (tab) =>
-                                      setState(() => _eventTab = tab),
-                                  onPerformanceMetricChanged: (metric) =>
-                                      setState(
-                                          () => _performanceMetric = metric),
-                                  onCreateEvent: () =>
-                                      context.push('/organizer/events/create'),
-                                  onManageEvents: () =>
-                                      context.push('/organizer/events'),
-                                  onProfile: () =>
-                                      context.push('/organizer/profile'),
-                                  onNotifications: () =>
-                                      context.push('/notifications'),
-                                  onAttendees: _showAttendees,
-                                  onSendUpdate: _showAnnouncement,
-                                ),
-                              ),
+                color: _HubColors.rose,
+                onRefresh: _load,
+                child: CustomScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 1240),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 22, 24, 54),
+                            child: _HubContent(
+                              dashboard: _dashboard!,
+                              range: _range,
+                              eventTab: _eventTab,
+                              performanceMetric: _performanceMetric,
+                              refreshing: _loading,
+                              onRangeChanged: (range) => range == 'custom'
+                                  ? _chooseCustomRange()
+                                  : _load(range: range),
+                              onEventTabChanged: (tab) =>
+                                  setState(() => _eventTab = tab),
+                              onPerformanceMetricChanged: (metric) =>
+                                  setState(() => _performanceMetric = metric),
+                              onCreateEvent: () =>
+                                  context.push('/organizer/events/create'),
+                              onManageEvents: () =>
+                                  context.push('/organizer/events'),
+                              onProfile: () =>
+                                  context.push('/organizer/profile'),
+                              onNotifications: () =>
+                                  context.push('/notifications'),
+                              onAttendees: _showAttendees,
+                              onSendUpdate: _showAnnouncement,
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -265,7 +263,7 @@ class _HubContent extends StatelessWidget {
           onNotifications: onNotifications,
           onProfile: onProfile,
         ),
-        const SizedBox(height: 42),
+        SizedBox(height: 42),
         LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 760;
@@ -273,23 +271,23 @@ class _HubContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_timeGreeting()}, $displayName 👋',
+                  '${_timeGreeting(context)}, $displayName 👋',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: _HubColors.rose,
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  'Organizer Hub',
+                  context.l10n.organizerHub,
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         letterSpacing: -1.1,
                       ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Text(
-                  _summaryText(metrics, range),
+                  _summaryText(context, metrics, range),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: _muted(context),
                       ),
@@ -297,10 +295,10 @@ class _HubContent extends StatelessWidget {
               ],
             );
             final action = FilledButton.icon(
-              key: const Key('organizer-create-event'),
+              key: Key('organizer-create-event'),
               onPressed: onCreateEvent,
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Create event'),
+              icon: Icon(Icons.add_rounded, size: 20),
+              label: Text(context.l10n.createEvent1),
               style: FilledButton.styleFrom(
                 backgroundColor: _HubColors.rose,
                 foregroundColor: Colors.white,
@@ -314,7 +312,7 @@ class _HubContent extends StatelessWidget {
             if (compact) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [intro, const SizedBox(height: 20), action],
+                children: [intro, SizedBox(height: 20), action],
               );
             }
             return Row(
@@ -323,17 +321,17 @@ class _HubContent extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 30),
+        SizedBox(height: 30),
         _RangeSelector(selected: range, onChanged: onRangeChanged),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _MetricsGrid(metrics: metrics),
-        const SizedBox(height: 34),
+        SizedBox(height: 34),
         _SectionHeading(
-          title: 'Your next event',
+          title: context.l10n.yourNextEvent,
           action: upcoming.isEmpty ? null : 'View all events',
           onAction: onManageEvents,
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         if (dashboard['next_event'] is Map)
           _NextEventCard(
             event: _asMap(dashboard['next_event']),
@@ -343,7 +341,7 @@ class _HubContent extends StatelessWidget {
           )
         else
           _NoNextEventCard(onCreateEvent: onCreateEvent),
-        const SizedBox(height: 34),
+        SizedBox(height: 34),
         LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 930;
@@ -367,7 +365,7 @@ class _HubContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 7, child: eventPanel),
-                  const SizedBox(width: 22),
+                  SizedBox(width: 22),
                   Expanded(flex: 4, child: attentionPanel),
                 ],
               );
@@ -375,13 +373,13 @@ class _HubContent extends StatelessWidget {
             return Column(
               children: [
                 eventPanel,
-                const SizedBox(height: 22),
+                SizedBox(height: 22),
                 attentionPanel,
               ],
             );
           },
         ),
-        const SizedBox(height: 34),
+        SizedBox(height: 34),
         LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 930;
@@ -396,19 +394,19 @@ class _HubContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 7, child: chart),
-                  const SizedBox(width: 22),
+                  SizedBox(width: 22),
                   Expanded(flex: 4, child: feed),
                 ],
               );
             }
             return Column(
-              children: [chart, const SizedBox(height: 22), feed],
+              children: [chart, SizedBox(height: 22), feed],
             );
           },
         ),
         if (refreshing) ...[
-          const SizedBox(height: 20),
-          const LinearProgressIndicator(color: _HubColors.rose),
+          SizedBox(height: 20),
+          LinearProgressIndicator(color: _HubColors.rose),
         ],
       ],
     );
@@ -433,7 +431,7 @@ class _HubTopBar extends StatelessWidget {
     return Row(
       children: [
         _BrandMark(imageUrl: logoUrl),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Text(
           'Khair',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -441,13 +439,13 @@ class _HubTopBar extends StatelessWidget {
                 letterSpacing: -0.5,
               ),
         ),
-        const Spacer(),
+        Spacer(),
         IconButton(
           onPressed: onNotifications,
-          tooltip: 'Notifications',
-          icon: const Icon(Icons.notifications_none_rounded),
+          tooltip: context.l10n.orgNotifications,
+          icon: Icon(Icons.notifications_none_rounded),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
         InkWell(
           onTap: onProfile,
           borderRadius: BorderRadius.circular(24),
@@ -458,7 +456,7 @@ class _HubTopBar extends StatelessWidget {
               organizer.isEmpty
                   ? 'K'
                   : organizer.characters.first.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                   color: _HubColors.rose, fontWeight: FontWeight.w800),
             ),
           ),
@@ -497,7 +495,7 @@ class _BrandMark extends StatelessWidget {
           color: _HubColors.rose,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(Icons.volunteer_activism_rounded,
+        child: Icon(Icons.volunteer_activism_rounded,
             color: Colors.white, size: 21),
       );
 }
@@ -526,7 +524,7 @@ class _RangeSelector extends StatelessWidget {
             child: ChoiceChip(
               label: Text(choice['label']!),
               avatar: choice['key'] == 'custom'
-                  ? const Icon(Icons.date_range_outlined, size: 16)
+                  ? Icon(Icons.date_range_outlined, size: 16)
                   : null,
               selected: isSelected,
               onSelected: (_) => onChanged(choice['key']!),
@@ -558,27 +556,27 @@ class _MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       _MetricData(
-        label: 'Upcoming events',
+        label: context.l10n.upcomingEvents,
         value: _asNumber(metrics['upcoming_events']).toString(),
         icon: Icons.event_available_outlined,
         tone: _HubColors.violet,
       ),
       _MetricData(
-        label: 'Confirmed attendees',
+        label: context.l10n.confirmedAttendees,
         value: _asNumber(metrics['total_attendees']).toString(),
         change: _asDoubleOrNull(metrics['attendee_change']),
         icon: Icons.groups_2_outlined,
         tone: _HubColors.rose,
       ),
       _MetricData(
-        label: 'Event views',
+        label: context.l10n.eventViews,
         value: _asNumber(metrics['event_views']).toString(),
         change: _asDoubleOrNull(metrics['view_change']),
         icon: Icons.visibility_outlined,
         tone: _HubColors.blue,
       ),
       _MetricData(
-        label: 'Join rate',
+        label: context.l10n.joinRate,
         value: _asNumber(metrics['event_views']) == 0
             ? '—'
             : '${_asDouble(metrics['join_rate']).toStringAsFixed(1)}%',
@@ -601,7 +599,7 @@ class _MetricsGrid extends StatelessWidget {
           mainAxisSpacing: 14,
           childAspectRatio: columns == 1 ? 3.25 : 1.7,
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           children: items.map((item) => _MetricCard(item: item)).toList(),
         );
       },
@@ -646,11 +644,11 @@ class _MetricCard extends StatelessWidget {
                   ),
                   child: Icon(item.icon, color: item.tone, size: 19),
                 ),
-                const Spacer(),
+                Spacer(),
                 if (item.change != null) _ChangeBadge(change: item.change!),
               ],
             ),
-            const Spacer(),
+            Spacer(),
             Text(
               item.value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -658,7 +656,7 @@ class _MetricCard extends StatelessWidget {
                     letterSpacing: -0.7,
                   ),
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Text(item.label, style: TextStyle(color: _muted(context))),
           ],
         ),
@@ -715,7 +713,7 @@ class _NextEventCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _StatusBadge(status: _asString(event['status'])),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text(
                   _asString(event['title'], fallback: 'Untitled event'),
                   maxLines: 2,
@@ -725,7 +723,7 @@ class _NextEventCard extends StatelessWidget {
                         letterSpacing: -0.3,
                       ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Wrap(
                   spacing: 16,
                   runSpacing: 9,
@@ -741,23 +739,24 @@ class _NextEventCard extends StatelessWidget {
                           ? Icons.videocam_outlined
                           : Icons.location_on_outlined,
                       value: event['is_online'] == true
-                          ? 'Online'
+                          ? context.l10n.online
                           : _asString(event['city'], fallback: 'Venue TBA'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 _AttendeeProgress(event: event),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     OutlinedButton(
-                        onPressed: onManage, child: const Text('Manage event')),
+                        onPressed: onManage,
+                        child: Text(context.l10n.manageEvent)),
                     OutlinedButton(
                       onPressed: () => onAttendees(event),
-                      child: const Text('Attendees'),
+                      child: Text(context.l10n.attendees),
                     ),
                     if (_canSendUpdate(event))
                       FilledButton(
@@ -765,7 +764,7 @@ class _NextEventCard extends StatelessWidget {
                         style: FilledButton.styleFrom(
                             backgroundColor: _HubColors.rose,
                             foregroundColor: Colors.white),
-                        child: const Text('Send update'),
+                        child: Text(context.l10n.sendUpdate),
                       ),
                   ],
                 ),
@@ -810,32 +809,31 @@ class _NoNextEventCard extends StatelessWidget {
                 color: _HubColors.softRose,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const Icon(Icons.auto_awesome_outlined,
-                  color: _HubColors.rose),
+              child: Icon(Icons.auto_awesome_outlined, color: _HubColors.rose),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ready to host your next event?',
+                  Text(context.l10n.readyToHostYourNextEvent,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
                           ?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 5),
-                  Text('Create an event and start building your community.',
+                  SizedBox(height: 5),
+                  Text(context.l10n.createAnEventAndStartBuildingY,
                       style: TextStyle(color: _muted(context))),
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             FilledButton(
               onPressed: onCreateEvent,
               style: FilledButton.styleFrom(
                   backgroundColor: _HubColors.rose,
                   foregroundColor: Colors.white),
-              child: const Text('Create event'),
+              child: Text(context.l10n.createEvent1),
             ),
           ],
         ),
@@ -862,7 +860,11 @@ class _EventsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['Upcoming', 'Drafts', 'Past'];
+    final labels = [
+      context.l10n.upcomingEvents,
+      context.l10n.draftEvents,
+      context.l10n.past,
+    ];
     const keys = ['upcoming', 'drafts', 'past'];
     final safeTab = selectedTab.clamp(0, labels.length - 1);
     final items = _asList(events[keys[safeTab]]);
@@ -874,8 +876,10 @@ class _EventsPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SectionHeading(
-                title: 'Your events', action: 'View all', onAction: onManage),
-            const SizedBox(height: 15),
+                title: context.l10n.yourEvents,
+                action: context.l10n.viewAll,
+                onAction: onManage),
+            SizedBox(height: 15),
             Wrap(
               spacing: 7,
               children: List.generate(
@@ -897,12 +901,14 @@ class _EventsPanel extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             if (items.isEmpty)
               _InlineEmpty(
                   message: safeTab == 0
-                      ? 'No upcoming events yet.'
-                      : 'No ${labels[safeTab].toLowerCase()} events.')
+                      ? context.l10n.noUpcomingEventsYet
+                      : safeTab == 1
+                          ? context.l10n.noDraftEvents
+                          : context.l10n.noPastEvents)
             else
               ...items.map((item) => _EventRow(
                     event: _asMap(item),
@@ -940,7 +946,7 @@ class _EventRow extends StatelessWidget {
             height: 58,
             child: _EventImage(event: event, radius: 11),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,7 +959,7 @@ class _EventRow extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   '${_formatDate(event['start_date'])} · ${_asNumber(event['attendees'])} attendees',
                   style: TextStyle(color: _muted(context), fontSize: 12),
@@ -961,10 +967,10 @@ class _EventRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _StatusBadge(status: _asString(event['status'])),
           PopupMenuButton<String>(
-            tooltip: 'Event actions',
+            tooltip: context.l10n.eventActions,
             onSelected: (value) {
               switch (value) {
                 case 'manage':
@@ -976,13 +982,15 @@ class _EventRow extends StatelessWidget {
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'manage', child: Text('Manage event')),
+              PopupMenuItem(
+                  value: 'manage', child: Text(context.l10n.manageEvent)),
               if (_isLiveEvent(event))
-                const PopupMenuItem(
-                    value: 'attendees', child: Text('View attendees')),
+                PopupMenuItem(
+                    value: 'attendees',
+                    child: Text(context.l10n.viewAttendees)),
               if (_canSendUpdate(event))
-                const PopupMenuItem(
-                    value: 'update', child: Text('Send update')),
+                PopupMenuItem(
+                    value: 'update', child: Text(context.l10n.sendUpdate)),
             ],
           ),
         ],
@@ -1013,11 +1021,10 @@ class _AttentionPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeading(title: 'Needs your attention'),
-            const SizedBox(height: 12),
+            _SectionHeading(title: context.l10n.needsYourAttention),
+            SizedBox(height: 12),
             if (items.isEmpty)
-              const _InlineEmpty(
-                  message: 'Nothing needs your attention right now.')
+              _InlineEmpty(message: context.l10n.noAttentionNeeded)
             else
               ...items.map((raw) {
                 final item = _asMap(raw);
@@ -1051,15 +1058,15 @@ class _AttentionPanel extends StatelessWidget {
                         color: color,
                         size: 19,
                       ),
-                      const SizedBox(width: 9),
+                      SizedBox(width: 9),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(_asString(item['title']),
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontWeight: FontWeight.w800, fontSize: 13)),
-                            const SizedBox(height: 3),
+                            SizedBox(height: 3),
                             Text(_asString(item['detail']),
                                 style: TextStyle(
                                     color: _muted(context), fontSize: 12)),
@@ -1074,7 +1081,9 @@ class _AttentionPanel extends StatelessWidget {
                                 : action == 'send_update'
                                     ? () => onSendUpdate(event)
                                     : onManage,
-                        child: Text(action == 'attendees' ? 'Open' : 'Review'),
+                        child: Text(action == 'attendees'
+                            ? context.l10n.open
+                            : context.l10n.review),
                       ),
                     ],
                   ),
@@ -1112,35 +1121,39 @@ class _PerformancePanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Expanded(child: _SectionHeading(title: 'Performance')),
+                Expanded(
+                    child: _SectionHeading(title: context.l10n.performance)),
                 SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'views', label: Text('Views')),
-                    ButtonSegment(value: 'attendees', label: Text('Joins')),
+                  segments: [
+                    ButtonSegment(
+                        value: 'views', label: Text(context.l10n.views)),
+                    ButtonSegment(
+                        value: 'attendees', label: Text(context.l10n.joins)),
                   ],
                   selected: {metric},
                   onSelectionChanged: (value) => onMetricChanged(value.first),
                   showSelectedIcon: false,
                   style: ButtonStyle(
-                    textStyle: WidgetStateProperty.all(const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w700)),
+                    textStyle: WidgetStateProperty.all(
+                        TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 5),
+            SizedBox(height: 5),
             Text(
               metric == 'views'
-                  ? 'Unique event-detail viewers in the selected range'
-                  : 'Confirmed unique joins in the selected range',
+                  ? context.l10n.performanceViewsRange
+                  : context.l10n.performanceJoinsRange,
               style: TextStyle(color: _muted(context), fontSize: 12),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             if (parsed.isEmpty)
-              const SizedBox(
+              SizedBox(
                   height: 190,
-                  child: _InlineEmpty(message: 'No performance data yet.'))
+                  child:
+                      _InlineEmpty(message: context.l10n.noPerformanceDataYet))
             else
               _LineChart(
                 points: parsed,
@@ -1183,7 +1196,8 @@ class _LineChart extends StatelessWidget {
       return Container(
         height: 200,
         alignment: Alignment.center,
-        child: const Text('No performance data yet.', style: TextStyle(color: _HubColors.muted)),
+        child: Text(context.l10n.noPerformanceDataYet,
+            style: TextStyle(color: _HubColors.muted)),
       );
     }
     return LayoutBuilder(
@@ -1206,7 +1220,7 @@ class _LineChart extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1224,7 +1238,7 @@ class _LineChart extends StatelessWidget {
 
   Widget _chartDate(dynamic value) => Text(
         _formatShortDate(value),
-        style: const TextStyle(fontSize: 10, color: _HubColors.muted),
+        style: TextStyle(fontSize: 10, color: _HubColors.muted),
       );
 }
 
@@ -1316,11 +1330,10 @@ class _ActivityPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeading(title: 'Recent activity'),
-            const SizedBox(height: 14),
+            _SectionHeading(title: context.l10n.recentActivity),
+            SizedBox(height: 14),
             if (items.isEmpty)
-              const _InlineEmpty(
-                  message: 'Your organizer activity will appear here.')
+              _InlineEmpty(message: context.l10n.organizerActivityWillAppear)
             else
               ...items.take(6).map((raw) {
                 final item = _asMap(raw);
@@ -1333,10 +1346,10 @@ class _ActivityPanel extends StatelessWidget {
                         margin: const EdgeInsets.only(top: 4),
                         width: 9,
                         height: 9,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                             color: _HubColors.rose, shape: BoxShape.circle),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1345,11 +1358,11 @@ class _ActivityPanel extends StatelessWidget {
                               _activityTitle(item),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontWeight: FontWeight.w800, fontSize: 13),
                             ),
                             if (_asString(item['detail']).isNotEmpty) ...[
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 _asString(item['detail']),
                                 maxLines: 1,
@@ -1358,7 +1371,7 @@ class _ActivityPanel extends StatelessWidget {
                                     color: _muted(context), fontSize: 12),
                               ),
                             ],
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Text(
                               _relativeDate(item['created_at']),
                               style: TextStyle(
@@ -1389,9 +1402,9 @@ class _AttendeeProgress extends StatelessWidget {
     final ratio = capacity != null && capacity > 0
         ? (attendees / capacity).clamp(0.0, 1.0)
         : null;
-        
+
     final preview = event['attendee_preview'] as List? ?? [];
-        
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1399,7 +1412,7 @@ class _AttendeeProgress extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.groups_2_outlined, size: 17, color: _muted(context)),
-              const SizedBox(width: 7),
+              SizedBox(width: 7),
               Text(
                 'No attendees yet. They will appear here.',
                 style: TextStyle(color: _muted(context), fontSize: 13),
@@ -1426,9 +1439,11 @@ class _AttendeeProgress extends StatelessWidget {
                         child: CircleAvatar(
                           radius: 12,
                           backgroundColor: _HubColors.softRose,
-                          backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                          backgroundImage:
+                              avatar != null ? NetworkImage(avatar) : null,
                           child: avatar == null
-                              ? const Icon(Icons.person, size: 14, color: _HubColors.rose)
+                              ? Icon(Icons.person,
+                                  size: 14, color: _HubColors.rose)
                               : null,
                         ),
                       ),
@@ -1436,17 +1451,17 @@ class _AttendeeProgress extends StatelessWidget {
                   }),
                 ),
               ),
-              if (preview.isNotEmpty) const SizedBox(width: 8),
+              if (preview.isNotEmpty) SizedBox(width: 8),
               Text(
                 capacity == null
                     ? '$attendees confirmed attendees'
                     : '$attendees / $capacity confirmed attendees',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ],
           ),
         if (ratio != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
@@ -1473,14 +1488,14 @@ class _EventImage extends StatelessWidget {
     final url = _nullableString(event['image_url']);
     final placeholder = Container(
       height: height,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_HubColors.rose, Color(0xFFB92F6C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Center(
+      child: Center(
           child: Icon(Icons.event_rounded, color: Colors.white, size: 35)),
     );
     final image = url == null || url.isEmpty
@@ -1537,7 +1552,7 @@ class _Meta extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: _HubColors.rose),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(value, style: TextStyle(color: _muted(context), fontSize: 12)),
         ],
       );
@@ -1610,7 +1625,7 @@ class _InlineEmpty extends StatelessWidget {
         child: Row(
           children: [
             Icon(Icons.inbox_outlined, color: _muted(context), size: 19),
-            const SizedBox(width: 9),
+            SizedBox(width: 9),
             Expanded(
               child: Text(message,
                   style: TextStyle(color: _muted(context), fontSize: 13)),
@@ -1632,26 +1647,25 @@ class _ErrorState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded,
-                  color: _HubColors.rose, size: 42),
-              const SizedBox(height: 14),
-              Text('We couldn’t load your Organizer Hub.',
+              Icon(Icons.cloud_off_rounded, color: _HubColors.rose, size: 42),
+              SizedBox(height: 14),
+              Text(context.l10n.adminActionFailed,
                   textAlign: TextAlign.center,
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 7),
+              SizedBox(height: 7),
               Text(message,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: _muted(context))),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               FilledButton(
                   onPressed: onRetry,
                   style: FilledButton.styleFrom(
                       backgroundColor: _HubColors.rose,
                       foregroundColor: Colors.white),
-                  child: const Text('Try again')),
+                  child: Text(context.l10n.tryAgain)),
             ],
           ),
         ),
@@ -1668,7 +1682,7 @@ class _AttendeeSheet extends StatelessWidget {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return SafeArea(
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 640),
+        constraints: BoxConstraints(maxHeight: 640),
         padding: EdgeInsets.fromLTRB(20, 13, 20, 20 + bottom),
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
@@ -1686,26 +1700,27 @@ class _AttendeeSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(99)),
               ),
             ),
-            const SizedBox(height: 18),
-            Text('Attendees',
+            SizedBox(height: 18),
+            Text(context.l10n.attendees,
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Text(eventTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: _muted(context))),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             if (attendees.isEmpty)
-              const Expanded(
-                  child: _InlineEmpty(message: 'No confirmed attendees yet.'))
+              Expanded(
+                  child:
+                      _InlineEmpty(message: context.l10n.noConfirmedAttendees))
             else
               Expanded(
                 child: ListView.separated(
                   itemCount: attendees.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => Divider(height: 1),
                   itemBuilder: (_, index) {
                     final attendee = attendees[index];
                     final name = _asString(attendee['display_name'],
@@ -1716,17 +1731,19 @@ class _AttendeeSheet extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
                         backgroundColor: _HubColors.softRose,
-                        backgroundImage: avatar != null ? NetworkImage(avatar) : null,
-                        child: avatar == null 
+                        backgroundImage:
+                            avatar != null ? NetworkImage(avatar) : null,
+                        child: avatar == null
                             ? Text(name.characters.first.toUpperCase(),
-                                style: const TextStyle(color: _HubColors.rose))
+                                style: TextStyle(color: _HubColors.rose))
                             : null,
                       ),
                       title: Text(name,
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(_relativeDate(attendee['joined_at'] ?? attendee['registered_at'])),
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: Text(_relativeDate(
+                          attendee['joined_at'] ?? attendee['registered_at'])),
                       trailing: attendee['attended'] == true
-                          ? const Icon(Icons.check_circle,
+                          ? Icon(Icons.check_circle,
                               color: _HubColors.success, size: 19)
                           : null,
                     );
@@ -1770,7 +1787,7 @@ class _AnnouncementDialogState extends State<_AnnouncementDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Send an event update'),
+        title: Text(context.l10n.sendAnEventUpdate),
         content: SizedBox(
           width: 480,
           child: SingleChildScrollView(
@@ -1781,40 +1798,44 @@ class _AnnouncementDialogState extends State<_AnnouncementDialog> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: _muted(context))),
-                const SizedBox(height: 17),
+                SizedBox(height: 17),
                 TextField(
                   controller: _title,
                   maxLength: 160,
-                  decoration: const InputDecoration(
-                      labelText: 'Title', hintText: 'A short update title'),
+                  decoration: InputDecoration(
+                      labelText: context.l10n.title,
+                      hintText: context.l10n.aShortUpdateTitle),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   initialValue: _type,
-                  decoration: const InputDecoration(labelText: 'Update type'),
-                  items: const [
+                  decoration:
+                      InputDecoration(labelText: context.l10n.updateType),
+                  items: [
                     DropdownMenuItem(
-                        value: 'general', child: Text('General update')),
+                        value: 'general',
+                        child: Text(context.l10n.generalUpdate)),
                     DropdownMenuItem(
                         value: 'schedule_change',
-                        child: Text('Schedule update')),
+                        child: Text(context.l10n.scheduleUpdate)),
                     DropdownMenuItem(
-                        value: 'reminder', child: Text('Reminder')),
+                        value: 'reminder', child: Text(context.l10n.reminder)),
                     DropdownMenuItem(
-                        value: 'important', child: Text('Important update')),
+                        value: 'important',
+                        child: Text(context.l10n.importantUpdate)),
                   ],
                   onChanged: (value) =>
                       setState(() => _type = value ?? 'general'),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 TextField(
                   controller: _message,
                   minLines: 4,
                   maxLines: 7,
                   maxLength: 2000,
-                  decoration: const InputDecoration(
-                      labelText: 'Message',
-                      hintText: 'Write the update for attendees'),
+                  decoration: InputDecoration(
+                      labelText: context.l10n.message,
+                      hintText: context.l10n.writeTheUpdateForAttendees),
                 ),
               ],
             ),
@@ -1823,7 +1844,7 @@ class _AnnouncementDialogState extends State<_AnnouncementDialog> {
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel')),
+              child: Text(context.l10n.adminCancel)),
           FilledButton(
             onPressed: () {
               final message = _message.text.trim();
@@ -1837,7 +1858,7 @@ class _AnnouncementDialogState extends State<_AnnouncementDialog> {
             style: FilledButton.styleFrom(
                 backgroundColor: _HubColors.rose,
                 foregroundColor: Colors.white),
-            child: const Text('Send update'),
+            child: Text(context.l10n.sendUpdate),
           ),
         ],
       );
@@ -1859,27 +1880,34 @@ class _HubColors {
   static const danger = Color(0xFFDC2626);
 }
 
-String _summaryText(Map<String, dynamic> metrics, String range) {
+String _summaryText(
+    BuildContext context, Map<String, dynamic> metrics, String range) {
   final upcoming = _asNumber(metrics['upcoming_events']);
   final attendees = _asNumber(metrics['total_attendees']);
   final label = switch (range) {
-    '7d' => 'in the last 7 days',
-    'this_month' => 'this month',
-    'last_month' => 'last month',
-    'custom' => 'in your selected range',
-    _ => 'in the last 30 days',
+    '7d' => context.l10n.organizerRangeLast7Days,
+    'this_month' => context.l10n.organizerRangeThisMonth,
+    'last_month' => context.l10n.organizerRangeLastMonth,
+    'custom' => context.l10n.organizerRangeSelected,
+    _ => context.l10n.organizerRangeLast30Days,
   };
   if (upcoming == 0) {
-    return "You don't have an upcoming event yet. You have $attendees confirmed attendees $label.";
+    return context.l10n.organizerSummaryNoUpcoming(attendees, label);
   }
-  return 'You have $upcoming upcoming ${upcoming == 1 ? 'event' : 'events'} and $attendees confirmed attendees $label.';
+  return context.l10n.organizerSummaryUpcoming(
+      upcoming,
+      upcoming == 1
+          ? context.l10n.organizerEvent
+          : context.l10n.organizerEvents,
+      attendees,
+      label);
 }
 
-String _timeGreeting() {
+String _timeGreeting(BuildContext context) {
   final hour = DateTime.now().hour;
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return context.l10n.greetingGoodMorning;
+  if (hour < 18) return context.l10n.greetingGoodAfternoon;
+  return context.l10n.greetingGoodEvening;
 }
 
 String _activityTitle(Map<String, dynamic> item) {
@@ -1979,7 +2007,7 @@ Color _border(BuildContext context) =>
 
 Color _muted(BuildContext context) =>
     Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFFAAA3B0)
+        ? Color(0xFFAAA3B0)
         : _HubColors.muted;
 
 String _friendlyError(Object error) {

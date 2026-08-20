@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -6,8 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../layout/app_breakpoints.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../features/notifications/presentation/bloc/notification_bloc.dart';
-import '../../l10n/generated/app_localizations.dart';
+import '../../features/notifications/presentation/widgets/notification_bell_button.dart';
 import '../../tokens/tokens.dart';
 import 'khair_brand.dart';
 
@@ -20,7 +20,7 @@ class MainScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthBloc, AuthState>(
         builder: (context, auth) {
-          final items = _itemsFor(auth);
+          final items = _itemsFor(context, auth);
           final desktop = AppBreakpoints.isDesktop(context);
           final path = GoRouterState.of(context).uri.path;
           return PopScope(
@@ -41,24 +41,26 @@ class MainScaffold extends StatelessWidget {
         },
       );
 
-  List<_NavDestination> _itemsFor(AuthState auth) {
-    const discover =
-        _NavDestination(Icons.explore_outlined, Icons.explore, 'Discover', '/');
-    const map = _NavDestination(Icons.map_outlined, Icons.map, 'Map', '/map');
-    const myEvents = _NavDestination(
-        Icons.event_note_outlined, Icons.event_note, 'My Events', '/my-events');
-    const profile = _NavDestination(
-        Icons.person_outline_rounded, Icons.person, 'Profile', '/profile');
-    const dashboard = _NavDestination(Icons.dashboard_outlined,
-        Icons.dashboard_rounded, 'Dashboard', '/organizer');
-    const admin = _NavDestination(Icons.admin_panel_settings_outlined,
-        Icons.admin_panel_settings, 'Admin', '/admin');
-    if (!auth.isAuthenticated) return const [discover, map];
-    if (auth.isAdmin) return const [discover, admin, profile];
+  List<_NavDestination> _itemsFor(BuildContext context, AuthState auth) {
+    final l10n = context.l10n;
+    final discover = _NavDestination(
+        Icons.explore_outlined, Icons.explore, l10n.navDiscover, '/');
+    final map =
+        _NavDestination(Icons.map_outlined, Icons.map, l10n.navMap, '/map');
+    final myEvents = _NavDestination(Icons.event_note_outlined,
+        Icons.event_note, l10n.myEvents, '/my-events');
+    final profile = _NavDestination(Icons.person_outline_rounded, Icons.person,
+        l10n.navProfile, '/profile');
+    final dashboard = _NavDestination(Icons.dashboard_outlined,
+        Icons.dashboard_rounded, l10n.organizerDashboard, '/organizer');
+    final admin = _NavDestination(Icons.admin_panel_settings_outlined,
+        Icons.admin_panel_settings, l10n.adminPanel, '/admin');
+    if (!auth.isAuthenticated) return [discover, map];
+    if (auth.isAdmin) return [discover, admin, profile];
     if (auth.isApprovedOrganizer) {
-      return const [discover, map, myEvents, dashboard, profile];
+      return [discover, map, myEvents, dashboard, profile];
     }
-    return const [discover, map, myEvents, profile];
+    return [discover, map, myEvents, profile];
   }
 }
 
@@ -80,54 +82,53 @@ class _DesktopNavigation extends StatelessWidget
       elevation: 0,
       scrolledUnderElevation: 0,
       titleSpacing: 32,
-      title: const KhairBrand(
+      title: KhairBrand(
         size: 28,
         nameStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
       ),
       actions: [
         _DesktopNavLink(
-            label: 'Discover',
+            label: context.l10n.navDiscover,
             selected: path == '/',
             onPressed: () => context.go('/')),
         _DesktopNavLink(
-            label: 'Categories',
+            label: context.l10n.mapCategories,
             selected: false,
             onPressed: () => context.go('/')),
         _DesktopNavLink(
-            label: 'Online',
+            label: context.l10n.online,
             selected: false,
             onPressed: () => context.go('/map')),
         _DesktopNavLink(
-            label: 'Map',
+            label: context.l10n.navMap,
             selected: _matches(path, '/map'),
             onPressed: () => context.go('/map')),
         if (auth.isAuthenticated)
           IconButton(
-            tooltip: 'My events',
+            tooltip: context.l10n.myEvents,
             onPressed: () => context.go('/my-events'),
             icon: Icon(Icons.bookmark_border_rounded,
                 color: _matches(path, '/my-events') ? AppColors.primary : null),
           ),
-        const SizedBox(width: 8),
-        if (auth.isAuthenticated)
-          const _DesktopNotificationBell(),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
+        if (auth.isAuthenticated) const _DesktopNotificationBell(),
+        SizedBox(width: 8),
         if (!auth.isAuthenticated)
           TextButton(
               onPressed: () => context.go('/login'),
-              child: const Text('Sign in'))
+              child: Text(context.l10n.signIn1))
         else
           IconButton(
-            tooltip: 'Profile',
+            tooltip: context.l10n.profileTooltip,
             onPressed: () => context.go('/profile'),
-            icon: const Icon(Icons.account_circle_outlined),
+            icon: Icon(Icons.account_circle_outlined),
           ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         FilledButton(
           onPressed: () {
             if (!auth.isAuthenticated) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Sign in or register to create an event.')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(context.l10n.signInOrRegisterToCreateAnEven)));
               context.go('/login?next=${Uri.encodeComponent('/create-event')}');
             } else {
               context.go(auth.isApprovedOrganizer
@@ -136,13 +137,13 @@ class _DesktopNavigation extends StatelessWidget
             }
           },
           style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 44),
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            shape: const StadiumBorder(),
+            minimumSize: Size(0, 44),
+            padding: EdgeInsets.symmetric(horizontal: 18),
+            shape: StadiumBorder(),
           ),
-          child: const Text('Create event'),
+          child: Text(context.l10n.createEvent1),
         ),
-        const SizedBox(width: 28),
+        SizedBox(width: 28),
       ],
     );
   }
@@ -159,7 +160,7 @@ class _DesktopNavLink extends StatelessWidget {
         onPressed: onPressed,
         style: TextButton.styleFrom(
           foregroundColor: selected ? AppColors.primary : null,
-          minimumSize: const Size(0, 52),
+          minimumSize: Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 13),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
@@ -167,9 +168,9 @@ class _DesktopNavLink extends StatelessWidget {
           Text(label,
               style: TextStyle(
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600)),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: Duration(milliseconds: 180),
               width: selected ? 18 : 0,
               height: 2,
               decoration: BoxDecoration(
@@ -196,7 +197,7 @@ class _MobileNavigation extends StatelessWidget {
           child: Container(
             height: 66,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xDD1A1F26) : const Color(0xE6FFFFFF),
+              color: isDark ? Color(0xDD1A1F26) : Color(0xE6FFFFFF),
               borderRadius: BorderRadius.circular(26),
               border: Border.all(
                   color: Colors.black.withValues(alpha: isDark ? 0 : .06)),
@@ -238,7 +239,7 @@ class _NavItem extends StatelessWidget {
       onTap: () => context.go(item.route),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(selected ? item.activeIcon : item.icon, color: color, size: 22),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(item.label,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -254,35 +255,5 @@ class _DesktopNotificationBell extends StatelessWidget {
   const _DesktopNotificationBell();
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NotificationBloc, NotificationState>(
-      buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
-      builder: (context, state) {
-        final path = GoRouterState.of(context).uri.path;
-        final isSelected = path == '/notifications';
-        return IconButton(
-          tooltip: AppLocalizations.of(context)?.orgNotifications ?? 'Notifications',
-          onPressed: () => context.go('/notifications'),
-          icon: Badge(
-            isLabelVisible: state.unreadCount > 0,
-            label: Text(
-              state.unreadCount > 9 ? '9+' : state.unreadCount.toString(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
-            backgroundColor: AppColors.primary,
-            offset: const Offset(4, -4),
-            child: Icon(
-              isSelected ? Icons.notifications_rounded : Icons.notifications_none_rounded,
-              color: isSelected ? AppColors.primary : null,
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => const NotificationBellButton();
 }
