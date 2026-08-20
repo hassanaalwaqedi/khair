@@ -91,7 +91,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
     _venue = TextEditingController(text: data.venueName ?? '');
     _address = TextEditingController(text: data.address ?? '');
     _onlineLink = TextEditingController(text: data.onlineLink ?? '');
-    _onlineInstructions = TextEditingController(text: data.onlineInstructions ?? '');
+    _onlineInstructions =
+        TextEditingController(text: data.onlineInstructions ?? '');
     _capacity = TextEditingController(text: data.capacity?.toString() ?? '');
     _guidelines = TextEditingController(text: data.guidelines);
     _priceAmount = TextEditingController(text: data.priceAmount ?? '');
@@ -270,12 +271,14 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: dark ? Colors.white : _CreateColors.text)),
-                Text(context.l10n.createEventStepLabel(
-                        _stepLabels[state.currentStep]),
+                Text(
+                    context.l10n
+                        .createEventStepLabel(_stepLabels[state.currentStep]),
                     style: TextStyle(
                         color: dark ? Colors.white60 : _CreateColors.muted)),
                 Spacer(),
-                Text(context.l10n.progressPercent(
+                Text(
+                    context.l10n.progressPercent(
                         ((state.currentStep + 1) / 5 * 100).round()),
                     style: TextStyle(
                         color: _CreateColors.rose,
@@ -452,8 +455,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
             dark: dark),
         SizedBox(height: 10),
         if (state.categoriesLoading)
-          LinearProgressIndicator(
-              color: _CreateColors.rose, minHeight: 2),
+          LinearProgressIndicator(color: _CreateColors.rose, minHeight: 2),
         if (!state.categoriesLoading && filtered.isEmpty)
           _hintBox(
               'Categories will appear here when they are available from Khair.',
@@ -883,26 +885,21 @@ class _CreateEventViewState extends State<_CreateEventView> {
           SizedBox(height: 8),
           Row(children: [
             Expanded(
-                child: _choiceChip(
-                    'Free',
-                    data.pricingType == 'free',
-                    () => cubit.updatePricingType('free'),
-                    dark)),
+                child: _choiceChip('Free', data.pricingType == 'free',
+                    () => cubit.updatePricingType('free'), dark)),
             SizedBox(width: 8),
             Expanded(
-                child: _choiceChip(
-                    'Paid',
-                    data.pricingType == 'paid',
-                    () {
-                      if (data.eventType == 'online') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.paidOnlineEventsAreNotSupporte)),
-                        );
-                      } else {
-                        cubit.updatePricingType('paid');
-                      }
-                    },
-                    dark))
+                child: _choiceChip('Paid', data.pricingType == 'paid', () {
+              if (data.eventType == 'online') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text(context.l10n.paidOnlineEventsAreNotSupporte)),
+                );
+              } else {
+                cubit.updatePricingType('paid');
+              }
+            }, dark))
           ]),
           if (data.pricingType == 'paid') ...[
             SizedBox(height: 16),
@@ -913,7 +910,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   label: context.l10n.price,
                   hint: 'e.g. 50',
                   controller: _priceAmount,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   prefix: Icons.attach_money_outlined,
                   onChanged: (val) => cubit.updatePriceAmount(val),
                   dark: dark,
@@ -985,46 +983,62 @@ class _CreateEventViewState extends State<_CreateEventView> {
                                 ? _CreateColors.darkBorder
                                 : _CreateColors.border),
                         width: url != null ? 2 : 1)),
-                child: uploading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                            color: _CreateColors.rose))
-                    : url == null
-                        ? _UploadEmpty()
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(19),
-                            child: Stack(fit: StackFit.expand, children: [
-                              if (previewBytes != null)
-                                Image.memory(
-                                  previewBytes,
-                                  fit: BoxFit.cover,
-                                  cacheWidth: 720,
-                                  cacheHeight: 405,
-                                )
-                              else
-                                Image.network(ApiConfig.resolveUrl(url),
-                                    fit: BoxFit.cover,
-                                    cacheWidth: 720,
-                                    cacheHeight: 405,
-                                    errorBuilder: (_, __, ___) =>
-                                        const _UploadEmpty()),
-                              Container(
-                                  decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                    Colors.transparent,
-                                    Color(0x66000000)
-                                  ]))),
-                              Positioned(
-                                  bottom: 16,
-                                  left: 18,
-                                  child: Text(context.l10n.replaceCoverImage,
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w700)))
-                            ]))),
+                child: previewBytes == null && url == null
+                    ? _UploadEmpty()
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(19),
+                        child: Stack(fit: StackFit.expand, children: [
+                          if (previewBytes != null)
+                            Image.memory(
+                              previewBytes,
+                              fit: BoxFit.cover,
+                              cacheWidth: 720,
+                              cacheHeight: 405,
+                            )
+                          else
+                            Image.network(ApiConfig.resolveUrl(url),
+                                fit: BoxFit.cover,
+                                cacheWidth: 720,
+                                cacheHeight: 405,
+                                errorBuilder: (_, __, ___) =>
+                                    const _UploadEmpty()),
+                          if (uploading)
+                            ColoredBox(
+                              color: const Color(0x88000000),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const CircularProgressIndicator(
+                                        color: Colors.white),
+                                    const SizedBox(height: 12),
+                                    Text(context.l10n.imageUploading,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else ...[
+                            Container(
+                                decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                  Colors.transparent,
+                                  Color(0x66000000)
+                                ]))),
+                            Positioned(
+                                bottom: 16,
+                                left: 18,
+                                child: Text(context.l10n.replaceCoverImage,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700))),
+                          ],
+                        ]))),
           ),
           SizedBox(height: 10),
           Text(context.l10n.jpgPngOrWebpUpTo10Mb169Recomme,
@@ -1325,8 +1339,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
           onTap: () async {
             final picked = await showDatePicker(
                 context: context,
-                initialDate:
-                    value ?? DateTime.now().add(Duration(days: 7)),
+                initialDate: value ?? DateTime.now().add(Duration(days: 7)),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(Duration(days: 730)));
             if (picked != null) onChanged(picked);

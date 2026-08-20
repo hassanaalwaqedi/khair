@@ -1,6 +1,6 @@
 import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -9,14 +9,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../data/organizer_application_api.dart';
+import '../../domain/entities/organizer_image_upload.dart';
 
 /// The server-backed organizer trust gateway. A draft only exists after the
 /// API accepts it; uploads and decisions never use a local/mock fallback.
+enum _DraftSaveState { idle, saving, saved, failed }
+
 class OrganizerAccessPage extends StatefulWidget {
   const OrganizerAccessPage({super.key});
 
@@ -24,7 +28,8 @@ class OrganizerAccessPage extends StatefulWidget {
   State<OrganizerAccessPage> createState() => _OrganizerAccessPageState();
 }
 
-class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
+class _OrganizerAccessPageState extends State<OrganizerAccessPage>
+    with WidgetsBindingObserver {
   static const _pink = Color(0xfff43f75);
   static const _ink = Color(0xff1d1832);
 
@@ -47,10 +52,15 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   final List<Map<String, dynamic>> _documents = <Map<String, dynamic>>[];
   final ImagePicker _imagePicker = ImagePicker();
 
+  static const _localDraftKey = 'organizer_application_local_draft_v1';
+
   Timer? _autosave;
+  Future<bool>? _saveOperation;
+  bool _saveRequestedAgain = false;
   Map<String, dynamic>? _application;
-  Uint8List? _logoPreview;
-  Uint8List? _representativePreview;
+  OrganizerImageUploadState _logoUpload = const OrganizerImageUploadState();
+  OrganizerImageUploadState _representativeUpload =
+      const OrganizerImageUploadState();
   int _step = 0;
   String _organizerType = 'community';
   String _country = 'TR';
@@ -59,19 +69,25 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   bool _guidelinesAccepted = false;
   bool _loading = true;
   bool _saving = false;
+  bool _hasUnsavedChanges = false;
+  _DraftSaveState _draftSaveState = _DraftSaveState.idle;
   bool _submitting = false;
   bool _isTransitioning = false;
   bool _showStatus = false;
   String? _error;
+  String? _documentError;
+  bool _documentUploading = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(_load());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _autosave?.cancel();
     for (final controller in [
       _publicName,
@@ -90,12 +106,49 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      unawaited(_cacheLocalDraft(_draft));
+      if (!_showStatus && !_submitting) {
+        unawaited(_saveReliable(quiet: true));
+      }
+    }
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final application = await _api.loadMine();
       if (!mounted) return;
-      if (application != null) _hydrate(application);
+      final localDraft = await _readLocalDraft();
+      final serverUpdatedAt = application == null
+          ? null
+          : DateTime.tryParse(_string(application['updated_at']));
+      final localSavedAt = localDraft == null
+          ? null
+          : DateTime.tryParse(_string(localDraft['_cached_at']));
+      final useLocalDraft = localDraft != null &&
+          (application == null ||
+              (localSavedAt != null &&
+                  (serverUpdatedAt == null ||
+                      localSavedAt.isAfter(serverUpdatedAt))));
+      final effectiveApplication = useLocalDraft
+          ? <String, dynamic>{
+              ...?application,
+              ...localDraft,
+            }
+          : application;
+      if (useLocalDraft) {
+        _hydrate(effectiveApplication!);
+        _hasUnsavedChanges = true;
+        _draftSaveState = _DraftSaveState.failed;
+      } else if (application != null) {
+        _hydrate(application);
+        await _clearLocalDraft();
+      }
+      if (!mounted) return;
       if (application != null && application['status'] == 'approved') {
         final org = OrganizerModel(
           id: _string(application['id']),
@@ -111,10 +164,10 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         context.read<AuthBloc>().add(OrganizerSessionChanged(org));
       }
       setState(() {
-        _application = application;
-        _showStatus = application != null &&
-            application['status'] != null &&
-            application['status'] != 'draft';
+        _application = effectiveApplication;
+        _showStatus = effectiveApplication != null &&
+            effectiveApplication['status'] != null &&
+            effectiveApplication['status'] != 'draft';
         _loading = false;
       });
     } on DioException catch (e) {
@@ -152,7 +205,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     _city.text = _string(data['city']);
     _description.text = _string(data['description']);
     _eventPlan.text = _string(data['event_plan']);
-    _guidelinesAccepted = data['guidelines_accepted_at'] != null;
+    _guidelinesAccepted = data['guidelines_accepted'] == true ||
+        data['guidelines_accepted_at'] != null;
     _categories
       ..clear()
       ..addAll(_strings(data['event_categories']));
@@ -210,35 +264,95 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         'evidence': _evidence,
       };
 
+  Future<Map<String, dynamic>?> _readLocalDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = prefs.getString(_localDraftKey);
+      if (encoded == null || encoded.isEmpty) return null;
+      final value = jsonDecode(encoded);
+      return value is Map ? Map<String, dynamic>.from(value) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _cacheLocalDraft(Map<String, dynamic> draft) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _localDraftKey,
+        jsonEncode({
+          ...draft,
+          '_cached_at': DateTime.now().toUtc().toIso8601String(),
+        }),
+      );
+    } catch (_) {
+      // The cache is a safety net; failure must not interrupt the form.
+    }
+  }
+
+  Future<void> _clearLocalDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_localDraftKey);
+    } catch (_) {}
+  }
+
   void _queueSave() {
     if (_loading || _showStatus || _submitting) return;
+    _hasUnsavedChanges = true;
+    _draftSaveState = _DraftSaveState.idle;
+    unawaited(_cacheLocalDraft(_draft));
     _autosave?.cancel();
     _autosave = Timer(Duration(milliseconds: 750), () {
-      unawaited(_save(quiet: true));
+      unawaited(_saveReliable(quiet: true));
     });
   }
 
-  Future<bool> _save({bool quiet = false}) async {
-    if (_saving || _submitting) return true;
-    setState(() => _saving = true);
-    try {
-      final saved = await _api.saveDraft(_draft);
-      if (!mounted) return true;
-      setState(() {
-        _application = saved;
-        _error = null;
-      });
-      return true;
-    } catch (error) {
-      if (!mounted) return false;
-      final message = _errorText(error, context.l10n.draftSaveFailed);
-      // Only show a snackbar — never set _error here, because that would
-      // replace the form with the "Try again" error page.
-      if (!quiet) _snack(message);
-      return false;
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
+  Future<bool> _saveReliable({bool quiet = false}) {
+    _saveRequestedAgain = true;
+    return _saveOperation ??= _runSave(quiet: quiet).whenComplete(() {
+      _saveOperation = null;
+    });
+  }
+
+  Future<bool> _runSave({required bool quiet}) async {
+    var success = false;
+    do {
+      _saveRequestedAgain = false;
+      if (_submitting) return false;
+      if (mounted) {
+        setState(() {
+          _saving = true;
+          _draftSaveState = _DraftSaveState.saving;
+        });
+      }
+      final snapshot = _draft;
+      await _cacheLocalDraft(snapshot);
+      try {
+        final saved = await _api.saveDraft(snapshot);
+        success = true;
+        if (!mounted) continue;
+        setState(() {
+          _application = saved;
+          _error = null;
+          _hasUnsavedChanges = false;
+          _draftSaveState = _DraftSaveState.saved;
+        });
+        await _clearLocalDraft();
+      } catch (error) {
+        success = false;
+        if (!mounted) continue;
+        setState(() {
+          _hasUnsavedChanges = true;
+          _draftSaveState = _DraftSaveState.failed;
+        });
+        if (!quiet) _snack(_draftErrorText(error));
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+    } while (_saveRequestedAgain && mounted);
+    return success;
   }
 
   Future<void> _continue() async {
@@ -251,7 +365,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     }
     setState(() => _isTransitioning = true);
     try {
-      if (!await _save()) return;
+      if (!await _saveReliable()) return;
       if (!mounted) return;
       setState(() => _step += 1);
     } finally {
@@ -278,12 +392,20 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       }
     }
     if (step == 1) {
+      if (_logoUpload.isBusy ||
+          (_organizerType == 'individual' && _representativeUpload.isBusy)) {
+        return context.l10n.uploadInProgress;
+      }
       if (_application?['has_public_logo'] != true) {
-        return context.l10n.uploadLogoRequired;
+        return _logoUpload.status == OrganizerImageUploadStatus.failed
+            ? context.l10n.imageUploadFailedSafe
+            : context.l10n.uploadLogoRequired;
       }
       if (_organizerType == 'individual' &&
           _application?['has_representative_photo'] != true) {
-        return context.l10n.uploadRepresentativePhotoRequired;
+        return _representativeUpload.status == OrganizerImageUploadStatus.failed
+            ? context.l10n.imageUploadFailedSafe
+            : context.l10n.uploadRepresentativePhotoRequired;
       }
     }
     if (step == 2) {
@@ -310,7 +432,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     }
     setState(() => _isTransitioning = true);
     try {
-      if (!await _save()) return;
+      if (!await _saveReliable()) return;
       setState(() => _submitting = true);
       final status = _application?['status']?.toString();
       final submitted = await _api.submit(resubmit: status == 'needs_revision');
@@ -322,7 +444,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       });
     } catch (error) {
       if (mounted) {
-        _snack(_errorText(error, context.l10n.organizerApplicationSubmitFailed));
+        _snack(
+            _errorText(error, context.l10n.organizerApplicationSubmitFailed));
       }
     } finally {
       if (mounted) {
@@ -334,44 +457,124 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     }
   }
 
-  Future<void> _pickImage({required bool representativePhoto}) async {
+  Future<void> _pickImageReliable({required bool representativePhoto}) async {
+    final current = representativePhoto ? _representativeUpload : _logoUpload;
+    if (current.isBusy) return;
     final file = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 1600,
       imageQuality: 85,
     );
     if (file == null) return;
+
+    final bytes = await file.readAsBytes();
+    await _uploadImageBytes(
+      representativePhoto: representativePhoto,
+      bytes: bytes,
+      filename: file.name,
+    );
+  }
+
+  Future<void> _retryImageUpload({required bool representativePhoto}) async {
+    final current = representativePhoto ? _representativeUpload : _logoUpload;
+    if (current.isBusy ||
+        current.localBytes == null ||
+        current.filename == null) {
+      return _pickImageReliable(representativePhoto: representativePhoto);
+    }
+    await _uploadImageBytes(
+      representativePhoto: representativePhoto,
+      bytes: current.localBytes!,
+      filename: current.filename!,
+    );
+  }
+
+  Future<void> _uploadImageBytes({
+    required bool representativePhoto,
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    void update(OrganizerImageUploadState next) {
+      if (!mounted) return;
+      setState(() {
+        if (representativePhoto) {
+          _representativeUpload = next;
+        } else {
+          _logoUpload = next;
+        }
+      });
+    }
+
+    update(OrganizerImageUploadState(
+      status: OrganizerImageUploadStatus.selected,
+      localBytes: bytes,
+      filename: filename,
+    ));
+    final issue = await inspectImageUpload(filename: filename, bytes: bytes);
+    if (issue != null) {
+      update(OrganizerImageUploadState(
+        status: OrganizerImageUploadStatus.failed,
+        localBytes: bytes,
+        filename: filename,
+        error: _imageIssueText(issue),
+      ));
+      return;
+    }
+
+    update(OrganizerImageUploadState(
+      status: OrganizerImageUploadStatus.preparing,
+      localBytes: bytes,
+      filename: filename,
+    ));
+    update(OrganizerImageUploadState(
+      status: OrganizerImageUploadStatus.uploading,
+      localBytes: bytes,
+      filename: filename,
+      progress: 0,
+    ));
     try {
-      final validation = validateImageUpload(
-        filename: file.name,
-        byteLength: await file.length(),
-      );
-      if (validation != null) {
-        _snack(validation);
-        return;
-      }
-      final bytes = await file.readAsBytes();
       final updated = await _api.uploadImage(
         bytes: bytes,
-        filename: file.name,
+        filename: filename,
         representativePhoto: representativePhoto,
+        onSendProgress: (sent, total) {
+          if (total <= 0 || !mounted) return;
+          update(OrganizerImageUploadState(
+            status: OrganizerImageUploadStatus.uploading,
+            localBytes: bytes,
+            filename: filename,
+            progress: sent / total,
+          ));
+        },
       );
       if (!mounted) return;
       setState(() {
         _application = updated;
+        final uploaded = OrganizerImageUploadState(
+          status: OrganizerImageUploadStatus.uploaded,
+          localBytes: bytes,
+          filename: filename,
+          progress: 1,
+        );
         if (representativePhoto) {
-          _representativePreview = bytes;
+          _representativeUpload = uploaded;
         } else {
-          _logoPreview = bytes;
+          _logoUpload = uploaded;
         }
       });
       _snack(context.l10n.imageUploadComplete);
     } catch (error) {
-      if (mounted) _snack(_errorText(error, context.l10n.imageUploadFailed));
+      update(OrganizerImageUploadState(
+        status: OrganizerImageUploadStatus.failed,
+        localBytes: bytes,
+        filename: filename,
+        error: _uploadErrorText(error),
+      ));
     }
   }
 
   Future<void> _pickDocument() async {
+    if (_documentUploading) return;
     final result = await FilePicker.platform.pickFiles(
       withData: true,
       type: FileType.custom,
@@ -379,11 +582,24 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     );
     final picked = result?.files.singleOrNull;
     if (picked == null || picked.bytes == null) return;
+    final bytes = picked.bytes!;
+    if (bytes.isEmpty) {
+      setState(() => _documentError = context.l10n.imageEmpty);
+      return;
+    }
+    if (bytes.length > 10 * 1024 * 1024) {
+      setState(() => _documentError = context.l10n.documentTooLarge);
+      return;
+    }
     final type = await _chooseDocumentType();
     if (type == null) return;
+    setState(() {
+      _documentUploading = true;
+      _documentError = null;
+    });
     try {
       final file = await _api.uploadDocument(
-        bytes: picked.bytes!,
+        bytes: bytes,
         filename: picked.name,
         fileType: type,
       );
@@ -391,7 +607,12 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       setState(() => _documents.add(file));
       _snack(context.l10n.documentUploadComplete);
     } catch (error) {
-      if (mounted) _snack(_errorText(error, context.l10n.documentUploadFailed));
+      if (mounted) {
+        setState(() => _documentError = context.l10n.documentUploadFailedSafe);
+        _snack(context.l10n.documentUploadFailedSafe);
+      }
+    } finally {
+      if (mounted) setState(() => _documentUploading = false);
     }
   }
 
@@ -468,6 +689,44 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     return fallback;
   }
 
+  String _imageIssueText(ImageUploadIssue issue) {
+    switch (issue) {
+      case ImageUploadIssue.empty:
+        return context.l10n.imageEmpty;
+      case ImageUploadIssue.tooLarge:
+        return context.l10n.imageTooLarge;
+      case ImageUploadIssue.unsupportedType:
+        return context.l10n.imageFormatUnsupported;
+      case ImageUploadIssue.invalidImage:
+        return context.l10n.imageInvalid;
+    }
+  }
+
+  String _uploadErrorText(Object error) {
+    if (error is DioException) {
+      if (error.type == DioExceptionType.connectionError) {
+        return context.l10n.imageUploadOfflineSafe;
+      }
+      if (error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return context.l10n.imageUploadTimedOut;
+      }
+      final status = error.response?.statusCode;
+      if (status == 401) return context.l10n.sessionExpired;
+      if (status == 413) return context.l10n.imageTooLarge;
+    }
+    return context.l10n.imageUploadFailedSafe;
+  }
+
+  String _draftErrorText(Object error) {
+    if (error is DioException &&
+        (error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout)) {
+      return context.l10n.draftSaveOfflineSafe;
+    }
+    return context.l10n.draftSaveFailedSafe;
+  }
+
   void _snack(String message) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -508,16 +767,37 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
             icon: Icon(Icons.close_rounded),
             tooltip: context.l10n.closeOrganizerApplication,
           ),
-          title: Text(context.l10n.becomeAnOrganizer),
+          title: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 220),
+            child: Text(
+              context.l10n.becomeAnOrganizer,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           actions: [
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 16),
               child: Center(
-                child: Text(_saving
-                    ? context.l10n.savingDraft
-                    : context.l10n.draftSavedSecurely,
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.black54)),
+                child: Text(
+                  _saving
+                      ? context.l10n.savingDraft
+                      : _draftSaveState == _DraftSaveState.failed
+                          ? context.l10n.draftSaveFailedSafe
+                          : _hasUnsavedChanges
+                              ? context.l10n.draftChangesNotSaved
+                              : _draftSaveState == _DraftSaveState.saved
+                                  ? context.l10n.savedLabel
+                                  : '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _draftSaveState == _DraftSaveState.failed
+                        ? Colors.red.shade700
+                        : Colors.black54,
+                  ),
+                ),
               ),
             ),
           ],
@@ -574,9 +854,10 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               FilledButton.icon(
                 style: FilledButton.styleFrom(
                     backgroundColor: _pink, minimumSize: Size(172, 52)),
-                onPressed:
-                    _submitting ? null : (_step == 3 ? _submit : _continue),
-                icon: _submitting
+                onPressed: _submitting || _isTransitioning
+                    ? null
+                    : (_step == 3 ? _submit : _continue),
+                icon: _submitting || _isTransitioning
                     ? SizedBox(
                         width: 18,
                         height: 18,
@@ -585,9 +866,11 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     : Icon(_step == 3
                         ? Icons.verified_rounded
                         : Icons.arrow_forward_rounded),
-              label: Text(_step == 3
-                  ? context.l10n.submitForReview
-                  : context.l10n.registrationContinue),
+                label: Text(_submitting || _isTransitioning
+                    ? context.l10n.savingDraft
+                    : _step == 3
+                        ? context.l10n.submitForReview
+                        : context.l10n.registrationContinue),
               ),
             ]),
           ),
@@ -628,15 +911,13 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                   child: Text(context.l10n.stepNumber(index + 1),
                       style: TextStyle(
                           fontWeight: FontWeight.w800,
-                          color:
-                              active ? Colors.white : Color(0xff746f7d))),
+                          color: active ? Colors.white : Color(0xff746f7d))),
                 ),
                 if (index < 3)
                   Expanded(
                       child: Container(
                           height: 3,
-                          color:
-                              index < _step ? _pink : Color(0xffeeeaf0))),
+                          color: index < _step ? _pink : Color(0xffeeeaf0))),
               ]),
             );
           }),
@@ -701,7 +982,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                 textCapitalization: TextCapitalization.characters,
                 maxLength: 2,
                 decoration: InputDecoration(
-                    labelText: context.l10n.countryCode, hintText: context.l10n.tr),
+                    labelText: context.l10n.countryCode,
+                    hintText: context.l10n.tr),
                 onChanged: (value) {
                   setState(() => _country = value.trim().toUpperCase());
                   _queueSave();
@@ -713,9 +995,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           ]),
           SizedBox(height: 14),
           _field(_description, context.l10n.aboutYourOrganization,
-              hint:
-                  context.l10n.aboutYourOrganizationHint,
-              maxLines: 5),
+              hint: context.l10n.aboutYourOrganizationHint, maxLines: 5),
         ],
       );
 
@@ -723,18 +1003,20 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         _uploadCard(
           title: context.l10n.publicLogoOrProfileImage,
           subtitle: context.l10n.jpgPngOrWebpUpTo5MbPrivateUnti,
-          bytes: _logoPreview,
+          upload: _logoUpload,
           isUploaded: _application?['has_public_logo'] == true,
-          onPressed: () => _pickImage(representativePhoto: false),
+          onPressed: () => _pickImageReliable(representativePhoto: false),
+          onRetry: () => _retryImageUpload(representativePhoto: false),
         ),
         if (_organizerType == 'individual') ...[
           SizedBox(height: 16),
           _uploadCard(
             title: context.l10n.publicRepresentativePhoto,
             subtitle: context.l10n.requiredForIndividualOrganizer,
-            bytes: _representativePreview,
+            upload: _representativeUpload,
             isUploaded: _application?['has_representative_photo'] == true,
-            onPressed: () => _pickImage(representativePhoto: true),
+            onPressed: () => _pickImageReliable(representativePhoto: true),
+            onRetry: () => _retryImageUpload(representativePhoto: true),
           ),
         ],
         SizedBox(height: 26),
@@ -755,18 +1037,29 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         _evidenceChips(),
         SizedBox(height: 12),
         OutlinedButton.icon(
-          onPressed: _pickDocument,
-          icon: Icon(Icons.upload_file_outlined),
+          onPressed: _documentUploading ? null : _pickDocument,
+          icon: _documentUploading
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.upload_file_outlined),
           label: Text(context.l10n.uploadVerificationDocument),
         ),
+        if (_documentError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(_documentError!,
+                style: TextStyle(color: Colors.red.shade700)),
+          ),
         if (_documents.isNotEmpty) ...[
           SizedBox(height: 10),
           ..._documents.map((file) => Material(
                 color: Colors.transparent,
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading:
-                      Icon(Icons.verified_user_outlined, color: _pink),
+                  leading: Icon(Icons.verified_user_outlined, color: _pink),
                   title: Text(_string(file['original_filename'],
                       fallback: context.l10n.secureDocument)),
                   subtitle: Text(context.l10n.privateDocumentType(
@@ -779,9 +1072,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
 
   Widget _eventsStep() => _panel(children: [
         _field(_eventPlan, context.l10n.whatEventsWillYouHost,
-            hint:
-                context.l10n.eventPlanDescriptionHint,
-            maxLines: 5),
+            hint: context.l10n.eventPlanDescriptionHint, maxLines: 5),
         SizedBox(height: 22),
         Text(context.l10n.plannedEventCategories,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
@@ -896,12 +1187,12 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
 
   Widget _reviewStep() => _panel(children: [
         _reviewGroup(context.l10n.publicProfile, [
-          _reviewLine(context.l10n.type, _localizedDisplay(context, _organizerType)),
+          _reviewLine(
+              context.l10n.type, _localizedDisplay(context, _organizerType)),
           _reviewLine(context.l10n.name, _publicName.text.trim()),
           _reviewLine(context.l10n.representative, _representative.text.trim()),
           _reviewLine(context.l10n.contactEmail, _email.text.trim()),
-          _reviewLine(context.l10n.location,
-              '${_city.text.trim()}, $_country'),
+          _reviewLine(context.l10n.location, '${_city.text.trim()}, $_country'),
         ]),
         _reviewGroup(context.l10n.trustMaterial, [
           _reviewLine(
@@ -913,12 +1204,17 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               context.l10n.itemsCount(_links.length, context.l10n.added)),
           _reviewLine(context.l10n.evidence,
               context.l10n.itemsCount(_evidence.length, context.l10n.added)),
-          _reviewLine(context.l10n.privateDocuments,
-              context.l10n.itemsCount(_documents.length, context.l10n.uploaded)),
+          _reviewLine(
+              context.l10n.privateDocuments,
+              context.l10n
+                  .itemsCount(_documents.length, context.l10n.uploaded)),
         ]),
         _reviewGroup(context.l10n.events, [
-          _reviewLine(context.l10n.categories,
-              _categories.map((item) => _localizedDisplay(context, item)).join(', ')),
+          _reviewLine(
+              context.l10n.categories,
+              _categories
+                  .map((item) => _localizedDisplay(context, item))
+                  .join(', ')),
           _reviewLine(
               context.l10n.audience,
               _audiences.isEmpty
@@ -946,7 +1242,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     final rejected = status == 'rejected';
     final suspended = status == 'suspended';
     final isDraft = status == 'draft';
-    
+
     final title = isApproved
         ? context.l10n.organizerApproved
         : needsRevision
@@ -1012,14 +1308,12 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                   SizedBox(height: 10),
                   Text(message,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          height: 1.5, color: Color(0xff716b7d))),
+                      style: TextStyle(height: 1.5, color: Color(0xff716b7d))),
                   if ((needsRevision || rejected) &&
                       _string(_application?['admin_reason_code'])
                           .isNotEmpty) ...[
                     SizedBox(height: 12),
-                    Text(
-                        context.l10n.reasonLabel,
+                    Text(context.l10n.reasonLabel,
                         style: TextStyle(fontWeight: FontWeight.w700)),
                     SizedBox(width: 4),
                     Expanded(
@@ -1101,15 +1395,16 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
 
   Widget _field(TextEditingController controller, String label,
           {String? hint, int maxLines = 1, TextInputType? keyboardType}) =>
-        TextField(
+      TextField(
         controller: controller,
         onChanged: (_) => _queueSave(),
         maxLines: maxLines,
         keyboardType: keyboardType,
         textDirection: (keyboardType == TextInputType.phone ||
-                        keyboardType == TextInputType.emailAddress ||
-                        keyboardType == TextInputType.url)
-                       ? TextDirection.ltr : null,
+                keyboardType == TextInputType.emailAddress ||
+                keyboardType == TextInputType.url)
+            ? TextDirection.ltr
+            : null,
         decoration: InputDecoration(
             labelText: label,
             hintText: hint,
@@ -1121,9 +1416,10 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   Widget _uploadCard(
           {required String title,
           required String subtitle,
-          required Uint8List? bytes,
+          required OrganizerImageUploadState upload,
           required bool isUploaded,
-          required VoidCallback onPressed}) =>
+          required VoidCallback onPressed,
+          required VoidCallback onRetry}) =>
       InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(18),
@@ -1141,9 +1437,9 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               child: SizedBox(
                 height: 96,
                 width: 96,
-                child: bytes != null
+                child: upload.localBytes != null
                     ? Image.memory(
-                        bytes,
+                        upload.localBytes!,
                         fit: BoxFit.cover,
                         cacheWidth: 192,
                         cacheHeight: 192,
@@ -1151,7 +1447,9 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     : Container(
                         color: Colors.white,
                         child: Icon(
-                            isUploaded
+                            isUploaded ||
+                                    upload.status ==
+                                        OrganizerImageUploadStatus.uploaded
                                 ? Icons.check_circle_rounded
                                 : Icons.add_photo_alternate_outlined,
                             color: _pink,
@@ -1165,20 +1463,59 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                   Text(title,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 16)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                   SizedBox(height: 5),
-                  Text(
-                      isUploaded
-                          ? context.l10n.uploadedSecurelyTapToReplace
-                          : subtitle,
-                      style: TextStyle(color: Color(0xff716b7d))),
+                  Text(subtitle, style: TextStyle(color: Color(0xff716b7d))),
                   SizedBox(height: 12),
-                  Text(isUploaded
-                      ? context.l10n.replaceImage
-                      : context.l10n.chooseImage,
-                      style: TextStyle(
-                          color: _pink, fontWeight: FontWeight.w800)),
+                  if (upload.isBusy) ...[
+                    Text(
+                      upload.status == OrganizerImageUploadStatus.preparing
+                          ? context.l10n.imagePreparing
+                          : context.l10n.imageUploading,
+                      style:
+                          TextStyle(color: _pink, fontWeight: FontWeight.w800),
+                    ),
+                    if (upload.status ==
+                        OrganizerImageUploadStatus.uploading) ...[
+                      SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: upload.progress > 0 ? upload.progress : null,
+                        color: _pink,
+                        backgroundColor: _pink.withValues(alpha: .15),
+                      ),
+                    ],
+                  ] else if (upload.status ==
+                      OrganizerImageUploadStatus.failed) ...[
+                    Text(upload.error ?? context.l10n.imageUploadFailedSafe,
+                        style: TextStyle(color: Colors.red.shade700)),
+                    SizedBox(height: 8),
+                    Wrap(spacing: 12, children: [
+                      TextButton(
+                        onPressed: onRetry,
+                        child: Text(context.l10n.retry),
+                      ),
+                      TextButton(
+                        onPressed: onPressed,
+                        child: Text(context.l10n.mediaUploadChange),
+                      ),
+                    ]),
+                  ] else ...[
+                    Text(
+                        isUploaded ||
+                                upload.status ==
+                                    OrganizerImageUploadStatus.uploaded
+                            ? context.l10n.imageUploaded
+                            : context.l10n.chooseImage,
+                        style: TextStyle(
+                            color: _pink, fontWeight: FontWeight.w800)),
+                    if (isUploaded ||
+                        upload.status == OrganizerImageUploadStatus.uploaded)
+                      TextButton(
+                        onPressed: onPressed,
+                        child: Text(context.l10n.replaceImage),
+                      ),
+                  ],
                 ])),
           ]),
         ),
@@ -1194,19 +1531,15 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               'linkedin',
               'other'
             ]
-                .map((item) =>
-                    DropdownMenuItem(
-                        value: item,
-                        child: Text(_localizedDisplay(context, item))))
+                .map((item) => DropdownMenuItem(
+                    value: item, child: Text(_localizedDisplay(context, item))))
                 .toList(),
             onChanged: (value) => setState(() => _linkPlatform = value!)),
         SizedBox(width: 12),
         Expanded(child: _field(_linkUrl, context.l10n.httpsLinkHint)),
         SizedBox(width: 8),
         IconButton(
-            onPressed: _addLink,
-            color: _pink,
-            icon: Icon(Icons.add_circle)),
+            onPressed: _addLink, color: _pink, icon: Icon(Icons.add_circle)),
       ]);
 
   Widget _addEvidenceRow() => Column(children: [
@@ -1214,7 +1547,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           Expanded(
               child: DropdownButtonFormField<String>(
                   initialValue: _evidenceType,
-        decoration: InputDecoration(labelText: context.l10n.evidenceType),
+                  decoration:
+                      InputDecoration(labelText: context.l10n.evidenceType),
                   items: const [
                     'official_website',
                     'verified_social',
@@ -1236,7 +1570,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         ]),
         SizedBox(height: 10),
         Row(children: [
-          Expanded(child: _field(_evidenceNote, context.l10n.shortNoteOptional)),
+          Expanded(
+              child: _field(_evidenceNote, context.l10n.shortNoteOptional)),
           SizedBox(width: 8),
           IconButton(
               onPressed: _addEvidence,
@@ -1303,8 +1638,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         padding: const EdgeInsets.only(bottom: 22),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           SizedBox(height: 8),
           ...children,
         ]),
@@ -1315,8 +1649,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SizedBox(
               width: 145,
-              child: Text(label,
-                  style: TextStyle(color: Color(0xff716b7d)))),
+              child: Text(label, style: TextStyle(color: Color(0xff716b7d)))),
           Expanded(
               child: Text(value.isEmpty ? context.l10n.notProvided : value,
                   style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1421,8 +1754,7 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: Color(0xfffff4f7),
-            borderRadius: BorderRadius.circular(16)),
+            color: Color(0xfffff4f7), borderRadius: BorderRadius.circular(16)),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, color: Color(0xfff43f75)),
           SizedBox(width: 12),

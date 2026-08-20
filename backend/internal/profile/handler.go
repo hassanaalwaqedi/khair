@@ -518,6 +518,12 @@ func (h *Handler) ModerateImage(c *gin.Context) {
 // ─── POST /profile/upload-avatar ──────────────────
 
 func (h *Handler) UploadAvatar(c *gin.Context) {
+	if storageErr := storage.UnavailableError(h.storage); storageErr != nil {
+		log.Printf("[ERROR] avatar storage unavailable: %v", storageErr)
+		response.Error(c, http.StatusServiceUnavailable, "Image storage is temporarily unavailable")
+		return
+	}
+
 	userID, _ := c.Get("user_id")
 	uid, _ := userID.(uuid.UUID)
 
@@ -565,7 +571,7 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 	avatarURL, err := h.storage.Upload(file, header, fmt.Sprintf("profiles/%s", uid.String()))
 	if err != nil {
 		log.Printf("[ERROR] Failed to upload avatar for %s: %v", uid, err)
-		response.InternalServerError(c, "Failed to save image")
+		response.Error(c, http.StatusServiceUnavailable, "Image storage is temporarily unavailable")
 		return
 	}
 

@@ -10,6 +10,7 @@ import '../../../../core/locale/locale_bloc.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/image_upload_client.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../../../core/widgets/discard_changes_dialog.dart';
 
@@ -80,7 +81,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       setState(() {
         _loading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         _captureInitialValues();
         setState(() {
@@ -92,45 +93,47 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   }
 
   Future<void> _pickAvatar() async {
+    if (_uploading) return;
     final image = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 82);
     if (image == null) return;
-    final validation = validateImageUpload(
-      filename: image.name,
-      byteLength: await image.length(),
-      maxBytes: 5 * 1024 * 1024,
-    );
-    if (validation != null) {
-      if (mounted) setState(() => _error = validation);
-      return;
-    }
     final bytes = await image.readAsBytes();
+    final issue = await inspectImageUpload(filename: image.name, bytes: bytes);
     if (!mounted) return;
     setState(() {
+      _preview = bytes;
       _uploading = true;
       _error = null;
     });
+    if (issue != null) {
+      setState(() {
+        _uploading = false;
+        _error = imageUploadIssueMessage(issue);
+      });
+      return;
+    }
     try {
-      final data = FormData.fromMap(
-          {'image': MultipartFile.fromBytes(bytes, filename: image.name)});
-      final response = await getIt<Dio>().post('/profile/upload-avatar',
-          data: data, options: Options(contentType: 'multipart/form-data'));
-      final result = Map<String, dynamic>.from(response.data['data'] as Map);
+      final url = await uploadImageBytes(
+        dio: getIt<Dio>(),
+        path: '/profile/upload-avatar',
+        bytes: bytes,
+        filename: image.name,
+      );
       if (!mounted) return;
       setState(() {
-        _preview = bytes;
-        _avatarUrl = result['avatar_url']?.toString();
+        _avatarUrl = url;
         _uploading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _uploading = false;
           _error =
               'We couldn’t upload that photo. Use a JPG, PNG, or WebP under 5 MB.';
+          _error = imageUploadFailureMessage(error);
         });
       }
     }
@@ -254,9 +257,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                               Text(
                                   'Keep these details current so Khair can personalize your event experience.',
                                   style: TextStyle(
-                                      color: dark
-                                          ? Color(0xFFC5BEC8)
-                                          : _muted)),
+                                      color:
+                                          dark ? Color(0xFFC5BEC8) : _muted)),
                               SizedBox(height: 26),
                               Center(
                                   child: _AvatarEditor(
@@ -293,11 +295,17 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                       Icons.language_outlined),
                                   items: [
                                     DropdownMenuItem(
-                                        value: 'en', child: Text(context.l10n.registrationLanguageEnglish)),
+                                        value: 'en',
+                                        child: Text(context
+                                            .l10n.registrationLanguageEnglish)),
                                     DropdownMenuItem(
-                                        value: 'ar', child: Text(context.l10n.registrationLanguageArabic)),
+                                        value: 'ar',
+                                        child: Text(context
+                                            .l10n.registrationLanguageArabic)),
                                     DropdownMenuItem(
-                                        value: 'tr', child: Text(context.l10n.registrationLanguageTurkish))
+                                        value: 'tr',
+                                        child: Text(context
+                                            .l10n.registrationLanguageTurkish))
                                   ],
                                   onChanged: (value) => setState(
                                       () => _language = value ?? 'en')),
@@ -339,22 +347,25 @@ class _AvatarEditor extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(colors: [_rose, Color(0xFFFF8AAF)])),
             child: ClipOval(
-                child: loading
-                    ? Center(
-                        child: CircularProgressIndicator(color: Colors.white))
-                    : preview != null
-                        ? Image.memory(preview!,
-                            fit: BoxFit.cover,
-                            cacheWidth: 200,
-                            cacheHeight: 200)
-                        : avatarUrl?.isNotEmpty == true
-                            ? Image.network(ApiConfig.resolveUrl(avatarUrl),
-                                fit: BoxFit.cover,
-                                cacheWidth: 200,
-                                cacheHeight: 200,
-                                errorBuilder: (_, __, ___) =>
-                                    _AvatarInitial(name))
-                            : _AvatarInitial(name))),
+                child: Stack(fit: StackFit.expand, children: [
+              if (preview != null)
+                Image.memory(preview!,
+                    fit: BoxFit.cover, cacheWidth: 200, cacheHeight: 200)
+              else if (avatarUrl?.isNotEmpty == true)
+                Image.network(ApiConfig.resolveUrl(avatarUrl),
+                    fit: BoxFit.cover,
+                    cacheWidth: 200,
+                    cacheHeight: 200,
+                    errorBuilder: (_, __, ___) => _AvatarInitial(name))
+              else
+                _AvatarInitial(name),
+              if (loading)
+                const ColoredBox(
+                  color: Color(0x88000000),
+                  child: Center(
+                      child: CircularProgressIndicator(color: Colors.white)),
+                ),
+            ]))),
         PositionedDirectional(
             end: -2,
             bottom: -2,
@@ -433,7 +444,7 @@ class _EditSkeleton extends StatelessWidget {
   const _EditSkeleton();
   @override
   Widget build(BuildContext context) => Center(
-           child: Column(mainAxisSize: MainAxisSize.min, children: [
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
         SizedBox(
             width: 96,
             height: 96,

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/image_upload_client.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../../events/domain/entities/event.dart';
 import '../../../events/domain/repositories/events_repository.dart';
@@ -105,6 +106,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     }
     _update(nextData);
   }
+
   void updateLanguage(String value) =>
       _update(state.formData.copyWith(language: value));
   void updateGenderPolicy(String value) =>
@@ -277,20 +279,24 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   Future<void> suggestDescription() async {
     if (state.formData.title.trim().isEmpty) return;
-    
-    final words = state.formData.description.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+
+    final words = state.formData.description
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .length;
     if (words < 5) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
-        errorMessage: 'Please write at least 5 words about your event to give Khair AI some context.',
+        errorMessage:
+            'Please write at least 5 words about your event to give Khair AI some context.',
       ));
       return;
     }
 
     emit(state.copyWith(status: CreateEventStatus.aiGenerating));
     try {
-      final response =
-          await getIt<Dio>().post('ai/enhance-description', data: {
+      final response = await getIt<Dio>().post('ai/enhance-description', data: {
         'title': state.formData.title.trim(),
         'description': state.formData.description.trim(),
         'category': state.formData.category,
@@ -320,51 +326,45 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   Future<void> uploadImage(XFile file) async {
+    if (state.status == CreateEventStatus.imageUploading) return;
     try {
-      final validation = validateImageUpload(
-        filename: file.name,
-        byteLength: await file.length(),
-      );
-      if (validation != null) {
-        emit(state.copyWith(
-          status: CreateEventStatus.failure,
-          errorMessage: validation,
-        ));
-        return;
-      }
       final bytes = await file.readAsBytes();
+      final issue = await inspectImageUpload(filename: file.name, bytes: bytes);
 
       emit(state.copyWith(
         status: CreateEventStatus.imageUploading,
         formData: state.formData.copyWith(coverImagePreviewBytes: bytes),
       ));
+      if (issue != null) {
+        emit(state.copyWith(
+          status: CreateEventStatus.failure,
+          errorMessage: imageUploadIssueMessage(issue),
+        ));
+        return;
+      }
 
-      final response = await getIt<Dio>().post(
-        'upload/image',
-        data: FormData.fromMap({
-          'image': MultipartFile.fromBytes(bytes, filename: file.name),
-        }),
+      final url = await uploadImageBytes(
+        dio: getIt<Dio>(),
+        path: '/upload/image',
+        bytes: bytes,
+        filename: file.name,
       );
-      final url = response.data['data']?['url']?.toString();
-      if (url == null || url.isEmpty)
-        throw Exception('No permanent image URL returned.');
       _update(
         state.formData.copyWith(
           coverImageUrl: url,
-          clearCoverImagePreviewBytes: true,
+          coverImagePreviewBytes: bytes,
         ),
         schedule: false,
       );
     } on DioException catch (error) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
-        errorMessage:
-            _friendlyError(error, 'Image upload failed. Try another image.'),
+        errorMessage: imageUploadFailureMessage(error),
       ));
-    } catch (_) {
+    } catch (error) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
-        errorMessage: 'Image upload failed. Try another image.',
+        errorMessage: imageUploadFailureMessage(error),
       ));
     }
   }
@@ -456,9 +456,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         pricing: fd.pricingType == 'paid'
             ? EventPricing(
                 type: 'paid',
-                amountCents: fd.priceAmount != null && fd.priceAmount!.isNotEmpty
-                    ? (double.parse(fd.priceAmount!) * 100).toInt()
-                    : 0,
+                amountCents:
+                    fd.priceAmount != null && fd.priceAmount!.isNotEmpty
+                        ? (double.parse(fd.priceAmount!) * 100).toInt()
+                        : 0,
                 currency: fd.currency ?? 'USD',
                 paymentMethod: 'pay_at_venue',
               )
