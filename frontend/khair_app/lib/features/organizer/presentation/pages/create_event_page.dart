@@ -8,10 +8,12 @@ import 'package:intl/intl.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../shared/widgets/map_location_picker.dart';
 import '../../../auth/data/datasources/countries_datasource.dart';
 import '../../../auth/data/models/country_model.dart';
 import '../../../auth/presentation/widgets/country_search_field.dart';
+import '../../../events/domain/entities/event.dart';
 import '../cubit/create_event_cubit.dart';
 import '../cubit/create_event_state.dart';
 
@@ -36,14 +38,22 @@ const _stepLabels = [
 ];
 
 class CreateEventPage extends StatelessWidget {
-  const CreateEventPage({super.key});
+  const CreateEventPage({super.key, this.initialEvent});
+
+  final Event? initialEvent;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<CreateEventCubit>()
-        ..loadCategories()
-        ..loadLocalDraft(),
+      create: (_) {
+        final cubit = getIt<CreateEventCubit>()..loadCategories();
+        if (initialEvent != null) {
+          cubit.loadExistingEvent(initialEvent!);
+        } else {
+          cubit.loadLocalDraft();
+        }
+        return cubit;
+      },
       child: _CreateEventView(),
     );
   }
@@ -103,7 +113,19 @@ class _CreateEventViewState extends State<_CreateEventView> {
   Future<void> _loadCountries() async {
     try {
       final values = await _countriesSource.getAll();
-      if (mounted) setState(() => _countries = values);
+      if (mounted) {
+        final countryCode = _cubit.state.formData.countryCode?.toLowerCase();
+        final selectedCountry = countryCode == null
+            ? null
+            : values
+                .where(
+                    (country) => country.isoCode.toLowerCase() == countryCode)
+                .firstOrNull;
+        setState(() {
+          _countries = values;
+          _selectedCountry = selectedCountry;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _countries = const []);
     } finally {
@@ -157,33 +179,47 @@ class _CreateEventViewState extends State<_CreateEventView> {
         // When the local draft finishes loading for the first time, populate controllers
         if (state.isLocalDraftLoaded) {
           final data = state.formData;
-          if (_title.text != data.title) _title.text = data.title;
-          if (_description.text != data.description)
+          if (_title.text != data.title) {
+            _title.text = data.title;
+          }
+          if (_description.text != data.description) {
             _description.text = data.description;
-          if (_city.text != (data.city ?? '')) _city.text = data.city ?? '';
-          if (_venue.text != (data.venueName ?? ''))
+          }
+          if (_city.text != (data.city ?? '')) {
+            _city.text = data.city ?? '';
+          }
+          if (_venue.text != (data.venueName ?? '')) {
             _venue.text = data.venueName ?? '';
-          if (_address.text != (data.address ?? ''))
+          }
+          if (_address.text != (data.address ?? '')) {
             _address.text = data.address ?? '';
-          if (_onlineLink.text != (data.onlineLink ?? ''))
+          }
+          if (_onlineLink.text != (data.onlineLink ?? '')) {
             _onlineLink.text = data.onlineLink ?? '';
-          if (_onlineInstructions.text != (data.onlineInstructions ?? ''))
+          }
+          if (_onlineInstructions.text != (data.onlineInstructions ?? '')) {
             _onlineInstructions.text = data.onlineInstructions ?? '';
+          }
           final capStr = data.capacity?.toString() ?? '';
-          if (_capacity.text != capStr) _capacity.text = capStr;
-          if (_guidelines.text != data.guidelines)
+          if (_capacity.text != capStr) {
+            _capacity.text = capStr;
+          }
+          if (_guidelines.text != data.guidelines) {
             _guidelines.text = data.guidelines;
+          }
         }
       },
       child: BlocBuilder<CreateEventCubit, CreateEventState>(
         builder: (context, state) {
           final dark = Theme.of(context).brightness == Brightness.dark;
           return PopScope(
-            canPop: state.currentStep == 0,
+            canPop: state.currentStep == 0 && context.canNavigateBack,
             onPopInvokedWithResult: (didPop, result) {
               if (didPop) return;
               if (state.currentStep > 0) {
                 context.read<CreateEventCubit>().previousStep();
+              } else {
+                context.popOrGo('/organizer');
               }
             },
             child: Scaffold(
@@ -225,7 +261,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
         children: [
           _iconButton(
             Icons.close_rounded,
-            () => context.go('/organizer'),
+            () => context.popOrGo('/organizer'),
             dark,
           ),
           SizedBox(width: 14),

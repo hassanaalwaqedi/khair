@@ -2,89 +2,80 @@ package support_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/support"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
-// A small mock repo to test service logic if we had interfaces, but since we rely on concrete sql.DB,
-// we will use go-sqlmock to test the service interactions.
-
-func TestService_StartSession(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	repo := support.NewRepository(db)
-	svc := support.NewService(repo, nil, nil, nil, db)
-
-	userID := uuid.New()
-	req := models.CreateSupportTicketRequest{
-		Category: "General",
-		Subject:  "Help me",
-	}
-
-	mock.ExpectQuery(`INSERT INTO support_tickets`).
-		WithArgs(userID, "General", "Help me", "ai_active", "normal").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
-			AddRow(uuid.New(), time.Now(), time.Now()))
-
-	mock.ExpectQuery(`SELECT id, slug, title, content, category, language, is_published, created_at, updated_at`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "slug", "title", "content", "category", "language", "is_published", "created_at", "updated_at"}))
-
-	mock.ExpectQuery(`INSERT INTO support_messages`).
-		WithArgs(sqlmock.AnyArg(), "user", userID, "Help me", "text").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(uuid.New(), time.Now()))
-
-	mock.ExpectQuery(`INSERT INTO support_messages`).
-		WithArgs(sqlmock.AnyArg(), "ai", nil, sqlmock.AnyArg(), "text").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(uuid.New(), time.Now()))
-
-	mock.ExpectQuery(`UPDATE support_tickets`).
-		WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow(time.Now()))
-
-	ticket, aiMsg, err := svc.StartSession(context.Background(), userID, req)
-	assert.NoError(t, err)
-	assert.NotNil(t, ticket)
-	assert.NotNil(t, aiMsg)
-	assert.Equal(t, "ai_active", ticket.Status)
-	assert.Equal(t, "ai", aiMsg.SenderType)
-
-	err = mock.ExpectationsWereMet()
-	assert.NoError(t, err)
+func ticketRows(ticketID, userID uuid.UUID, status string) *sqlmock.Rows {
+	return sqlmock.NewRows([]string{
+		"id", "user_id", "assigned_to", "category", "subject", "status",
+		"priority", "ai_summary", "created_at", "updated_at",
+		"first_human_response_at", "resolved_at", "closed_at", "language",
+		"context_type", "context_id",
+	}).AddRow(ticketID, userID, nil, "general", "Khair support conversation",
+		status, "normal", nil, time.Now(), time.Now(), nil, nil, nil, "en", nil, nil)
 }
 
-func TestService_EscalateTicket(t *testing.T) {
+func TestService_StartConversationCreatesPersistentWelcome(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
 
 	repo := support.NewRepository(db)
 	svc := support.NewService(repo, nil, nil, nil, db)
-
+	userID := uuid.New()
 	ticketID := uuid.New()
 
-	mock.ExpectQuery(`SELECT id, user_id, assigned_to, category, subject, status, priority, ai_summary, created_at, updated_at, first_human_response_at, resolved_at, closed_at`).
-		WithArgs(ticketID).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "assigned_to", "category", "subject", "status", "priority", "ai_summary", "created_at", "updated_at", "first_human_response_at", "resolved_at", "closed_at"}).
-			AddRow(ticketID, uuid.New(), nil, "General", "Subject", "ai_active", "normal", nil, time.Now(), time.Now(), nil, nil, nil))
-
-	mock.ExpectQuery(`UPDATE support_tickets`).
-		WithArgs(nil, "waiting_for_support", "normal", nil, nil, nil, nil, ticketID).
-		WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow(time.Now()))
-
+	mock.ExpectQuery(`SELECT id, user_id, assigned_to`).
+		WithArgs(userID).
+		WillReturnError(sql.ErrNoRows)
+	mock.ExpectQuery(`SELECT COALESCE\(NULLIF\(p.preferred_language`).
+		WithArgs(userID).
+		WillReturnRows(sqlmock.NewRows([]string{"language", "role", "organizer_status"}).AddRow("en", "user", ""))
+	mock.ExpectQuery(`INSERT INTO support_tickets`).
+		WithArgs(userID, "general", "Khair support conversation", "ai_active", "normal", "en", nil, nil).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).AddRow(ticketID, time.Now(), time.Now()))
 	mock.ExpectQuery(`INSERT INTO support_messages`).
-		WithArgs(ticketID, "system", nil, "Your request has been sent to Khair Support.", "text").
+		WithArgs(ticketID, "ai", nil, sqlmock.AnyArg(), "text", sqlmock.AnyArg()).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(uuid.New(), time.Now()))
 
-	err = svc.EscalateTicket(ticketID)
+	ticket, welcome, created, err := svc.StartConversation(context.Background(), userID, models.CreateSupportConversationRequest{Language: "en"})
 	assert.NoError(t, err)
+	assert.True(t, created)
+	assert.Equal(t, ticketID, ticket.ID)
+	assert.Equal(t, "ai_active", ticket.Status)
+	assert.Equal(t, "ai", welcome.SenderType)
+	assert.Contains(t, welcome.Body, "Khair AI")
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
 
-	err = mock.ExpectationsWereMet()
+func TestService_EscalateTicketMovesConversationToWaitingForAgent(t *testing.T) {
+	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
+	defer db.Close()
+
+	repo := support.NewRepository(db)
+	svc := support.NewService(repo, nil, nil, nil, db)
+	ticketID := uuid.New()
+	userID := uuid.New()
+
+	mock.ExpectQuery(`SELECT id, user_id, assigned_to`).
+		WithArgs(ticketID).
+		WillReturnRows(ticketRows(ticketID, userID, "ai_active"))
+	mock.ExpectQuery(`UPDATE support_tickets`).
+		WithArgs(nil, "waiting_for_agent", "normal", nil, nil, nil, nil, ticketID).
+		WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow(time.Now()))
+	mock.ExpectQuery(`INSERT INTO support_messages`).
+		WithArgs(ticketID, "system", nil, sqlmock.AnyArg(), "text", sqlmock.AnyArg()).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(uuid.New(), time.Now()))
+
+	assert.NoError(t, svc.EscalateTicket(ticketID))
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

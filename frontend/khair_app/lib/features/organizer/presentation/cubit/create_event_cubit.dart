@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,56 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   static const String _draftCacheKey = 'create_event_draft_cache';
 
   CreateEventCubit(this._eventsRepository) : super(CreateEventState());
+
+  /// Seeds the shared event editor with an existing event.  Editing must not
+  /// load the separate "new event" local draft, otherwise it can overwrite the
+  /// event the organizer explicitly chose to edit.
+  void loadExistingEvent(Event event) {
+    final start = event.startDate;
+    final end = event.endDate;
+    final pricing = event.pricing;
+    emit(state.copyWith(
+      draftId: event.id,
+      formData: CreateEventFormData(
+        title: event.title,
+        description: event.description ?? '',
+        category: event.category ?? '',
+        tags: event.tags,
+        eventType: event.isOnline ? 'online' : event.eventType,
+        language: event.language ?? 'en',
+        startDate: start,
+        startTime: TimeOfDay(hour: start.hour, minute: start.minute),
+        endDate: end,
+        endTime:
+            end == null ? null : TimeOfDay(hour: end.hour, minute: end.minute),
+        timezone: event.timezone ?? 'UTC',
+        countryCode: event.country,
+        countryName: event.country,
+        city: event.city,
+        venueName: event.venueName,
+        address: event.address ?? event.fullAddress,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        onlinePlatform: event.onlinePlatform ?? event.meetingPlatform ?? 'zoom',
+        onlineLink: event.onlineLink ?? event.meetingUrl,
+        onlineInstructions: event.joinInstructions,
+        genderPolicy: event.genderRestriction ?? 'mixed',
+        unlimitedCapacity: event.capacity == null,
+        capacity: event.capacity,
+        registrationDeadline: event.registrationDeadline,
+        registrationMode: event.registrationMode ?? 'instant',
+        pricingType: pricing.type,
+        priceAmount: pricing.amountCents == null
+            ? null
+            : (pricing.amountCents! / 100).toStringAsFixed(2),
+        currency: pricing.currency,
+        paymentMethod: pricing.paymentMethod,
+        coverImageUrl: event.imageUrl,
+      ),
+      status: CreateEventStatus.initial,
+      isLocalDraftLoaded: true,
+    ));
+  }
 
   Future<void> loadLocalDraft() async {
     try {
@@ -76,16 +127,26 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   bool nextStep() {
     if (state.status == CreateEventStatus.saving ||
-        state.status == CreateEventStatus.submitting) return false;
-    if (!validateStep(state.currentStep)) return false;
-    if (!state.isLastStep) goToStep(state.currentStep + 1);
+        state.status == CreateEventStatus.submitting) {
+      return false;
+    }
+    if (!validateStep(state.currentStep)) {
+      return false;
+    }
+    if (!state.isLastStep) {
+      goToStep(state.currentStep + 1);
+    }
     return true;
   }
 
   void previousStep() {
     if (state.status == CreateEventStatus.saving ||
-        state.status == CreateEventStatus.submitting) return;
-    if (!state.isFirstStep) goToStep(state.currentStep - 1);
+        state.status == CreateEventStatus.submitting) {
+      return;
+    }
+    if (!state.isFirstStep) {
+      goToStep(state.currentStep - 1);
+    }
   }
 
   void updateFormData(CreateEventFormData formData) {
@@ -132,8 +193,9 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   void addTag(String rawTag) {
     final tag = rawTag.trim().replaceFirst(RegExp(r'^#'), '');
-    if (tag.isEmpty || tag.length > 32 || state.formData.tags.length >= 8)
+    if (tag.isEmpty || tag.length > 32 || state.formData.tags.length >= 8) {
       return;
+    }
     if (!RegExp(r'^[\p{L}\p{N} _-]+$', unicode: true).hasMatch(tag)) return;
     if (state.formData.tags
         .any((item) => item.toLowerCase() == tag.toLowerCase())) {
@@ -234,10 +296,12 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         if (fd.eventType == 'online') return 'Add a valid meeting URL.';
         if (fd.countryCode == null) return 'Select a country.';
         if (fd.city?.trim().isEmpty ?? true) return 'Enter a city.';
-        if (fd.address?.trim().isEmpty ?? true)
+        if (fd.address?.trim().isEmpty ?? true) {
           return 'Enter a street address.';
-        if (fd.latitude == null || fd.longitude == null)
+        }
+        if (fd.latitude == null || fd.longitude == null) {
           return 'Pinpoint the exact location on the map.';
+        }
         return 'Complete all required fields.';
       case 2:
         return fd.unlimitedCapacity
@@ -507,8 +571,9 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   String _friendlyError(DioException error, String fallback) {
     final response = error.response?.data;
-    if (response is Map && response['error'] is String)
+    if (response is Map && response['error'] is String) {
       return response['error'] as String;
+    }
     return fallback;
   }
 

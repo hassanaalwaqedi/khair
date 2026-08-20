@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Centralized API configuration.
 ///
 /// All files that need the backend URL should import this file
@@ -24,12 +22,27 @@ class ApiConfig {
   static final serverOrigin = _extractOrigin(apiBaseUrl);
 
   static final String publicAppUrl = () {
-    String url = _envPublicAppUrl.isNotEmpty ? _envPublicAppUrl : 'https://khair.app';
+    String url =
+        _envPublicAppUrl.isNotEmpty ? _envPublicAppUrl : 'https://khair.app';
     return url.replaceFirst(RegExp(r'/$'), '');
   }();
 
+  /// Builds the WebSocket endpoint from the API base without accidentally
+  /// duplicating the trailing slash before `/ws`.
+  static Uri webSocketUri(String token) {
+    final apiUri = Uri.parse(apiBaseUrl);
+    final normalizedPath = apiUri.path.replaceFirst(RegExp(r'/+$'), '');
+    final scheme = apiUri.scheme == 'https' ? 'wss' : 'ws';
+    return apiUri.replace(
+      scheme: scheme,
+      path: '$normalizedPath/ws',
+      queryParameters: {'token': token},
+    );
+  }
+
   /// Event share links point to the canonical public domain.
-  static String publicEventUrl(String eventId) => '$publicAppUrl/events/$eventId';
+  static String publicEventUrl(String eventId) =>
+      '$publicAppUrl/events/$eventId';
 
   /// Resolves a potentially relative URL to an absolute URL.
   /// Already-absolute URLs are returned as-is.

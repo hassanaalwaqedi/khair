@@ -85,9 +85,16 @@ type GeminiCandidate struct {
 
 // ---------- Core method ----------
 
-// Generate sends a structured prompt to Gemini and returns the text response.
-// Includes automatic retry with exponential backoff for 429 rate-limit errors.
+// Generate sends a plain-text prompt to Gemini and returns a plain-text reply.
+// Structured consumers should use GenerateJSON so the model is explicitly
+// asked for JSON instead of making a user-facing chat reply look like JSON.
 func (c *Client) Generate(ctx context.Context, prompt string, temperature float64) (string, error) {
+	return c.generate(ctx, prompt, temperature, "")
+}
+
+// generate includes automatic retry with exponential backoff for 429
+// rate-limit errors. responseMimeType is reserved for structured callers.
+func (c *Client) generate(ctx context.Context, prompt string, temperature float64, responseMimeType string) (string, error) {
 	if !c.IsEnabled() {
 		return "", fmt.Errorf("gemini AI is not enabled (missing API key)")
 	}
@@ -104,7 +111,7 @@ func (c *Client) Generate(ctx context.Context, prompt string, temperature float6
 		GenerationConfig: GeminiGenerationConfig{
 			Temperature:      temperature,
 			MaxOutputTokens:  c.maxTokens,
-			ResponseMimeType: "application/json",
+			ResponseMimeType: responseMimeType,
 		},
 	}
 
@@ -171,7 +178,7 @@ func (c *Client) Generate(ctx context.Context, prompt string, temperature float6
 
 // GenerateJSON sends a prompt and parses the JSON response into the target struct
 func (c *Client) GenerateJSON(ctx context.Context, prompt string, temperature float64, target interface{}) error {
-	text, err := c.Generate(ctx, prompt, temperature)
+	text, err := c.generate(ctx, prompt, temperature, "application/json")
 	if err != nil {
 		return err
 	}
@@ -330,4 +337,3 @@ If inappropriate, set passed=false and provide a clear, respectful warning.`,
 
 	return &result, nil
 }
-

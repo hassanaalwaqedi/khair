@@ -57,7 +57,8 @@ class NotificationTarget {
       case 'support_attachment':
       case 'support_message':
         return NotificationTarget(
-            route: '/support', notificationId: notificationId);
+            route: _supportRoute(_value(data, 'ticket_id')),
+            notificationId: notificationId);
       default:
         return NotificationTarget(
             route: '/notifications', notificationId: notificationId);
@@ -66,6 +67,11 @@ class NotificationTarget {
 
   static String _eventRoute(String? eventId) =>
       eventId == null || eventId.isEmpty ? '/my-events' : '/events/$eventId';
+
+  static String _supportRoute(String? ticketID) =>
+      ticketID == null || ticketID.isEmpty
+          ? '/support'
+          : '/support?conversation=${Uri.encodeQueryComponent(ticketID)}';
 
   static String? _value(Map<String, dynamic> data, String key) {
     final value = data[key]?.toString().trim();

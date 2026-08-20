@@ -12,6 +12,7 @@ import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../core/utils/media_url_helper.dart';
 import '../../../../core/utils/calendar_service.dart';
 import '../../../../core/utils/share_helper.dart';
@@ -291,7 +292,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               child: _heroButton(
                 icon: Icons.arrow_back_rounded,
                 label: context.l10n.eventDetailsBack,
-                onPressed: () => context.pop(),
+                onPressed: () => context.popOrGo('/'),
               ),
             ),
             PositionedDirectional(

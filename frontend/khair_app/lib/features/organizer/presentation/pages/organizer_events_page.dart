@@ -250,11 +250,11 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
             ),
             // Actions
             PopupMenuButton(
-              icon:
-                  Icon(Icons.more_vert, color: KhairColors.textTertiary),
+              icon: Icon(Icons.more_vert, color: KhairColors.textTertiary),
               itemBuilder: (context) => [
                 PopupMenuItem(value: 'view', child: Text(context.l10n.view)),
-                PopupMenuItem(value: 'edit', child: Text(context.l10n.ownerEdit)),
+                PopupMenuItem(
+                    value: 'edit', child: Text(context.l10n.ownerEdit)),
                 if (event.status == 'approved')
                   PopupMenuItem(
                     value: 'notify',
@@ -279,7 +279,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                     _openEvent(context, event);
                     break;
                   case 'edit':
-                    context.push('/organizer/events/${event.id}/edit');
+                    context.push('/organizer/events/${event.id}/edit',
+                        extra: event);
                     break;
                   case 'notify':
                     _showNotifyAttendeesDialog(context, event);
@@ -296,7 +297,7 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   void _openEvent(BuildContext context, Event event) {
     final publicEvent =
         event.status == 'approved' || event.status == 'published';
-    context.go(
+    context.push(
         publicEvent ? '/events/${event.id}' : '/organizer/events/${event.id}');
   }
 
@@ -470,7 +471,8 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                   if (ctx.mounted) {
                                     ScaffoldMessenger.of(ctx).showSnackBar(
                                       SnackBar(
-                                        content: Text(context.l10n.adminActionFailed),
+                                        content: Text(
+                                            context.l10n.adminActionFailed),
                                         backgroundColor: KhairColors.error,
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
@@ -488,9 +490,10 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
                             : Icon(Icons.send_rounded, size: 18),
-                        label: Text(isSending
-                            ? context.l10n.sending
-                            : context.l10n.sendMessageToAttendees,
+                        label: Text(
+                            isSending
+                                ? context.l10n.sending
+                                : context.l10n.sendMessageToAttendees,
                             style: TextStyle(
                                 fontWeight: FontWeight.w600, fontSize: 14)),
                         style: ElevatedButton.styleFrom(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/api_config.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../core/theme/khair_theme.dart';
 import '../../../events/domain/entities/event.dart';
 import '../bloc/organizer_bloc.dart';
@@ -24,7 +25,7 @@ class OrganizerEventStatusPage extends StatelessWidget {
         title: Text(context.l10n.eventStatus),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/organizer/events'),
+          onPressed: () => context.popOrGo('/organizer/events'),
         ),
       ),
       body: BlocBuilder<OrganizerBloc, OrganizerState>(
@@ -232,7 +233,7 @@ class _DetailsPanel extends StatelessWidget {
     final location = event.isOnline
         ? context.l10n.onlineEvent
         : [event.city, event.country]
-            .where((part) => part != null && part!.isNotEmpty)
+            .where((part) => part != null && part.isNotEmpty)
             .map((part) => part)
             .join(', ');
 

@@ -20,7 +20,8 @@ class WebSocketService with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       debugPrint('[WS] App paused/detached, disconnecting');
       disconnect();
     } else if (state == AppLifecycleState.resumed) {
@@ -57,12 +58,7 @@ class WebSocketService with WidgetsBindingObserver {
         return;
       }
 
-      // Convert HTTP URL to WS URL
-      final wsUrl = ApiConfig.apiBaseUrl
-          .replaceFirst('https://', 'wss://')
-          .replaceFirst('http://', 'ws://');
-
-      final uri = Uri.parse('$wsUrl/ws?token=$token');
+      final uri = ApiConfig.webSocketUri(token);
       debugPrint('[WS] Connecting to ${uri.host}...');
 
       final channel = WebSocketChannel.connect(uri);
@@ -127,7 +123,8 @@ class WebSocketService with WidgetsBindingObserver {
     _reconnectTimer?.cancel();
     final delay = Duration(seconds: (1 << _reconnectAttempts).clamp(1, 30));
     _reconnectAttempts++;
-    debugPrint('[WS] Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts)');
+    debugPrint(
+        '[WS] Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts)');
 
     _reconnectTimer = Timer(delay, () {
       connect();

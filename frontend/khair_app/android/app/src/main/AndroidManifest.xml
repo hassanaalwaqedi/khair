@@ -38,7 +38,28 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
+            <!-- Route shared event/profile URLs through Flutter so GoRouter can
+                 preserve Back semantics instead of launching a separate task. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="khair-it-app.web.app"/>
+                <data android:scheme="https" android:host="khair.app"/>
+                <data android:scheme="https" android:host="khair.it.com"/>
+            </intent-filter>
+            <!-- The app scheme provides a reliable mobile fallback while the
+                 website association file verifies the HTTPS domains. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="khair"/>
+            </intent-filter>
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="true" />
+            </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

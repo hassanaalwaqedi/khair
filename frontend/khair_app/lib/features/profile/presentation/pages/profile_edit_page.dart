@@ -10,6 +10,7 @@ import '../../../../core/locale/locale_bloc.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../core/utils/image_upload_client.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../../../core/widgets/discard_changes_dialog.dart';
@@ -155,7 +156,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       if (mounted) {
         context.read<LocaleBloc>().add(ChangeLocale(Locale(_language)));
         _captureInitialValues();
-        Navigator.of(context).pop(true);
+        context.popOrGo('/profile', result: true);
       }
     } on DioException catch (_) {
       if (mounted) {
@@ -194,14 +195,18 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   }
 
   Future<void> _handlePop(bool didPop) async {
-    if (didPop || !_hasUnsavedChanges || _discardDialogOpen) return;
+    if (didPop || _discardDialogOpen) return;
+    if (!_hasUnsavedChanges) {
+      context.popOrGo('/profile');
+      return;
+    }
     _discardDialogOpen = true;
     final discard = await showDiscardChangesDialog(context);
     if (!mounted) return;
     _discardDialogOpen = false;
     if (!discard) return;
     setState(() => _allowPop = true);
-    Navigator.of(context).pop();
+    context.popOrGo('/profile');
   }
 
   @override
@@ -209,7 +214,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final background = dark ? Color(0xFF101014) : Color(0xFFFCFAFB);
     return PopScope(
-      canPop: _allowPop || !_hasUnsavedChanges,
+      canPop: (_allowPop || !_hasUnsavedChanges) && context.canNavigateBack,
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         backgroundColor: background,
