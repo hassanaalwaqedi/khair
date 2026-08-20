@@ -396,12 +396,31 @@ func (h *Handler) isSupportAgent(c *gin.Context) bool {
 }
 
 func (h *Handler) requestUserID(c *gin.Context) (uuid.UUID, bool) {
-	userID, err := uuid.Parse(c.GetString("user_id"))
-	if err != nil {
+	// AuthMiddleware stores the validated subject as uuid.UUID.  Accept the
+	// string form as well because focused handler tests and legacy middleware
+	// adapters still use it. Calling Gin's GetString for a UUID silently returns
+	// an empty string, which used to turn every valid Support request into a
+	// 401 and consequently made the mobile client clear the user's session.
+	value, exists := c.Get("user_id")
+	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user ID"})
 		return uuid.Nil, false
 	}
-	return userID, true
+
+	switch userID := value.(type) {
+	case uuid.UUID:
+		if userID != uuid.Nil {
+			return userID, true
+		}
+	case string:
+		parsed, err := uuid.Parse(userID)
+		if err == nil && parsed != uuid.Nil {
+			return parsed, true
+		}
+	}
+
+	c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user ID"})
+	return uuid.Nil, false
 }
 
 func validateImageAttachment(file multipart.File, header *multipart.FileHeader) error {

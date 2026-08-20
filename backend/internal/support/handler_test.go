@@ -16,7 +16,9 @@ import (
 
 func mockAuthMiddleware(userID uuid.UUID, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("user_id", userID.String())
+		// Match the production AuthMiddleware contract. A UUID, rather than its
+		// string representation, is placed in the Gin context after JWT validation.
+		c.Set("user_id", userID)
 		c.Set("roles", roles)
 		c.Next()
 	}
@@ -28,7 +30,7 @@ func mockAdminMiddleware() gin.HandlerFunc {
 	}
 }
 
-func TestHandler_StartSession(t *testing.T) {
+func TestHandler_StartSessionAcceptsUUIDAuthContext(t *testing.T) {
 	// Skip detailed implementation for brevity, testing HTTP response shape
 	gin.SetMode(gin.TestMode)
 	
@@ -50,7 +52,9 @@ func TestHandler_StartSession(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/support/sessions", bytes.NewBuffer(reqBody))
 	w := httptest.NewRecorder()
 	
-	// This will panic or return 500 because DB is nil, but we can check if it hit the handler
+	// The database has no mocked expectations, so this deliberately returns 500
+	// after reaching the handler. It must not return 401: production auth stores
+	// user_id as uuid.UUID in Gin context.
 	r.ServeHTTP(w, req)
 	
 	assert.Equal(t, http.StatusInternalServerError, w.Code) // Expected without a real DB mock
