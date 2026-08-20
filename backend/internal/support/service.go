@@ -67,13 +67,16 @@ func NewService(repo *Repository, aiClient *ai.Client, wsHub *ws.Hub, fcmClient 
 }
 
 // StartConversation returns the current active conversation when one exists,
-// otherwise creates it with a localized Khair AI welcome. The returned record
-// is the same record later handed to a human agent.
+// unless the user explicitly requests a fresh AI chat. A forced new chat keeps
+// a queued human conversation intact for support agents and starts a separate
+// AI-first thread for a new question.
 func (s *Service) StartConversation(ctx context.Context, userID uuid.UUID, req models.CreateSupportConversationRequest) (*models.SupportTicket, *models.SupportMessage, bool, error) {
-	if ticket, err := s.repo.GetActiveTicket(userID); err == nil {
-		return ticket, nil, false, nil
-	} else if !errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, false, err
+	if !req.ForceNew {
+		if ticket, err := s.repo.GetActiveTicket(userID); err == nil {
+			return ticket, nil, false, nil
+		} else if !errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, false, err
+		}
 	}
 
 	profileLanguage, _, _, err := s.repo.GetUserSupportContext(userID)

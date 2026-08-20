@@ -56,6 +56,40 @@ func TestService_StartConversationCreatesPersistentWelcome(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestService_StartConversationForceNewDoesNotResumeHumanQueue(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	repo := support.NewRepository(db)
+	svc := support.NewService(repo, nil, nil, nil, db)
+	userID := uuid.New()
+	ticketID := uuid.New()
+
+	// A force-new request must not call GetActiveTicket. It creates a second,
+	// AI-active conversation while the queued human ticket remains untouched.
+	mock.ExpectQuery(`SELECT COALESCE\(NULLIF\(p.preferred_language`).
+		WithArgs(userID).
+		WillReturnRows(sqlmock.NewRows([]string{"language", "role", "organizer_status"}).AddRow("en", "user", ""))
+	mock.ExpectQuery(`INSERT INTO support_tickets`).
+		WithArgs(userID, "general", "Khair support conversation", "ai_active", "normal", "en", nil, nil).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).AddRow(ticketID, time.Now(), time.Now()))
+	mock.ExpectQuery(`INSERT INTO support_messages`).
+		WithArgs(ticketID, "ai", nil, sqlmock.AnyArg(), "text", sqlmock.AnyArg()).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(uuid.New(), time.Now()))
+
+	ticket, welcome, created, err := svc.StartConversation(context.Background(), userID, models.CreateSupportConversationRequest{
+		Language: "en",
+		ForceNew: true,
+	})
+	assert.NoError(t, err)
+	assert.True(t, created)
+	assert.Equal(t, ticketID, ticket.ID)
+	assert.Equal(t, "ai_active", ticket.Status)
+	assert.Equal(t, "ai", welcome.SenderType)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestService_EscalateTicketMovesConversationToWaitingForAgent(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)

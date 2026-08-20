@@ -14,6 +14,7 @@ class SupportRepository {
     required String language,
     String? contextType,
     String? contextId,
+    bool forceNew = false,
   }) async {
     final response = await _apiClient.post(
       '/support/conversations',
@@ -22,6 +23,7 @@ class SupportRepository {
         if (contextType != null && contextId != null)
           'context_type': contextType,
         if (contextType != null && contextId != null) 'context_id': contextId,
+        if (forceNew) 'force_new': true,
       },
     );
     final data = Map<String, dynamic>.from(response.data as Map);

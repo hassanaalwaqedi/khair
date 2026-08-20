@@ -12,14 +12,18 @@ class _SupportRepository extends SupportRepository {
   final SupportConversation conversation;
   final bool failHistoryRefresh;
   bool escalated = false;
+  bool? receivedForceNew;
 
   @override
   Future<SupportConversation> openConversation({
     required String language,
     String? contextType,
     String? contextId,
-  }) async =>
-      conversation;
+    bool forceNew = false,
+  }) async {
+    receivedForceNew = forceNew;
+    return conversation;
+  }
 
   @override
   Future<List<SupportTicket>> getUserTickets() async => [conversation.ticket];
@@ -83,6 +87,21 @@ void main() {
       expect(state.ticket.id, ticket.id);
       expect(state.ticket.isAiActive, isTrue);
       expect(state.messages.single.body, 'Hello from Khair AI');
+    });
+
+    test('forwards an explicit fresh-AI-chat request to the repository',
+        () async {
+      final repository = _SupportRepository(
+        SupportConversation(ticket: ticket, messages: [welcome], created: true),
+      );
+      final newChatCubit = SupportCubit(repository);
+      addTearDown(newChatCubit.close);
+
+      await newChatCubit.openConversation('en', forceNew: true);
+
+      expect(repository.receivedForceNew, isTrue);
+      expect((newChatCubit.state as SupportSessionActive).ticket.isAiActive,
+          isTrue);
     });
 
     test('keeps the user in the human-support queue if history refresh fails',

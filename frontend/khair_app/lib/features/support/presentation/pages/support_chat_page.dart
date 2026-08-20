@@ -42,13 +42,14 @@ class _SupportChatPageState extends State<SupportChatPage> {
     super.dispose();
   }
 
-  void _openConversation() {
+  void _openConversation({bool forceNew = false}) {
     if (!mounted) return;
     context.read<SupportCubit>().openConversation(
           Localizations.localeOf(context).languageCode,
           initialTicketId: widget.initialTicketId,
           contextType: widget.contextType,
           contextId: widget.contextId,
+          forceNew: forceNew,
         );
   }
 
@@ -85,11 +86,24 @@ class _SupportChatPageState extends State<SupportChatPage> {
           PopupMenuButton<_SupportMenuAction>(
             tooltip: copy.moreOptions,
             onSelected: (action) {
-              if (action == _SupportMenuAction.escalate) {
-                context.read<SupportCubit>().escalate();
+              switch (action) {
+                case _SupportMenuAction.newAiChat:
+                  _openConversation(forceNew: true);
+                case _SupportMenuAction.escalate:
+                  context.read<SupportCubit>().escalate();
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _SupportMenuAction.newAiChat,
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_comment_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(copy.newAiChat),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: _SupportMenuAction.escalate,
                 child: Row(
@@ -132,7 +146,11 @@ class _SupportChatPageState extends State<SupportChatPage> {
               constraints: const BoxConstraints(maxWidth: 920),
               child: Column(
                 children: [
-                  _ConversationStatus(ticket: active.ticket, copy: copy),
+                  _ConversationStatus(
+                    ticket: active.ticket,
+                    copy: copy,
+                    onStartNewAiChat: () => _openConversation(forceNew: true),
+                  ),
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
@@ -299,7 +317,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
   }
 }
 
-enum _SupportMenuAction { escalate }
+enum _SupportMenuAction { newAiChat, escalate }
 
 class _AppBarIdentity extends StatelessWidget {
   const _AppBarIdentity({required this.copy, this.ticket});
@@ -311,42 +329,47 @@ class _AppBarIdentity extends StatelessWidget {
   Widget build(BuildContext context) {
     final isHumanConversation = ticket?.isHumanActive ?? false;
     return Row(
-        children: [
-          CircleAvatar(
-            radius: 17,
-            backgroundColor: isHumanConversation
-                ? KhairColors.successLight
-                : KhairColors.primarySurface,
-            child: Icon(
-              isHumanConversation ? Icons.support_agent : Icons.auto_awesome,
-              color:
-                  isHumanConversation ? KhairColors.success : KhairColors.primary,
-              size: 18,
-            ),
+      children: [
+        CircleAvatar(
+          radius: 17,
+          backgroundColor: isHumanConversation
+              ? KhairColors.successLight
+              : KhairColors.primarySurface,
+          child: Icon(
+            isHumanConversation ? Icons.support_agent : Icons.auto_awesome,
+            color:
+                isHumanConversation ? KhairColors.success : KhairColors.primary,
+            size: 18,
           ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(copy.supportTitle,
-                  style: Theme.of(context).textTheme.titleMedium),
-              Text(isHumanConversation ? copy.supportTeam : copy.aiAssistant,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: KhairColors.neutral600,
-                      )),
-            ],
-          ),
-        ],
-      );
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(copy.supportTitle,
+                style: Theme.of(context).textTheme.titleMedium),
+            Text(isHumanConversation ? copy.supportTeam : copy.aiAssistant,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: KhairColors.neutral600,
+                    )),
+          ],
+        ),
+      ],
+    );
   }
 }
 
 class _ConversationStatus extends StatelessWidget {
-  const _ConversationStatus({required this.ticket, required this.copy});
+  const _ConversationStatus({
+    required this.ticket,
+    required this.copy,
+    required this.onStartNewAiChat,
+  });
 
   final SupportTicket ticket;
   final _SupportCopy copy;
+  final VoidCallback onStartNewAiChat;
 
   @override
   Widget build(BuildContext context) {
@@ -383,6 +406,12 @@ class _ConversationStatus extends StatelessWidget {
           Expanded(
               child: Text(message,
                   style: TextStyle(color: color, fontWeight: FontWeight.w600))),
+          if (!ticket.isAiActive)
+            IconButton(
+              tooltip: copy.newAiChat,
+              onPressed: onStartNewAiChat,
+              icon: Icon(Icons.add_comment_outlined, color: color),
+            ),
         ],
       ),
     );
@@ -875,6 +904,11 @@ class _SupportCopy {
       : language == 'tr'
           ? 'Khair Desteğe bağlan'
           : 'Talk to Khair Support';
+  String get newAiChat => isArabic
+      ? 'بدء محادثة جديدة مع ذكاء خير الاصطناعي'
+      : language == 'tr'
+          ? 'Yeni yapay zekâ sohbeti başlat'
+          : 'Start a new AI chat';
   String get aiThinking => isArabic
       ? 'ذكاء خير الاصطناعي يفكر...'
       : language == 'tr'
