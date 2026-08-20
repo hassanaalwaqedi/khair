@@ -28,13 +28,18 @@ import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() {
+  // Platform channels used by Firebase Messaging require Flutter bindings.
+  // Register the background handler before the app starts, but only after the
+  // binding exists; otherwise Android release builds remain on the splash
+  // screen after an unhandled platform-channel exception.
+  WidgetsFlutterBinding.ensureInitialized();
+
   if (!kIsWeb) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
   CrashReporter.init(
     sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
     appRunner: () async {
-      WidgetsFlutterBinding.ensureInitialized();
       await initializeDateFormatting();
 
       // Firebase & push notifications are only configured for mobile
