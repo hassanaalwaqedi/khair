@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,7 +14,7 @@ import (
 	"github.com/khair/backend/pkg/response"
 )
 
-// Service manages device tokens and sends push notifications.
+// Service manages authenticated device registrations and sends FCM messages.
 type Service struct {
 	db  *sql.DB
 	fcm *fcm.Client
@@ -24,12 +25,28 @@ func NewService(db *sql.DB, fcmClient *fcm.Client) *Service {
 	return &Service{db: db, fcm: fcmClient}
 }
 
-// RegisterToken stores a device token for a user.
+// RegisterToken assigns a physical device token to the authenticated account.
+// The unique token constraint deliberately moves a shared device to its most
+// recently authenticated user, preventing User A from receiving User B's push.
 func (s *Service) RegisterToken(userID uuid.UUID, token, platform string) error {
+	token = strings.TrimSpace(token)
+	platform = strings.ToLower(strings.TrimSpace(platform))
+	if len(token) < 20 || len(token) > 4096 {
+		return fmt.Errorf("invalid device token")
+	}
+	if platform != "android" && platform != "ios" && platform != "web" {
+		return fmt.Errorf("invalid device platform")
+	}
+
 	_, err := s.db.Exec(`
-		INSERT INTO device_tokens (user_id, token, platform)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (user_id, token) DO UPDATE SET updated_at = NOW()
+		INSERT INTO device_tokens (user_id, token, platform, last_seen_at, is_active)
+		VALUES ($1, $2, $3, NOW(), true)
+		ON CONFLICT (token) DO UPDATE SET
+			user_id = EXCLUDED.user_id,
+			platform = EXCLUDED.platform,
+			last_seen_at = NOW(),
+			is_active = true,
+			updated_at = NOW()
 	`, userID, token, platform)
 	if err != nil {
 		return fmt.Errorf("register device token: %w", err)
@@ -37,15 +54,34 @@ func (s *Service) RegisterToken(userID uuid.UUID, token, platform string) error 
 	return nil
 }
 
-// RemoveToken removes a device token.
+// RemoveToken deactivates only the current authenticated user's token.
 func (s *Service) RemoveToken(userID uuid.UUID, token string) error {
-	_, err := s.db.Exec(`DELETE FROM device_tokens WHERE user_id = $1 AND token = $2`, userID, token)
+	_, err := s.db.Exec(`
+		UPDATE device_tokens
+		SET is_active = false, updated_at = NOW()
+		WHERE user_id = $1 AND token = $2
+	`, userID, strings.TrimSpace(token))
 	return err
 }
 
-// GetUserTokens returns all device tokens for a user.
+// DeactivateToken retires a token Firebase has declared invalid. It is not
+// scoped to a user because Firebase is the authoritative source for that
+// device-token lifecycle event.
+func (s *Service) DeactivateToken(token string) error {
+	_, err := s.db.Exec(`
+		UPDATE device_tokens
+		SET is_active = false, updated_at = NOW()
+		WHERE token = $1
+	`, token)
+	return err
+}
+
+// GetUserTokens returns every active device token for a user.
 func (s *Service) GetUserTokens(userID uuid.UUID) ([]string, error) {
-	rows, err := s.db.Query(`SELECT token FROM device_tokens WHERE user_id = $1`, userID)
+	rows, err := s.db.Query(`
+		SELECT token FROM device_tokens
+		WHERE user_id = $1 AND is_active = true
+	`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,31 +89,90 @@ func (s *Service) GetUserTokens(userID uuid.UUID) ([]string, error) {
 
 	var tokens []string
 	for rows.Next() {
-		var t string
-		if err := rows.Scan(&t); err != nil {
+		var token string
+		if err := rows.Scan(&token); err != nil {
 			return nil, err
 		}
-		tokens = append(tokens, t)
+		tokens = append(tokens, token)
 	}
-	return tokens, nil
+	return tokens, rows.Err()
 }
 
-// SendToUser sends a push notification to all of a user's devices.
+// SendToUser delivers a notification to every active device for the account.
+// Notification content is persisted before this method is invoked; this method
+// only transports it and safely records its delivery outcome.
 func (s *Service) SendToUser(userID uuid.UUID, title, body string, data map[string]string) {
+	payload := publicFCMData(data)
+	notificationID := strings.TrimSpace(payload["notification_id"])
+	notificationType := strings.TrimSpace(payload["type"])
+
+	if s == nil || s.fcm == nil || !s.fcm.IsEnabled() {
+		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "fcm_not_configured")
+		return
+	}
+
 	tokens, err := s.GetUserTokens(userID)
 	if err != nil {
-		log.Printf("[PUSH] Error getting tokens for %s: %v", userID, err)
+		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q reason=%q", notificationID, notificationType, "token_lookup_failed")
 		return
 	}
 	if len(tokens) == 0 {
+		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "no_active_devices")
 		return
 	}
-	s.fcm.SendToMultiple(tokens, title, body, data)
+
+	for _, result := range s.fcm.SendToMultiple(tokens, title, body, payload) {
+		if result.Err == nil {
+			log.Printf("[PUSH] delivery_sent notification_id=%q type=%q attempts=%d", notificationID, notificationType, result.Attempts)
+			continue
+		}
+		if fcm.IsInvalidToken(result.Err) {
+			if err := s.DeactivateToken(result.Token); err != nil {
+				log.Printf("[PUSH] invalid_token_cleanup_failed notification_id=%q type=%q", notificationID, notificationType)
+				continue
+			}
+			log.Printf("[PUSH] token_deactivated notification_id=%q type=%q attempts=%d", notificationID, notificationType, result.Attempts)
+			continue
+		}
+		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q category=%q attempts=%d", notificationID, notificationType, deliveryFailureCategory(result.Err), result.Attempts)
+	}
 }
 
-// ── Handler ──
+// publicFCMData is a final server-side privacy boundary. Business services may
+// retain richer metadata in the authenticated notification center, but only
+// navigation identifiers and non-sensitive status enter Firebase payloads.
+func publicFCMData(data map[string]string) map[string]string {
+	allowed := map[string]struct{}{
+		"notification_id": {},
+		"type":            {},
+		"status":          {},
+		"entity_type":     {},
+		"entity_id":       {},
+		"event_id":        {},
+		"application_id":  {},
+		"ticket_id":       {},
+		"announcement_id": {},
+	}
+	payload := make(map[string]string, len(allowed))
+	for key, value := range data {
+		if _, ok := allowed[key]; ok && strings.TrimSpace(value) != "" {
+			payload[key] = value
+		}
+	}
+	return payload
+}
 
-// Handler handles device token HTTP endpoints.
+func deliveryFailureCategory(err error) string {
+	if fcm.IsTransient(err) {
+		return "transient"
+	}
+	if fcm.IsInvalidToken(err) {
+		return "invalid_token"
+	}
+	return "permanent"
+}
+
+// Handler handles authenticated device token endpoints.
 type Handler struct {
 	service *Service
 }
@@ -92,7 +187,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	devices := r.Group("/devices", authMiddleware)
 	{
 		devices.POST("", h.Register)
-		devices.DELETE("/:token", h.Unregister)
+		devices.DELETE("", h.Unregister)
+		// Kept temporarily for already-released clients. New clients send the
+		// token in an authenticated JSON body, not in the request URL.
+		devices.DELETE("/:token", h.UnregisterLegacy)
 	}
 }
 
@@ -102,10 +200,14 @@ type RegisterRequest struct {
 	Platform string `json:"platform" binding:"required,oneof=android ios web"`
 }
 
-// Register handles POST /devices
+type unregisterRequest struct {
+	Token string `json:"token" binding:"required"`
+}
+
+// Register handles POST /devices.
 func (h *Handler) Register(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	uid, ok := authenticatedUserID(c)
+	if !ok {
 		response.Error(c, http.StatusUnauthorized, "Not authenticated")
 		return
 	}
@@ -115,27 +217,52 @@ func (h *Handler) Register(c *gin.Context) {
 		response.BadRequest(c, "Token and platform are required")
 		return
 	}
-
-	uid := userID.(uuid.UUID)
 	if err := h.service.RegisterToken(uid, req.Token, req.Platform); err != nil {
-		response.InternalServerError(c, "Failed to register device")
+		response.BadRequest(c, "Invalid device registration")
 		return
 	}
 
 	response.SuccessWithMessage(c, "Device registered", nil)
 }
 
-// Unregister handles DELETE /devices/:token
+// Unregister handles DELETE /devices.
 func (h *Handler) Unregister(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	uid, ok := authenticatedUserID(c)
+	if !ok {
 		response.Error(c, http.StatusUnauthorized, "Not authenticated")
 		return
 	}
+	var req unregisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil || strings.TrimSpace(req.Token) == "" {
+		response.BadRequest(c, "Device token is required")
+		return
+	}
+	h.remove(c, uid, req.Token)
+}
 
-	token := c.Param("token")
-	uid := userID.(uuid.UUID)
-	_ = h.service.RemoveToken(uid, token)
+// UnregisterLegacy handles DELETE /devices/:token for existing clients.
+func (h *Handler) UnregisterLegacy(c *gin.Context) {
+	uid, ok := authenticatedUserID(c)
+	if !ok {
+		response.Error(c, http.StatusUnauthorized, "Not authenticated")
+		return
+	}
+	h.remove(c, uid, c.Param("token"))
+}
 
+func (h *Handler) remove(c *gin.Context, userID uuid.UUID, token string) {
+	if err := h.service.RemoveToken(userID, token); err != nil {
+		response.InternalServerError(c, "Failed to unregister device")
+		return
+	}
 	response.SuccessWithMessage(c, "Device unregistered", nil)
+}
+
+func authenticatedUserID(c *gin.Context) (uuid.UUID, bool) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return uuid.Nil, false
+	}
+	uid, ok := userID.(uuid.UUID)
+	return uid, ok && uid != uuid.Nil
 }

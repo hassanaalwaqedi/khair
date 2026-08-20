@@ -44,6 +44,21 @@ func (s *Service) Create(userID uuid.UUID, title, message string) error {
 
 // CreateTyped inserts a notification with type and data for deep linking
 func (s *Service) CreateTyped(userID uuid.UUID, title, message, notifType string, data map[string]string) error {
+	_, _, err := s.CreateTypedOnce(userID, title, message, notifType, data, "")
+	return err
+}
+
+// CreateTypedWithID persists a notification and returns the authoritative
+// notification ID used by the matching FCM payload.
+func (s *Service) CreateTypedWithID(userID uuid.UUID, title, message, notifType string, data map[string]string) (uuid.UUID, error) {
+	id, _, err := s.CreateTypedOnce(userID, title, message, notifType, data, "")
+	return id, err
+}
+
+// CreateTypedOnce persists one logical notification at most once per user and
+// dedupe key. The boolean is false when an API or worker retry already created
+// the notification, in which case a second push must not be sent.
+func (s *Service) CreateTypedOnce(userID uuid.UUID, title, message, notifType string, data map[string]string, dedupeKey string) (uuid.UUID, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
 	defer cancel()
 
@@ -52,14 +67,40 @@ func (s *Service) CreateTyped(userID uuid.UUID, title, message, notifType string
 		dataJSON = []byte("{}")
 	}
 
-	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO notifications (user_id, title, message, notification_type, data) VALUES ($1, $2, $3, $4, $5)`,
-		userID, title, message, notifType, dataJSON,
-	)
-	if err != nil {
-		return fmt.Errorf("create notification: %w", err)
+	var id uuid.UUID
+	if dedupeKey == "" {
+		err := s.db.QueryRowContext(ctx,
+			`INSERT INTO notifications (user_id, title, message, notification_type, data)
+			 VALUES ($1, $2, $3, $4, $5)
+			 RETURNING id`,
+			userID, title, message, notifType, dataJSON,
+		).Scan(&id)
+		if err != nil {
+			return uuid.Nil, false, fmt.Errorf("create notification: %w", err)
+		}
+		return id, true, nil
 	}
-	return nil
+
+	err := s.db.QueryRowContext(ctx,
+		`INSERT INTO notifications (user_id, title, message, notification_type, data, dedupe_key)
+		 VALUES ($1, $2, $3, $4, $5, $6)
+		 ON CONFLICT (user_id, dedupe_key) WHERE dedupe_key IS NOT NULL DO NOTHING
+		 RETURNING id`,
+		userID, title, message, notifType, dataJSON, dedupeKey,
+	).Scan(&id)
+	if err == nil {
+		return id, true, nil
+	}
+	if err != sql.ErrNoRows {
+		return uuid.Nil, false, fmt.Errorf("create notification: %w", err)
+	}
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT id FROM notifications WHERE user_id = $1 AND dedupe_key = $2`,
+		userID, dedupeKey,
+	).Scan(&id); err != nil {
+		return uuid.Nil, false, fmt.Errorf("load deduplicated notification: %w", err)
+	}
+	return id, false, nil
 }
 
 // CreateForAll inserts a notification for every active user. Returns the count of users notified.

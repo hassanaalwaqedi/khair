@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"regexp"
 	"sort"
@@ -742,6 +743,7 @@ func (s *Service) deliverDecision(app *Application, decision, message string) {
 		return
 	}
 	data := map[string]string{
+		"type":           organizerDecisionPushType(decision),
 		"status":         decision,
 		"organizer_name": app.PublicName,
 		"reason":         message,
@@ -755,17 +757,43 @@ func (s *Service) deliverDecision(app *Application, decision, message string) {
 	if title == "" || body == "" {
 		title, body = localizedDecision(decision, app.PublicName, message, identity.Language)
 	}
+	var notificationID uuid.UUID
+	created := false
 	if s.notifications != nil {
 		if localized, err := s.notifications.LocalizeForUser(app.UserID, "organizer_application", data); err == nil {
 			title, body = localized.Title, localized.Message
 		}
-		_ = s.notifications.CreateTyped(app.UserID, title, body, "organizer_application", data)
+		var err error
+		notificationID, created, err = s.notifications.CreateTypedOnce(
+			app.UserID,
+			title,
+			body,
+			"organizer_application",
+			data,
+			"organizer_application:"+app.ID.String()+":"+decision,
+		)
+		if err != nil {
+			log.Printf("[ORGANIZER_APPLICATION] Failed to create decision notification: %v", err)
+			return
+		}
 	}
-	if s.push != nil {
+	if s.push != nil && created {
+		data["notification_id"] = notificationID.String()
 		s.push.SendToUser(app.UserID, title, body, data)
 	}
-	if s.email != nil {
+	if s.email != nil && created {
 		_ = s.email.SendNotificationEmail(identity.Email, title, body, identity.Language)
+	}
+}
+
+func organizerDecisionPushType(decision string) string {
+	switch decision {
+	case "approved":
+		return "organizer_approved"
+	case "rejected":
+		return "organizer_rejected"
+	default:
+		return "organizer_revision_requested"
 	}
 }
 

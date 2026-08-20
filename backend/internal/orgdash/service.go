@@ -3,16 +3,21 @@ package orgdash
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 )
 
 // Service handles organization dashboard business logic
 type Service struct {
-	repo *Repository
+	repo          *Repository
+	notifications *notification.Service
+	pushService   *push.Service
 }
 
 // NewService creates a new orgdash service
@@ -23,6 +28,13 @@ func NewService(db *sql.DB) *Service {
 // GetRepository returns the repository for external use
 func (s *Service) GetRepository() *Repository {
 	return s.repo
+}
+
+// SetNotificationDelivery wires organization-dashboard event mutations into
+// the shared, idempotent in-app and FCM notification pipeline.
+func (s *Service) SetNotificationDelivery(notifications *notification.Service, pushService *push.Service) {
+	s.notifications = notifications
+	s.pushService = pushService
 }
 
 // GetDashboardStats returns overview statistics
@@ -190,6 +202,7 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 	if err != nil {
 		return nil, errors.New("event not found")
 	}
+	previousStartDate := ev.StartDate
 
 	if req.Title != nil {
 		ev.Title = *req.Title
@@ -246,16 +259,71 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 	if err := s.repo.UpdateEvent(ev); err != nil {
 		return nil, err
 	}
+	if !ev.StartDate.Equal(previousStartDate) {
+		go s.notifyAttendees(ev, "event_updated", ev.StartDate.UTC().Format(time.RFC3339Nano))
+	}
 	return ev, nil
 }
 
 // CancelEvent cancels an event
 func (s *Service) CancelEvent(orgID, eventID uuid.UUID) error {
-	_, err := s.repo.GetEventByID(eventID, orgID)
+	ev, err := s.repo.GetEventByID(eventID, orgID)
 	if err != nil {
 		return errors.New("event not found")
 	}
-	return s.repo.CancelEvent(eventID)
+	if err := s.repo.CancelEvent(eventID); err != nil {
+		return err
+	}
+	go s.notifyAttendees(ev, "event_cancelled", "cancelled")
+	return nil
+}
+
+// notifyAttendees creates one localised in-app notification per confirmed or
+// reserved attendee and sends its matching FCM payload. The database dedupe
+// key makes retries safe, while PushService applies the final FCM data
+// allowlist before any data leaves Khair.
+func (s *Service) notifyAttendees(event *models.Event, notificationType, operation string) {
+	if s.notifications == nil || event == nil {
+		return
+	}
+
+	rows, err := s.repo.db.Query(`
+		SELECT DISTINCT user_id
+		FROM event_registrations
+		WHERE event_id = $1 AND status IN ('confirmed', 'reserved')
+	`, event.ID)
+	if err != nil {
+		log.Printf("[ORGDASH] attendee notification lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	dedupeKey := notificationType + ":" + event.ID.String() + ":" + operation
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		data := map[string]string{
+			"type":        notificationType,
+			"entity_type": "event",
+			"entity_id":   event.ID.String(),
+			"event_id":    event.ID.String(),
+			"event_title": event.Title,
+		}
+		copy, notificationID, created, err := s.notifications.CreateLocalizedOnce(userID, notificationType, data, dedupeKey)
+		if err != nil {
+			log.Printf("[ORGDASH] attendee notification failed: %v", err)
+			continue
+		}
+		if created && s.pushService != nil {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("[ORGDASH] attendee notification iteration failed: %v", err)
+	}
 }
 
 // DuplicateEvent creates a copy of an event

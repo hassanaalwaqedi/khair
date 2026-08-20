@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/auth/auth_session_controller.dart';
+import '../../../../core/push/push_notification_service_platform.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -102,6 +103,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    // Keep the authenticated API session alive long enough to deactivate this
+    // device token. A later user on the same phone cannot receive this user's
+    // notifications even if the FCM token itself is reused.
+    await PushNotificationService.instance.removeToken();
+    PushNotificationService.instance.clearSession();
     await _authRepository.logout();
     emit(const AuthState(status: AuthStatus.unauthenticated));
   }
@@ -110,6 +116,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSessionExpired event,
     Emitter<AuthState> emit,
   ) {
+    PushNotificationService.instance.clearSession();
     emit(const AuthState(status: AuthStatus.unauthenticated));
   }
 

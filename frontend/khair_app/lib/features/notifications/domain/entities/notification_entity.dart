@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/push/notification_target.dart';
+
 /// Notification entity for user notifications
 class AppNotification extends Equatable {
   final String id;
@@ -49,24 +51,13 @@ class AppNotification extends Equatable {
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
   }
 
-  /// Route path for deep-linking on notification tap
-  String? get routePath {
-    switch (notificationType) {
-      case 'event_join_confirmed':
-      case 'event_joined':
-      case 'event_reminder':
-      case 'event_updated':
-      case 'event_cancelled':
-      case 'event_participant_joined':
-      case 'organizer_announcement':
-      case 'organizer_message':
-      case 'new_participant':
-        final eventId = data['event_id'];
-        return eventId == null ? '/my-events' : '/events/$eventId';
-      default:
-        return null;
-    }
-  }
+  /// Route path for in-app notification taps. It shares the exact same typed
+  /// mapping as system-notification taps, independent of localized copy.
+  String get routePath => NotificationTarget.fromData({
+        ...data,
+        'type': data['type'] ?? notificationType,
+        'notification_id': id,
+      }).route;
 
   @override
   List<Object?> get props =>
