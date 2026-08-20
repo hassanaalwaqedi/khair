@@ -132,7 +132,10 @@
       <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
   </picture>
   
-  <script src="flutter_bootstrap.js" async=""></script>
+  <!-- This query string migrates browsers that cached the previous bootstrap
+       bundle for a year. After this release Firebase revalidates it on every
+       visit, so it remains safe to deploy future Flutter builds. -->
+  <script src="flutter_bootstrap.js?v=khair-cache-v1" async=""></script>
 
 
 
