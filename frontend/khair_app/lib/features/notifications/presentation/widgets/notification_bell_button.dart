@@ -34,7 +34,7 @@ class NotificationBellButton extends StatelessWidget {
           label: accessibilityLabel,
           child: IconButton(
             tooltip: context.l10n.notifications,
-            onPressed: onPressed ?? () => context.go('/notifications'),
+            onPressed: onPressed ?? () => context.push('/notifications'),
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             padding: const EdgeInsets.all(10),
             icon: _BellIcon(

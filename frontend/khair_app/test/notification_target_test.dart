@@ -44,6 +44,15 @@ void main() {
       );
     });
 
+    test('opens the exact support conversation from a support reply', () {
+      final target = NotificationTarget.fromData({
+        'type': 'support_reply',
+        'ticket_id': 'conversation-123',
+      });
+
+      expect(target.route, '/support?conversation=conversation-123');
+    });
+
     test('falls back to the notification center for unknown types', () {
       expect(
         NotificationTarget.fromData({'type': 'future_notification_type'}).route,

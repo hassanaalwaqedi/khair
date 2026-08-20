@@ -10,6 +10,7 @@ import '../../../../core/widgets/khair_components.dart';
 import '../../../../core/widgets/discard_changes_dialog.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../core/utils/image_upload_client.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../domain/entities/organizer.dart';
@@ -118,14 +119,18 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
   }
 
   Future<void> _handlePop(bool didPop) async {
-    if (didPop || !_hasUnsavedChanges || _discardDialogOpen) return;
+    if (didPop || _discardDialogOpen) return;
+    if (!_hasUnsavedChanges) {
+      context.popOrGo('/organizer');
+      return;
+    }
     _discardDialogOpen = true;
     final discard = await showDiscardChangesDialog(context);
     if (!mounted) return;
     _discardDialogOpen = false;
     if (!discard) return;
     setState(() => _allowPop = true);
-    Navigator.of(context).pop();
+    context.popOrGo('/organizer');
   }
 
   @override
@@ -220,7 +225,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _allowPop || !_hasUnsavedChanges,
+      canPop: (_allowPop || !_hasUnsavedChanges) && context.canNavigateBack,
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         appBar: AppBar(

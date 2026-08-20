@@ -23,6 +23,12 @@ const (
 type Message struct {
 	Type string      `json:"type"`
 	Data interface{} `json:"data"`
+	// These routing fields are consumed by every hub instance before the
+	// envelope is forwarded. Flutter ignores unknown envelope keys. They are
+	// intentionally not used as an authorization mechanism; the signed JWT on
+	// each connected client remains the enforcement point.
+	RecipientUsers []string `json:"recipient_users,omitempty"`
+	RecipientRoles []string `json:"recipient_roles,omitempty"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -135,38 +141,78 @@ func (h *Hub) Broadcast(msgType string, data interface{}) {
 	}
 }
 
-// BroadcastToUser sends a message to all connections of a specific user.
+// BroadcastToUser sends a message to all connections of a specific user. It
+// goes through Redis when configured, so targeted events also work after a
+// horizontal scale-out.
 func (h *Hub) BroadcastToUser(userID string, msgType string, data interface{}) {
-	msg := Message{Type: msgType, Data: data}
+	h.broadcastTargeted(Message{
+		Type:           msgType,
+		Data:           data,
+		RecipientUsers: []string{userID},
+	})
+}
+
+// BroadcastToRoles delivers an event only to authenticated clients carrying
+// one of the requested JWT roles. It is used for the support inbox: ordinary
+// users never receive another user's support conversation.
+func (h *Hub) BroadcastToRoles(roles []string, msgType string, data interface{}) {
+	h.broadcastTargeted(Message{
+		Type:           msgType,
+		Data:           data,
+		RecipientRoles: roles,
+	})
+}
+
+func (h *Hub) broadcastTargeted(msg Message) {
 	raw, err := json.Marshal(msg)
 	if err != nil {
+		log.Printf("[WS] Marshal targeted broadcast error: %v", err)
 		return
 	}
-
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	if clients, ok := h.userIndex[userID]; ok {
-		for client := range clients {
-			select {
-			case client.send <- raw:
-			default:
-				log.Printf("[WS] Dropping message for slow client user=%s", userID)
-			}
+	if h.redis != nil {
+		if err := h.redis.Publish(h.ctx, redisPubSubChannel, raw).Err(); err != nil {
+			log.Printf("[WS] Redis PUBLISH error: %v", err)
 		}
+		return
 	}
+	h.broadcastLocalMessage(raw, msg)
 }
 
 // broadcastLocal sends a raw JSON message to all locally connected clients.
 func (h *Hub) broadcastLocal(raw []byte) {
+	var msg Message
+	if err := json.Unmarshal(raw, &msg); err != nil {
+		log.Printf("[WS] Unmarshal local broadcast error: %v", err)
+		return
+	}
+	h.broadcastLocalMessage(raw, msg)
+}
+
+func (h *Hub) broadcastLocalMessage(raw []byte, msg Message) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for client := range h.clients {
+		if len(msg.RecipientUsers) > 0 && !containsString(msg.RecipientUsers, client.userID) {
+			continue
+		}
+		if len(msg.RecipientRoles) > 0 && !client.hasAnyRole(msg.RecipientRoles) {
+			continue
+		}
 		select {
 		case client.send <- raw:
 		default:
 			// slow client, drop
 		}
 	}
+}
+
+func containsString(values []string, value string) bool {
+	for _, candidate := range values {
+		if candidate == value {
+			return true
+		}
+	}
+	return false
 }
 
 // subscribeRedis listens to the Redis Pub/Sub channel and fans out to local clients.
@@ -202,8 +248,9 @@ func (h *Hub) HandleUpgrade(c *gin.Context) {
 		return
 	}
 
-	// Parse JWT to extract user ID
-	userID, err := h.parseJWT(tokenStr)
+	// Parse JWT to extract the authenticated user and their roles. Roles are
+	// used only for server-side routing of staff-only events.
+	userID, roles, err := h.parseJWTIdentity(tokenStr)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 		return
@@ -220,6 +267,7 @@ func (h *Hub) HandleUpgrade(c *gin.Context) {
 		conn:   conn,
 		send:   make(chan []byte, 256),
 		userID: userID,
+		roles:  roles,
 	}
 
 	h.register <- client
@@ -230,6 +278,11 @@ func (h *Hub) HandleUpgrade(c *gin.Context) {
 
 // parseJWT extracts the user ID from a JWT token string.
 func (h *Hub) parseJWT(tokenStr string) (string, error) {
+	userID, _, err := h.parseJWTIdentity(tokenStr)
+	return userID, err
+}
+
+func (h *Hub) parseJWTIdentity(tokenStr string) (string, map[string]struct{}, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
@@ -237,18 +290,29 @@ func (h *Hub) parseJWT(tokenStr string) (string, error) {
 		return []byte(h.jwtSecret), nil
 	})
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return "", jwt.ErrSignatureInvalid
+		return "", nil, jwt.ErrSignatureInvalid
 	}
 
 	// Check expiry
 	if exp, ok := claims["exp"].(float64); ok {
 		if time.Unix(int64(exp), 0).Before(time.Now()) {
-			return "", jwt.ErrTokenExpired
+			return "", nil, jwt.ErrTokenExpired
+		}
+	}
+	roles := map[string]struct{}{}
+	if role, ok := claims["role"].(string); ok && role != "" {
+		roles[role] = struct{}{}
+	}
+	if rawRoles, ok := claims["roles"].([]interface{}); ok {
+		for _, rawRole := range rawRoles {
+			if role, ok := rawRole.(string); ok && role != "" {
+				roles[role] = struct{}{}
+			}
 		}
 	}
 
@@ -257,11 +321,11 @@ func (h *Hub) parseJWT(tokenStr string) (string, error) {
 	// for service-to-service tokens, but never treat a missing identifier as a
 	// valid WebSocket session.
 	if userID, ok := claims["user_id"].(string); ok && userID != "" {
-		return userID, nil
+		return userID, roles, nil
 	}
 	if subject, ok := claims["sub"].(string); ok && subject != "" {
-		return subject, nil
+		return subject, roles, nil
 	}
 
-	return "", jwt.ErrTokenUnverifiable
+	return "", nil, jwt.ErrTokenUnverifiable
 }

@@ -1,11 +1,13 @@
 import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../di/injection.dart';
+import 'navigation.dart';
 import '../widgets/main_scaffold.dart';
 import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
@@ -72,11 +74,16 @@ class _AuthRefresh extends ChangeNotifier {
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/',
+  debugLogDiagnostics: kDebugMode,
   refreshListenable: _AuthRefresh(_authBloc.stream),
   redirect: _guardRoute,
   routes: [
     GoRoute(path: '/auth-loading', builder: (_, __) => _AuthLoadingPage()),
-    GoRoute(path: '/landing', builder: (_, __) => LandingPage()),
+    GoRoute(
+      path: '/landing',
+      builder: (_, __) =>
+          RouteBackFallback(fallbackLocation: '/', child: LandingPage()),
+    ),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) => MultiBlocProvider(
@@ -111,22 +118,45 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/events/:id',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<EventsBloc>(),
-        child: EventDetailsPage(eventId: state.pathParameters['id']!),
+      builder: (context, state) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: BlocProvider(
+          create: (_) => getIt<EventsBloc>(),
+          child: EventDetailsPage(eventId: state.pathParameters['id']!),
+        ),
       ),
     ),
     GoRoute(
       path: '/organizers/:id',
-      builder: (_, state) => OrganizerPublicProfilePage(
-        organizerId: state.pathParameters['id']!,
+      builder: (_, state) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: OrganizerPublicProfilePage(
+          organizerId: state.pathParameters['id']!,
+        ),
       ),
     ),
-    GoRoute(path: '/login', builder: (_, __) => LoginPage()),
-    GoRoute(path: '/register', builder: (_, __) => RegisterPage()),
     GoRoute(
-        path: '/register/verify', builder: (_, __) => EmailVerificationPage()),
-    GoRoute(path: '/verification', builder: (_, __) => VerificationPage()),
+      path: '/login',
+      builder: (_, __) =>
+          RouteBackFallback(fallbackLocation: '/', child: LoginPage()),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (_, __) =>
+          RouteBackFallback(fallbackLocation: '/', child: RegisterPage()),
+    ),
+    GoRoute(
+      path: '/register/verify',
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/register',
+        child: EmailVerificationPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/verification',
+      builder: (_, __) =>
+          RouteBackFallback(fallbackLocation: '/', child: VerificationPage()),
+    ),
     GoRoute(
       path: '/organizer/apply',
       builder: (_, __) => OrganizerAccessPage(),
@@ -137,24 +167,43 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/organizer',
-      builder: (_, __) => OrganizerHubPage(),
+      builder: (_, __) =>
+          RouteBackFallback(fallbackLocation: '/', child: OrganizerHubPage()),
       routes: [
         GoRoute(
             path: 'events/create',
             builder: (_, __) => BlocProvider(
                 create: (_) => getIt<EventsBloc>(), child: CreateEventPage())),
         GoRoute(
+          path: 'events/:id/edit',
+          redirect: (_, state) => state.extra is Event
+              ? null
+              : '/organizer/events/${state.pathParameters['id']}',
+          builder: (_, state) => BlocProvider(
+            create: (_) => getIt<EventsBloc>(),
+            child: CreateEventPage(initialEvent: state.extra as Event),
+          ),
+        ),
+        GoRoute(
             path: 'events',
-            builder: (_, __) => BlocProvider(
-                create: (_) => getIt<OrganizerBloc>(),
-                child: OrganizerEventsPage())),
+            builder: (_, __) => RouteBackFallback(
+                  fallbackLocation: '/organizer',
+                  child: BlocProvider(
+                    create: (_) => getIt<OrganizerBloc>(),
+                    child: OrganizerEventsPage(),
+                  ),
+                )),
         GoRoute(
             path: 'events/:id',
-            builder: (_, state) => BlocProvider(
-                create: (_) =>
-                    getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
-                child: OrganizerEventStatusPage(
-                    eventId: state.pathParameters['id']!))),
+            builder: (_, state) => RouteBackFallback(
+                  fallbackLocation: '/organizer/events',
+                  child: BlocProvider(
+                    create: (_) =>
+                        getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
+                    child: OrganizerEventStatusPage(
+                        eventId: state.pathParameters['id']!),
+                  ),
+                )),
         GoRoute(
             path: 'profile',
             builder: (_, __) => BlocProvider(
@@ -163,17 +212,25 @@ final GoRouter appRouter = GoRouter(
                 child: OrganizerProfileEditPage())),
         GoRoute(
             path: 'analytics',
-            builder: (_, __) => BlocProvider(
-                create: (_) =>
-                    getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
-                child: OrganizerAnalyticsPage())),
+            builder: (_, __) => RouteBackFallback(
+                  fallbackLocation: '/organizer',
+                  child: BlocProvider(
+                    create: (_) =>
+                        getIt<OrganizerBloc>()..add(LoadOrganizerEvents()),
+                    child: OrganizerAnalyticsPage(),
+                  ),
+                )),
       ],
     ),
     GoRoute(
       path: '/admin',
-      builder: (_, __) => BlocProvider(
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: BlocProvider(
           create: (_) => getIt<AdminBloc>()..add(LoadAdminData()),
-          child: AdminDashboardPage()),
+          child: AdminDashboardPage(),
+        ),
+      ),
       routes: [
         GoRoute(
           path: 'events/:id',
@@ -201,37 +258,92 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        GoRoute(path: 'reports', builder: (_, __) => ReportsPage()),
-        GoRoute(path: 'audit-logs', builder: (_, __) => AuditLogsPage()),
+        GoRoute(
+          path: 'reports',
+          builder: (_, __) => RouteBackFallback(
+            fallbackLocation: '/admin',
+            child: ReportsPage(),
+          ),
+        ),
+        GoRoute(
+          path: 'audit-logs',
+          builder: (_, __) => RouteBackFallback(
+            fallbackLocation: '/admin',
+            child: AuditLogsPage(),
+          ),
+        ),
         GoRoute(
             path: 'organizers/:id/trust',
             builder: (_, state) =>
                 OrganizerTrustPage(organizerId: state.pathParameters['id']!)),
-        GoRoute(path: 'support', builder: (_, __) => AdminSupportInboxPage()),
+        GoRoute(
+          path: 'support',
+          builder: (_, __) => RouteBackFallback(
+            fallbackLocation: '/admin',
+            child: AdminSupportInboxPage(),
+          ),
+        ),
       ],
     ),
     GoRoute(
         path: '/owner-dashboard',
-        builder: (_, __) => BlocProvider(
-            create: (_) => getIt<OwnerPostsBloc>(),
-            child: const owner.OwnerDashboardPage())),
+        builder: (_, __) => RouteBackFallback(
+              fallbackLocation: '/',
+              child: BlocProvider(
+                create: (_) => getIt<OwnerPostsBloc>(),
+                child: const owner.OwnerDashboardPage(),
+              ),
+            )),
     GoRoute(
-        path: '/notifications', builder: (_, __) => NotificationCenterPage()),
+      path: '/notifications',
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: NotificationCenterPage(),
+      ),
+    ),
     GoRoute(path: '/profile/edit', builder: (_, __) => ProfileEditPage()),
-    GoRoute(path: '/about', builder: (_, __) => StaticPage(pageType: 'about')),
     GoRoute(
-        path: '/privacy', builder: (_, __) => StaticPage(pageType: 'privacy')),
-    GoRoute(path: '/terms', builder: (_, __) => StaticPage(pageType: 'terms')),
+      path: '/about',
+      builder: (_, __) => RouteBackFallback(
+          fallbackLocation: '/', child: StaticPage(pageType: 'about')),
+    ),
+    GoRoute(
+      path: '/privacy',
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: StaticPage(pageType: 'privacy'),
+      ),
+    ),
+    GoRoute(
+      path: '/terms',
+      builder: (_, __) => RouteBackFallback(
+          fallbackLocation: '/', child: StaticPage(pageType: 'terms')),
+    ),
     GoRoute(
         path: '/content-policy',
-        builder: (_, __) => StaticPage(pageType: 'content')),
+        builder: (_, __) => RouteBackFallback(
+              fallbackLocation: '/',
+              child: StaticPage(pageType: 'content'),
+            )),
     GoRoute(
         path: '/verification-policy',
-        builder: (_, __) => StaticPage(pageType: 'verification')),
+        builder: (_, __) => RouteBackFallback(
+              fallbackLocation: '/',
+              child: StaticPage(pageType: 'verification'),
+            )),
     GoRoute(
         path: '/support',
-        builder: (_, __) => BlocProvider(
-            create: (_) => getIt<SupportCubit>(), child: SupportChatPage())),
+        builder: (_, state) => RouteBackFallback(
+              fallbackLocation: '/',
+              child: BlocProvider(
+                create: (_) => getIt<SupportCubit>(),
+                child: SupportChatPage(
+                  initialTicketId: state.uri.queryParameters['conversation'],
+                  contextType: state.uri.queryParameters['context_type'],
+                  contextId: state.uri.queryParameters['context_id'],
+                ),
+              ),
+            )),
   ],
   errorBuilder: (context, state) =>
       _NotFoundPage(message: state.error?.toString()),
@@ -242,9 +354,13 @@ String? _guardRoute(BuildContext context, GoRouterState routerState) {
   final state = _authBloc.state;
   final isLoadingPage = path == '/auth-loading';
   if (state.status == AuthStatus.initial) {
-    return isLoadingPage ? null : '/auth-loading';
+    return isLoadingPage
+        ? null
+        : '/auth-loading?next=${Uri.encodeComponent(_internalLocation(routerState))}';
   }
-  if (isLoadingPage) return state.isAuthenticated ? '/' : '/';
+  if (isLoadingPage) {
+    return _safeNext(routerState.uri.queryParameters['next']) ?? '/';
+  }
 
   final publicPath = path == '/' ||
       path == '/landing' ||
@@ -263,7 +379,7 @@ String? _guardRoute(BuildContext context, GoRouterState routerState) {
   final authPath = path == '/login' || path == '/register';
   if (!state.isAuthenticated) {
     if (publicPath) return null;
-    return '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+    return '/login?next=${Uri.encodeComponent(_internalLocation(routerState))}';
   }
 
   if (authPath) {
@@ -278,14 +394,23 @@ String? _guardRoute(BuildContext context, GoRouterState routerState) {
   if (path.startsWith('/organizer/') && path != '/organizer/apply') {
     return state.isAuthenticated
         ? null
-        : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+        : '/login?next=${Uri.encodeComponent(_internalLocation(routerState))}';
   }
   if (path == '/organizer') {
     return state.isAuthenticated
         ? null
-        : '/login?next=${Uri.encodeComponent(routerState.uri.toString())}';
+        : '/login?next=${Uri.encodeComponent(_internalLocation(routerState))}';
   }
   return null;
+}
+
+/// Converts a platform URL (for example `khair:///events/123`) into the
+/// internal path GoRouter uses after auth hydration. Never carry an external
+/// host into `next`, otherwise deep links silently fall back to Discover.
+String _internalLocation(GoRouterState state) {
+  final uri = state.uri;
+  final path = uri.path.isEmpty ? '/' : uri.path;
+  return uri.hasQuery ? '$path?${uri.query}' : path;
 }
 
 String? _safeNext(String? next) =>

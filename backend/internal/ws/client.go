@@ -21,7 +21,17 @@ type Client struct {
 	conn   *websocket.Conn
 	send   chan []byte
 	userID string
+	roles  map[string]struct{}
 	mu     sync.Mutex
+}
+
+func (c *Client) hasAnyRole(required []string) bool {
+	for _, role := range required {
+		if _, ok := c.roles[role]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // readPump pumps messages from the WebSocket connection to the hub.

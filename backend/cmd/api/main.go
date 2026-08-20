@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -300,6 +301,10 @@ func main() {
 	verifyRL := rateLimiter.Middleware("report_submit")  // 10 req/hr per IP
 	resendRL := rateLimiter.Middleware("report_submit")  // 10 req/hr per IP
 	loginRL := rateLimiter.Middleware("default")         // 100 req/hr per IP
+	rateLimiter.SetConfig("support_ai", ratelimit.Config{
+		IPLimit: 30, IPWindow: time.Hour, AccountLimit: 60, AccountWindow: time.Hour,
+	})
+	supportRL := rateLimiter.Middleware("support_ai")
 
 	// Register routes (with rate limiting on auth/registration)
 	authHandler.RegisterRoutes(v1, loginRL, registerRL, verifyRL, resendRL)
@@ -317,7 +322,7 @@ func main() {
 	registrationHandler.RegisterRoutes(v1, registerRL, verifyRL, resendRL)
 	uploadHandler.RegisterRoutes(v1, authMiddleware)
 	organizerApplicationHandler.RegisterRoutes(v1, authMiddleware)
-	supportHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware)
+	supportHandler.RegisterRoutes(v1, authMiddleware, adminMiddleware, supportRL)
 
 	// WebSocket endpoint (JWT via query param)
 	v1.GET("/ws", wsHub.HandleUpgrade)

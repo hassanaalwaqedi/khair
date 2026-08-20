@@ -131,20 +131,20 @@ func Render(notificationType string, data map[string]string, language string) Lo
 	case "support_reply":
 		switch language {
 		case "ar":
-			return LocalizedNotification{Title: "\u062f\u0639\u0645 \u062e\u064a\u0631", Message: "\u0642\u0627\u0645 \u062f\u0639\u0645 \u062e\u064a\u0631 \u0628\u0627\u0644\u0631\u062f \u0639\u0644\u0649 \u062a\u0630\u0643\u0631\u062a\u0643."}
+			return LocalizedNotification{Title: "\u062f\u0639\u0645 \u062e\u064a\u0631", Message: "\u0644\u062f\u064a\u0643 \u0631\u062f \u062c\u062f\u064a\u062f \u0645\u0646 \u0641\u0631\u064a\u0642 \u0627\u0644\u062f\u0639\u0645."}
 		case "tr":
-			return LocalizedNotification{Title: "Khair Destek", Message: "Khair Destek talebinize yan\u0131t verdi."}
+			return LocalizedNotification{Title: "Khair Destek", Message: "Destek ekibimizden yeni bir yan\u0131t\u0131n\u0131z var."}
 		default:
-			return LocalizedNotification{Title: "Khair Support", Message: "Khair Support replied to your ticket."}
+			return LocalizedNotification{Title: "Khair Support", Message: "You have a new reply from our support team."}
 		}
 	case "support_attachment":
 		switch language {
 		case "ar":
-			return LocalizedNotification{Title: "\u062f\u0639\u0645 \u062e\u064a\u0631", Message: "\u0623\u0631\u0633\u0644 \u062f\u0639\u0645 \u062e\u064a\u0631 \u0645\u0631\u0641\u0642\u064b\u0627 \u0625\u0644\u0649 \u062a\u0630\u0643\u0631\u062a\u0643."}
+			return LocalizedNotification{Title: "\u062f\u0639\u0645 \u062e\u064a\u0631", Message: "\u0623\u0631\u0633\u0644 \u0641\u0631\u064a\u0642 \u0627\u0644\u062f\u0639\u0645 \u0645\u0631\u0641\u0642\u064b\u0627 \u0625\u0644\u0649 \u0645\u062d\u0627\u062f\u062b\u062a\u0643."}
 		case "tr":
-			return LocalizedNotification{Title: "Khair Destek", Message: "Khair Destek talebinize bir ek g\u00f6nderdi."}
+			return LocalizedNotification{Title: "Khair Destek", Message: "Destek ekibimiz görüşmenize bir ek gönderdi."}
 		default:
-			return LocalizedNotification{Title: "Khair Support", Message: "Khair Support sent an attachment to your ticket."}
+			return LocalizedNotification{Title: "Khair Support", Message: "Our support team sent an attachment to your conversation."}
 		}
 	}
 

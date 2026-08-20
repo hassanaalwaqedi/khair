@@ -192,8 +192,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                       ),
                       child: Text(
                         count > 9 ? '9+' : count.toString(),
-                        style:
-                            TextStyle(color: Colors.white, fontSize: 10),
+                        style: TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),
                   ),
@@ -356,8 +355,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               color: Colors.white.withAlpha(40),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(Icons.business_rounded,
-                color: Colors.white, size: 32),
+            child: Icon(Icons.business_rounded, color: Colors.white, size: 32),
           ),
           SizedBox(width: 20),
           Expanded(
@@ -705,11 +703,11 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               ),
             ),
             PopupMenuButton(
-              icon:
-                  Icon(Icons.more_vert, color: KhairColors.textTertiary),
+              icon: Icon(Icons.more_vert, color: KhairColors.textTertiary),
               itemBuilder: (context) => [
                 PopupMenuItem(value: 'view', child: Text(context.l10n.view)),
-                PopupMenuItem(value: 'edit', child: Text(context.l10n.ownerEdit)),
+                PopupMenuItem(
+                    value: 'edit', child: Text(context.l10n.ownerEdit)),
               ],
               onSelected: (value) {
                 switch (value) {
@@ -717,7 +715,8 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     _openEvent(event);
                     break;
                   case 'edit':
-                    context.push('/organizer/events/${event.id}/edit');
+                    context.push('/organizer/events/${event.id}/edit',
+                        extra: event);
                     break;
                 }
               },
@@ -731,7 +730,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
   void _openEvent(Event event) {
     final publicEvent =
         event.status == 'approved' || event.status == 'published';
-    context.go(
+    context.push(
         publicEvent ? '/events/${event.id}' : '/organizer/events/${event.id}');
   }
 

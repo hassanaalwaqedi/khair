@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/router/navigation.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../data/organizer_application_api.dart';
 import '../../domain/entities/organizer_image_upload.dart';
@@ -750,11 +751,13 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage>
     if (_showStatus) return _statusPage();
 
     return PopScope(
-      canPop: _step == 0,
+      canPop: _step == 0 && context.canNavigateBack,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_step > 0) {
           setState(() => _step -= 1);
+        } else {
+          context.popOrGo('/profile');
         }
       },
       child: Scaffold(
@@ -763,7 +766,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage>
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            onPressed: () => context.go('/'),
+            onPressed: () => context.popOrGo('/profile'),
             icon: Icon(Icons.close_rounded),
             tooltip: context.l10n.closeOrganizerApplication,
           ),
@@ -1283,7 +1286,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage>
       backgroundColor: Color(0xfffdfbfc),
       appBar: AppBar(
           leading: IconButton(
-              onPressed: () => context.go('/'), icon: Icon(Icons.close))),
+              onPressed: () => context.popOrGo('/profile'),
+              icon: Icon(Icons.close))),
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 580),
