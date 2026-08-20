@@ -18,6 +18,9 @@ service-account*.json
 credentials*.json
 google-services.json
 GoogleService-Info.plist
+# Firebase Android client configuration contains project identifiers, not the
+# backend service-account secret. Track this one required release-build file.
+!frontend/khair_app/android/app/google-services.json
 
 # ─── IDE ──────────────────────────────────
 .idea/

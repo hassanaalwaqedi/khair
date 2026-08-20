@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/crash/crash_reporter.dart';
 import 'core/di/injection.dart';
 import 'core/locale/locale_bloc.dart';
 import 'core/network/connectivity_service.dart';
-import 'core/push/local_notification_service.dart';
+import 'core/push/local_notification_service_web.dart'
+    if (dart.library.io) 'core/push/local_notification_service.dart';
+import 'core/push/push_notification_service_platform.dart';
 import 'core/router/app_router.dart';
 import 'core/services/websocket_service.dart';
 import 'core/theme/app_theme_builder.dart';
@@ -20,11 +25,12 @@ import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/notifications/presentation/bloc/notification_bloc.dart';
-import 'core/push/push_notification_service_web.dart'
-    if (dart.library.io) 'core/push/push_notification_service.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() {
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
   CrashReporter.init(
     sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
     appRunner: () async {
@@ -41,12 +47,12 @@ void main() {
 
       // Push notifications only on mobile (uses dart:io + Firebase which aren't configured for web)
       if (!kIsWeb) {
-        // Init local notifications with deep-link routing
+        // Init native channels and keep taps queued until auth + GoRouter are
+        // ready. Permission/token registration happens only after sign-in.
         await LocalNotificationService.instance.init();
-        LocalNotificationService.instance.setOnNotificationTap((route) {
-          appRouter.go(route);
+        LocalNotificationService.instance.setOnNotificationTap((data) {
+          PushNotificationService.instance.handleLocalNotificationTap(data);
         });
-
         await PushNotificationService.instance.initialize();
       }
 
@@ -92,6 +98,12 @@ class KhairApp extends StatelessWidget {
             WebSocketService.instance.disconnect();
             getIt<NotificationBloc>().add(
               const NotificationSessionChanged(false),
+            );
+          }
+          if (!kIsWeb) {
+            unawaited(
+              PushNotificationService.instance
+                  .onAuthenticationStateChanged(authState.isAuthenticated),
             );
           }
         },

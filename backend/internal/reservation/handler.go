@@ -299,29 +299,49 @@ func (h *Handler) NotifyAttendees(c *gin.Context) {
 		return
 	}
 
-	// Build notification content
-	msg := req.Message
-
 	// Send to each attendee
 	go func() {
 		for _, attendeeID := range attendeeIDs {
 			_ = h.service.repo.QueueAnnouncementDelivery(announcementID, attendeeID)
 			inAppStatus := "delivered"
+			var notificationID uuid.UUID
+			created := false
 			if h.notifSvc != nil {
-				if err := h.notifSvc.CreateTyped(attendeeID, title, msg, "organizer_announcement", map[string]string{
-					"event_id": eventID.String(), "announcement_id": announcementID.String(),
-				}); err != nil {
+				var err error
+				notificationID, created, err = h.notifSvc.CreateTypedOnce(
+					attendeeID,
+					title,
+					req.Message,
+					"organizer_announcement",
+					map[string]string{
+						"type":            "organizer_announcement",
+						"event_id":        eventID.String(),
+						"announcement_id": announcementID.String(),
+					},
+					"organizer_announcement:"+announcementID.String(),
+				)
+				if err != nil {
 					inAppStatus = "failed"
 				}
 			}
 			_ = h.service.repo.UpdateAnnouncementDelivery(announcementID, attendeeID, inAppStatus, "dispatched")
-			if h.pushSvc != nil {
+			if h.pushSvc != nil && h.notifSvc != nil && created {
+				copy, err := h.notifSvc.LocalizeForUser(attendeeID, "organizer_announcement", map[string]string{
+					"event_title": evt.Title,
+				})
+				if err != nil {
+					log.Printf("[NOTIFY] Failed to localize announcement preview: %v", err)
+					continue
+				}
 				data := map[string]string{
+					"notification_id": notificationID.String(),
 					"type":            "organizer_announcement",
+					"entity_type":     "event",
+					"entity_id":       eventID.String(),
 					"event_id":        eventID.String(),
 					"announcement_id": announcementID.String(),
 				}
-				h.pushSvc.SendToUser(attendeeID, title, msg, data)
+				h.pushSvc.SendToUser(attendeeID, copy.Title, copy.Message, data)
 			}
 		}
 		log.Printf("[NOTIFY] Sent organizer message to %d attendees for event %s", len(attendeeIDs), eventID)

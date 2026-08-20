@@ -26,15 +26,23 @@ func (h *Handler) sendStructuredJoinNotifications(userID, eventID uuid.UUID) {
 		return
 	}
 
-	attendeeCopy, err := h.notifSvc.CreateLocalized(userID, "event_join_confirmed", data)
+	attendeeCopy, attendeeNotificationID, created, err := h.notifSvc.CreateLocalizedOnce(
+		userID,
+		"event_join_confirmed",
+		data,
+		"event_join_confirmed:"+eventID.String(),
+	)
 	if err != nil {
 		log.Printf("[NOTIFICATION] Failed to create user join notification: %v", err)
 		return
 	}
-	if h.pushSvc != nil {
+	if h.pushSvc != nil && created {
 		h.pushSvc.SendToUser(userID, attendeeCopy.Title, attendeeCopy.Message, map[string]string{
-			"type":     "event_join_confirmed",
-			"event_id": eventID.String(),
+			"notification_id": attendeeNotificationID.String(),
+			"type":            "event_join_confirmed",
+			"entity_type":     "event",
+			"entity_id":       eventID.String(),
+			"event_id":        eventID.String(),
 		})
 	}
 
@@ -42,15 +50,23 @@ func (h *Handler) sendStructuredJoinNotifications(userID, eventID uuid.UUID) {
 	if organizerUserID == uuid.Nil {
 		return
 	}
-	organizerCopy, err := h.notifSvc.CreateLocalized(organizerUserID, "event_participant_joined", data)
+	organizerCopy, organizerNotificationID, created, err := h.notifSvc.CreateLocalizedOnce(
+		organizerUserID,
+		"event_participant_joined",
+		data,
+		"event_participant_joined:"+eventID.String()+":"+userID.String(),
+	)
 	if err != nil {
 		log.Printf("[NOTIFICATION] Failed to create organizer join notification: %v", err)
 		return
 	}
-	if h.pushSvc != nil {
+	if h.pushSvc != nil && created {
 		h.pushSvc.SendToUser(organizerUserID, organizerCopy.Title, organizerCopy.Message, map[string]string{
-			"type":     "event_participant_joined",
-			"event_id": eventID.String(),
+			"notification_id": organizerNotificationID.String(),
+			"type":            "event_participant_joined",
+			"entity_type":     "event",
+			"entity_id":       eventID.String(),
+			"event_id":        eventID.String(),
 		})
 	}
 }

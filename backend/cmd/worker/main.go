@@ -65,7 +65,10 @@ func main() {
 	rankingSvc := ai.NewRankingService(geminiClient, interactionRepo, db)
 
 	// Initialize FCM push service for reminders
-	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
+	fcmClient := fcm.NewClient()
+	if !fcmClient.IsEnabled() {
+		log.Printf("[WORKER] FCM push delivery is disabled; configure FCM_SERVICE_ACCOUNT as a deployment secret: %v", fcmClient.ConfigurationError())
+	}
 	pushSvc := push.NewService(db, fcmClient)
 
 	// Graceful shutdown
@@ -315,18 +318,28 @@ func sendRemindersForWindow(db *sql.DB, notifSvc *notification.Service, pushSvc 
 			}
 
 			var reminder notification.LocalizedNotification
+			var notificationID uuid.UUID
+			created := false
 			if notifSvc != nil {
 				var err error
-				reminder, err = notifSvc.CreateLocalized(userID, "event_reminder", data)
+				reminder, notificationID, created, err = notifSvc.CreateLocalizedOnce(
+					userID,
+					"event_reminder",
+					data,
+					"event_reminder:"+eventID.String()+":"+label,
+				)
 				if err != nil {
 					log.Printf("[WORKER] Reminder notification error for %s: %v", userID, err)
 					continue
 				}
 			}
-			if pushSvc != nil && reminder.Title != "" {
+			if pushSvc != nil && created && reminder.Title != "" {
 				pushSvc.SendToUser(userID, reminder.Title, reminder.Message, map[string]string{
-					"type":     "event_reminder",
-					"event_id": eventID.String(),
+					"notification_id": notificationID.String(),
+					"type":            "event_reminder",
+					"entity_type":     "event",
+					"entity_id":       eventID.String(),
+					"event_id":        eventID.String(),
 				})
 			}
 			count++

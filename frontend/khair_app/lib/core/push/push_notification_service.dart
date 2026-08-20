@@ -1,156 +1,188 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'local_notification_service.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/widgets.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../di/injection.dart';
 import '../network/api_client.dart';
 import '../router/app_router.dart' as router_lib;
-import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import 'local_notification_service.dart';
+import 'notification_target.dart';
 
-/// Handles FCM push notification setup, token management, and message handling.
+const _permissionPromptedKey = 'push_permission_prompted_v1';
+
+/// Required by Firebase for data/background handling in release builds. It is
+/// intentionally UI-free: Android renders notification payloads in the system
+/// tray while background navigation is deferred until the user taps.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
+
+/// Handles FCM setup, authenticated token lifecycle, and safe notification
+/// navigation. Firebase listeners are installed once per process; the token is
+/// registered only after an authenticated session has permission to receive it.
 class PushNotificationService {
   static final PushNotificationService _instance = PushNotificationService._();
   static PushNotificationService get instance => _instance;
   PushNotificationService._();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  bool _initialized = false;
+  bool _isAuthenticated = false;
+  bool _activationInProgress = false;
+  NotificationTarget? _pendingTarget;
 
-  /// Initialize push notifications: request permission, get token, listen for refresh.
+  /// Installs message listeners and captures cold-start notification taps. It
+  /// does not prompt for permission or register with the backend yet.
   Future<void> initialize() async {
-    // 1. Request permission (required on iOS, Android 13+)
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
+    if (_initialized) return;
+    _initialized = true;
+
+    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) => _queueNotificationTap(message.data),
     );
-
-    // Android 13+ notification permission
-    if (Platform.isAndroid) {
-      var status = await Permission.notification.status;
-      if (status.isDenied) {
-        await Permission.notification.request();
+    _messaging.onTokenRefresh.listen((token) {
+      if (_isAuthenticated) {
+        unawaited(_registerTokenWithBackend(token));
       }
-    }
+    });
 
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('[FCM] User denied notification permission');
-      return;
-    }
-
-    debugPrint('[FCM] Permission granted: ${settings.authorizationStatus}');
-
-    // 2. Get FCM token
     try {
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _queueNotificationTap(initialMessage.data);
+      }
+    } catch (error) {
+      debugPrint('[FCM] Unable to read initial notification: $error');
+    }
+  }
+
+  /// Called after every resolved auth-state transition. It is safe to call more
+  /// than once: listeners are not duplicated and Android's permission prompt is
+  /// requested at most once by Khair.
+  Future<void> onAuthenticationStateChanged(bool isAuthenticated) async {
+    _isAuthenticated = isAuthenticated;
+    if (!isAuthenticated) return;
+
+    await _activateForAuthenticatedUser();
+    _dispatchPendingTarget();
+  }
+
+  /// Called before a manual logout clears the authenticated API session.
+  void clearSession() {
+    _isAuthenticated = false;
+    _pendingTarget = null;
+  }
+
+  /// Receives a foreground local-notification tap from the local notification
+  /// service. It follows the same typed, auth-safe path as an FCM tray tap.
+  void handleLocalNotificationTap(Map<String, dynamic> data) {
+    _queueNotificationTap(data);
+  }
+
+  Future<void> _activateForAuthenticatedUser() async {
+    if (_activationInProgress) return;
+    _activationInProgress = true;
+    try {
+      if (!await _hasNotificationPermission()) return;
       final token = await _messaging.getToken();
-      if (token != null) {
-        debugPrint('[FCM] Token: ${token.substring(0, 20)}...');
+      if (token != null && token.isNotEmpty) {
         await _registerTokenWithBackend(token);
       }
-    } catch (e) {
-      debugPrint('[FCM] Error getting token: $e');
-    }
-
-    // 3. Listen for token refresh
-    _messaging.onTokenRefresh.listen((newToken) {
-      debugPrint('[FCM] Token refreshed');
-      _registerTokenWithBackend(newToken);
-    });
-
-    // 4. Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      debugPrint('[FCM] Foreground message: ${message.notification?.title}');
-      // The notification is persisted by the backend; refresh the existing
-      // notification source of truth so the header badge updates immediately.
-      getIt<NotificationBloc>().add(const LoadUnreadCount());
-      // Show local notification with route payload
-      await LocalNotificationService.instance.showNotification(
-        title: message.notification?.title,
-        body: message.notification?.body,
-        payload: _buildRouteFromData(message.data),
-      );
-    });
-
-    // 5. Handle background/terminated message taps
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('[FCM] Message opened app: ${message.data}');
-      _handleNotificationTap(message.data);
-    });
-
-    // 6. Check if app was opened from a terminated state notification
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      debugPrint(
-          '[FCM] App opened from terminated state: ${initialMessage.data}');
-      _handleNotificationTap(initialMessage.data);
+    } catch (error) {
+      debugPrint('[FCM] Activation failed: $error');
+    } finally {
+      _activationInProgress = false;
     }
   }
 
-  /// Navigate to the appropriate screen based on notification data.
-  void _handleNotificationTap(Map<String, dynamic> data) {
-    final route = _buildRouteFromData(data);
-    if (route != null) {
+  Future<bool> _hasNotificationPermission() async {
+    if (Platform.isAndroid) {
+      var status = await Permission.notification.status;
+      if (status.isGranted || status.isLimited) return true;
+      if (status.isPermanentlyDenied || status.isRestricted) return false;
+
+      final preferences = await SharedPreferences.getInstance();
+      if (preferences.getBool(_permissionPromptedKey) ?? false) return false;
+      await preferences.setBool(_permissionPromptedKey, true);
+      status = await Permission.notification.request();
+      return status.isGranted || status.isLimited;
+    }
+
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    return settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+  }
+
+  Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    getIt<NotificationBloc>().add(const LoadUnreadCount());
+    // FCM does not show notification payloads while Flutter is foregrounded,
+    // so exactly one local notification provides the equivalent OS feedback.
+    if (message.notification == null) return;
+    await LocalNotificationService.instance.showNotification(
+      title: message.notification?.title,
+      body: message.notification?.body,
+      data: Map<String, dynamic>.from(message.data),
+    );
+  }
+
+  void _queueNotificationTap(Map<String, dynamic> data) {
+    _pendingTarget = NotificationTarget.fromData(data);
+    _dispatchPendingTarget();
+  }
+
+  void _dispatchPendingTarget() {
+    if (!_isAuthenticated || _pendingTarget == null) return;
+    final target = _pendingTarget!;
+    _pendingTarget = null;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
-        router_lib.appRouter.go(route);
-      } catch (e) {
-        debugPrint('[FCM] Navigation error: $e');
+        router_lib.appRouter.go(target.route);
+        final notificationId = target.notificationId;
+        if (notificationId != null && notificationId.isNotEmpty) {
+          getIt<NotificationBloc>().add(MarkNotificationRead(notificationId));
+        }
+      } catch (error) {
+        debugPrint('[FCM] Notification navigation failed: $error');
       }
-    }
+    });
   }
 
-  /// Build a route path from notification data payload.
-  String? _buildRouteFromData(Map<String, dynamic> data) {
-    final type = data['type'] as String?;
-    switch (type) {
-      case 'event_joined':
-      case 'event_join_confirmed':
-      case 'event_reminder':
-      case 'event_updated':
-      case 'event_cancelled':
-      case 'event_participant_joined':
-      case 'organizer_announcement':
-      case 'organizer_message':
-      case 'new_participant':
-        final eventId = data['event_id'];
-        return eventId == null ? '/my-events' : '/events/$eventId';
-      case 'verification_review':
-        return '/organizer/apply';
-      default:
-        return null;
-    }
-  }
-
-  /// Register the FCM token with the backend.
   Future<void> _registerTokenWithBackend(String token) async {
     try {
-      final apiClient = getIt<ApiClient>();
-      final platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
-      await apiClient.post('/devices', data: {
+      await getIt<ApiClient>().post('/devices', data: {
         'token': token,
-        'platform': platform,
+        'platform': Platform.isIOS ? 'ios' : 'android',
       });
-      debugPrint('[FCM] Token registered with backend');
-    } catch (e) {
-      debugPrint('[FCM] Error registering token: $e');
+      debugPrint('[FCM] Device token registered');
+    } catch (error) {
+      debugPrint('[FCM] Device token registration failed: $error');
     }
   }
 
-  /// Remove the FCM token from the backend (call on logout).
+  /// Deactivates the current device registration while the API token is still
+  /// valid. Failure is non-fatal because the next login safely reassigns the
+  /// unique physical token to the authenticated account.
   Future<void> removeToken() async {
     try {
       final token = await _messaging.getToken();
-      if (token != null) {
-        final apiClient = getIt<ApiClient>();
-        await apiClient.delete('/devices/$token');
-        debugPrint('[FCM] Token removed from backend');
-      }
-    } catch (e) {
-      debugPrint('[FCM] Error removing token: $e');
+      if (token == null || token.isEmpty) return;
+      await getIt<ApiClient>().delete('/devices', data: {'token': token});
+      debugPrint('[FCM] Device token deactivated');
+    } catch (error) {
+      debugPrint('[FCM] Device token deactivation failed: $error');
     }
   }
 }

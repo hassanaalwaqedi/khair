@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 )
 
 type ModerationScanner interface {
@@ -21,6 +24,8 @@ type Service struct {
 	db            *sql.DB
 	organizerRepo OrganizerRepository
 	moderation    ModerationScanner
+	notifications *notification.Service
+	pushService   *push.Service
 }
 
 // OrganizerRepository interface for organizer operations
@@ -40,6 +45,13 @@ func NewService(db *sql.DB, organizerRepo OrganizerRepository) *Service {
 
 func (s *Service) SetModeration(m ModerationScanner) {
 	s.moderation = m
+}
+
+// SetNotificationDelivery wires event changes into the existing notification
+// record and FCM services without creating a parallel notification system.
+func (s *Service) SetNotificationDelivery(notifications *notification.Service, pushService *push.Service) {
+	s.notifications = notifications
+	s.pushService = pushService
 }
 
 func (s *Service) IsSaved(userID, eventID uuid.UUID) (bool, error) {
@@ -68,67 +80,67 @@ func (s *Service) RecordView(eventID uuid.UUID, sessionID string) error {
 
 // CreateEventRequest represents a request to create an event
 type CreateEventRequest struct {
-	Title                        string   `json:"title" binding:"required"`
-	Description                  *string  `json:"description"`
-	Category                     string   `json:"category"`
-	Tags                         []string `json:"tags"`
-	EventType                    string   `json:"event_type" binding:"required"`
-	Language                     *string  `json:"language"`
-	Country                      *string  `json:"country"`
-	City                         *string  `json:"city"`
-	Address                      *string  `json:"address"`
-	Latitude                     *float64 `json:"latitude"`
-	Longitude                    *float64 `json:"longitude"`
-	StartDate                    string   `json:"start_date" binding:"required"`
-	EndDate                      *string  `json:"end_date"`
-	ImageURL                     *string  `json:"image_url"`
-	IsOnline                     bool     `json:"is_online"`
-	OnlineLink                   *string  `json:"online_link"`
-	OnlinePlatform               *string  `json:"online_platform"`
-	JoinInstructions             *string  `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
+	Title                        string              `json:"title" binding:"required"`
+	Description                  *string             `json:"description"`
+	Category                     string              `json:"category"`
+	Tags                         []string            `json:"tags"`
+	EventType                    string              `json:"event_type" binding:"required"`
+	Language                     *string             `json:"language"`
+	Country                      *string             `json:"country"`
+	City                         *string             `json:"city"`
+	Address                      *string             `json:"address"`
+	Latitude                     *float64            `json:"latitude"`
+	Longitude                    *float64            `json:"longitude"`
+	StartDate                    string              `json:"start_date" binding:"required"`
+	EndDate                      *string             `json:"end_date"`
+	ImageURL                     *string             `json:"image_url"`
+	IsOnline                     bool                `json:"is_online"`
+	OnlineLink                   *string             `json:"online_link"`
+	OnlinePlatform               *string             `json:"online_platform"`
+	JoinInstructions             *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
 	Pricing                      *models.PricingInfo `json:"pricing"`
 	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int     `json:"capacity"`
-	GenderRestriction            *string  `json:"gender_restriction"`
-	AgeMin                       *int     `json:"age_min"`
-	RegistrationDeadline         *string  `json:"registration_deadline"`
-	RegistrationMode             string   `json:"registration_mode"`
-	Timezone                     string   `json:"timezone"`
-	Guidelines                   *string  `json:"guidelines"`
+	Capacity                     *int                `json:"capacity"`
+	GenderRestriction            *string             `json:"gender_restriction"`
+	AgeMin                       *int                `json:"age_min"`
+	RegistrationDeadline         *string             `json:"registration_deadline"`
+	RegistrationMode             string              `json:"registration_mode"`
+	Timezone                     string              `json:"timezone"`
+	Guidelines                   *string             `json:"guidelines"`
 }
 
 // DraftEventRequest is a relaxed version of CreateEventRequest used for
 // auto-saving partially-filled forms. Only Title is required.
 type DraftEventRequest struct {
-	Title                        string   `json:"title" binding:"required"`
-	Description                  *string  `json:"description"`
-	Category                     string   `json:"category"`
-	Tags                         []string `json:"tags"`
-	EventType                    string   `json:"event_type"`
-	Language                     *string  `json:"language"`
-	Country                      *string  `json:"country"`
-	City                         *string  `json:"city"`
-	Address                      *string  `json:"address"`
-	Latitude                     *float64 `json:"latitude"`
-	Longitude                    *float64 `json:"longitude"`
-	StartDate                    string   `json:"start_date"`
-	EndDate                      *string  `json:"end_date"`
-	ImageURL                     *string  `json:"image_url"`
-	IsOnline                     bool     `json:"is_online"`
-	OnlineLink                   *string  `json:"online_link"`
-	OnlinePlatform               *string  `json:"online_platform"`
-	JoinInstructions             *string  `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int     `json:"join_link_visible_before_minutes"`
+	Title                        string              `json:"title" binding:"required"`
+	Description                  *string             `json:"description"`
+	Category                     string              `json:"category"`
+	Tags                         []string            `json:"tags"`
+	EventType                    string              `json:"event_type"`
+	Language                     *string             `json:"language"`
+	Country                      *string             `json:"country"`
+	City                         *string             `json:"city"`
+	Address                      *string             `json:"address"`
+	Latitude                     *float64            `json:"latitude"`
+	Longitude                    *float64            `json:"longitude"`
+	StartDate                    string              `json:"start_date"`
+	EndDate                      *string             `json:"end_date"`
+	ImageURL                     *string             `json:"image_url"`
+	IsOnline                     bool                `json:"is_online"`
+	OnlineLink                   *string             `json:"online_link"`
+	OnlinePlatform               *string             `json:"online_platform"`
+	JoinInstructions             *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
 	Pricing                      *models.PricingInfo `json:"pricing"`
 	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int     `json:"capacity"`
-	GenderRestriction            *string  `json:"gender_restriction"`
-	AgeMin                       *int     `json:"age_min"`
-	RegistrationDeadline         *string  `json:"registration_deadline"`
-	RegistrationMode             string   `json:"registration_mode"`
-	Timezone                     string   `json:"timezone"`
-	Guidelines                   *string  `json:"guidelines"`
+	Capacity                     *int                `json:"capacity"`
+	GenderRestriction            *string             `json:"gender_restriction"`
+	AgeMin                       *int                `json:"age_min"`
+	RegistrationDeadline         *string             `json:"registration_deadline"`
+	RegistrationMode             string              `json:"registration_mode"`
+	Timezone                     string              `json:"timezone"`
+	Guidelines                   *string             `json:"guidelines"`
 }
 
 // toCreateRequest converts a DraftEventRequest into a CreateEventRequest,
@@ -176,34 +188,34 @@ func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
 
 // UpdateEventRequest represents a request to update an event
 type UpdateEventRequest struct {
-	Title                        *string   `json:"title"`
-	Description                  *string   `json:"description"`
-	Category                     *string   `json:"category"`
-	Tags                         *[]string `json:"tags"`
-	EventType                    *string   `json:"event_type"`
-	Language                     *string   `json:"language"`
-	Country                      *string   `json:"country"`
-	City                         *string   `json:"city"`
-	Address                      *string   `json:"address"`
-	Latitude                     *float64  `json:"latitude"`
-	Longitude                    *float64  `json:"longitude"`
-	StartDate                    *string   `json:"start_date"`
-	EndDate                      *string   `json:"end_date"`
-	ImageURL                     *string   `json:"image_url"`
-	IsOnline                     *bool     `json:"is_online"`
-	OnlineLink                   *string   `json:"online_link"`
-	OnlinePlatform               *string   `json:"online_platform"`
+	Title                        *string             `json:"title"`
+	Description                  *string             `json:"description"`
+	Category                     *string             `json:"category"`
+	Tags                         *[]string           `json:"tags"`
+	EventType                    *string             `json:"event_type"`
+	Language                     *string             `json:"language"`
+	Country                      *string             `json:"country"`
+	City                         *string             `json:"city"`
+	Address                      *string             `json:"address"`
+	Latitude                     *float64            `json:"latitude"`
+	Longitude                    *float64            `json:"longitude"`
+	StartDate                    *string             `json:"start_date"`
+	EndDate                      *string             `json:"end_date"`
+	ImageURL                     *string             `json:"image_url"`
+	IsOnline                     *bool               `json:"is_online"`
+	OnlineLink                   *string             `json:"online_link"`
+	OnlinePlatform               *string             `json:"online_platform"`
 	JoinInstructions             *string             `json:"join_instructions"`
 	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
 	Pricing                      *models.PricingInfo `json:"pricing"`
 	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int      `json:"capacity"`
-	GenderRestriction            *string   `json:"gender_restriction"`
-	AgeMin                       *int      `json:"age_min"`
-	RegistrationDeadline         *string   `json:"registration_deadline"`
-	RegistrationMode             *string   `json:"registration_mode"`
-	Timezone                     *string   `json:"timezone"`
-	Guidelines                   *string   `json:"guidelines"`
+	Capacity                     *int                `json:"capacity"`
+	GenderRestriction            *string             `json:"gender_restriction"`
+	AgeMin                       *int                `json:"age_min"`
+	RegistrationDeadline         *string             `json:"registration_deadline"`
+	RegistrationMode             *string             `json:"registration_mode"`
+	Timezone                     *string             `json:"timezone"`
+	Guidelines                   *string             `json:"guidelines"`
 }
 
 // Create creates a new event
@@ -411,6 +423,8 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 		return nil, errors.New("you don't have permission to update this event")
 	}
 
+	previousStartDate := existingEvent.StartDate
+
 	// Update fields
 	event := &existingEvent.Event
 	if req.Title != nil {
@@ -538,7 +552,55 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 		}
 	}
 
+	if !event.StartDate.Equal(previousStartDate) {
+		go s.notifyAttendeesOfScheduleChange(event.ID, event.Title, event.StartDate, event.Timezone)
+	}
+
 	return event, nil
+}
+
+// notifyAttendeesOfScheduleChange creates one localized, de-duplicated record
+// per confirmed attendee, then sends the matching system notification.
+func (s *Service) notifyAttendeesOfScheduleChange(eventID uuid.UUID, title string, startDate time.Time, timezone string) {
+	if s.notifications == nil {
+		return
+	}
+	rows, err := s.db.Query(`
+		SELECT DISTINCT user_id
+		FROM event_registrations
+		WHERE event_id = $1 AND status IN ('confirmed', 'reserved')
+	`, eventID)
+	if err != nil {
+		log.Printf("[EVENT] schedule-change recipients lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	dedupeKey := "event_updated:" + eventID.String() + ":" + startDate.UTC().Format(time.RFC3339Nano)
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		data := map[string]string{
+			"type":        "event_updated",
+			"entity_type": "event",
+			"entity_id":   eventID.String(),
+			"event_id":    eventID.String(),
+			"event_title": title,
+			"start_at":    startDate.UTC().Format(time.RFC3339),
+			"timezone":    timezone,
+		}
+		copy, notificationID, created, err := s.notifications.CreateLocalizedOnce(userID, "event_updated", data, dedupeKey)
+		if err != nil {
+			log.Printf("[EVENT] schedule-change notification failed: %v", err)
+			continue
+		}
+		if s.pushService != nil && created {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
+	}
 }
 
 // Delete deletes an event

@@ -1,67 +1,218 @@
+import 'dart:convert';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+/// Android channel IDs are a backend contract. Do not rename existing IDs:
+/// Android users control channel settings after the first install.
+class KhairNotificationChannels {
+  static const important = 'khair_important';
+  static const reminders = 'khair_reminders';
+  static const updates = 'khair_updates';
+  static const general = 'khair_general';
+
+  static String forData(Map<String, dynamic> data) {
+    switch (data['type']?.toString()) {
+      case 'event_reminder':
+        return reminders;
+      case 'event_cancelled':
+      case 'organizer_approved':
+      case 'organizer_rejected':
+      case 'organizer_revision_requested':
+      case 'event_approved':
+      case 'event_rejected':
+      case 'event_revision_requested':
+      case 'verification_review':
+      case 'account_suspended':
+        return important;
+      case 'event_join_confirmed':
+      case 'event_participant_joined':
+      case 'event_updated':
+      case 'organizer_announcement':
+      case 'support_reply':
+      case 'support_attachment':
+        return updates;
+      default:
+        return general;
+    }
+  }
+}
 
 class LocalNotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
 
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  void Function(String route)? _onNotificationTap;
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+  void Function(Map<String, dynamic> data)? _onNotificationTap;
+  Map<String, dynamic>? _launchPayload;
+  bool _initialized = false;
 
-  /// Set a callback to navigate when a notification is tapped.
-  void setOnNotificationTap(void Function(String route) callback) {
+  /// Set after the router/auth lifecycle is ready. A launch payload is queued
+  /// until this callback exists so no cold-start navigation is lost.
+  void setOnNotificationTap(void Function(Map<String, dynamic> data) callback) {
     _onNotificationTap = callback;
+    final launchPayload = _launchPayload;
+    if (launchPayload != null) {
+      _launchPayload = null;
+      callback(launchPayload);
+    }
   }
 
   Future<void> init() async {
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
+    if (_initialized) return;
+    const settings = InitializationSettings(
+      android:
+          AndroidInitializationSettings('@drawable/ic_stat_khair_notification'),
+      iOS: DarwinInitializationSettings(),
     );
-    await _flutterLocalNotificationsPlugin.initialize(
-      settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Navigate on notification tap
-        if (response.payload != null && response.payload!.isNotEmpty) {
-          _onNotificationTap?.call(response.payload!);
-        }
-      },
+    await _plugin.initialize(
+      settings: settings,
+      onDidReceiveNotificationResponse: (response) =>
+          _handlePayload(response.payload),
     );
-    // Create high importance channel
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'khair_high', // id
-      'Khair Notifications', // name
-      description: 'High importance notifications for Khair app',
-      importance: Importance.max,
-      playSound: true,
-    );
-    await _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+
+    await _createAndroidChannels();
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      _handlePayload(launchDetails?.notificationResponse?.payload);
+    }
+    _initialized = true;
   }
 
-  Future<void> showNotification({String? title, String? body, String? payload}) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'khair_high',
-      'Khair Notifications',
-      channelDescription: 'High importance notifications for Khair app',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-    );
-    const DarwinNotificationDetails iOSPlatformChannelSpecifics = DarwinNotificationDetails(sound: 'default');
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
-    );
-    await _flutterLocalNotificationsPlugin.show(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title: title,
-      body: body,
-      notificationDetails: platformChannelSpecifics,
-      payload: payload,
+  Future<void> _createAndroidChannels() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+
+    const channels = [
+      AndroidNotificationChannel(
+        KhairNotificationChannels.important,
+        'Important Khair updates',
+        description:
+            'Approvals, cancellations, and actions that need attention.',
+        importance: Importance.high,
+      ),
+      AndroidNotificationChannel(
+        KhairNotificationChannels.reminders,
+        'Event reminders',
+        description: 'Reminders for events you registered for.',
+        importance: Importance.high,
+      ),
+      AndroidNotificationChannel(
+        KhairNotificationChannels.updates,
+        'Event and account updates',
+        description: 'Event activity and account updates from Khair.',
+        importance: Importance.defaultImportance,
+      ),
+      AndroidNotificationChannel(
+        KhairNotificationChannels.general,
+        'Khair notifications',
+        description: 'General Khair notifications.',
+        importance: Importance.defaultImportance,
+      ),
+    ];
+    for (final channel in channels) {
+      await android.createNotificationChannel(channel);
+    }
+  }
+
+  Future<void> showNotification({
+    String? title,
+    String? body,
+    required Map<String, dynamic> data,
+  }) async {
+    final channelId = KhairNotificationChannels.forData(data);
+    final channel = _channelDetails(channelId);
+    final notificationId = data['notification_id']?.toString().hashCode ??
+        DateTime.now().microsecondsSinceEpoch.remainder(1 << 31);
+    await _plugin.show(
+      id: notificationId,
+      title: title ?? 'Khair',
+      body: body ?? '',
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          icon: 'ic_stat_khair_notification',
+          importance: channel.importance,
+          priority: channel.priority,
+          visibility: NotificationVisibility.private,
+        ),
+        iOS: const DarwinNotificationDetails(sound: 'default'),
+      ),
+      payload: jsonEncode(data),
     );
   }
+
+  _ChannelDetails _channelDetails(String channelId) {
+    switch (channelId) {
+      case KhairNotificationChannels.important:
+        return const _ChannelDetails(
+          id: KhairNotificationChannels.important,
+          name: 'Important Khair updates',
+          description:
+              'Approvals, cancellations, and actions that need attention.',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+      case KhairNotificationChannels.reminders:
+        return const _ChannelDetails(
+          id: KhairNotificationChannels.reminders,
+          name: 'Event reminders',
+          description: 'Reminders for events you registered for.',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+      case KhairNotificationChannels.updates:
+        return const _ChannelDetails(
+          id: KhairNotificationChannels.updates,
+          name: 'Event and account updates',
+          description: 'Event activity and account updates from Khair.',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        );
+      default:
+        return const _ChannelDetails(
+          id: KhairNotificationChannels.general,
+          name: 'Khair notifications',
+          description: 'General Khair notifications.',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        );
+    }
+  }
+
+  void _handlePayload(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) return;
+      final data = Map<String, dynamic>.from(decoded);
+      final callback = _onNotificationTap;
+      if (callback == null) {
+        _launchPayload = data;
+        return;
+      }
+      callback(data);
+    } catch (_) {
+      // Ignore malformed local payloads. FCM data is always handled separately.
+    }
+  }
+}
+
+class _ChannelDetails {
+  const _ChannelDetails({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.importance,
+    required this.priority,
+  });
+
+  final String id;
+  final String name;
+  final String description;
+  final Importance importance;
+  final Priority priority;
 }

@@ -89,13 +89,43 @@ func Render(notificationType string, data map[string]string, language string) Lo
 		default:
 			return LocalizedNotification{Title: "Event reminder", Message: fmt.Sprintf("%s starts in %s.", eventTitle, label)}
 		}
+	case "event_updated":
+		eventTitle := data["event_title"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "تم تحديث موعد الفعالية", Message: fmt.Sprintf("تم تغيير موعد %s. راجع تفاصيل الفعالية.", eventTitle)}
+		case "tr":
+			return LocalizedNotification{Title: "Etkinlik zamanı güncellendi", Message: fmt.Sprintf("%s etkinliğinin zamanı değişti. Ayrıntıları gözden geçirin.", eventTitle)}
+		default:
+			return LocalizedNotification{Title: "Event time updated", Message: fmt.Sprintf("The time for %s has changed. Review the event details.", eventTitle)}
+		}
+	case "event_cancelled":
+		eventTitle := data["event_title"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "تم إلغاء الفعالية", Message: fmt.Sprintf("تم إلغاء %s. راجع تفاصيل الفعالية.", eventTitle)}
+		case "tr":
+			return LocalizedNotification{Title: "Etkinlik iptal edildi", Message: fmt.Sprintf("%s etkinliği iptal edildi. Ayrıntıları gözden geçirin.", eventTitle)}
+		default:
+			return LocalizedNotification{Title: "Event cancelled", Message: fmt.Sprintf("%s has been cancelled. Review the event details.", eventTitle)}
+		}
+	case "organizer_announcement":
+		eventTitle := data["event_title"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "تحديث من منظم الفعالية", Message: fmt.Sprintf("يوجد تحديث جديد للفعالية %s. افتح خير لعرض التفاصيل.", eventTitle)}
+		case "tr":
+			return LocalizedNotification{Title: "Organizatörden etkinlik güncellemesi", Message: fmt.Sprintf("%s etkinliği için yeni bir güncelleme var. Ayrıntıları görmek için Khair'i açın.", eventTitle)}
+		default:
+			return LocalizedNotification{Title: "Event update from the organizer", Message: fmt.Sprintf("There is a new update for %s. Open Khair to view the details.", eventTitle)}
+		}
 
 	case "verification_review":
-		return renderVerificationReview(data["status"], data["notes"], language)
+		return renderVerificationReview(data["status"], "", language)
 	case "organizer_application":
-		return renderOrganizerApplication(data["status"], data["organizer_name"], data["reason"], language)
+		return renderOrganizerApplication(data["status"], data["organizer_name"], "", language)
 	case "event_status":
-		return renderEventStatus(data["status"], data["event_title"], data["reason"], language)
+		return renderEventStatus(data["status"], data["event_title"], "", language)
 	case "account_status":
 		return renderAccountStatus(data["status"], data["reason"], language)
 	case "support_reply":
@@ -122,14 +152,29 @@ func Render(notificationType string, data map[string]string, language string) Lo
 }
 
 func (s *Service) CreateLocalized(userID uuid.UUID, notificationType string, data map[string]string) (LocalizedNotification, error) {
+	presentation, _, _, err := s.CreateLocalizedOnce(userID, notificationType, data, "")
+	return presentation, err
+}
+
+// CreateLocalizedWithID persists one notification and returns the ID that must
+// be attached to the matching FCM payload.
+func (s *Service) CreateLocalizedWithID(userID uuid.UUID, notificationType string, data map[string]string) (LocalizedNotification, uuid.UUID, error) {
+	presentation, id, _, err := s.CreateLocalizedOnce(userID, notificationType, data, "")
+	return presentation, id, err
+}
+
+// CreateLocalizedOnce creates a localized notification only once for a
+// per-user business-operation key. A retry receives the original ID and false.
+func (s *Service) CreateLocalizedOnce(userID uuid.UUID, notificationType string, data map[string]string, dedupeKey string) (LocalizedNotification, uuid.UUID, bool, error) {
 	presentation, err := s.LocalizeForUser(userID, notificationType, data)
 	if err != nil {
-		return LocalizedNotification{}, err
+		return LocalizedNotification{}, uuid.Nil, false, err
 	}
-	if err := s.CreateTyped(userID, presentation.Title, presentation.Message, notificationType, data); err != nil {
-		return LocalizedNotification{}, err
+	id, created, err := s.CreateTypedOnce(userID, presentation.Title, presentation.Message, notificationType, data, dedupeKey)
+	if err != nil {
+		return LocalizedNotification{}, uuid.Nil, false, err
 	}
-	return presentation, nil
+	return presentation, id, created, nil
 }
 
 // LocalizeForUser resolves system copy using the recipient's stored Khair

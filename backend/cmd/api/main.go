@@ -234,8 +234,12 @@ func main() {
 	sseHub := sse.NewHub()
 
 	// FCM push notifications (moved before admin service which depends on it)
-	fcmClient := fcm.NewClient(os.Getenv("FCM_SERVER_KEY"))
+	fcmClient := fcm.NewClient()
+	if !fcmClient.IsEnabled() {
+		appLogger.Error("FCM push delivery is disabled; configure FCM_SERVICE_ACCOUNT as a deployment secret", fcmClient.ConfigurationError())
+	}
 	pushService := push.NewService(db, fcmClient)
+	eventService.SetNotificationDelivery(notificationService, pushService)
 	organizerApplicationService := organizerapplication.NewService(db, notificationService, pushService, emailSvc)
 
 	adminService := admin.NewService(db, &organizerRepoAdapter{repo: organizerRepo}, &eventRepoAdapter{repo: eventRepo}, rbacService, notificationService, pushService, cacheService, sseHub)
@@ -282,6 +286,7 @@ func main() {
 	// Initialize Support service
 	supportRepo := support.NewRepository(db)
 	supportService := support.NewService(supportRepo, geminiClient, wsHub, fcmClient, db, notificationService)
+	supportService.SetPushService(pushService)
 	supportHandler := support.NewHandler(supportService)
 
 	if geminiClient.IsEnabled() {
@@ -418,6 +423,7 @@ func main() {
 
 	// Organization Dashboard API
 	orgdashService := orgdash.NewService(db)
+	orgdashService.SetNotificationDelivery(notificationService, pushService)
 	orgdashHandler := orgdash.NewHandler(orgdashService)
 	organizerHubRoutes := v1.Group("/organizer")
 	organizerHubRoutes.Use(authMiddleware)

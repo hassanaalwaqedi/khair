@@ -107,30 +107,8 @@ func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) 
 	org.Status = req.Status
 	org.RejectionReason = req.RejectionReason
 
-	// Send notification to the organizer's user
-	if s.notificationService != nil {
-		switch req.Status {
-		case "approved":
-			_, _ = s.notificationService.CreateLocalized(org.UserID, "organizer_application", map[string]string{
-				"status":         "approved",
-				"organizer_name": org.Name,
-				"entity_type":    "organizer",
-				"entity_id":      org.ID.String(),
-			})
-		case "rejected":
-			reason := "No reason provided"
-			if req.RejectionReason != nil && *req.RejectionReason != "" {
-				reason = *req.RejectionReason
-			}
-			_, _ = s.notificationService.CreateLocalized(org.UserID, "organizer_application", map[string]string{
-				"status":         "rejected",
-				"organizer_name": org.Name,
-				"reason":         reason,
-				"entity_type":    "organizer",
-				"entity_id":      org.ID.String(),
-			})
-		}
-	}
+	// One persisted notification and one FCM push share the same ID.
+	s.notifyOrganizerApplicationStatus(org, req.Status, req.RejectionReason)
 
 	return org, nil
 }
@@ -194,49 +172,92 @@ func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, revi
 		}
 	}
 
-	// Notify the organizer about the event status change
-	if s.notificationService != nil {
-		// Look up organizer's user_id
-		var orgUserID uuid.UUID
-		err := s.db.QueryRow(`SELECT user_id FROM organizers WHERE id = $1`, evt.OrganizerID).Scan(&orgUserID)
-		if err == nil {
-			switch req.Status {
-			case "approved", "published":
-				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
-					"status":      req.Status,
-					"event_title": evt.Title,
-					"entity_type": "event",
-					"entity_id":   id.String(),
-				})
-			case "rejected":
-				reason := "No reason provided"
-				if req.RejectionReason != nil && *req.RejectionReason != "" {
-					reason = *req.RejectionReason
-				}
-				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
-					"status":      "rejected",
-					"event_title": evt.Title,
-					"reason":      reason,
-					"entity_type": "event",
-					"entity_id":   id.String(),
-				})
-			case "needs_revision":
-				notes := ""
-				if req.RejectionReason != nil {
-					notes = *req.RejectionReason
-				}
-				_, _ = s.notificationService.CreateLocalized(orgUserID, "event_status", map[string]string{
-					"status":      "needs_revision",
-					"event_title": evt.Title,
-					"reason":      notes,
-					"entity_type": "event",
-					"entity_id":   id.String(),
-				})
-			}
-		}
+	// Notify the organizer about the event status change.
+	var orgUserID uuid.UUID
+	if err := s.db.QueryRow(`SELECT user_id FROM organizers WHERE id = $1`, evt.OrganizerID).Scan(&orgUserID); err == nil {
+		s.notifyOrganizerEventStatus(orgUserID, evt, req.Status, req.RejectionReason)
 	}
 
 	return evt, nil
+}
+
+func (s *Service) notifyOrganizerApplicationStatus(org *models.Organizer, status string, reason *string) {
+	if s.notificationService == nil {
+		return
+	}
+	reasonText := ""
+	if reason != nil {
+		reasonText = strings.TrimSpace(*reason)
+	}
+	typeName := "organizer_revision_requested"
+	switch status {
+	case "approved":
+		typeName = "organizer_approved"
+	case "rejected":
+		typeName = "organizer_rejected"
+	}
+	data := map[string]string{
+		"type":           typeName,
+		"status":         status,
+		"organizer_name": org.Name,
+		"reason":         reasonText,
+		"entity_type":    "organizer",
+		"entity_id":      org.ID.String(),
+	}
+	copy, notificationID, created, err := s.notificationService.CreateLocalizedOnce(
+		org.UserID,
+		"organizer_application",
+		data,
+		"organizer_application:"+org.ID.String()+":"+status,
+	)
+	if err != nil {
+		log.Printf("[ADMIN] organizer notification failed: %v", err)
+		return
+	}
+	if s.pushService != nil && created {
+		data["notification_id"] = notificationID.String()
+		s.pushService.SendToUser(org.UserID, copy.Title, copy.Message, data)
+	}
+}
+
+func (s *Service) notifyOrganizerEventStatus(userID uuid.UUID, event *models.EventWithOrganizer, status string, reason *string) {
+	if s.notificationService == nil {
+		return
+	}
+	reasonText := ""
+	if reason != nil {
+		reasonText = strings.TrimSpace(*reason)
+	}
+	typeName := "event_revision_requested"
+	switch status {
+	case "approved", "published":
+		typeName = "event_approved"
+	case "rejected":
+		typeName = "event_rejected"
+	}
+	data := map[string]string{
+		"type":        typeName,
+		"status":      status,
+		"event_title": event.Title,
+		"reason":      reasonText,
+		"entity_type": "event",
+		"entity_id":   event.ID.String(),
+		"event_id":    event.ID.String(),
+	}
+	copy, notificationID, created, err := s.notificationService.CreateLocalizedOnce(
+		userID,
+		"event_status",
+		data,
+		"event_status:"+event.ID.String()+":"+status,
+	)
+	if err != nil {
+		log.Printf("[ADMIN] event notification failed: %v", err)
+		return
+	}
+	if s.pushService != nil && created {
+		data["notification_id"] = notificationID.String()
+		s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+	}
 }
 
 // SuspendUser suspends a user account and revokes all their refresh tokens

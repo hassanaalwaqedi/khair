@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/khair/backend/internal/ai"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/internal/ws"
 	"github.com/khair/backend/pkg/fcm"
 	"github.com/khair/backend/pkg/storage"
@@ -22,9 +24,17 @@ type Service struct {
 	aiClient       *ai.Client
 	wsHub          *ws.Hub
 	fcmClient      *fcm.Client
+	pushSvc        *push.Service
 	db             *sql.DB
 	notifSvc       *notification.Service
 	privateR2Store *storage.PrivateR2Store
+}
+
+// SetPushService connects support replies to the shared device-token and FCM
+// lifecycle. It is kept as a setter to preserve the existing constructor used
+// by tests and by older service wiring.
+func (s *Service) SetPushService(pushSvc *push.Service) {
+	s.pushSvc = pushSvc
 }
 
 func NewService(repo *Repository, aiClient *ai.Client, wsHub *ws.Hub, fcmClient *fcm.Client, db *sql.DB, notificationServices ...*notification.Service) *Service {
@@ -221,8 +231,9 @@ func (s *Service) SendMessage(ticketID, senderID uuid.UUID, senderType, body, me
 		// Send FCM to user
 		if messageType != "internal_note" {
 			s.sendFCMToUser(ticket.UserID, "support_reply", map[string]string{
-				"type":      "support_message",
-				"ticket_id": ticket.ID.String(),
+				"type":       "support_reply",
+				"ticket_id":  ticket.ID.String(),
+				"message_id": msg.ID.String(),
 			})
 		}
 	}
@@ -283,8 +294,9 @@ func (s *Service) UploadAttachment(ctx context.Context, ticketID, senderID uuid.
 		}
 
 		s.sendFCMToUser(ticket.UserID, "support_attachment", map[string]string{
-			"type":      "support_message",
-			"ticket_id": ticket.ID.String(),
+			"type":       "support_attachment",
+			"ticket_id":  ticket.ID.String(),
+			"message_id": msg.ID.String(),
 		})
 	}
 
@@ -331,37 +343,21 @@ func (s *Service) broadcastEvent(userID uuid.UUID, eventType string, payload int
 }
 
 func (s *Service) sendFCMToUser(userID uuid.UUID, notificationType string, data map[string]string) {
-	if s.fcmClient == nil || !s.fcmClient.IsEnabled() {
+	if s.notifSvc == nil {
+		log.Printf("[SUPPORT] push skipped: notification service unavailable")
 		return
 	}
-
-	title, body := "Khair Support", "Khair Support replied to your ticket."
-	if notificationType == "support_attachment" {
-		body = "Khair Support sent an attachment to your ticket."
-	}
-	if s.notifSvc != nil {
-		localized, err := s.notifSvc.LocalizeForUser(userID, notificationType, data)
-		if err == nil {
-			title, body = localized.Title, localized.Message
-		}
-	}
-
-	query := `SELECT token FROM device_tokens WHERE user_id = $1`
-	rows, err := s.db.Query(query, userID)
+	data["entity_type"] = "support_ticket"
+	data["entity_id"] = data["ticket_id"]
+	dedupeKey := notificationType + ":" + data["message_id"]
+	copy, notificationID, created, err := s.notifSvc.CreateLocalizedOnce(userID, notificationType, data, dedupeKey)
 	if err != nil {
+		log.Printf("[SUPPORT] notification create failed: %v", err)
 		return
 	}
-	defer rows.Close()
-
-	var tokens []string
-	for rows.Next() {
-		var t string
-		if err := rows.Scan(&t); err == nil {
-			tokens = append(tokens, t)
-		}
+	if !created || s.pushSvc == nil {
+		return
 	}
-
-	if len(tokens) > 0 {
-		go s.fcmClient.SendToMultiple(tokens, title, body, data)
-	}
+	data["notification_id"] = notificationID.String()
+	go s.pushSvc.SendToUser(userID, copy.Title, copy.Message, data)
 }

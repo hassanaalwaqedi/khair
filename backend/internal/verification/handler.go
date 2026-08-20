@@ -292,8 +292,15 @@ func (h *Handler) sendLegacyReviewNotification(userID uuid.UUID, status, notes s
 // sendReviewNotification sends a single-language in-app notification and push
 // using the shared notification renderer.
 func (h *Handler) sendReviewNotification(userID uuid.UUID, status, notes string) {
-	data := map[string]string{"status": status, "notes": notes}
+	data := map[string]string{
+		"type":        "verification_review",
+		"status":      status,
+		"notes":       notes,
+		"entity_type": "verification",
+	}
 	var title, message string
+	var notificationID uuid.UUID
+	created := false
 
 	if h.notifSvc != nil {
 		localized, err := h.notifSvc.LocalizeForUser(userID, "verification_review", data)
@@ -301,17 +308,24 @@ func (h *Handler) sendReviewNotification(userID uuid.UUID, status, notes string)
 			log.Printf("[VERIFICATION] Failed to localize notification: %v", err)
 		} else {
 			title, message = localized.Title, localized.Message
-			if err := h.notifSvc.CreateTyped(userID, title, message, "verification_review", data); err != nil {
+			var err error
+			notificationID, created, err = h.notifSvc.CreateTypedOnce(
+				userID,
+				title,
+				message,
+				"verification_review",
+				data,
+				"verification_review:"+status,
+			)
+			if err != nil {
 				log.Printf("[VERIFICATION] Failed to create notification: %v", err)
 			}
 		}
 	}
 
-	if h.pushSvc != nil && title != "" && message != "" {
-		h.pushSvc.SendToUser(userID, title, message, map[string]string{
-			"type":   "verification_review",
-			"status": status,
-		})
+	if h.pushSvc != nil && created && title != "" && message != "" {
+		data["notification_id"] = notificationID.String()
+		h.pushSvc.SendToUser(userID, title, message, data)
 	}
 }
 

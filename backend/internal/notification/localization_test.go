@@ -63,6 +63,22 @@ func TestRenderAdditionalTransactionalTypes(t *testing.T) {
 	}
 }
 
+func TestRenderNeverLeaksPrivateReviewNotes(t *testing.T) {
+	privateNote := "internal reviewer note: private document URL"
+	for _, notificationType := range []string{"verification_review", "organizer_application", "event_status"} {
+		copy := Render(notificationType, map[string]string{
+			"status":         "rejected",
+			"event_title":    "Event",
+			"organizer_name": "Org",
+			"reason":         privateNote,
+			"notes":          privateNote,
+		}, "en")
+		if strings.Contains(copy.Title, privateNote) || strings.Contains(copy.Message, privateNote) {
+			t.Fatalf("%s leaked a private reviewer note: %+v", notificationType, copy)
+		}
+	}
+}
+
 func TestRenderUnknownTypeReturnsNoGeneratedCopy(t *testing.T) {
 	got := Render("legacy_type", map[string]string{"event_title": "Untouched"}, "ar")
 	if got.Title != "" || got.Message != "" {
