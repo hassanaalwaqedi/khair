@@ -3,6 +3,7 @@ package support
 import (
 	"errors"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -69,6 +70,9 @@ func (h *Handler) OpenConversation(c *gin.Context) {
 	}
 	messages, err := h.service.GetTicketMessages(ticket.ID, false)
 	if err != nil {
+		// Keep the client response generic, but retain the database error in the
+		// service logs so a production schema mismatch is actionable.
+		log.Printf("[SUPPORT] failed to load opened conversation %s: %v", ticket.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to load support conversation"})
 		return
 	}
