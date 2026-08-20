@@ -1,0 +1,8 @@
+{
+  "name": "khair",
+  "compatibility_date": "2026-08-20",
+  "assets": {
+    "directory": "./frontend/khair_app/build/web",
+    "not_found_handling": "single-page-application"
+  }
+}
