@@ -1,6 +1,6 @@
 import 'package:khair_app/core/locale/l10n_extension.dart';
-import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +10,8 @@ import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/khair_theme.dart';
+import '../../../../core/utils/image_upload_client.dart';
+import '../../../../core/utils/image_upload_validator.dart';
 
 /// Post-registration verification page for authority roles
 /// (Sheikh, Mosque, Organization, Community Organizer)
@@ -24,8 +26,8 @@ class _VerificationPageState extends State<VerificationPage> {
   final ApiClient _apiClient = getIt<ApiClient>();
   final ImagePicker _imagePicker = ImagePicker();
 
-  File? _profileImageFile;
-  File? _documentFile;
+  Uint8List? _profileImageBytes;
+  Uint8List? _documentBytes;
   String? _profileImageName;
   String? _documentName;
   String? _uploadedProfileImageUrl;
@@ -85,8 +87,8 @@ class _VerificationPageState extends State<VerificationPage> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: KhairColors.secondary
-                                  .withValues(alpha: 0.15),
+                              color:
+                                  KhairColors.secondary.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.verified_user_rounded,
@@ -124,8 +126,8 @@ class _VerificationPageState extends State<VerificationPage> {
                               color: KhairColors.error.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: KhairColors.error
-                                      .withValues(alpha: 0.3)),
+                                  color:
+                                      KhairColors.error.withValues(alpha: 0.3)),
                             ),
                             child: Row(
                               children: [
@@ -135,8 +137,8 @@ class _VerificationPageState extends State<VerificationPage> {
                                 Expanded(
                                   child: Text(
                                     _errorMessage!,
-                                    style: KhairTypography.bodySmall.copyWith(
-                                        color: Colors.white),
+                                    style: KhairTypography.bodySmall
+                                        .copyWith(color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -154,7 +156,7 @@ class _VerificationPageState extends State<VerificationPage> {
                           isUploaded: _uploadedProfileImageUrl != null,
                           isUploading: _isUploadingImage,
                           fileName: _profileImageName,
-                          file: _profileImageFile,
+                          imageBytes: _profileImageBytes,
                           required: true,
                           onTap: _pickProfileImage,
                         ),
@@ -169,7 +171,7 @@ class _VerificationPageState extends State<VerificationPage> {
                           isUploaded: _uploadedDocumentUrl != null,
                           isUploading: _isUploadingDocument,
                           fileName: _documentName,
-                          file: _documentFile,
+                          imageBytes: _documentBytes,
                           required: true,
                           onTap: _pickDocument,
                         ),
@@ -177,8 +179,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
                         // Confirmation checkbox
                         GestureDetector(
-                          onTap: () =>
-                              setState(() => _confirmed = !_confirmed),
+                          onTap: () => setState(() => _confirmed = !_confirmed),
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -206,8 +207,7 @@ class _VerificationPageState extends State<VerificationPage> {
                                     border: Border.all(
                                       color: _confirmed
                                           ? KhairColors.secondary
-                                          : Colors.white
-                                              .withValues(alpha: 0.3),
+                                          : Colors.white.withValues(alpha: 0.3),
                                       width: 2,
                                     ),
                                   ),
@@ -305,6 +305,7 @@ class _VerificationPageState extends State<VerificationPage> {
   // ── File Pickers ──
 
   Future<void> _pickProfileImage() async {
+    if (_isUploadingImage) return;
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -313,76 +314,104 @@ class _VerificationPageState extends State<VerificationPage> {
         imageQuality: 85,
       );
       if (image == null) return;
+      final bytes = await image.readAsBytes();
+      final issue =
+          await inspectImageUpload(filename: image.name, bytes: bytes);
+      if (!mounted) return;
 
       setState(() {
-        _profileImageFile = File(image.path);
+        _profileImageBytes = bytes;
         _profileImageName = image.name;
         _isUploadingImage = true;
         _errorMessage = null;
       });
+      if (issue != null) {
+        setState(() {
+          _isUploadingImage = false;
+          _errorMessage = imageUploadIssueMessage(issue);
+        });
+        return;
+      }
 
-      // Upload the image
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(image.path, filename: image.name),
-      });
-
-      final response = await _apiClient.post('/upload/image', data: formData);
-      final url = response.data['data']?['url'] ?? response.data['url'];
+      final url = await uploadImageBytes(
+        dio: getIt<Dio>(),
+        path: '/upload/image',
+        bytes: bytes,
+        filename: image.name,
+      );
+      if (!mounted) return;
 
       setState(() {
         _uploadedProfileImageUrl = url;
         _isUploadingImage = false;
       });
-    } catch (e) {
-      setState(() {
-        _isUploadingImage = false;
-        _profileImageFile = null;
-        _profileImageName = null;
-        _errorMessage = 'Failed to upload image. Please try again.';
-      });
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+          _errorMessage = imageUploadFailureMessage(error);
+        });
+      }
     }
   }
 
   Future<void> _pickDocument() async {
+    if (_isUploadingDocument) return;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
         allowMultiple: false,
+        withData: true,
       );
       if (result == null || result.files.isEmpty) return;
+      if (!mounted) return;
 
       final file = result.files.first;
-      if (file.path == null) return;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty) {
+        setState(() => _errorMessage = 'Choose a valid document to upload.');
+        return;
+      }
+      if (bytes.length > 10 * 1024 * 1024) {
+        setState(() => _errorMessage = 'Choose a document smaller than 10 MB.');
+        return;
+      }
 
       setState(() {
-        _documentFile = File(file.path!);
+        _documentBytes = bytes;
         _documentName = file.name;
         _isUploadingDocument = true;
         _errorMessage = null;
       });
 
-      // Upload the document
       final formData = FormData.fromMap({
-        'document':
-            await MultipartFile.fromFile(file.path!, filename: file.name),
+        'document': MultipartFile.fromBytes(bytes, filename: file.name),
       });
 
-      final response =
-          await _apiClient.post('/upload/document', data: formData);
+      final response = await _apiClient.post(
+        '/upload/document',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          sendTimeout: const Duration(minutes: 2),
+          receiveTimeout: const Duration(minutes: 2),
+        ),
+      );
+      if (!mounted) return;
       final url = response.data['data']?['url'] ?? response.data['url'];
 
       setState(() {
         _uploadedDocumentUrl = url;
         _isUploadingDocument = false;
       });
-    } catch (e) {
-      setState(() {
-        _isUploadingDocument = false;
-        _documentFile = null;
-        _documentName = null;
-        _errorMessage = 'Failed to upload document. Please try again.';
-      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isUploadingDocument = false;
+          _errorMessage = 'We could not upload that document. Please retry.';
+        });
+      }
     }
   }
 
@@ -509,7 +538,7 @@ class _VerificationPageState extends State<VerificationPage> {
     required bool isUploading,
     required bool required,
     String? fileName,
-    File? file,
+    Uint8List? imageBytes,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -536,15 +565,14 @@ class _VerificationPageState extends State<VerificationPage> {
         child: Row(
           children: [
             // Show image thumbnail if it's an image file that was picked
-            if (file != null &&
-                isUploaded &&
+            if (imageBytes != null &&
                 (fileName?.endsWith('.jpg') == true ||
                     fileName?.endsWith('.jpeg') == true ||
                     fileName?.endsWith('.png') == true))
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  file,
+                child: Image.memory(
+                  imageBytes,
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,

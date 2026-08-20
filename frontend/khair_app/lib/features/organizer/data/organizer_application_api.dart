@@ -43,6 +43,7 @@ class OrganizerApplicationApi {
     required Uint8List bytes,
     required String filename,
     required bool representativePhoto,
+    ProgressCallback? onSendProgress,
   }) async {
     final form = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: filename),
@@ -52,6 +53,11 @@ class OrganizerApplicationApi {
           ? 'organizer/application/me/representative-photo'
           : 'organizer/application/me/logo',
       data: form,
+      options: Options(
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
+      onSendProgress: onSendProgress,
     );
     return Map<String, dynamic>.from(response.data['data'] as Map);
   }
@@ -70,6 +76,10 @@ class OrganizerApplicationApi {
     final response = await _client.post(
       'organizer/application/me/documents',
       data: form,
+      options: Options(
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
     );
     return Map<String, dynamic>.from(response.data['data'] as Map);
   }

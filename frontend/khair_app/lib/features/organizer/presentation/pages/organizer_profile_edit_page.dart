@@ -10,6 +10,8 @@ import '../../../../core/widgets/khair_components.dart';
 import '../../../../core/widgets/discard_changes_dialog.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/image_upload_client.dart';
+import '../../../../core/utils/image_upload_validator.dart';
 import '../../domain/entities/organizer.dart';
 import '../../domain/repositories/organizer_repository.dart';
 import '../bloc/organizer_bloc.dart';
@@ -165,6 +167,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
   }
 
   Future<void> _pickLogo() async {
+    if (_uploadingImage) return;
     final image = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
@@ -173,32 +176,41 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
     if (image == null) return;
 
     final bytes = await image.readAsBytes();
+    final issue = await inspectImageUpload(filename: image.name, bytes: bytes);
     if (!mounted) return;
     setState(() {
+      _logoPreview = bytes;
       _uploadingImage = true;
     });
+    if (issue != null) {
+      setState(() => _uploadingImage = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(imageUploadIssueMessage(issue)),
+        backgroundColor: KhairColors.error,
+      ));
+      return;
+    }
 
     try {
-      final data = FormData.fromMap(
-          {'image': MultipartFile.fromBytes(bytes, filename: image.name)});
-      final response = await getIt<Dio>().post('/upload/image',
-          data: data, options: Options(contentType: 'multipart/form-data'));
-      
-      final result = Map<String, dynamic>.from(response.data['data'] as Map);
+      final url = await uploadImageBytes(
+        dio: getIt<Dio>(),
+        path: '/upload/image',
+        bytes: bytes,
+        filename: image.name,
+      );
       if (!mounted) return;
       setState(() {
-        _logoPreview = bytes;
-        _logoUrl = result['url']?.toString();
+        _logoUrl = url;
         _uploadingImage = false;
         _onFieldChanged();
       });
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _uploadingImage = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.l10n.failedToUploadImagePleaseTryAg),
+          content: Text(imageUploadFailureMessage(error)),
           backgroundColor: KhairColors.error,
         ));
       }
@@ -282,9 +294,7 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
               return KhairErrorState(
                 message: state.errorMessage ?? 'Failed to load profile.',
                 onRetry: () {
-                  context
-                      .read<OrganizerBloc>()
-                      .add(LoadOrganizerProfile());
+                  context.read<OrganizerBloc>().add(LoadOrganizerProfile());
                 },
               );
             }
@@ -336,12 +346,12 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
                                                 )
                                               : null,
                                     ),
-                                    child: _logoPreview == null &&
-                                            _logoUrl == null
-                                        ? Icon(Icons.business_rounded,
-                                            color: KhairColors.primary,
-                                            size: 32)
-                                        : null,
+                                    child:
+                                        _logoPreview == null && _logoUrl == null
+                                            ? Icon(Icons.business_rounded,
+                                                color: KhairColors.primary,
+                                                size: 32)
+                                            : null,
                                   ),
                                   if (_uploadingImage)
                                     Container(
@@ -487,9 +497,10 @@ class _OrganizerProfileEditPageState extends State<OrganizerProfileEditPage> {
         maxLines: maxLines,
         keyboardType: keyboardType,
         textDirection: (keyboardType == TextInputType.phone ||
-                        keyboardType == TextInputType.emailAddress ||
-                        keyboardType == TextInputType.url)
-                       ? TextDirection.ltr : null,
+                keyboardType == TextInputType.emailAddress ||
+                keyboardType == TextInputType.url)
+            ? TextDirection.ltr
+            : null,
         validator: validator,
         decoration: InputDecoration(
           labelText: label,

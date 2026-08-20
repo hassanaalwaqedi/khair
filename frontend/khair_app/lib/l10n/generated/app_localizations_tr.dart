@@ -3450,7 +3450,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get jpgPngOrWebpUpTo10Mb169Recomme =>
-      'JPG, PNG or WebP · up to 10 MB · 16:9 recommended';
+      'JPG, PNG veya WebP · en fazla 5 MB · 16:9 önerilir';
 
   @override
   String get reviewYourEvent => 'Review your event';
@@ -4014,6 +4014,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get documentUploadFailed => 'Belge yüklenemedi.';
 
   @override
+  String get documentTooLarge => 'Bu belge 10 MB\'tan büyük.';
+
+  @override
+  String get documentUploadFailedSafe =>
+      'Bu belge yüklenemedi. Başvurunuz güvende.';
+
+  @override
+  String get sessionExpired =>
+      'Oturumunuz sona erdi. Lütfen tekrar giriş yapın.';
+
+  @override
   String get organizationRegistration => 'Kuruluş kaydı';
 
   @override
@@ -4436,4 +4447,51 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get savedLabel => 'Kaydedildi';
+
+  @override
+  String get imageEmpty => 'Seçilen görsel boş. Başka bir görsel seçin.';
+
+  @override
+  String get imageTooLarge => 'Bu görsel 5 MB\'tan büyük.';
+
+  @override
+  String get imageFormatUnsupported =>
+      'Bu görsel biçimi desteklenmiyor. JPG, PNG veya WebP kullanın.';
+
+  @override
+  String get imageInvalid => 'Bu görsel okunamadı. Başka bir görsel seçin.';
+
+  @override
+  String get imageUploadOfflineSafe =>
+      'İnternet bağlantısı yok. Görseliniz güvende — tekrar deneyin.';
+
+  @override
+  String get imageUploadTimedOut => 'Yükleme çok uzun sürdü. Tekrar deneyin.';
+
+  @override
+  String get imageUploadFailedSafe =>
+      'Bu görsel yüklenemedi. Diğer bilgileriniz güvende.';
+
+  @override
+  String get draftSaveOfflineSafe =>
+      'Değişiklikleriniz eşitlenemedi. Bu cihazda kaydedildi.';
+
+  @override
+  String get draftSaveFailedSafe =>
+      'Son değişiklikleriniz kaydedilemedi. Bu cihazda saklandı.';
+
+  @override
+  String get draftChangesNotSaved => 'Kaydedilmemiş değişiklikler';
+
+  @override
+  String get uploadInProgress => 'Görsel yüklenirken lütfen bekleyin.';
+
+  @override
+  String get imagePreparing => 'Görsel hazırlanıyor…';
+
+  @override
+  String get imageUploading => 'Görsel güvenle yükleniyor…';
+
+  @override
+  String get imageUploaded => 'Yüklendi';
 }

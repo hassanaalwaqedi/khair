@@ -255,6 +255,18 @@ func (p unavailableProvider) Upload(multipart.File, *multipart.FileHeader, strin
 	return "", p.err
 }
 
+func (p unavailableProvider) unavailableReason() error { return p.err }
+
+// UnavailableError identifies a provider that could not be configured at
+// startup. Handlers can return a truthful 503 without exposing credentials or
+// internal R2 details to clients.
+func UnavailableError(provider Provider) error {
+	if unavailable, ok := provider.(interface{ unavailableReason() error }); ok {
+		return unavailable.unavailableReason()
+	}
+	return nil
+}
+
 func canonicalURIR2(value string) string {
 	if value == "" {
 		return "/"

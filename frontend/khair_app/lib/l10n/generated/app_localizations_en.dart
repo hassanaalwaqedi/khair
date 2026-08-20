@@ -3434,7 +3434,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get jpgPngOrWebpUpTo10Mb169Recomme =>
-      'JPG, PNG or WebP · up to 10 MB · 16:9 recommended';
+      'JPG, PNG or WebP · up to 5 MB · 16:9 recommended';
 
   @override
   String get reviewYourEvent => 'Review your event';
@@ -3996,6 +3996,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get documentUploadFailed => 'Document upload failed.';
 
   @override
+  String get documentTooLarge => 'This document is larger than 10 MB.';
+
+  @override
+  String get documentUploadFailedSafe =>
+      'We couldn\'t upload this document. Your application is safe.';
+
+  @override
+  String get sessionExpired => 'Your session expired. Please sign in again.';
+
+  @override
   String get organizationRegistration => 'Organization registration';
 
   @override
@@ -4021,7 +4031,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addHttpsEvidenceUrl => 'Add a complete https:// evidence URL.';
 
   @override
-  String get savingDraft => 'Saving?';
+  String get savingDraft => 'Saving…';
 
   @override
   String get draftSavedSecurely => 'Draft saved securely';
@@ -4415,4 +4425,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedLabel => 'Saved';
+
+  @override
+  String get imageEmpty => 'The selected image is empty. Choose another image.';
+
+  @override
+  String get imageTooLarge => 'This image is larger than 5 MB.';
+
+  @override
+  String get imageFormatUnsupported =>
+      'This image format isn\'t supported. Use JPG, PNG, or WebP.';
+
+  @override
+  String get imageInvalid =>
+      'This image could not be read. Choose another image.';
+
+  @override
+  String get imageUploadOfflineSafe =>
+      'No internet connection. Your image is safe — tap Retry.';
+
+  @override
+  String get imageUploadTimedOut => 'The upload took too long. Tap Retry.';
+
+  @override
+  String get imageUploadFailedSafe =>
+      'We couldn\'t upload this image. Your other information is safe.';
+
+  @override
+  String get draftSaveOfflineSafe =>
+      'We couldn\'t sync your changes. They\'re saved on this device.';
+
+  @override
+  String get draftSaveFailedSafe =>
+      'We couldn\'t save your latest changes. They\'re saved on this device.';
+
+  @override
+  String get draftChangesNotSaved => 'Unsaved changes';
+
+  @override
+  String get uploadInProgress =>
+      'Please wait while the image finishes uploading.';
+
+  @override
+  String get imagePreparing => 'Preparing image…';
+
+  @override
+  String get imageUploading => 'Uploading securely…';
+
+  @override
+  String get imageUploaded => 'Uploaded';
 }

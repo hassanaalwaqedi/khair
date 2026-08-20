@@ -19,6 +19,9 @@ func TestR2ProviderRequiresCompleteProductionConfiguration(t *testing.T) {
 	if _, ok := provider.(unavailableProvider); !ok {
 		t.Fatalf("production must not fall back to local storage; got %T", provider)
 	}
+	if err := UnavailableError(provider); err == nil {
+		t.Fatal("unavailable provider must expose a safe availability error")
+	}
 }
 
 func TestR2ProviderBuildsPathStyleObjectURL(t *testing.T) {
