@@ -69,19 +69,25 @@ func (h *Handler) OpenConversation(c *gin.Context) {
 		return
 	}
 	messages, err := h.service.GetTicketMessages(ticket.ID, false)
+	historyAvailable := err == nil
 	if err != nil {
-		// Keep the client response generic, but retain the database error in the
-		// service logs so a production schema mismatch is actionable.
+		// A malformed legacy history row (or an attachment relation which has
+		// not yet been migrated) must not make the whole support messenger
+		// unavailable. The ticket itself is valid and users can safely continue
+		// the conversation; retain the exact failure in server logs for repair.
 		log.Printf("[SUPPORT] failed to load opened conversation %s: %v", ticket.ID, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to load support conversation"})
-		return
+		messages = make([]*models.SupportMessage, 0, 1)
+		if welcome != nil {
+			messages = append(messages, welcome)
+		}
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"conversation": ticket,
-		"ticket":       ticket, // compatibility for pre-messenger clients
-		"messages":     messages,
-		"created":      created,
-		"welcome":      welcome,
+		"conversation":      ticket,
+		"ticket":            ticket, // compatibility for pre-messenger clients
+		"messages":          messages,
+		"created":           created,
+		"welcome":           welcome,
+		"history_available": historyAvailable,
 	})
 }
 
