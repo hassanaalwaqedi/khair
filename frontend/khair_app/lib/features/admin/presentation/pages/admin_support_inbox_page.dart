@@ -19,6 +19,8 @@ class AdminSupportInboxPage extends StatefulWidget {
 class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
   List<dynamic> _tickets = [];
   bool _isLoading = true;
+  String? _loadError;
+  String? _assigningTicketId;
   String _statusFilter = 'waiting_for_agent';
   StreamSubscription? _supportEvents;
 
@@ -40,38 +42,57 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
   }
 
   Future<void> _loadTickets() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
     try {
       final apiClient = getIt<ApiClient>();
       final response =
           await apiClient.get('/admin/support/tickets?status=$_statusFilter');
+      final rawTickets = response.data['tickets'];
+      if (!mounted) return;
       setState(() {
-        _tickets = response.data['tickets'] ?? [];
+        _tickets = rawTickets is List ? rawTickets : [];
         _isLoading = false;
       });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.adminActionFailed)));
-      }
+    } catch (error, stackTrace) {
+      debugPrint('Unable to load support inbox: $error\n$stackTrace');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString();
+      });
     }
   }
 
-  Future<void> _assignTicket(String ticketId) async {
+  Future<void> _assignTicket(Map<String, dynamic> ticket) async {
+    final ticketId = ticket['id']?.toString();
+    if (ticketId == null || ticketId.isEmpty) return;
+
+    setState(() => _assigningTicketId = ticketId);
     try {
       final apiClient = getIt<ApiClient>();
       await apiClient.post('/admin/support/tickets/$ticketId/assign');
-      _loadTickets();
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.ticketAssigned)));
-      }
-    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.ticketAssigned)));
+
+      // A claimed ticket moves from the waiting queue to human_active. Open its
+      // conversation now so the agent can read the AI context and reply without
+      // having to change the filter first.
+      await _showChatDialog({...ticket, 'status': 'human_active'});
+    } catch (error, stackTrace) {
+      debugPrint(
+          'Unable to assign support ticket $ticketId: $error\n$stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.l10n.adminActionFailed)));
       }
+    } finally {
+      if (mounted) setState(() => _assigningTicketId = null);
     }
   }
 
@@ -108,78 +129,118 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-            itemCount: _tickets.length,
-            itemBuilder: (context, index) {
-              final t = _tickets[index];
-              final createdAt =
-                  DateTime.tryParse(t['created_at']?.toString() ?? '')
-                      ?.toLocal();
-              return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  title: Text(t['subject'] ?? ''),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(context.l10n.supportTicketSummary(
-                          t['user_name']?.toString() ?? '',
-                          t['user_email']?.toString() ?? '',
-                          t['status']?.toString() ?? '',
-                          t['priority']?.toString() ?? '',
-                        )),
-                        const SizedBox(height: 5),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
-                          children: [
-                            _TicketFact(
-                              icon: Icons.language_outlined,
-                              label: (t['language']?.toString().isEmpty ??
-                                      true)
-                                  ? '—'
-                                  : t['language'].toString().toUpperCase(),
-                            ),
-                            _TicketFact(
-                              icon: Icons.schedule_outlined,
-                              label: _elapsed(createdAt),
-                            ),
-                            if (t['context_type'] != null)
-                              _TicketFact(
-                                icon: Icons.link_outlined,
-                                label: t['context_type'].toString(),
+          ? const Center(child: CircularProgressIndicator())
+          : _loadError != null
+              ? _InboxState(
+                  icon: Icons.error_outline,
+                  title: context.l10n.supportInboxLoadFailed,
+                  actionLabel: context.l10n.retry,
+                  onAction: _loadTickets,
+                )
+              : _tickets.isEmpty
+                  ? _InboxState(
+                      icon: Icons.inbox_outlined,
+                      title: context.l10n.supportInboxEmpty,
+                      actionLabel: context.l10n.refreshQueue,
+                      onAction: _loadTickets,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadTickets,
+                      child: ListView.builder(
+                        itemCount: _tickets.length,
+                        itemBuilder: (context, index) {
+                          final rawTicket = _tickets[index];
+                          final t = rawTicket is Map<String, dynamic>
+                              ? rawTicket
+                              : Map<String, dynamic>.from(rawTicket as Map);
+                          final createdAt = DateTime.tryParse(
+                                  t['created_at']?.toString() ?? '')
+                              ?.toLocal();
+                          return Card(
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: ListTile(
+                              title: Text(t['subject'] ?? ''),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(context.l10n.supportTicketSummary(
+                                    t['user_name']?.toString() ?? '',
+                                    t['user_email']?.toString() ?? '',
+                                    t['status']?.toString() ?? '',
+                                    t['priority']?.toString() ?? '',
+                                  )),
+                                  const SizedBox(height: 5),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 4,
+                                    children: [
+                                      _TicketFact(
+                                        icon: Icons.language_outlined,
+                                        label: (t['language']
+                                                    ?.toString()
+                                                    .isEmpty ??
+                                                true)
+                                            ? '—'
+                                            : t['language']
+                                                .toString()
+                                                .toUpperCase(),
+                                      ),
+                                      _TicketFact(
+                                        icon: Icons.schedule_outlined,
+                                        label: _elapsed(createdAt),
+                                      ),
+                                      if (t['context_type'] != null)
+                                        _TicketFact(
+                                          icon: Icons.link_outlined,
+                                          label: t['context_type'].toString(),
+                                        ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ],
+                              isThreeLine: false,
+                              trailing: t['status'] == 'waiting_for_agent'
+                                  ? ElevatedButton(
+                                      onPressed: _assigningTicketId ==
+                                              t['id']?.toString()
+                                          ? null
+                                          : () => _assignTicket(t),
+                                      child: _assigningTicketId ==
+                                              t['id']?.toString()
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
+                                            )
+                                          : Text(context.l10n.assignToMe),
+                                    )
+                                  : (t['assigned_to_name'] != null
+                                      ? Text(context.l10n.assignedTo(
+                                          t['assigned_to_name'].toString()))
+                                      : SizedBox()),
+                              onTap: () {
+                                if (t['status'] == 'waiting_for_agent') {
+                                  _assignTicket(t);
+                                } else {
+                                  _showChatDialog(t);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                    isThreeLine: false,
-                    trailing: t['status'] == 'waiting_for_agent'
-                        ? ElevatedButton(
-                            onPressed: () => _assignTicket(t['id']),
-                            child: Text(context.l10n.assignToMe),
-                          )
-                        : (t['assigned_to_name'] != null
-                            ? Text(context.l10n
-                                .assignedTo(t['assigned_to_name'].toString()))
-                            : SizedBox()),
-                    onTap: () {
-                      // Open a dialog or new page for chat
-                      _showChatDialog(t);
-                    },
-                  ),
-                );
-              },
-            ),
     );
   }
 
-  void _showChatDialog(Map<String, dynamic> ticket) {
-    showDialog(
+  Future<void> _showChatDialog(Map<String, dynamic> ticket) async {
+    await showDialog<void>(
       context: context,
       builder: (context) => _AdminChatDialog(ticket: ticket),
-    ).then((_) => _loadTickets());
+    );
+    if (mounted) _loadTickets();
   }
 
   String _elapsed(DateTime? value) {
@@ -188,6 +249,43 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
     if (elapsed.inDays > 0) return '${elapsed.inDays}d';
     if (elapsed.inHours > 0) return '${elapsed.inHours}h';
     return '${elapsed.inMinutes.clamp(0, 59)}m';
+  }
+}
+
+class _InboxState extends StatelessWidget {
+  const _InboxState({
+    required this.icon,
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: KhairColors.neutral500),
+            const SizedBox(height: 12),
+            Text(title, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.refresh),
+              label: Text(actionLabel),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

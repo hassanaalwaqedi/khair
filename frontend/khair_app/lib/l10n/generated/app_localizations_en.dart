@@ -2710,6 +2710,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportInbox => 'Support Inbox';
 
   @override
+  String get supportInboxLoadFailed => 'We could not load the support inbox.';
+
+  @override
+  String get supportInboxEmpty => 'No support conversations are waiting.';
+
+  @override
   String get verification => 'Verification';
 
   @override

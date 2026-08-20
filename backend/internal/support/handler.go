@@ -367,6 +367,7 @@ func (h *Handler) AdminGetTickets(c *gin.Context) {
 	status := c.Query("status")
 	tickets, err := h.service.repo.GetAdminTickets(status)
 	if err != nil {
+		log.Printf("[SUPPORT] failed to list admin tickets (status=%q): %v", status, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch admin tickets"})
 		return
 	}

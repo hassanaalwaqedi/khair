@@ -2725,6 +2725,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get supportInbox => 'Support Inbox';
 
   @override
+  String get supportInboxLoadFailed => 'Destek gelen kutusu yüklenemedi.';
+
+  @override
+  String get supportInboxEmpty => 'Yanıt bekleyen destek görüşmesi yok.';
+
+  @override
   String get verification => 'Verification';
 
   @override

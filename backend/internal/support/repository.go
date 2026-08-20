@@ -154,8 +154,9 @@ func (r *Repository) UpdateSubject(ticketID uuid.UUID, subject string) error {
 
 func (r *Repository) GetAdminTickets(status string) ([]*models.SupportTicketWithDetails, error) {
 	query := `SELECT t.id, t.user_id, t.assigned_to, t.category, t.subject, t.status, t.priority, t.ai_summary, t.created_at, t.updated_at, t.first_human_response_at, t.resolved_at, t.closed_at, t.language, t.context_type, t.context_id,
-			  u.first_name || ' ' || u.last_name as user_name, u.email as user_email,
-			  a.first_name || ' ' || a.last_name as assigned_to_name
+			  COALESCE(NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), ''), 'Khair user') AS user_name,
+			  COALESCE(u.email, '') AS user_email,
+			  NULLIF(CONCAT_WS(' ', a.first_name, a.last_name), '') AS assigned_to_name
 			  FROM support_tickets t
 			  JOIN users u ON t.user_id = u.id
 			  LEFT JOIN users a ON t.assigned_to = a.id

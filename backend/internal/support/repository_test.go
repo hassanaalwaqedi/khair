@@ -39,3 +39,33 @@ func TestRepositoryGetTicketMessagesReadsAIMessageWithoutOptionalRelations(t *te
 	require.Nil(t, messages[0].Attachment)
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestRepositoryGetAdminTicketsSupportsUsersWithoutProfileNames(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	ticketID := uuid.New()
+	userID := uuid.New()
+	createdAt := time.Now().UTC().Truncate(time.Microsecond)
+	mock.ExpectQuery(`COALESCE\(NULLIF\(CONCAT_WS`).
+		WithArgs("waiting_for_agent").
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id", "user_id", "assigned_to", "category", "subject", "status",
+			"priority", "ai_summary", "created_at", "updated_at",
+			"first_human_response_at", "resolved_at", "closed_at", "language",
+			"context_type", "context_id", "user_name", "user_email", "assigned_to_name",
+		}).AddRow(
+			ticketID, userID, nil, "general", "Need help", "waiting_for_agent",
+			"normal", nil, createdAt, createdAt, nil, nil, nil, "en", nil, nil,
+			"Khair user", "", nil,
+		))
+
+	tickets, err := support.NewRepository(db).GetAdminTickets("waiting_for_agent")
+	require.NoError(t, err)
+	require.Len(t, tickets, 1)
+	require.Equal(t, "Khair user", tickets[0].UserName)
+	require.Empty(t, tickets[0].UserEmail)
+	require.Nil(t, tickets[0].AssignedToName)
+	require.NoError(t, mock.ExpectationsWereMet())
+}

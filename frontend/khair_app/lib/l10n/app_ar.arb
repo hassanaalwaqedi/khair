@@ -965,6 +965,8 @@
   "createEvent1": "إنشاء فعالية",
   "organizerApplicationReviewQueu": "طابور مراجعة طلبات التنظيم",
   "supportInbox": "صندوق الدعم",
+  "supportInboxLoadFailed": "تعذر تحميل صندوق الدعم.",
+  "supportInboxEmpty": "لا توجد محادثات دعم بانتظار الرد.",
   "verification": "التحقق",
   "areYouSureYouWantToReject": "Are you sure you want to reject ",
   "noUsers": "لا يوجد مستخدمون",
