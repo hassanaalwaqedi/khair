@@ -6,9 +6,12 @@ import 'package:khair_app/features/support/data/support_repository.dart';
 import 'package:khair_app/features/support/presentation/bloc/support_cubit.dart';
 
 class _SupportRepository extends SupportRepository {
-  _SupportRepository(this.conversation) : super(ApiClient(Dio()));
+  _SupportRepository(this.conversation, {this.failHistoryRefresh = false})
+      : super(ApiClient(Dio()));
 
   final SupportConversation conversation;
+  final bool failHistoryRefresh;
+  bool escalated = false;
 
   @override
   Future<SupportConversation> openConversation({
@@ -22,8 +25,17 @@ class _SupportRepository extends SupportRepository {
   Future<List<SupportTicket>> getUserTickets() async => [conversation.ticket];
 
   @override
-  Future<List<SupportMessage>> getMessages(String ticketId) async =>
-      conversation.messages;
+  Future<List<SupportMessage>> getMessages(String ticketId) async {
+    if (failHistoryRefresh) {
+      throw DioException(requestOptions: RequestOptions(path: ticketId));
+    }
+    return conversation.messages;
+  }
+
+  @override
+  Future<void> escalateConversation(String ticketId) async {
+    escalated = true;
+  }
 }
 
 void main() {
@@ -71,6 +83,25 @@ void main() {
       expect(state.ticket.id, ticket.id);
       expect(state.ticket.isAiActive, isTrue);
       expect(state.messages.single.body, 'Hello from Khair AI');
+    });
+
+    test('keeps the user in the human-support queue if history refresh fails',
+        () async {
+      final repository = _SupportRepository(
+        SupportConversation(ticket: ticket, messages: [welcome], created: true),
+        failHistoryRefresh: true,
+      );
+      final handoffCubit = SupportCubit(repository);
+      addTearDown(handoffCubit.close);
+
+      await handoffCubit.openConversation('en');
+      await handoffCubit.escalate();
+
+      final state = handoffCubit.state as SupportSessionActive;
+      expect(repository.escalated, isTrue);
+      expect(state.ticket.isWaitingForAgent, isTrue);
+      expect(state.messages.single.body, 'Hello from Khair AI');
+      expect(state.transientError, isNull);
     });
   });
 }

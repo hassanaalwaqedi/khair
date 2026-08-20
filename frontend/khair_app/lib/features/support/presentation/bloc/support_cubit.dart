@@ -185,7 +185,16 @@ class SupportCubit extends Cubit<SupportState> {
     emit(current.copyWith(isSending: true, clearError: true));
     try {
       await _repository.escalateConversation(current.ticket.id);
-      final messages = await _repository.getMessages(current.ticket.id);
+      // Escalation is durable on the POST. A best-effort refresh must not
+      // revert the user back to AI mode when older history cannot be read.
+      var messages = current.messages;
+      try {
+        final refreshed = await _repository.getMessages(current.ticket.id);
+        if (refreshed.isNotEmpty) messages = refreshed;
+      } catch (_) {
+        // Keep the visible conversation and show the waiting-for-support
+        // state. The server has already accepted the handoff.
+      }
       emit(SupportSessionActive(
         current.ticket.copyWith(status: 'waiting_for_agent'),
         messages,

@@ -79,3 +79,20 @@ func TestService_EscalateTicketMovesConversationToWaitingForAgent(t *testing.T) 
 	assert.NoError(t, svc.EscalateTicket(ticketID))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestService_EscalateTicketIsIdempotentAfterHandoff(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	repo := support.NewRepository(db)
+	svc := support.NewService(repo, nil, nil, nil, db)
+	ticketID := uuid.New()
+	userID := uuid.New()
+	mock.ExpectQuery(`SELECT id, user_id, assigned_to`).
+		WithArgs(ticketID).
+		WillReturnRows(ticketRows(ticketID, userID, "waiting_for_agent"))
+
+	assert.NoError(t, svc.EscalateTicket(ticketID))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
