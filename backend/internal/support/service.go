@@ -710,7 +710,21 @@ func localizedActionLabel(action, language string) string {
 }
 
 func requestsHuman(message string) bool {
-	return containsAny(strings.ToLower(message), "talk to human", "talk to a human", "real person", "support agent", "human agent", "موظف", "اريد التحدث مع شخص", "أريد التحدث مع شخص", "أريد الدعم", "destek temsilcisi", "gerçek kişi")
+	return containsAny(strings.ToLower(message),
+		// English
+		"talk to human", "talk to a human", "talk to person", "talk to a person",
+		"talk with a person", "speak to a person", "speak with a person",
+		"speak to a human", "speak with a human",
+		"real person", "support agent", "human agent", "human support",
+		"live agent", "live support", "customer service", "contact support",
+		// Arabic
+		"موظف", "موظف دعم", "دعم بشري", "اريد التحدث مع شخص", "أريد التحدث مع شخص",
+		"اريد التحدث الى شخص", "أريد التحدث إلى شخص", "التحدث مع شخص",
+		"التواصل مع شخص", "أريد الدعم",
+		// Turkish
+		"destek temsilcisi", "gerçek kişi", "bir kişiyle konuşmak istiyorum",
+		"bir insanla konuşmak istiyorum", "canlı destek",
+	)
 }
 
 func containsAny(text string, phrases ...string) bool {
