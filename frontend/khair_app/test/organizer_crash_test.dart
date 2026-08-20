@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 // the exact RangeError caused by the concurrency flaw.
 
 class MockOrganizerAccessPage extends StatefulWidget {
+  const MockOrganizerAccessPage({super.key});
+
   @override
   _MockOrganizerAccessPageState createState() => _MockOrganizerAccessPageState();
 }

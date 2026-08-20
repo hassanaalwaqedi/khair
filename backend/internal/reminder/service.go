@@ -7,18 +7,24 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
 )
 
 // Service handles event reminder scheduling and sending.
 type Service struct {
-	db      *sql.DB
-	pushSvc *push.Service
+	db       *sql.DB
+	pushSvc  *push.Service
+	notifSvc *notification.Service
 }
 
 // NewService creates a new reminder service.
-func NewService(db *sql.DB, pushSvc *push.Service) *Service {
-	return &Service{db: db, pushSvc: pushSvc}
+func NewService(db *sql.DB, pushSvc *push.Service, notificationServices ...*notification.Service) *Service {
+	service := &Service{db: db, pushSvc: pushSvc}
+	if len(notificationServices) > 0 {
+		service.notifSvc = notificationServices[0]
+	}
+	return service
 }
 
 // ProcessReminders finds events starting soon and sends reminders.
@@ -29,7 +35,7 @@ func (s *Service) ProcessReminders(reminderType string, duration time.Duration) 
 	windowEnd := windowStart.Add(duration).Add(5 * time.Minute) // small buffer
 
 	rows, err := s.db.Query(`
-		SELECT e.id, e.title, e.start_date
+		SELECT e.id, e.title, e.start_date, e.timezone
 		FROM events e
 		WHERE e.status = 'approved' AND e.is_published = true
 		  AND e.start_date >= $1 AND e.start_date <= $2
@@ -44,13 +50,16 @@ func (s *Service) ProcessReminders(reminderType string, duration time.Duration) 
 		var eventID uuid.UUID
 		var title string
 		var startDate time.Time
-		rows.Scan(&eventID, &title, &startDate)
+		var timezone string
+		if err := rows.Scan(&eventID, &title, &startDate, &timezone); err != nil {
+			continue
+		}
 
-		s.sendRemindersForEvent(eventID, title, startDate, reminderType)
+		s.sendRemindersForEvent(eventID, title, startDate, timezone, reminderType)
 	}
 }
 
-func (s *Service) sendRemindersForEvent(eventID uuid.UUID, title string, startDate time.Time, reminderType string) {
+func (s *Service) sendRemindersForEvent(eventID uuid.UUID, title string, startDate time.Time, timezone, reminderType string) {
 	// Get registered attendees who haven't received this reminder
 	rows, err := s.db.Query(`
 		SELECT a.user_id, u.email, u.name
@@ -69,11 +78,13 @@ func (s *Service) sendRemindersForEvent(eventID uuid.UUID, title string, startDa
 	defer rows.Close()
 
 	timeUntil := time.Until(startDate)
-	var timeStr string
+	var timeStr, reminderLabel string
 	if timeUntil.Hours() >= 20 {
 		timeStr = "tomorrow"
+		reminderLabel = "24 hours"
 	} else {
 		timeStr = "in 2 hours"
+		reminderLabel = "2 hours"
 	}
 
 	for rows.Next() {
@@ -81,8 +92,31 @@ func (s *Service) sendRemindersForEvent(eventID uuid.UUID, title string, startDa
 		var userEmail, userName string
 		rows.Scan(&userID, &userEmail, &userName)
 
-		// Send push notification
-		if s.pushSvc != nil {
+		if s.notifSvc != nil {
+			data := map[string]string{
+				"entity_type":    "event",
+				"entity_id":      eventID.String(),
+				"event_id":       eventID.String(),
+				"event_title":    title,
+				"start_at":       startDate.UTC().Format(time.RFC3339),
+				"timezone":       timezone,
+				"reminder_label": reminderLabel,
+			}
+			localized, err := s.notifSvc.CreateLocalized(userID, "event_reminder", data)
+			if err != nil {
+				log.Printf("[REMINDER] Notification error for %s: %v", userID, err)
+			} else if s.pushSvc != nil {
+				s.pushSvc.SendToUser(userID, localized.Title, localized.Message, map[string]string{
+					"type":      "event_reminder",
+					"event_id":  eventID.String(),
+					"entity_id": eventID.String(),
+				})
+			}
+		}
+
+		// Send the legacy English push only when this compatibility service was
+		// constructed without the shared notification service.
+		if s.pushSvc != nil && s.notifSvc == nil {
 			s.pushSvc.SendToUser(userID, "Event Reminder 🔔",
 				title+" starts "+timeStr,
 				map[string]string{"event_id": eventID.String()})

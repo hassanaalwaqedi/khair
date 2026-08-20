@@ -52,12 +52,15 @@ class AppNotification extends Equatable {
   /// Route path for deep-linking on notification tap
   String? get routePath {
     switch (notificationType) {
+      case 'event_join_confirmed':
       case 'event_joined':
       case 'event_reminder':
       case 'event_updated':
       case 'event_cancelled':
+      case 'event_participant_joined':
       case 'organizer_announcement':
       case 'organizer_message':
+      case 'new_participant':
         final eventId = data['event_id'];
         return eventId == null ? '/my-events' : '/events/$eventId';
       default:
@@ -66,5 +69,6 @@ class AppNotification extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, userId, title, message, notificationType, data, isRead, createdAt];
+  List<Object?> get props =>
+      [id, userId, title, message, notificationType, data, isRead, createdAt];
 }

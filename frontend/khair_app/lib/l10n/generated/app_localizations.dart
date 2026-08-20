@@ -916,6 +916,12 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
+  /// No description provided for @useDeviceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device language'**
+  String get useDeviceLanguage;
+
   /// No description provided for @english.
   ///
   /// In en, this message translates to:
@@ -3292,6 +3298,36 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get orgNotifications;
 
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @unreadNotificationsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} unread notifications'**
+  String unreadNotificationsCount(Object count);
+
+  /// No description provided for @notificationsAllCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up!'**
+  String get notificationsAllCaughtUp;
+
+  /// No description provided for @pushNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications on'**
+  String get pushNotificationsOn;
+
+  /// No description provided for @pushNotificationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications off'**
+  String get pushNotificationsOff;
+
   /// No description provided for @orgSettings.
   ///
   /// In en, this message translates to:
@@ -3963,6 +3999,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category'**
   String get mapFilterCategory;
+
+  /// No description provided for @anyDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Any date'**
+  String get anyDate;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrow;
 
   /// No description provided for @mapFilterAll.
   ///
@@ -4791,6 +4839,3464 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for an available support agent...'**
   String get waitingForSupportAgent;
+
+  /// No description provided for @greetingGoodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get greetingGoodMorning;
+
+  /// No description provided for @greetingGoodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingGoodAfternoon;
+
+  /// No description provided for @greetingGoodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingGoodEvening;
+
+  /// No description provided for @discoverHeadlinePre.
+  ///
+  /// In en, this message translates to:
+  /// **'Find events that'**
+  String get discoverHeadlinePre;
+
+  /// No description provided for @discoverHeadlineHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'inspire'**
+  String get discoverHeadlineHighlight;
+
+  /// No description provided for @discoverHeadlinePost.
+  ///
+  /// In en, this message translates to:
+  /// **' you'**
+  String get discoverHeadlinePost;
+
+  /// No description provided for @resultsForQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Results for \"{query}\"'**
+  String resultsForQuery(String query);
+
+  /// No description provided for @matchingEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching events'**
+  String get matchingEvents;
+
+  /// No description provided for @exploreMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore map'**
+  String get exploreMap;
+
+  /// No description provided for @featuredNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured near you'**
+  String get featuredNearYou;
+
+  /// No description provided for @eventsWorthTimeFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Events worth making time for'**
+  String get eventsWorthTimeFor;
+
+  /// No description provided for @happeningThisWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening this weekend'**
+  String get happeningThisWeekend;
+
+  /// No description provided for @planSomethingMeaningful.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan something meaningful'**
+  String get planSomethingMeaningful;
+
+  /// No description provided for @thisWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'This weekend'**
+  String get thisWeekend;
+
+  /// No description provided for @nearMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Near me'**
+  String get nearMe;
+
+  /// No description provided for @freeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get freeLabel;
+
+  /// No description provided for @chooseArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose area'**
+  String get chooseArea;
+
+  /// No description provided for @locationUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not update your location.'**
+  String get locationUpdateError;
+
+  /// No description provided for @filtersComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters coming soon'**
+  String get filtersComingSoon;
+
+  /// No description provided for @adjustFiltersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your filters or area.'**
+  String get adjustFiltersHint;
+
+  /// No description provided for @loadEventsError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load events right now.'**
+  String get loadEventsError;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @savedEventsUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t update your saved events.'**
+  String get savedEventsUpdateError;
+
+  /// No description provided for @discoverFreeEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover free events'**
+  String get discoverFreeEvents;
+
+  /// No description provided for @freePromoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore gatherings that don\'t cost a thing'**
+  String get freePromoSubtitle;
+
+  /// No description provided for @useCurrentLocationShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current location'**
+  String get useCurrentLocationShort;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @profileTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTooltip;
+
+  /// No description provided for @termsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Privacy'**
+  String get termsPrivacy;
+
+  /// No description provided for @pleaseReviewAndAcceptOurTermsT.
+  ///
+  /// In en, this message translates to:
+  /// **'Please review and accept our terms to continue.'**
+  String get pleaseReviewAndAcceptOurTermsT;
+
+  /// No description provided for @iAcceptThe.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the '**
+  String get iAcceptThe;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @acceptContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept & Continue'**
+  String get acceptContinue;
+
+  /// No description provided for @organizerAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer Agreement'**
+  String get organizerAgreement;
+
+  /// No description provided for @asAnEventOrganizerYouMustAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'As an event organizer, you must agree to additional terms.'**
+  String get asAnEventOrganizerYouMustAgree;
+
+  /// No description provided for @iAgreeToTheOrganizerAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the Organizer Agreement'**
+  String get iAgreeToTheOrganizerAgreement;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @discoverEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover events'**
+  String get discoverEvents;
+
+  /// No description provided for @weCouldn.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\\'**
+  String get weCouldn;
+
+  /// No description provided for @linkCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard!'**
+  String get linkCopiedToClipboard;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChanges;
+
+  /// No description provided for @yourUnsavedEditsWillBeLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Your unsaved edits will be lost.'**
+  String get yourUnsavedEditsWillBeLost;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @noEventsFound1.
+  ///
+  /// In en, this message translates to:
+  /// **'No Events Found'**
+  String get noEventsFound1;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No Results'**
+  String get noResults;
+
+  /// No description provided for @noReports.
+  ///
+  /// In en, this message translates to:
+  /// **'No Reports'**
+  String get noReports;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No Notifications'**
+  String get noNotifications;
+
+  /// No description provided for @noOrganizers.
+  ///
+  /// In en, this message translates to:
+  /// **'No Organizers'**
+  String get noOrganizers;
+
+  /// No description provided for @noAuditLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No Audit Logs'**
+  String get noAuditLogs;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Unavailable'**
+  String get locationUnavailable;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Error'**
+  String get connectionError;
+
+  /// No description provided for @tryAgain1.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain1;
+
+  /// No description provided for @myEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'My events'**
+  String get myEvents;
+
+  /// No description provided for @signIn1.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn1;
+
+  /// No description provided for @signInOrRegisterToCreateAnEven.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or register to create an event.'**
+  String get signInOrRegisterToCreateAnEven;
+
+  /// No description provided for @createEvent1.
+  ///
+  /// In en, this message translates to:
+  /// **'Create event'**
+  String get createEvent1;
+
+  /// No description provided for @organizerApplicationReviewQueu.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer application review queue'**
+  String get organizerApplicationReviewQueu;
+
+  /// No description provided for @supportInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Support Inbox'**
+  String get supportInbox;
+
+  /// No description provided for @verification.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification'**
+  String get verification;
+
+  /// No description provided for @areYouSureYouWantToReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reject '**
+  String get areYouSureYouWantToReject;
+
+  /// No description provided for @noUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No Users'**
+  String get noUsers;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found.'**
+  String get noUsersFound;
+
+  /// No description provided for @verified.
+  ///
+  /// In en, this message translates to:
+  /// **'VERIFIED'**
+  String get verified;
+
+  /// No description provided for @verifyUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify User'**
+  String get verifyUser;
+
+  /// No description provided for @promoteToOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote to Organizer'**
+  String get promoteToOrganizer;
+
+  /// No description provided for @promoteToAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote to Admin'**
+  String get promoteToAdmin;
+
+  /// No description provided for @suspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get suspend;
+
+  /// No description provided for @ban.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban'**
+  String get ban;
+
+  /// No description provided for @activate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get activate;
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @deleteQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Quote'**
+  String get deleteQuote;
+
+  /// No description provided for @areYouSureYouWantToDeleteThisQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this quote?'**
+  String get areYouSureYouWantToDeleteThisQ;
+
+  /// No description provided for @quoteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote deleted'**
+  String get quoteDeleted;
+
+  /// No description provided for @failedToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete'**
+  String get failedToDelete;
+
+  /// No description provided for @arabicText.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic Text'**
+  String get arabicText;
+
+  /// No description provided for @source.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get source;
+
+  /// No description provided for @reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get reference;
+
+  /// No description provided for @showOnHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Home'**
+  String get showOnHome;
+
+  /// No description provided for @showOnDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Dashboard'**
+  String get showOnDashboard;
+
+  /// No description provided for @showOnLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Login'**
+  String get showOnLogin;
+
+  /// No description provided for @failedToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save'**
+  String get failedToSave;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @noQuotesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No quotes yet'**
+  String get noQuotesYet;
+
+  /// No description provided for @titleAndMessageAreRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title and message are required'**
+  String get titleAndMessageAreRequired;
+
+  /// No description provided for @pleaseSelectAUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a user'**
+  String get pleaseSelectAUser;
+
+  /// No description provided for @sendNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Notification'**
+  String get sendNotification;
+
+  /// No description provided for @sendPushNotificationsToYourUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Send push notifications to your users'**
+  String get sendPushNotificationsToYourUse;
+
+  /// No description provided for @allUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'All Users'**
+  String get allUsers;
+
+  /// No description provided for @individual.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual'**
+  String get individual;
+
+  /// No description provided for @searchUserByNameOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Search user by name or email...'**
+  String get searchUserByNameOrEmail;
+
+  /// No description provided for @title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get title;
+
+  /// No description provided for @notificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification title...'**
+  String get notificationTitle;
+
+  /// No description provided for @writeYourNotificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your notification message...'**
+  String get writeYourNotificationMessage;
+
+  /// No description provided for @noPendingVerificationRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No Pending Verification Requests'**
+  String get noPendingVerificationRequests;
+
+  /// No description provided for @allVerificationRequestsHaveBee.
+  ///
+  /// In en, this message translates to:
+  /// **'All verification requests have been reviewed'**
+  String get allVerificationRequestsHaveBee;
+
+  /// No description provided for @userNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'User Notes:'**
+  String get userNotes;
+
+  /// No description provided for @viewCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'View Certificate'**
+  String get viewCertificate;
+
+  /// No description provided for @viewPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'View Photo'**
+  String get viewPhoto;
+
+  /// No description provided for @changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get changes;
+
+  /// No description provided for @adminReviewNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Review Notes:'**
+  String get adminReviewNotes;
+
+  /// No description provided for @failedToLoadImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load image'**
+  String get failedToLoadImage;
+
+  /// No description provided for @pleaseProvideAReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Please provide a reason'**
+  String get pleaseProvideAReason;
+
+  /// No description provided for @reviewEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Event'**
+  String get reviewEvent;
+
+  /// No description provided for @review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get review;
+
+  /// No description provided for @capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get capacity;
+
+  /// No description provided for @ticketAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket assigned'**
+  String get ticketAssigned;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @waitingForSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Support'**
+  String get waitingForSupport;
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get inProgress;
+
+  /// No description provided for @resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get resolved;
+
+  /// No description provided for @assignToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to me'**
+  String get assignToMe;
+
+  /// No description provided for @typeReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Type reply...'**
+  String get typeReply;
+
+  /// No description provided for @replyToUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to User'**
+  String get replyToUser;
+
+  /// No description provided for @internalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Note'**
+  String get internalNote;
+
+  /// No description provided for @noAuditLogsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit logs found'**
+  String get noAuditLogsFound;
+
+  /// No description provided for @filterLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Logs'**
+  String get filterLogs;
+
+  /// No description provided for @system.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
+
+  /// No description provided for @organizerApplications.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer applications'**
+  String get organizerApplications;
+
+  /// No description provided for @refreshQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh queue'**
+  String get refreshQueue;
+
+  /// No description provided for @needsChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs changes'**
+  String get needsChanges;
+
+  /// No description provided for @noApplicationsInThisQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'No applications in this queue'**
+  String get noApplicationsInThisQueue;
+
+  /// No description provided for @newSubmissionsWillAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'New submissions will appear here.'**
+  String get newSubmissionsWillAppearHere;
+
+  /// No description provided for @theOrganizerQueueCouldNotBeLoa.
+  ///
+  /// In en, this message translates to:
+  /// **'The organizer queue could not be loaded.'**
+  String get theOrganizerQueueCouldNotBeLoa;
+
+  /// No description provided for @organizerApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer application'**
+  String get organizerApplication;
+
+  /// No description provided for @refreshDossier.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh dossier'**
+  String get refreshDossier;
+
+  /// No description provided for @organizationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization description'**
+  String get organizationDescription;
+
+  /// No description provided for @eventPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Event plan'**
+  String get eventPlan;
+
+  /// No description provided for @applicantMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Applicant message'**
+  String get applicantMessage;
+
+  /// No description provided for @internalReviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal review note'**
+  String get internalReviewNote;
+
+  /// No description provided for @notSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get notSpecified;
+
+  /// No description provided for @viewPublicImage.
+  ///
+  /// In en, this message translates to:
+  /// **'View public image'**
+  String get viewPublicImage;
+
+  /// No description provided for @viewRepresentativePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'View representative photo'**
+  String get viewRepresentativePhoto;
+
+  /// No description provided for @officialPublicLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Official public links'**
+  String get officialPublicLinks;
+
+  /// No description provided for @noOfficialLinksProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'No official links provided'**
+  String get noOfficialLinksProvided;
+
+  /// No description provided for @evidenceEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence entries'**
+  String get evidenceEntries;
+
+  /// No description provided for @noAdditionalEvidenceProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'No additional evidence provided'**
+  String get noAdditionalEvidenceProvided;
+
+  /// No description provided for @privateVerificationDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Private verification documents'**
+  String get privateVerificationDocuments;
+
+  /// No description provided for @noPrivateDocumentsUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No private documents uploaded'**
+  String get noPrivateDocumentsUploaded;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @requestChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Request changes'**
+  String get requestChanges;
+
+  /// No description provided for @approveOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve organizer'**
+  String get approveOrganizer;
+
+  /// No description provided for @reasonCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason code'**
+  String get reasonCode;
+
+  /// No description provided for @egIdentityunverified.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. identity_unverified'**
+  String get egIdentityunverified;
+
+  /// No description provided for @internalNoteNotShownToApplican.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal note (not shown to applicant)'**
+  String get internalNoteNotShownToApplican;
+
+  /// No description provided for @theSecureImageCouldNotBeDispla.
+  ///
+  /// In en, this message translates to:
+  /// **'The secure image could not be displayed.'**
+  String get theSecureImageCouldNotBeDispla;
+
+  /// No description provided for @organizerTrustProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer Trust Profile'**
+  String get organizerTrustProfile;
+
+  /// No description provided for @trustActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust Actions'**
+  String get trustActions;
+
+  /// No description provided for @trustScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust Score'**
+  String get trustScore;
+
+  /// No description provided for @reasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (required)'**
+  String get reasonRequired;
+
+  /// No description provided for @reportDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Report dismissed'**
+  String get reportDismissed;
+
+  /// No description provided for @resolveReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve Report'**
+  String get resolveReport;
+
+  /// No description provided for @approveNoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve (No Action)'**
+  String get approveNoAction;
+
+  /// No description provided for @issueWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue Warning'**
+  String get issueWarning;
+
+  /// No description provided for @removeContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Content'**
+  String get removeContent;
+
+  /// No description provided for @recommendedForYou1.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended for You'**
+  String get recommendedForYou1;
+
+  /// No description provided for @ai.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ AI'**
+  String get ai;
+
+  /// No description provided for @viewEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'View event →'**
+  String get viewEvent;
+
+  /// No description provided for @checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get checkYourEmail;
+
+  /// No description provided for @verificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get verificationCode;
+
+  /// No description provided for @verifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify email'**
+  String get verifyEmail;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get resendCode;
+
+  /// No description provided for @backToEventDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to event discovery'**
+  String get backToEventDiscovery;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @signingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get signingIn;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with'**
+  String get orContinueWith;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @createOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Create one'**
+  String get createOne;
+
+  /// No description provided for @signInToContinueCreatingYourEv.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue creating your event.'**
+  String get signInToContinueCreatingYourEv;
+
+  /// No description provided for @createYourKhairAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your Khair account'**
+  String get createYourKhairAccount;
+
+  /// No description provided for @discoverEventsJoinCommunitiesB.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover events. Join communities. Be part of something meaningful.'**
+  String get discoverEventsJoinCommunitiesB;
+
+  /// No description provided for @orContinueWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with email'**
+  String get orContinueWithEmail;
+
+  /// No description provided for @creatingYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your account…'**
+  String get creatingYourAccount;
+
+  /// No description provided for @createAccount1.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount1;
+
+  /// No description provided for @alreadyHaveAnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAnAccount;
+
+  /// No description provided for @use8OrMoreCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 8 or more characters.'**
+  String get use8OrMoreCharacters;
+
+  /// No description provided for @g.
+  ///
+  /// In en, this message translates to:
+  /// **'G'**
+  String get g;
+
+  /// No description provided for @khairEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair events'**
+  String get khairEvents;
+
+  /// No description provided for @selectCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select country'**
+  String get selectCountry;
+
+  /// No description provided for @shareEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Share event'**
+  String get shareEvent;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @addToGoogleCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Google Calendar'**
+  String get addToGoogleCalendar;
+
+  /// No description provided for @viewOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View on map'**
+  String get viewOnMap;
+
+  /// No description provided for @mapPreviewIsUnavailableForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Map preview is unavailable for this event.'**
+  String get mapPreviewIsUnavailableForThis;
+
+  /// No description provided for @onlineEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Online event'**
+  String get onlineEvent;
+
+  /// No description provided for @joinProviderMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {provider} meeting'**
+  String joinProviderMeeting(Object provider);
+
+  /// No description provided for @verificationCodeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the six-digit code we sent to {email}.'**
+  String verificationCodeSentTo(Object email);
+
+  /// No description provided for @message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get message;
+
+  /// No description provided for @noAttentionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs your attention right now.'**
+  String get noAttentionNeeded;
+
+  /// No description provided for @organizerActivityWillAppear.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organizer activity will appear here.'**
+  String get organizerActivityWillAppear;
+
+  /// No description provided for @noConfirmedAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'No confirmed attendees yet.'**
+  String get noConfirmedAttendees;
+
+  /// No description provided for @loadingAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading analytics...'**
+  String get loadingAnalytics;
+
+  /// No description provided for @loadingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading profile...'**
+  String get loadingProfile;
+
+  /// No description provided for @theOrganizerHasNotAddedADescri.
+  ///
+  /// In en, this message translates to:
+  /// **'The organizer has not added a description yet.'**
+  String get theOrganizerHasNotAddedADescri;
+
+  /// No description provided for @verifiedOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified organizer'**
+  String get verifiedOrganizer;
+
+  /// No description provided for @eventOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Event organizer'**
+  String get eventOrganizer;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
+
+  /// No description provided for @attendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendees'**
+  String get attendees;
+
+  /// No description provided for @weCouldntLoadThisEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this event.'**
+  String get weCouldntLoadThisEvent;
+
+  /// No description provided for @theEventMayHaveBeenRemovedOrIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The event may have been removed or is temporarily unavailable.'**
+  String get theEventMayHaveBeenRemovedOrIs;
+
+  /// No description provided for @leaveEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave event?'**
+  String get leaveEvent;
+
+  /// No description provided for @yourReservationWillBeReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reservation will be released.'**
+  String get yourReservationWillBeReleased;
+
+  /// No description provided for @keepReservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep reservation'**
+  String get keepReservation;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @noJoinedEventsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No joined events yet'**
+  String get noJoinedEventsYet;
+
+  /// No description provided for @youAreRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'You are registered!'**
+  String get youAreRegistered;
+
+  /// No description provided for @mayThisGatheringBenefitYounyou.
+  ///
+  /// In en, this message translates to:
+  /// **'May this gathering benefit you.\\nYour seat has been confirmed.'**
+  String get mayThisGatheringBenefitYounyou;
+
+  /// No description provided for @thisIsAPaidEventPleaseRemember.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a paid event. Please remember to bring payment to the venue.'**
+  String get thisIsAPaidEventPleaseRemember;
+
+  /// No description provided for @viewMyEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'View My Events'**
+  String get viewMyEvents;
+
+  /// No description provided for @savedEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved events'**
+  String get savedEvents;
+
+  /// No description provided for @noSavedEventsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved events yet'**
+  String get noSavedEventsYet;
+
+  /// No description provided for @saveEventsYouWantToRevisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save events you want to revisit.'**
+  String get saveEventsYouWantToRevisit;
+
+  /// No description provided for @exploreEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore events'**
+  String get exploreEvents;
+
+  /// No description provided for @communityImpact.
+  ///
+  /// In en, this message translates to:
+  /// **'COMMUNITY IMPACT'**
+  String get communityImpact;
+
+  /// No description provided for @joinTheMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'JOIN THE MOVEMENT'**
+  String get joinTheMovement;
+
+  /// No description provided for @noFeaturedEventsRightNow.
+  ///
+  /// In en, this message translates to:
+  /// **'No featured events right now.'**
+  String get noFeaturedEventsRightNow;
+
+  /// No description provided for @searchForHalalEventsWorkshopsO.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for Halal events, workshops, or circles...'**
+  String get searchForHalalEventsWorkshopsO;
+
+  /// No description provided for @toUnlockOrganizerMode.
+  ///
+  /// In en, this message translates to:
+  /// **'to unlock organizer mode'**
+  String get toUnlockOrganizerMode;
+
+  /// No description provided for @viewDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'VIEW DASHBOARD'**
+  String get viewDashboard;
+
+  /// No description provided for @upcomingForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming for You'**
+  String get upcomingForYou;
+
+  /// No description provided for @noUpcomingEventsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming events found.'**
+  String get noUpcomingEventsFound;
+
+  /// No description provided for @attendees1.
+  ///
+  /// In en, this message translates to:
+  /// **'attendees'**
+  String get attendees1;
+
+  /// No description provided for @weCouldntUpdateYourSavedEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t update your saved events.'**
+  String get weCouldntUpdateYourSavedEvents;
+
+  /// No description provided for @recommendedForYou2.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended for you'**
+  String get recommendedForYou2;
+
+  /// No description provided for @searchEventsOrPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events or places'**
+  String get searchEventsOrPlaces;
+
+  /// No description provided for @exploreWhatsHappeningNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore what’s happening nearby'**
+  String get exploreWhatsHappeningNearby;
+
+  /// No description provided for @saveEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Save event'**
+  String get saveEvent;
+
+  /// No description provided for @nothingHappeningHereYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing happening here yet'**
+  String get nothingHappeningHereYet;
+
+  /// No description provided for @moveTheMapOrExploreAWiderArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the map or explore a wider area.'**
+  String get moveTheMapOrExploreAWiderArea;
+
+  /// No description provided for @exploreOnlineEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore online events'**
+  String get exploreOnlineEvents;
+
+  /// No description provided for @when.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get when;
+
+  /// No description provided for @freeOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Free only'**
+  String get freeOnly;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @signInToSaveEventsAndKeepThemI.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save events and keep them in sync.'**
+  String get signInToSaveEventsAndKeepThemI;
+
+  /// No description provided for @readAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Read all'**
+  String get readAll;
+
+  /// No description provided for @noNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotificationsYet;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You\\'**
+  String get you;
+
+  /// No description provided for @failedToLoadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load notifications'**
+  String get failedToLoadNotifications;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @notificationEventJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re registered 🎉'**
+  String get notificationEventJoinTitle;
+
+  /// No description provided for @notificationEventJoinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve successfully joined\n{eventTitle}'**
+  String notificationEventJoinBody(Object eventTitle);
+
+  /// No description provided for @notificationEventParticipantJoinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New participant joined'**
+  String get notificationEventParticipantJoinedTitle;
+
+  /// No description provided for @notificationEventParticipantJoinedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new participant joined your event:\n{eventTitle}'**
+  String notificationEventParticipantJoinedBody(Object eventTitle);
+
+  /// No description provided for @notificationViewEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'View event details'**
+  String get notificationViewEvent;
+
+  /// No description provided for @notificationOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get notificationOnline;
+
+  /// No description provided for @notificationLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'{location}'**
+  String notificationLocation(Object location);
+
+  /// No description provided for @notificationFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get notificationFree;
+
+  /// No description provided for @notificationPayAtVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} · Pay at venue'**
+  String notificationPayAtVenue(Object price);
+
+  /// No description provided for @notificationWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Khair 🎉'**
+  String get notificationWelcomeTitle;
+
+  /// No description provided for @notificationWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Assalamu Alaikum {firstName},\nWe\'re glad you\'re here. Start discovering events and communities that interest you.'**
+  String notificationWelcomeBody(Object firstName);
+
+  /// No description provided for @notificationWelcomeUnderReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Khair – Account under review'**
+  String get notificationWelcomeUnderReviewTitle;
+
+  /// No description provided for @notificationWelcomeUnderReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Assalamu Alaikum {firstName},\\nYour account is under review by the Khair team. We will notify you when the review is complete.'**
+  String notificationWelcomeUnderReviewBody(Object firstName);
+
+  /// No description provided for @notificationReceivedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Received {time}'**
+  String notificationReceivedAt(Object time);
+
+  /// No description provided for @notificationEventReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Event reminder'**
+  String get notificationEventReminderTitle;
+
+  /// No description provided for @notificationEventReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{eventTitle} starts in {reminderLabel}.'**
+  String notificationEventReminderBody(Object eventTitle, Object reminderLabel);
+
+  /// No description provided for @notificationUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread notification'**
+  String get notificationUnread;
+
+  /// No description provided for @notificationClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close notification'**
+  String get notificationClose;
+
+  /// No description provided for @createAnEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an event'**
+  String get createAnEvent;
+
+  /// No description provided for @saveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save draft'**
+  String get saveDraft;
+
+  /// No description provided for @letsStartWithTheBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Let’s start with the basics'**
+  String get letsStartWithTheBasics;
+
+  /// No description provided for @tellPeopleWhatYourEventIsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell people what your event is about.'**
+  String get tellPeopleWhatYourEventIsAbout;
+
+  /// No description provided for @eventTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Event title'**
+  String get eventTitle1;
+
+  /// No description provided for @suggestCategoryWithAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest category with AI'**
+  String get suggestCategoryWithAi;
+
+  /// No description provided for @whenAndWhereIsItHappening.
+  ///
+  /// In en, this message translates to:
+  /// **'When and where is it happening?'**
+  String get whenAndWhereIsItHappening;
+
+  /// No description provided for @giveAttendeesTheDetailsTheyNee.
+  ///
+  /// In en, this message translates to:
+  /// **'Give attendees the details they need to plan ahead.'**
+  String get giveAttendeesTheDetailsTheyNee;
+
+  /// No description provided for @timezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get timezone;
+
+  /// No description provided for @venueName.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue name'**
+  String get venueName;
+
+  /// No description provided for @streetAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Street address'**
+  String get streetAddress;
+
+  /// No description provided for @pinpointTheLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinpoint the location'**
+  String get pinpointTheLocation;
+
+  /// No description provided for @meetingUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting URL'**
+  String get meetingUrl;
+
+  /// No description provided for @instructionsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions (optional)'**
+  String get instructionsOptional;
+
+  /// No description provided for @whoIsThisEventFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is this event for?'**
+  String get whoIsThisEventFor;
+
+  /// No description provided for @setAttendanceAndAccessPreferen.
+  ///
+  /// In en, this message translates to:
+  /// **'Set attendance and access preferences.'**
+  String get setAttendanceAndAccessPreferen;
+
+  /// No description provided for @unlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get unlimited;
+
+  /// No description provided for @limited.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited'**
+  String get limited;
+
+  /// No description provided for @paidOnlineEventsAreNotSupporte.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid online events are not supported yet.'**
+  String get paidOnlineEventsAreNotSupporte;
+
+  /// No description provided for @price.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get price;
+
+  /// No description provided for @currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @anythingAttendeesShouldKnowOpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything attendees should know? (optional)'**
+  String get anythingAttendeesShouldKnowOpt;
+
+  /// No description provided for @makeYourEventStandOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your event stand out'**
+  String get makeYourEventStandOut;
+
+  /// No description provided for @addAStrongCoverImageSoPeopleIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a strong cover image so people instantly understand your event.'**
+  String get addAStrongCoverImageSoPeopleIn;
+
+  /// No description provided for @replaceCoverImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace cover image'**
+  String get replaceCoverImage;
+
+  /// No description provided for @jpgPngOrWebpUpTo10Mb169Recomme.
+  ///
+  /// In en, this message translates to:
+  /// **'JPG, PNG or WebP · up to 10 MB · 16:9 recommended'**
+  String get jpgPngOrWebpUpTo10Mb169Recomme;
+
+  /// No description provided for @reviewYourEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your event'**
+  String get reviewYourEvent;
+
+  /// No description provided for @makeSureEverythingLooksRightBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure everything looks right before sending it to Khair moderation.'**
+  String get makeSureEverythingLooksRightBe;
+
+  /// No description provided for @readyToSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to submit'**
+  String get readyToSubmit;
+
+  /// No description provided for @submission.
+  ///
+  /// In en, this message translates to:
+  /// **'Submission'**
+  String get submission;
+
+  /// No description provided for @yourEventWillBeSavedAsPendingR.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event will be saved as pending review. It becomes discoverable only after admin approval.'**
+  String get yourEventWillBeSavedAsPendingR;
+
+  /// No description provided for @iConfirmTheseEventDetailsAreAc.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm these event details are accurate.'**
+  String get iConfirmTheseEventDetailsAreAc;
+
+  /// No description provided for @aiSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'AI suggestion'**
+  String get aiSuggestion;
+
+  /// No description provided for @yourEventIsUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event is under review'**
+  String get yourEventIsUnderReview;
+
+  /// No description provided for @yourEventHasBeenSubmittedForRe.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event has been submitted for review. We will notify you when moderation is complete.'**
+  String get yourEventHasBeenSubmittedForRe;
+
+  /// No description provided for @backToOrganizerHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Organizer Hub'**
+  String get backToOrganizerHub;
+
+  /// No description provided for @chooseACoverImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a cover image'**
+  String get chooseACoverImage;
+
+  /// No description provided for @dragAndDropOrTapToBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag and drop or tap to browse'**
+  String get dragAndDropOrTapToBrowse;
+
+  /// No description provided for @livePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get livePreview;
+
+  /// No description provided for @whatDoesThisDocumentVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this document verify?'**
+  String get whatDoesThisDocumentVerify;
+
+  /// No description provided for @closeOrganizerApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Close organizer application'**
+  String get closeOrganizerApplication;
+
+  /// No description provided for @becomeAnOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Become an organizer'**
+  String get becomeAnOrganizer;
+
+  /// No description provided for @countryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Country code'**
+  String get countryCode;
+
+  /// No description provided for @tr.
+  ///
+  /// In en, this message translates to:
+  /// **'TR'**
+  String get tr;
+
+  /// No description provided for @publicLogoOrProfileImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Public logo or profile image'**
+  String get publicLogoOrProfileImage;
+
+  /// No description provided for @jpgPngOrWebpUpTo5MbPrivateUnti.
+  ///
+  /// In en, this message translates to:
+  /// **'JPG, PNG, or WebP · up to 5 MB. Private until approved.'**
+  String get jpgPngOrWebpUpTo5MbPrivateUnti;
+
+  /// No description provided for @publicRepresentativePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Public representative photo'**
+  String get publicRepresentativePhoto;
+
+  /// No description provided for @requiredForIndividualOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for individual organizers. Visible only after approval.'**
+  String get requiredForIndividualOrganizer;
+
+  /// No description provided for @officialLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Official links'**
+  String get officialLinks;
+
+  /// No description provided for @optionalButUsefulForAFasterRev.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, but useful for a faster review. Only add official public links.'**
+  String get optionalButUsefulForAFasterRev;
+
+  /// No description provided for @verificationEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification evidence'**
+  String get verificationEvidence;
+
+  /// No description provided for @documentsAreEncryptedInPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents are encrypted in private storage and are accessible only to authorized Khair reviewers.'**
+  String get documentsAreEncryptedInPrivate;
+
+  /// No description provided for @uploadVerificationDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload verification document'**
+  String get uploadVerificationDocument;
+
+  /// No description provided for @plannedEventCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned event categories'**
+  String get plannedEventCategories;
+
+  /// No description provided for @typicalAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical audience'**
+  String get typicalAudience;
+
+  /// No description provided for @iAcceptTheKhairOrganizerStanda.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Khair Organizer Standards'**
+  String get iAcceptTheKhairOrganizerStanda;
+
+  /// No description provided for @iWillKeepEventsSafeRespectfulA.
+  ///
+  /// In en, this message translates to:
+  /// **'I will keep events safe, respectful, accurate, and inclusive. Version 2026-08.'**
+  String get iWillKeepEventsSafeRespectfulA;
+
+  /// No description provided for @readOrganizerStandardsV202608.
+  ///
+  /// In en, this message translates to:
+  /// **'Read Organizer Standards · v2026-08'**
+  String get readOrganizerStandardsV202608;
+
+  /// No description provided for @khairOrganizerStandards.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair Organizer Standards'**
+  String get khairOrganizerStandards;
+
+  /// No description provided for @version202608.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 2026-08'**
+  String get version202608;
+
+  /// No description provided for @iUnderstand.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand'**
+  String get iUnderstand;
+
+  /// No description provided for @evidenceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence type'**
+  String get evidenceType;
+
+  /// No description provided for @overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @past.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get past;
+
+  /// No description provided for @eventsByType.
+  ///
+  /// In en, this message translates to:
+  /// **'Events by Type'**
+  String get eventsByType;
+
+  /// No description provided for @noEventDataToDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'No event data to display'**
+  String get noEventDataToDisplay;
+
+  /// No description provided for @notifyAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify Attendees'**
+  String get notifyAttendees;
+
+  /// No description provided for @sendMessageToAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Message to Attendees'**
+  String get sendMessageToAttendees;
+
+  /// No description provided for @messageWillBeSentAsPushNotific.
+  ///
+  /// In en, this message translates to:
+  /// **'Message will be sent as push notification and in-app notification to all confirmed attendees of '**
+  String get messageWillBeSentAsPushNotific;
+
+  /// No description provided for @typeYourMessageToAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message to attendees...'**
+  String get typeYourMessageToAttendees;
+
+  /// No description provided for @includeEventLinkInNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Include event link in notification'**
+  String get includeEventLinkInNotification;
+
+  /// No description provided for @messageSentToAllAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent to all attendees!'**
+  String get messageSentToAllAttendees;
+
+  /// No description provided for @eventStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Event status'**
+  String get eventStatus;
+
+  /// No description provided for @backToMyEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to My Events'**
+  String get backToMyEvents;
+
+  /// No description provided for @organizerHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer Hub'**
+  String get organizerHub;
+
+  /// No description provided for @draftEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get draftEvents;
+
+  /// No description provided for @noDraftEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No draft events.'**
+  String get noDraftEvents;
+
+  /// No description provided for @noPastEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No past events.'**
+  String get noPastEvents;
+
+  /// No description provided for @organizerRangeLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'in the last 7 days'**
+  String get organizerRangeLast7Days;
+
+  /// No description provided for @organizerRangeThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get organizerRangeThisMonth;
+
+  /// No description provided for @organizerRangeLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'last month'**
+  String get organizerRangeLastMonth;
+
+  /// No description provided for @organizerRangeSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'in your selected range'**
+  String get organizerRangeSelected;
+
+  /// No description provided for @organizerRangeLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'in the last 30 days'**
+  String get organizerRangeLast30Days;
+
+  /// No description provided for @organizerSummaryNoUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have an upcoming event yet. You have {attendees} confirmed attendees {range}.'**
+  String organizerSummaryNoUpcoming(Object attendees, Object range);
+
+  /// No description provided for @organizerSummaryUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {upcoming} upcoming {eventsLabel} and {attendees} confirmed attendees {range}.'**
+  String organizerSummaryUpcoming(
+      Object attendees, Object eventsLabel, Object range, Object upcoming);
+
+  /// No description provided for @organizerEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'event'**
+  String get organizerEvent;
+
+  /// No description provided for @organizerEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'events'**
+  String get organizerEvents;
+
+  /// No description provided for @performanceViewsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Unique event-detail viewers in the selected range'**
+  String get performanceViewsRange;
+
+  /// No description provided for @performanceJoinsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed unique joins in the selected range'**
+  String get performanceJoinsRange;
+
+  /// No description provided for @yourNextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next event'**
+  String get yourNextEvent;
+
+  /// No description provided for @upcomingEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming events'**
+  String get upcomingEvents;
+
+  /// No description provided for @confirmedAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed attendees'**
+  String get confirmedAttendees;
+
+  /// No description provided for @eventViews.
+  ///
+  /// In en, this message translates to:
+  /// **'Event views'**
+  String get eventViews;
+
+  /// No description provided for @joinRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Join rate'**
+  String get joinRate;
+
+  /// No description provided for @manageEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage event'**
+  String get manageEvent;
+
+  /// No description provided for @sendUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Send update'**
+  String get sendUpdate;
+
+  /// No description provided for @readyToHostYourNextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to host your next event?'**
+  String get readyToHostYourNextEvent;
+
+  /// No description provided for @createAnEventAndStartBuildingY.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an event and start building your community.'**
+  String get createAnEventAndStartBuildingY;
+
+  /// No description provided for @yourEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Your events'**
+  String get yourEvents;
+
+  /// No description provided for @eventActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Event actions'**
+  String get eventActions;
+
+  /// No description provided for @viewAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'View attendees'**
+  String get viewAttendees;
+
+  /// No description provided for @needsYourAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs your attention'**
+  String get needsYourAttention;
+
+  /// No description provided for @performance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get performance;
+
+  /// No description provided for @views.
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get views;
+
+  /// No description provided for @joins.
+  ///
+  /// In en, this message translates to:
+  /// **'Joins'**
+  String get joins;
+
+  /// No description provided for @noPerformanceDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No performance data yet.'**
+  String get noPerformanceDataYet;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get recentActivity;
+
+  /// No description provided for @noAttendeesYetTheyWillAppearHe.
+  ///
+  /// In en, this message translates to:
+  /// **'No attendees yet. They will appear here.'**
+  String get noAttendeesYetTheyWillAppearHe;
+
+  /// No description provided for @weCouldntLoadYourOrganizerHub.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your Organizer Hub.'**
+  String get weCouldntLoadYourOrganizerHub;
+
+  /// No description provided for @sendAnEventUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an event update'**
+  String get sendAnEventUpdate;
+
+  /// No description provided for @aShortUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A short update title'**
+  String get aShortUpdateTitle;
+
+  /// No description provided for @updateType.
+  ///
+  /// In en, this message translates to:
+  /// **'Update type'**
+  String get updateType;
+
+  /// No description provided for @generalUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'General update'**
+  String get generalUpdate;
+
+  /// No description provided for @scheduleUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule update'**
+  String get scheduleUpdate;
+
+  /// No description provided for @reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminder;
+
+  /// No description provided for @importantUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Important update'**
+  String get importantUpdate;
+
+  /// No description provided for @writeTheUpdateForAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the update for attendees'**
+  String get writeTheUpdateForAttendees;
+
+  /// No description provided for @failedToUploadImagePleaseTryAg.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload image. Please try again.'**
+  String get failedToUploadImagePleaseTryAg;
+
+  /// No description provided for @profileUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSuccessfully;
+
+  /// No description provided for @organizerProfile1.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer profile'**
+  String get organizerProfile1;
+
+  /// No description provided for @organizerProfileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer profile not found.'**
+  String get organizerProfileNotFound;
+
+  /// No description provided for @editProfile1.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile1;
+
+  /// No description provided for @yourEventProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event profile'**
+  String get yourEventProfile;
+
+  /// No description provided for @keepTheseDetailsCurrentSoKhair.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep these details current so Khair can personalize your event experience.'**
+  String get keepTheseDetailsCurrentSoKhair;
+
+  /// No description provided for @displayName1.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get displayName1;
+
+  /// No description provided for @loadingYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your profile…'**
+  String get loadingYourProfile;
+
+  /// No description provided for @accountInformation1.
+  ///
+  /// In en, this message translates to:
+  /// **'Account information'**
+  String get accountInformation1;
+
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @emailUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Email updates'**
+  String get emailUpdates;
+
+  /// No description provided for @emailNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications on'**
+  String get emailNotificationsOn;
+
+  /// No description provided for @emailNotificationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications off'**
+  String get emailNotificationsOff;
+
+  /// No description provided for @couldNotUpdateYourPreferencePl.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your preference. Please try again.'**
+  String get couldNotUpdateYourPreferencePl;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAll;
+
+  /// No description provided for @noUpcomingEventsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming events yet'**
+  String get noUpcomingEventsYet;
+
+  /// No description provided for @discoverSomethingWorthShowingU.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover something worth showing up for.'**
+  String get discoverSomethingWorthShowingU;
+
+  /// No description provided for @signOut1.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut1;
+
+  /// No description provided for @weCouldntLoadYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your profile.'**
+  String get weCouldntLoadYourProfile;
+
+  /// No description provided for @checkYourConnectionAndTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get checkYourConnectionAndTryAgain;
+
+  /// No description provided for @lastUpdatedAugust2026.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: August 2026'**
+  String get lastUpdatedAugust2026;
+
+  /// No description provided for @khairSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair Support'**
+  String get khairSupport;
+
+  /// No description provided for @youAreChattingWithKhairAi.
+  ///
+  /// In en, this message translates to:
+  /// **'You are chatting with Khair AI'**
+  String get youAreChattingWithKhairAi;
+
+  /// No description provided for @thisTicketHasBeenResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'This ticket has been resolved.'**
+  String get thisTicketHasBeenResolved;
+
+  /// No description provided for @applyForOfficialnorganizerStat.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply for Official\\nOrganizer Status'**
+  String get applyForOfficialnorganizerStat;
+
+  /// No description provided for @uploadYourDocumentsSoOurTeamCa.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your documents so our team can verify your identity'**
+  String get uploadYourDocumentsSoOurTeamCa;
+
+  /// No description provided for @officialProfileImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Profile Image'**
+  String get officialProfileImage;
+
+  /// No description provided for @qualificationDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Qualification Document'**
+  String get qualificationDocument;
+
+  /// No description provided for @iConfirmThatAllProvidedDocumen.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm that all provided documents are authentic and I am authorized to represent this organization.'**
+  String get iConfirmThatAllProvidedDocumen;
+
+  /// No description provided for @skipForNowI.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now — I\\'**
+  String get skipForNowI;
+
+  /// No description provided for @submitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted!'**
+  String get submitted;
+
+  /// No description provided for @yourVerificationRequestHasBeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your verification request has been submitted. Our team will review it within 24–48 hours. You\\'**
+  String get yourVerificationRequestHasBeen;
+
+  /// No description provided for @startExploring.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Exploring'**
+  String get startExploring;
+
+  /// No description provided for @revisionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} revisions'**
+  String revisionCount(int count);
+
+  /// No description provided for @supportTicketSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ({email})\\nStatus: {status} | Priority: {priority}'**
+  String supportTicketSummary(
+      Object name, Object email, Object status, Object priority);
+
+  /// No description provided for @assignedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned: {name}'**
+  String assignedTo(Object name);
+
+  /// No description provided for @aiSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'AI summary: {summary}'**
+  String aiSummary(Object summary);
+
+  /// No description provided for @privateDocumentType.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · private'**
+  String privateDocumentType(Object type);
+
+  /// No description provided for @countryDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'{flag} {name}'**
+  String countryDisplayName(Object flag, Object name);
+
+  /// No description provided for @eventsInArea.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events in this area'**
+  String eventsInArea(int count);
+
+  /// No description provided for @eventDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · {time}'**
+  String eventDateTime(Object date, Object time);
+
+  /// No description provided for @createEventStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of 5'**
+  String createEventStep(int step);
+
+  /// No description provided for @createEventStepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **' · {label}'**
+  String createEventStepLabel(Object label);
+
+  /// No description provided for @progressPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String progressPercent(int percent);
+
+  /// No description provided for @organizerApplicationStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer application step {step} of 4'**
+  String organizerApplicationStep(int step);
+
+  /// No description provided for @stepNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'{number}'**
+  String stepNumber(int number);
+
+  /// No description provided for @submittedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted {date}'**
+  String submittedOn(Object date);
+
+  /// No description provided for @documentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Doc: {type}'**
+  String documentType(Object type);
+
+  /// No description provided for @reportsManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports Management'**
+  String get reportsManagement;
+
+  /// No description provided for @filterLabelCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({count})'**
+  String filterLabelCount(Object label, int count);
+
+  /// No description provided for @organizerAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account does not have access to the organizer application.'**
+  String get organizerAccessDenied;
+
+  /// No description provided for @organizerApplicationLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not load your organizer application. Try again.'**
+  String get organizerApplicationLoadFailed;
+
+  /// No description provided for @draftSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not save your draft.'**
+  String get draftSaveFailed;
+
+  /// No description provided for @enterPublicOrganizerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your public organizer name.'**
+  String get enterPublicOrganizerName;
+
+  /// No description provided for @enterResponsibleRepresentative.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the responsible representative.'**
+  String get enterResponsibleRepresentative;
+
+  /// No description provided for @enterVerifiedAccountEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your verified account email.'**
+  String get enterVerifiedAccountEmail;
+
+  /// No description provided for @enterCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your city.'**
+  String get enterCity;
+
+  /// No description provided for @organizationDescriptionMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least 50 characters about your organization.'**
+  String get organizationDescriptionMinLength;
+
+  /// No description provided for @uploadLogoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a public logo or profile image.'**
+  String get uploadLogoRequired;
+
+  /// No description provided for @uploadRepresentativePhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your public profile photo.'**
+  String get uploadRepresentativePhotoRequired;
+
+  /// No description provided for @eventPlanMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your event plan in at least 50 characters.'**
+  String get eventPlanMinLength;
+
+  /// No description provided for @chooseEventCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one planned event category.'**
+  String get chooseEventCategory;
+
+  /// No description provided for @acceptOrganizerStandards.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the Khair Organizer Standards to continue.'**
+  String get acceptOrganizerStandards;
+
+  /// No description provided for @organizerApplicationSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not submit your application.'**
+  String get organizerApplicationSubmitFailed;
+
+  /// No description provided for @imageUploadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload complete. Your image remains private until approval.'**
+  String get imageUploadComplete;
+
+  /// No description provided for @imageUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image upload failed.'**
+  String get imageUploadFailed;
+
+  /// No description provided for @documentUploadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification document uploaded securely.'**
+  String get documentUploadComplete;
+
+  /// No description provided for @documentUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Document upload failed.'**
+  String get documentUploadFailed;
+
+  /// No description provided for @organizationRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization registration'**
+  String get organizationRegistration;
+
+  /// No description provided for @charityRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Charity registration'**
+  String get charityRegistration;
+
+  /// No description provided for @communityDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Community document'**
+  String get communityDocument;
+
+  /// No description provided for @schoolCompanyDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'School or company document'**
+  String get schoolCompanyDocument;
+
+  /// No description provided for @otherSupportingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Other supporting document'**
+  String get otherSupportingDocument;
+
+  /// No description provided for @addHttpsLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a complete https:// link.'**
+  String get addHttpsLink;
+
+  /// No description provided for @addEvidenceUrlOrNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a URL or a short note for this evidence.'**
+  String get addEvidenceUrlOrNote;
+
+  /// No description provided for @addHttpsEvidenceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a complete https:// evidence URL.'**
+  String get addHttpsEvidenceUrl;
+
+  /// No description provided for @savingDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving?'**
+  String get savingDraft;
+
+  /// No description provided for @draftSavedSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft saved securely'**
+  String get draftSavedSecurely;
+
+  /// No description provided for @submitForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit for review'**
+  String get submitForReview;
+
+  /// No description provided for @tellUsAboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about you'**
+  String get tellUsAboutYou;
+
+  /// No description provided for @buildTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Build trust'**
+  String get buildTrust;
+
+  /// No description provided for @reviewYourApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your application'**
+  String get reviewYourApplication;
+
+  /// No description provided for @tellUsAboutYouDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the public identity people will see on Khair.'**
+  String get tellUsAboutYouDescription;
+
+  /// No description provided for @buildTrustDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the image and optional evidence that help us verify your application.'**
+  String get buildTrustDescription;
+
+  /// No description provided for @yourEventsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the kinds of safe, meaningful events you plan to host.'**
+  String get yourEventsDescription;
+
+  /// No description provided for @reviewYourApplicationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the details before sending your application to the Khair review team.'**
+  String get reviewYourApplicationDescription;
+
+  /// No description provided for @organizerType.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer type'**
+  String get organizerType;
+
+  /// No description provided for @company.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get company;
+
+  /// No description provided for @school.
+  ///
+  /// In en, this message translates to:
+  /// **'School'**
+  String get school;
+
+  /// No description provided for @other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get other;
+
+  /// No description provided for @publicOrganizerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Public organizer name'**
+  String get publicOrganizerName;
+
+  /// No description provided for @responsibleRepresentative.
+  ///
+  /// In en, this message translates to:
+  /// **'Responsible representative'**
+  String get responsibleRepresentative;
+
+  /// No description provided for @verifiedAccountEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified account email'**
+  String get verifiedAccountEmail;
+
+  /// No description provided for @phoneInternationalOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional, international format)'**
+  String get phoneInternationalOptional;
+
+  /// No description provided for @aboutYourOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'About your organization'**
+  String get aboutYourOrganization;
+
+  /// No description provided for @aboutYourOrganizationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Who are you, what is your purpose, and why should the Khair community trust your events?'**
+  String get aboutYourOrganizationHint;
+
+  /// No description provided for @eventPlanDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your event ideas, frequency, safety plan, and the value for your community.'**
+  String get eventPlanDescriptionHint;
+
+  /// No description provided for @lecture.
+  ///
+  /// In en, this message translates to:
+  /// **'Lecture'**
+  String get lecture;
+
+  /// No description provided for @workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop'**
+  String get workshop;
+
+  /// No description provided for @conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference'**
+  String get conference;
+
+  /// No description provided for @technology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get technology;
+
+  /// No description provided for @education.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get education;
+
+  /// No description provided for @socialGathering.
+  ///
+  /// In en, this message translates to:
+  /// **'Social gathering'**
+  String get socialGathering;
+
+  /// No description provided for @everyone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get everyone;
+
+  /// No description provided for @families.
+  ///
+  /// In en, this message translates to:
+  /// **'Families'**
+  String get families;
+
+  /// No description provided for @students.
+  ///
+  /// In en, this message translates to:
+  /// **'Students'**
+  String get students;
+
+  /// No description provided for @professionals.
+  ///
+  /// In en, this message translates to:
+  /// **'Professionals'**
+  String get professionals;
+
+  /// No description provided for @men.
+  ///
+  /// In en, this message translates to:
+  /// **'Men'**
+  String get men;
+
+  /// No description provided for @women.
+  ///
+  /// In en, this message translates to:
+  /// **'Women'**
+  String get women;
+
+  /// No description provided for @secureDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure document'**
+  String get secureDocument;
+
+  /// No description provided for @organizerRuleAccurate.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish accurate, complete event information and update attendees promptly when plans change.'**
+  String get organizerRuleAccurate;
+
+  /// No description provided for @organizerRuleSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Create safe, respectful gatherings. Do not discriminate, harass, mislead, or facilitate harmful activity.'**
+  String get organizerRuleSafe;
+
+  /// No description provided for @organizerRuleRights.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only images, names, documents, and links you are entitled to share.'**
+  String get organizerRuleRights;
+
+  /// No description provided for @organizerRulePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect attendee privacy and never use Khair data for unsolicited contact or unrelated marketing.'**
+  String get organizerRulePrivacy;
+
+  /// No description provided for @organizerRuleLaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow local law, venue requirements, and Khair content and community policies.'**
+  String get organizerRuleLaw;
+
+  /// No description provided for @organizerRuleReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooperate with review requests and keep your organizer profile and verification material current.'**
+  String get organizerRuleReview;
+
+  /// No description provided for @publicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile'**
+  String get publicProfile;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
+
+  /// No description provided for @representative.
+  ///
+  /// In en, this message translates to:
+  /// **'Representative'**
+  String get representative;
+
+  /// No description provided for @contactEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact email'**
+  String get contactEmail;
+
+  /// No description provided for @trustMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust material'**
+  String get trustMaterial;
+
+  /// No description provided for @publicImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Public image'**
+  String get publicImage;
+
+  /// No description provided for @uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get uploaded;
+
+  /// No description provided for @missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get missing;
+
+  /// No description provided for @added.
+  ///
+  /// In en, this message translates to:
+  /// **'added'**
+  String get added;
+
+  /// No description provided for @evidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence'**
+  String get evidence;
+
+  /// No description provided for @privateDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Private documents'**
+  String get privateDocuments;
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {label}'**
+  String itemsCount(int count, String label);
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @audience.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get audience;
+
+  /// No description provided for @standards.
+  ///
+  /// In en, this message translates to:
+  /// **'Standards'**
+  String get standards;
+
+  /// No description provided for @accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get accepted;
+
+  /// No description provided for @notAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted'**
+  String get notAccepted;
+
+  /// No description provided for @reviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'A Khair admin will review this application. You will receive an in-app notification, push notification when available, and an email after a decision.'**
+  String get reviewNotice;
+
+  /// No description provided for @organizerApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'You are approved to organize'**
+  String get organizerApproved;
+
+  /// No description provided for @applicationNeedsChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Your application needs changes'**
+  String get applicationNeedsChanges;
+
+  /// No description provided for @applicationNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your application was not approved'**
+  String get applicationNotApproved;
+
+  /// No description provided for @organizerAccountSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organizer account is suspended'**
+  String get organizerAccountSuspended;
+
+  /// No description provided for @applicationIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Your application is incomplete'**
+  String get applicationIncomplete;
+
+  /// No description provided for @applicationUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your application is under review'**
+  String get applicationUnderReview;
+
+  /// No description provided for @organizerToolsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer tools are now available on your account.'**
+  String get organizerToolsAvailable;
+
+  /// No description provided for @reviewFeedbackAndResubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the feedback, update your draft, and submit again when ready.'**
+  String get reviewFeedbackAndResubmit;
+
+  /// No description provided for @applicationClosedContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'This application is closed. Contact Khair support if you need help with the decision.'**
+  String get applicationClosedContactSupport;
+
+  /// No description provided for @contactSupportForMoreInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Khair support for more information.'**
+  String get contactSupportForMoreInformation;
+
+  /// No description provided for @completeApplicationToOrganize.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete and submit your application to start organizing events.'**
+  String get completeApplicationToOrganize;
+
+  /// No description provided for @applicationWithReviewTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details, evidence, and event plan are securely with the Khair review team.'**
+  String get applicationWithReviewTeam;
+
+  /// No description provided for @reasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason:'**
+  String get reasonLabel;
+
+  /// No description provided for @openOrganizerHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Open organizer hub'**
+  String get openOrganizerHub;
+
+  /// No description provided for @updateApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Update application'**
+  String get updateApplication;
+
+  /// No description provided for @backToDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to discover'**
+  String get backToDiscover;
+
+  /// No description provided for @refreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh status'**
+  String get refreshStatus;
+
+  /// No description provided for @uploadedSecurelyTapToReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded securely. Tap to replace.'**
+  String get uploadedSecurelyTapToReplace;
+
+  /// No description provided for @replaceImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get replaceImage;
+
+  /// No description provided for @chooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get chooseImage;
+
+  /// No description provided for @httpsLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://?'**
+  String get httpsLinkHint;
+
+  /// No description provided for @evidenceUrlOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence URL (optional)'**
+  String get evidenceUrlOptional;
+
+  /// No description provided for @shortNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Short note (optional)'**
+  String get shortNoteOptional;
+
+  /// No description provided for @instagram.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get instagram;
+
+  /// No description provided for @facebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook'**
+  String get facebook;
+
+  /// No description provided for @linkedin.
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get linkedin;
+
+  /// No description provided for @officialWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Official website'**
+  String get officialWebsite;
+
+  /// No description provided for @verifiedSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified social account'**
+  String get verifiedSocial;
+
+  /// No description provided for @notProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not provided'**
+  String get notProvided;
+
+  /// No description provided for @optionalButUsefulForFasterReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, but useful for a faster review. Only add official public links.'**
+  String get optionalButUsefulForFasterReview;
+
+  /// No description provided for @whatEventsWillYouHost.
+  ///
+  /// In en, this message translates to:
+  /// **'What events will you host?'**
+  String get whatEventsWillYouHost;
+
+  /// No description provided for @sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get sending;
+
+  /// No description provided for @passwordWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get passwordWeak;
+
+  /// No description provided for @passwordGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get passwordGood;
+
+  /// No description provided for @passwordStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get passwordStrong;
+
+  /// No description provided for @postEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Post event'**
+  String get postEvent;
+
+  /// No description provided for @postingEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting…'**
+  String get postingEvent;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @eventFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get eventFallback;
+
+  /// No description provided for @dateToBeAnnounced.
+  ///
+  /// In en, this message translates to:
+  /// **'Date to be announced'**
+  String get dateToBeAnnounced;
+
+  /// No description provided for @locationToBeAnnounced.
+  ///
+  /// In en, this message translates to:
+  /// **'Location to be announced'**
+  String get locationToBeAnnounced;
+
+  /// No description provided for @notificationSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification sent to {count} user(s)'**
+  String notificationSentTo(int count);
+
+  /// No description provided for @failedToSendNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send notification'**
+  String get failedToSendNotification;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @editQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Quote'**
+  String get editQuote;
+
+  /// No description provided for @addQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Quote'**
+  String get addQuote;
+
+  /// No description provided for @quoteUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote updated'**
+  String get quoteUpdated;
+
+  /// No description provided for @quoteAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote added'**
+  String get quoteAdded;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @joinedEventsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined events'**
+  String get joinedEventsLabel;
+
+  /// No description provided for @personalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details'**
+  String get personalDetails;
+
+  /// No description provided for @communityEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Community event'**
+  String get communityEvent;
+
+  /// No description provided for @paidEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid Event'**
+  String get paidEvent;
+
+  /// No description provided for @noCostToAttend.
+  ///
+  /// In en, this message translates to:
+  /// **'No cost to attend'**
+  String get noCostToAttend;
+
+  /// No description provided for @removeFromSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get removeFromSaved;
+
+  /// No description provided for @registrationClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration closed'**
+  String get registrationClosed;
+
+  /// No description provided for @registrationCloses.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration closes {date}'**
+  String registrationCloses(Object date);
+
+  /// No description provided for @youMayAlsoLike.
+  ///
+  /// In en, this message translates to:
+  /// **'You may also like'**
+  String get youMayAlsoLike;
+
+  /// No description provided for @memberSinceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} {date}'**
+  String memberSinceDate(Object label, Object date);
+
+  /// No description provided for @beFirstToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to join'**
+  String get beFirstToJoin;
+
+  /// No description provided for @meetingAccessAfterJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting access after joining'**
+  String get meetingAccessAfterJoining;
+
+  /// No description provided for @savedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get savedLabel;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class KhairAuthField extends StatelessWidget {
@@ -42,7 +43,7 @@ class KhairAuthField extends StatelessWidget {
         validator: validator,
         onFieldSubmitted: onFieldSubmitted,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 16),
+        style: TextStyle(fontSize: 16),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -66,7 +67,7 @@ class SocialLoginButton extends StatelessWidget {
         height: 54,
         child: OutlinedButton.icon(
           onPressed: onPressed,
-          icon: const _GoogleMark(),
+          icon: _GoogleMark(),
           label: Text(label),
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
@@ -78,9 +79,9 @@ class SocialLoginButton extends StatelessWidget {
 }
 
 class _GoogleMark extends StatelessWidget {
-  const _GoogleMark();
+  _GoogleMark();
   @override
-  Widget build(BuildContext context) => const Text('G',
+  Widget build(BuildContext context) => Text(context.l10n.g,
       style: TextStyle(
           color: Color(0xFF4285F4), fontWeight: FontWeight.w800, fontSize: 19));
 }

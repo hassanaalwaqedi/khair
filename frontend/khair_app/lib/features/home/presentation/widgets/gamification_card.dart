@@ -32,14 +32,14 @@ class GamificationCard extends StatelessWidget {
               : const [Color(0xFFE8F5EC), Color(0xFFD4EDDA)],
         ),
         border: Border.all(
-          color: const Color(0xFFC8A951).withValues(alpha: 0.2),
+          color: Color(0xFFC8A951).withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFC8A951).withValues(alpha: 0.08),
+            color: Color(0xFFC8A951).withValues(alpha: 0.08),
             blurRadius: 20,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -48,11 +48,11 @@ class GamificationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 '🌟',
                 style: TextStyle(fontSize: 22),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               RichText(
                 text: TextSpan(
                   children: [
@@ -66,7 +66,7 @@ class GamificationCard extends StatelessWidget {
                     ),
                     TextSpan(
                       text: level,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFFC8A951),
@@ -77,11 +77,11 @@ class GamificationCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           // Progress bar
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: progress),
-            duration: const Duration(milliseconds: 1000),
+            duration: Duration(milliseconds: 1000),
             curve: Curves.easeOutCubic,
             builder: (context, value, _) {
               return Column(
@@ -101,7 +101,7 @@ class GamificationCard extends StatelessWidget {
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(6),
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
                                     Color(0xFFC8A951),
                                     Color(0xFFE8D98F),
@@ -114,7 +114,7 @@ class GamificationCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
@@ -139,7 +139,7 @@ class GamificationCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFFC8A951)
+                            color: Color(0xFFC8A951)
                                 .withValues(alpha: 0.9),
                           ),
                         ),

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -32,18 +33,19 @@ class _SavedEventsPageState extends State<SavedEventsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Saved events')),
+        appBar: AppBar(title: Text(context.l10n.savedEvents)),
         body: FutureBuilder<List<Map<String, dynamic>>>(
             future: _events,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
-                return const Center(
+                return Center(
                     child: CircularProgressIndicator(color: Color(0xFFF43F75)));
               }
               if (snapshot.hasError) {
                 return Center(
                     child: FilledButton(
-                        onPressed: _reload, child: const Text('Try again')));
+                        onPressed: _reload,
+                        child: Text(context.l10n.tryAgain)));
               }
               final events = snapshot.data ?? const [];
               if (events.isEmpty) {
@@ -52,19 +54,19 @@ class _SavedEventsPageState extends State<SavedEventsPage> {
                         padding: const EdgeInsets.all(28),
                         child:
                             Column(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.bookmark_border_rounded,
+                          Icon(Icons.bookmark_border_rounded,
                               size: 48, color: Color(0xFFF43F75)),
-                          const SizedBox(height: 14),
-                          Text('No saved events yet',
+                          SizedBox(height: 14),
+                          Text(context.l10n.noSavedEventsYet,
                               style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: 6),
-                          const Text('Save events you want to revisit.'),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 6),
+                          Text(context.l10n.saveEventsYouWantToRevisit),
+                          SizedBox(height: 16),
                           FilledButton(
                               onPressed: () => context.go('/'),
                               style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF43F75)),
-                              child: const Text('Explore events'))
+                                  backgroundColor: Color(0xFFF43F75)),
+                              child: Text(context.l10n.exploreEvents))
                         ])));
               }
               return RefreshIndicator(
@@ -72,7 +74,7 @@ class _SavedEventsPageState extends State<SavedEventsPage> {
                   child: ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                       itemCount: events.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => SizedBox(height: 10),
                       itemBuilder: (_, index) =>
                           _SavedEventTile(event: events[index])));
             }),
@@ -88,7 +90,7 @@ class _SavedEventTile extends StatelessWidget {
     final start = DateTime.tryParse(event['start_date']?.toString() ?? '');
     final image = event['image_url']?.toString();
     final place = event['is_online'] == true
-        ? 'Online event'
+        ? context.l10n.onlineEvent
         : [event['city'], event['country']]
             .whereType<String>()
             .where((v) => v.isNotEmpty)
@@ -104,20 +106,22 @@ class _SavedEventTile extends StatelessWidget {
                     child: image?.isNotEmpty == true
                         ? Image.network(ApiConfig.resolveUrl(image),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const ColoredBox(
+                            errorBuilder: (_, __, ___) => ColoredBox(
                                 color: Color(0xFFFFF1F5),
                                 child: Icon(Icons.event_outlined,
                                     color: Color(0xFFF43F75))))
-                        : const ColoredBox(
+                        : ColoredBox(
                             color: Color(0xFFFFF1F5),
                             child: Icon(Icons.event_outlined,
                                 color: Color(0xFFF43F75))))),
-            title: Text(event['title']?.toString() ?? 'Event',
-                maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+                event['title']?.toString() ?? context.l10n.eventFallback,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             subtitle: Text(
-                '${start == null ? 'Date to be announced' : DateFormat('EEE, MMM d · h:mm a').format(start)}\n${place.isEmpty ? 'Location to be announced' : place}'),
+                '${start == null ? context.l10n.dateToBeAnnounced : DateFormat('EEE, MMM d · h:mm a').format(start)}\n${place.isEmpty ? context.l10n.locationToBeAnnounced : place}'),
             isThreeLine: true,
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/events/$id')));
   }
 }

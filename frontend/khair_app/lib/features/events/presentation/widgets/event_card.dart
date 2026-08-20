@@ -40,10 +40,10 @@ class _EventCardState extends State<EventCard> {
       }),
       child: AnimatedSlide(
         offset: Offset(0, _hovered ? -0.014 : 0),
-        duration: const Duration(milliseconds: 280),
+        duration: Duration(milliseconds: 280),
         curve: Curves.easeOut,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
+          duration: Duration(milliseconds: 280),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -153,30 +153,30 @@ class _EventCardState extends State<EventCard> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.x1),
+                          SizedBox(height: AppSpacing.x1),
                           _MetaRow(
-                            leading: const Text('🗓️'),
+                            leading: Text('🗓️'),
                             text: DateFormat('EEE, MMM d • h:mm a')
                                 .format(widget.event.startDate),
                           ),
-                          const SizedBox(height: AppSpacing.x1),
+                          SizedBox(height: AppSpacing.x1),
                           _MetaRow(
-                            leading: const Text('📍'),
+                            leading: Text('📍'),
                             text: location,
                           ),
-                          const SizedBox(height: AppSpacing.x1),
+                          SizedBox(height: AppSpacing.x1),
                           _MetaRow(
-                            leading: const Text('👥'),
+                            leading: Text('👥'),
                             text: attendeeText,
                           ),
-                          const SizedBox(height: AppSpacing.x1),
+                          SizedBox(height: AppSpacing.x1),
                           _MetaRow(
-                            leading: const Text('💵'),
+                            leading: Text('💵'),
                             text: widget.event.pricing.isFree
-                                ? 'Free'
+                                ? context.l10n.eventDetailsFree
                                 : '${(widget.event.pricing.amountCents! / 100).toStringAsFixed(2)} ${widget.event.pricing.currency ?? ""}',
                           ),
-                          const Spacer(),
+                          Spacer(),
                           Row(
                             children: [
                               if (widget.event.organizerName != null) ...[
@@ -191,7 +191,7 @@ class _EventCardState extends State<EventCard> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: AppSpacing.x2),
+                                SizedBox(width: AppSpacing.x2),
                               ],
                               _buildJoinButton(),
                             ],
@@ -215,14 +215,14 @@ class _EventCardState extends State<EventCard> {
       onExit: (_) => setState(() => _joinHovered = false),
       child: AnimatedScale(
         scale: _joinHovered ? 1.04 : 1,
-        duration: const Duration(milliseconds: 220),
+        duration: Duration(milliseconds: 220),
         curve: Curves.easeOut,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: Duration(milliseconds: 220),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               colors: [Color(0xFF0E6E5D), Color(0xFF20856F)],
             ),
             boxShadow: _joinHovered
@@ -230,7 +230,7 @@ class _EventCardState extends State<EventCard> {
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 14,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ]
                 : null,
@@ -238,11 +238,11 @@ class _EventCardState extends State<EventCard> {
           child: InkWell(
             onTap: widget.onJoinTap ?? widget.onTap,
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(
                   horizontal: AppSpacing.x2, vertical: AppSpacing.x1),
               child: Text(
-                'Join',
+                context.l10n.eventDetailsJoin,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -258,7 +258,7 @@ class _EventCardState extends State<EventCard> {
 
   Widget _fallbackImage() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -333,7 +333,7 @@ class _MetaRow extends StatelessWidget {
     return Row(
       children: [
         SizedBox(width: 18, child: Center(child: leading)),
-        const SizedBox(width: AppSpacing.x1),
+        SizedBox(width: AppSpacing.x1),
         Expanded(
           child: Text(
             text,

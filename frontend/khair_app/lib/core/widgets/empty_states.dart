@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 /// Empty state widget with illustration and action button
@@ -38,16 +39,16 @@ class EmptyState extends StatelessWidget {
                 color: Colors.grey[400],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               message,
               style: TextStyle(
@@ -57,7 +58,7 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               ElevatedButton(
                 onPressed: onAction,
                 child: Text(actionLabel!),
@@ -72,51 +73,49 @@ class EmptyState extends StatelessWidget {
 
 /// Pre-built empty states
 class EmptyStates {
-  static Widget noEvents({VoidCallback? onRefresh}) => EmptyState(
+  static Widget noEvents(BuildContext context, {VoidCallback? onRefresh}) => EmptyState(
         icon: Icons.event_busy,
-        title: 'No Events Found',
-        message: 'There are no events matching your criteria. Try adjusting your filters or check back later.',
-        actionLabel: onRefresh != null ? 'Refresh' : null,
+        title: context.l10n.noEventsFound1,
+        message: context.l10n.adjustFiltersHint,
+        actionLabel: onRefresh != null ? context.l10n.tryAgain : null,
         onAction: onRefresh,
       );
 
-  static Widget noSearchResults({String? query}) => EmptyState(
+  static Widget noSearchResults(BuildContext context, {String? query}) => EmptyState(
         icon: Icons.search_off,
-        title: 'No Results',
-        message: query != null 
-            ? 'No events found for "$query". Try a different search term.'
-            : 'No results found. Try adjusting your search.',
+        title: context.l10n.noResults,
+        message: context.l10n.adjustFiltersHint,
       );
 
-  static Widget noReports() => const EmptyState(
+  static Widget noReports(BuildContext context) => EmptyState(
         icon: Icons.flag_outlined,
-        title: 'No Reports',
-        message: 'There are no pending reports to review.',
+        title: context.l10n.noReports,
+        message: context.l10n.noReports,
       );
 
-  static Widget noNotifications() => const EmptyState(
+  static Widget noNotifications(BuildContext context) => EmptyState(
         icon: Icons.notifications_none,
-        title: 'No Notifications',
-        message: "You're all caught up! Check back later for updates.",
+        title: context.l10n.noNotifications,
+        message: context.l10n.noNotificationsYet,
       );
 
-  static Widget noOrganizers() => const EmptyState(
+  static Widget noOrganizers(BuildContext context) => EmptyState(
         icon: Icons.business_outlined,
-        title: 'No Organizers',
-        message: 'No organizers pending approval.',
+        title: context.l10n.noOrganizers,
+        message: context.l10n.adminNoPendingOrg,
       );
 
-  static Widget noAuditLogs() => const EmptyState(
+  static Widget noAuditLogs(BuildContext context) => EmptyState(
         icon: Icons.history,
-        title: 'No Audit Logs',
-        message: 'No actions have been logged yet.',
+        title: context.l10n.noAuditLogs,
+        message: context.l10n.noAuditLogsFound,
       );
 
-  static Widget locationUnavailable({VoidCallback? onEnable}) => EmptyState(
+  static Widget locationUnavailable(BuildContext context, {VoidCallback? onEnable}) => EmptyState(
         icon: Icons.location_off,
-        title: 'Location Unavailable',
-        message: 'Enable location services to see events near you.',
-        actionLabel: onEnable != null ? 'Enable Location' : null,
+        title: context.l10n.locationUnavailable,
+        message: context.l10n.useYourLocation,
+        actionLabel: onEnable != null ? context.l10n.useCurrentLocationShort : null,
         onAction: onEnable,
       );
 }

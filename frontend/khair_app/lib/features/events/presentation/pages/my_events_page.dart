@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,22 +24,22 @@ class _MyEventsPageState extends State<MyEventsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('My Events')),
+    appBar: AppBar(title: Text(context.l10n.orgMyEvents)),
     body: FutureBuilder<List<dynamic>>(
       future: _reservations,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState != ConnectionState.done) return Center(child: CircularProgressIndicator());
         if (snapshot.hasError) {
-          return Center(child: FilledButton.icon(onPressed: _reload, icon: const Icon(Icons.refresh), label: const Text('Try again')));
+          return Center(child: FilledButton.icon(onPressed: _reload, icon: Icon(Icons.refresh), label: Text(context.l10n.tryAgain)));
         }
         final items = snapshot.data ?? const [];
         if (items.isEmpty) {
           return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.event_available_outlined, size: 52),
-            const SizedBox(height: 12),
-            const Text('No joined events yet'),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: () => context.go('/'), child: const Text('Discover events')),
+            Icon(Icons.event_available_outlined, size: 52),
+            SizedBox(height: 12),
+            Text(context.l10n.noJoinedEventsYet),
+            SizedBox(height: 12),
+            FilledButton(onPressed: () => context.go('/'), child: Text(context.l10n.discoverEvents)),
           ]));
         }
         return RefreshIndicator(
@@ -46,16 +47,18 @@ class _MyEventsPageState extends State<MyEventsPage> {
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => SizedBox(height: 10),
             itemBuilder: (_, index) {
               final item = Map<String, dynamic>.from(items[index] as Map);
               final eventId = item['event_id']?.toString() ?? '';
-              final title = item['event_title']?.toString() ?? item['title']?.toString() ?? 'Event';
+              final title = item['event_title']?.toString() ??
+                  item['title']?.toString() ??
+                  context.l10n.eventFallback;
               return Card(child: ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.event)),
+                leading: CircleAvatar(child: Icon(Icons.event)),
                 title: Text(title),
-                subtitle: Text(item['status']?.toString() ?? 'Joined'),
-                trailing: const Icon(Icons.chevron_right),
+                subtitle: Text(item['status']?.toString() ?? context.l10n.joined),
+                trailing: Icon(Icons.chevron_right),
                 onTap: eventId.isEmpty ? null : () => context.push('/events/$eventId'),
               ));
             },

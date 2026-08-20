@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/khair_theme.dart';
@@ -68,14 +69,14 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
               ],
               colors: isDark
                   ? [
-                      const Color(0xFF1A1F2E),
-                      const Color(0xFF252B3B),
-                      const Color(0xFF1A1F2E),
+                      Color(0xFF1A1F2E),
+                      Color(0xFF252B3B),
+                      Color(0xFF1A1F2E),
                     ]
                   : [
-                      const Color(0xFFE8E8E8),
-                      const Color(0xFFF5F5F5),
-                      const Color(0xFFE8E8E8),
+                      Color(0xFFE8E8E8),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFE8E8E8),
                     ],
             ).createShader(bounds);
           },
@@ -110,7 +111,7 @@ class SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2433) : const Color(0xFFE0E0E0),
+        color: isDark ? Color(0xFF1E2433) : Color(0xFFE0E0E0),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
@@ -129,7 +130,7 @@ class SkeletonCircle extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2433) : const Color(0xFFE0E0E0),
+        color: isDark ? Color(0xFF1E2433) : Color(0xFFE0E0E0),
         shape: BoxShape.circle,
       ),
     );
@@ -175,25 +176,25 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
 
     // Gradient animation
     _gradientController = AnimationController(
-      duration: const Duration(seconds: 4),
+      duration: Duration(seconds: 4),
       vsync: this,
     )..repeat();
 
     // Logo pulse
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
 
     // Initial fade-in
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: 800),
       vsync: this,
     )..forward();
 
     // Message rotation
     _messageController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: Duration(milliseconds: 600),
       vsync: this,
     )..forward();
 
@@ -201,7 +202,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
   }
 
   void _startMessageRotation() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(Duration(seconds: 3), () {
       if (!mounted) return;
       _messageController.reverse().then((_) {
         if (!mounted) return;
@@ -251,13 +252,13 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
                 children: [
                   // Subtle geometric pattern behind logo
                   _buildGeometricPattern(),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
                   // Animated logo
                   _buildApprovedPulsingLogo(),
-                  const SizedBox(height: 48),
+                  SizedBox(height: 48),
                   // Rotating message
                   _buildRotatingMessage(),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
                   // Subtle loading indicator
                   _buildLoadingDots(),
                 ],
@@ -302,7 +303,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
           scale: scale,
           child: Opacity(
             opacity: opacity,
-            child: const KhairBrandMark(size: 80),
+            child: KhairBrandMark(size: 80),
           ),
         );
       },
@@ -314,7 +315,7 @@ class _KhairFullScreenLoadingState extends State<KhairFullScreenLoading>
       opacity: _messageController,
       child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(0, 0.3),
+          begin: Offset(0, 0.3),
           end: Offset.zero,
         ).animate(CurvedAnimation(
           parent: _messageController,
@@ -455,17 +456,17 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
     _resetTimers();
 
     // Show skeleton after 500ms
-    Future.delayed(const Duration(milliseconds: 400), () {
+    Future.delayed(Duration(milliseconds: 400), () {
       if (mounted && widget.isLoading) setState(() => _showSkeleton = true);
     });
 
     // Show message after 2s
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(Duration(seconds: 2), () {
       if (mounted && widget.isLoading) setState(() => _showMessage = true);
     });
 
     // Show retry after 5s
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(Duration(seconds: 5), () {
       if (mounted && widget.isLoading) setState(() => _showRetry = true);
     });
   }
@@ -480,7 +481,7 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
   Widget build(BuildContext context) {
     if (!widget.isLoading) {
       return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: Duration(milliseconds: 300),
         child: widget.child,
       );
     }
@@ -491,13 +492,13 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
       child: Column(
         children: [
           Expanded(child: widget.skeleton),
           if (_showMessage)
             AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
+              duration: Duration(milliseconds: 400),
               opacity: 1.0,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -513,7 +514,7 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
             ),
           if (_showRetry && widget.onRetry != null)
             AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
+              duration: Duration(milliseconds: 400),
               opacity: 1.0,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 24),
@@ -522,8 +523,8 @@ class _SmartLoadingWrapperState extends State<SmartLoadingWrapper> {
                     _resetTimers();
                     widget.onRetry!();
                   },
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Retry'),
+                  icon: Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(context.l10n.retry),
                   style: TextButton.styleFrom(
                     foregroundColor: KhairColors.primary,
                   ),
@@ -551,7 +552,7 @@ class EventCardSkeleton extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF151A26) : Colors.white,
+        color: isDark ? Color(0xFF151A26) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark
@@ -559,19 +560,19 @@ class EventCardSkeleton extends StatelessWidget {
               : Colors.black.withValues(alpha: 0.05),
         ),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SkeletonBox(height: 160, borderRadius: 12),
+          const SkeletonBox(height: 160, borderRadius: 12),
           SizedBox(height: 14),
-          SkeletonBox(width: 220, height: 18),
+          const SkeletonBox(width: 220, height: 18),
           SizedBox(height: 8),
-          SkeletonBox(width: 160, height: 14),
+          const SkeletonBox(width: 160, height: 14),
           SizedBox(height: 14),
           Row(children: [
-            SkeletonBox(width: 110, height: 14),
+            const SkeletonBox(width: 110, height: 14),
             SizedBox(width: 16),
-            SkeletonBox(width: 130, height: 14),
+            const SkeletonBox(width: 130, height: 14),
           ]),
         ],
       ),
@@ -589,10 +590,10 @@ class EventsListSkeleton extends StatelessWidget {
     return ShimmerLoading(
       child: ListView.builder(
         shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+        physics: NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         itemCount: itemCount,
-        itemBuilder: (context, index) => const EventCardSkeleton(),
+        itemBuilder: (context, index) => EventCardSkeleton(),
       ),
     );
   }
@@ -611,7 +612,7 @@ class EventDetailsSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero image
-            SkeletonBox(height: 280, borderRadius: 0),
+            const SkeletonBox(height: 280, borderRadius: 0),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -619,29 +620,29 @@ class EventDetailsSkeleton extends StatelessWidget {
                 children: [
                   // Tags
                   Row(children: [
-                    SkeletonBox(width: 70, height: 28, borderRadius: 14),
-                    const SizedBox(width: 8),
-                    SkeletonBox(width: 90, height: 28, borderRadius: 14),
+                    const SkeletonBox(width: 70, height: 28, borderRadius: 14),
+                    SizedBox(width: 8),
+                    const SkeletonBox(width: 90, height: 28, borderRadius: 14),
                   ]),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // Title
                   const SkeletonBox(width: double.infinity, height: 24),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   const SkeletonBox(width: 200, height: 24),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   // Info cards
                   Row(children: [
                     Expanded(child: SkeletonBox(height: 90, borderRadius: 14)),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: SkeletonBox(height: 90, borderRadius: 14)),
                   ]),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   // Description block
                   _section(isDark),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // Location block
                   _section(isDark),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // Attendees block
                   _section(isDark),
                 ],
@@ -658,7 +659,7 @@ class EventDetailsSkeleton extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF151A26) : Colors.white,
+        color: isDark ? Color(0xFF151A26) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
@@ -668,15 +669,15 @@ class EventDetailsSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            SkeletonBox(width: 22, height: 22, borderRadius: 6),
-            const SizedBox(width: 10),
-            SkeletonBox(width: 120, height: 17),
+            const SkeletonBox(width: 22, height: 22, borderRadius: 6),
+            SizedBox(width: 10),
+            const SkeletonBox(width: 120, height: 17),
           ]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           const SkeletonBox(width: double.infinity, height: 14),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           const SkeletonBox(width: double.infinity, height: 14),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           const SkeletonBox(width: 200, height: 14),
         ],
       ),
@@ -698,19 +699,19 @@ class SheikhProfileSkeleton extends StatelessWidget {
             Container(
               height: 220,
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF0D1117), Color(0xFF151A26)],
                 ),
               ),
-              child: const Column(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SkeletonCircle(size: 100),
+                  const SkeletonCircle(size: 100),
                   SizedBox(height: 16),
-                  SkeletonBox(width: 180, height: 22),
+                  const SkeletonBox(width: 180, height: 22),
                   SizedBox(height: 8),
-                  SkeletonBox(width: 130, height: 16),
+                  const SkeletonBox(width: 130, height: 16),
                 ],
               ),
             ),
@@ -723,25 +724,25 @@ class SheikhProfileSkeleton extends StatelessWidget {
                   // Stat cards
                   Row(children: [
                     Expanded(child: SkeletonBox(height: 70, borderRadius: 14)),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: SkeletonBox(height: 70, borderRadius: 14)),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: SkeletonBox(height: 70, borderRadius: 14)),
                   ]),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Bio section
                   const SkeletonBox(width: 80, height: 18),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   const SkeletonBox(width: double.infinity, height: 14),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   const SkeletonBox(width: double.infinity, height: 14),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   const SkeletonBox(width: 200, height: 14),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Reviews section
                   const SkeletonBox(width: 100, height: 18),
-                  const SizedBox(height: 12),
-                  SkeletonBox(
+                  SizedBox(height: 12),
+                  const SkeletonBox(
                       width: double.infinity, height: 100, borderRadius: 14),
                 ],
               ),
@@ -768,7 +769,7 @@ class ChatMessageSkeleton extends StatelessWidget {
         children: [
           if (!isMe) ...[
             const SkeletonCircle(size: 32),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
           ],
           SkeletonBox(
             width: 180 + (isMe ? 20 : 0),
@@ -815,20 +816,20 @@ class OrganizerCardSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF151A26) : Colors.white,
+        color: isDark ? Color(0xFF151A26) : Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SkeletonCircle(size: 48),
+          const SkeletonCircle(size: 48),
           SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SkeletonBox(width: 150, height: 16),
+                const SkeletonBox(width: 150, height: 16),
                 SizedBox(height: 6),
-                SkeletonBox(width: 200, height: 12),
+                const SkeletonBox(width: 200, height: 12),
               ],
             ),
           ),
@@ -882,10 +883,10 @@ class KhairLoadingButton extends StatelessWidget {
           elevation: 0,
         ),
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
+          duration: Duration(milliseconds: 200),
           child: isLoading
               ? SizedBox(
-                  key: const ValueKey('loading'),
+                  key: ValueKey('loading'),
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
@@ -894,16 +895,16 @@ class KhairLoadingButton extends StatelessWidget {
                   ),
                 )
               : Row(
-                  key: const ValueKey('label'),
+                  key: ValueKey('label'),
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
                       Icon(icon, size: 20),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                     ],
                     Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),

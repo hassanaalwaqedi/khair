@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart' hide MapEvent;
@@ -57,8 +58,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
             state.events.indexWhere((event) => event.id == selected.id);
         if (index >= 0) {
           _cards.animateToPage(index,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOut);
+              duration: Duration(milliseconds: 260), curve: Curves.easeOut);
         }
       },
       builder: (context, state) => Scaffold(
@@ -138,15 +138,14 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
                   child: FilledButton.icon(
                 onPressed: () =>
                     context.read<MapStateManager>().searchThisArea(),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Search this area'),
+                icon: Icon(Icons.refresh_rounded, size: 18),
+                label: Text(context.l10n.mapSearchThisArea),
                 style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 46),
-                    shape: const StadiumBorder()),
+                    minimumSize: Size(0, 46), shape: StadiumBorder()),
               )),
             ),
           if (state.status == MapLoadStatus.loading)
-            const PositionedDirectional(
+            PositionedDirectional(
                 top: 136,
                 start: 0,
                 end: 0,
@@ -155,7 +154,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
                         icon: Icons.hourglass_top_rounded,
                         text: 'Finding events…'))),
           if (state.locationPermissionDenied)
-            const PositionedDirectional(
+            PositionedDirectional(
                 top: 188,
                 start: 16,
                 end: 16,
@@ -178,7 +177,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
               end: 20,
               child: Center(
                   child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 350),
+                constraints: BoxConstraints(maxWidth: 350),
                 child: _MarkerPreview(
                     event: state.selectedEvent!,
                     onOpen: () =>
@@ -194,7 +193,7 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
               foregroundColor: AppColors.primary,
               onPressed: () =>
                   context.read<MapStateManager>().refreshUserLocation(),
-              child: const Icon(Icons.my_location_rounded),
+              child: Icon(Icons.my_location_rounded),
             ),
           ),
           desktop
@@ -272,7 +271,7 @@ class _MapSearchControls extends StatelessWidget {
         end: 16,
         child: Column(children: [
           ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 780),
+              constraints: BoxConstraints(maxWidth: 780),
               child: Material(
                 color: Colors.white,
                 elevation: 7,
@@ -283,46 +282,46 @@ class _MapSearchControls extends StatelessWidget {
                   textInputAction: TextInputAction.search,
                   onSubmitted: onSearch,
                   decoration: InputDecoration(
-                    hintText: 'Search events or places',
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    hintText: context.l10n.searchEventsOrPlaces,
+                    prefixIcon: Icon(Icons.search_rounded),
                     suffixIcon: TextButton.icon(
                         onPressed: onFilters,
-                        icon: const Icon(Icons.tune_rounded, size: 18),
-                        label: const Text('Filters')),
+                        icon: Icon(Icons.tune_rounded, size: 18),
+                        label: Text(context.l10n.mapFilters)),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     border: InputBorder.none,
                   ),
                 ),
               )),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(children: [
                 _QuickChip(
-                    label: 'Today',
+                    label: context.l10n.filterEventsToday,
                     icon: Icons.today_outlined,
                     active: filters.when == 'today',
                     onTap: () => onQuickFilter(filters.copyWith(
                         when: filters.when == 'today' ? 'any' : 'today'))),
                 _QuickChip(
-                    label: 'This weekend',
+                    label: context.l10n.thisWeekend,
                     icon: Icons.weekend_outlined,
                     active: filters.when == 'weekend',
                     onTap: () => onQuickFilter(filters.copyWith(
                         when: filters.when == 'weekend' ? 'any' : 'weekend'))),
                 _QuickChip(
-                    label: 'Near me',
+                    label: context.l10n.nearMe,
                     icon: Icons.near_me_outlined,
                     active: false,
                     onTap: onLocation),
                 _QuickChip(
-                    label: 'Free',
+                    label: context.l10n.freeLabel,
                     icon: Icons.sell_outlined,
                     active: filters.freeOnly,
                     onTap: () => onQuickFilter(
                         filters.copyWith(freeOnly: !filters.freeOnly))),
                 _QuickChip(
-                    label: 'Online',
+                    label: context.l10n.online,
                     icon: Icons.videocam_outlined,
                     active: filters.eventType == 'online',
                     onTap: () => onQuickFilter(filters.copyWith(
@@ -360,7 +359,7 @@ class _QuickChip extends StatelessWidget {
                   Icon(icon,
                       size: 17,
                       color: active ? Colors.white : AppColors.primary),
-                  const SizedBox(width: 7),
+                  SizedBox(width: 7),
                   Text(label,
                       style: TextStyle(
                           color: active ? Colors.white : AppColors.textPrimary,
@@ -476,25 +475,25 @@ class _ResultsPanel extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: onSurface.withValues(alpha: .18),
                       borderRadius: BorderRadius.circular(99))),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Row(children: [
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Text('${state.events.length} events in this area',
+                      Text(context.l10n.eventsInArea(state.events.length),
                           style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w800,
                               color: onSurface)),
-                      const SizedBox(height: 2),
-                      const Text('Explore what’s happening nearby',
+                      SizedBox(height: 2),
+                      Text(context.l10n.exploreWhatsHappeningNearby,
                           style: TextStyle(
                               color: AppColors.textSecondary, fontSize: 12))
                     ])),
                 TextButton(
                     onPressed: onBrowseAll,
-                    child: const Text('View all events'))
+                    child: Text(context.l10n.orgViewAllEvents))
               ]),
             ])),
         Expanded(
@@ -564,36 +563,37 @@ class _MapEventCard extends StatelessWidget {
                                   child: _Pill(
                                       label: _categoryLabel(event.category))),
                               IconButton(
-                                  tooltip: 'Save event',
+                                  tooltip: context.l10n.saveEvent,
                                   onPressed: onSave,
-                                  icon: const Icon(
-                                      Icons.bookmark_border_rounded,
+                                  icon: Icon(Icons.bookmark_border_rounded,
                                       size: 20))
                             ]),
                             Text(event.title,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 15,
                                     color: AppColors.textPrimary)),
-                            const Spacer(),
+                            Spacer(),
                             _Meta(
                                 icon: Icons.calendar_today_outlined,
                                 text: DateFormat('EEE · h:mm a')
                                     .format(event.startsAt)),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             _Meta(
                                 icon: event.isOnline
                                     ? Icons.videocam_outlined
                                     : Icons.location_on_outlined,
-                                text: event.locationLabel.isEmpty
-                                    ? event.organization
-                                    : event.locationLabel),
-                            const SizedBox(height: 5),
+                                text: event.isOnline
+                                    ? context.l10n.onlineEvent
+                                    : event.locationLabel.isEmpty
+                                        ? event.organization
+                                        : event.locationLabel),
+                            SizedBox(height: 5),
                             Text(
-                                '${event.reservedCount} going${event.priceCents == 0 ? ' · Free' : ''}',
-                                style: const TextStyle(
+                                '${context.l10n.eventDetailsAttending(event.reservedCount)}${event.priceCents == 0 ? ' · ${context.l10n.eventDetailsFree}' : ''}',
+                                style: TextStyle(
                                     fontSize: 11.5,
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w600)),
@@ -611,7 +611,7 @@ class _EventImage extends StatelessWidget {
     final image = event.imageUrl;
     return image == null || image.isEmpty
         ? DecoratedBox(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 gradient: LinearGradient(
                     colors: [Color(0xFFFFD7E4), Color(0xFFF99ABC)],
                     begin: Alignment.topLeft,
@@ -620,7 +620,7 @@ class _EventImage extends StatelessWidget {
         : Image.network(ApiConfig.resolveUrl(image),
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => DecoratedBox(
-                decoration: const BoxDecoration(color: Color(0xFFFFE4ED)),
+                decoration: BoxDecoration(color: Color(0xFFFFE4ED)),
                 child: Icon(icon, color: AppColors.primary)));
   }
 }
@@ -632,13 +632,13 @@ class _Meta extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
         Icon(icon, size: 14, color: AppColors.textTertiary),
-        const SizedBox(width: 5),
+        SizedBox(width: 5),
         Expanded(
             child: Text(text,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontSize: 11.5, color: AppColors.textSecondary)))
+                style:
+                    TextStyle(fontSize: 11.5, color: AppColors.textSecondary)))
       ]);
 }
 
@@ -649,10 +649,9 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          color: const Color(0xFFFFEEF4),
-          borderRadius: BorderRadius.circular(99)),
+          color: Color(0xFFFFEEF4), borderRadius: BorderRadius.circular(99)),
       child: Text(label,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 10,
               color: AppColors.primaryDark,
               fontWeight: FontWeight.w800)));
@@ -664,7 +663,7 @@ class _KhairEventMarker extends StatelessWidget {
   final bool selected;
   @override
   Widget build(BuildContext context) => AnimatedScale(
-      duration: const Duration(milliseconds: 180),
+      duration: Duration(milliseconds: 180),
       scale: selected ? 1.18 : 1,
       child: DecoratedBox(
           decoration: BoxDecoration(
@@ -695,11 +694,11 @@ class _KhairClusterMarker extends StatelessWidget {
           child: Container(
               width: 44,
               height: 44,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: AppColors.primary, shape: BoxShape.circle),
               alignment: Alignment.center,
               child: Text('$count',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.w800)))));
 }
 
@@ -719,7 +718,7 @@ class _MarkerPreview extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(_categoryIcon(event.category), color: AppColors.primary),
-                const SizedBox(width: 9),
+                SizedBox(width: 9),
                 Flexible(
                     child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -728,13 +727,16 @@ class _MarkerPreview extends StatelessWidget {
                       Text(event.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w800)),
-                      Text(DateFormat('EEE · h:mm a').format(event.startsAt),
-                          style: const TextStyle(
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                      Text(
+                          DateFormat('EEE · h:mm a',
+                                  Localizations.localeOf(context).languageCode)
+                              .format(event.startsAt),
+                          style: TextStyle(
                               fontSize: 12, color: AppColors.textSecondary))
                     ])),
-                const SizedBox(width: 5),
-                const Icon(Icons.chevron_right_rounded)
+                SizedBox(width: 5),
+                Icon(Icons.chevron_right_rounded)
               ]))));
 }
 
@@ -751,10 +753,9 @@ class _StatusPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 16, color: AppColors.primary),
-            const SizedBox(width: 7),
+            SizedBox(width: 7),
             Text(text,
-                style:
-                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 12))
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))
           ])));
 }
 
@@ -764,20 +765,20 @@ class _NoticePill extends StatelessWidget {
   final VoidCallback? retry;
   @override
   Widget build(BuildContext context) => Material(
-      color: const Color(0xFFFFF8FA),
+      color: Color(0xFFFFF8FA),
       elevation: 4,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(children: [
-            const Icon(Icons.info_outline_rounded, color: AppColors.primary),
-            const SizedBox(width: 9),
+            Icon(Icons.info_outline_rounded, color: AppColors.primary),
+            SizedBox(width: 9),
             Expanded(
                 child: Text(text,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12.5, color: AppColors.textPrimary))),
             if (retry != null)
-              TextButton(onPressed: retry, child: const Text('Retry'))
+              TextButton(onPressed: retry, child: Text(context.l10n.retry))
           ])));
 }
 
@@ -791,27 +792,39 @@ class _EmptyMapState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.explore_off_outlined,
-            color: AppColors.primary, size: 36),
-        const SizedBox(height: 6),
-        Text('Nothing happening here yet',
+        Icon(Icons.explore_off_outlined, color: AppColors.primary, size: 36),
+        SizedBox(height: 6),
+        Text(context.l10n.nothingHappeningHereYet,
             style: TextStyle(
                 fontWeight: FontWeight.w800,
                 color: Theme.of(context).colorScheme.onSurface)),
-        const SizedBox(height: 4),
-        Text('Move the map or explore a wider area.',
+        SizedBox(height: 4),
+        Text(context.l10n.moveTheMapOrExploreAWiderArea,
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: Theme.of(context)
                     .colorScheme
                     .onSurface
                     .withValues(alpha: .68))),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         OutlinedButton(
             onPressed: onExploreOnline,
-            child: const Text('Explore online events'))
+            child: Text(context.l10n.exploreOnlineEvents))
       ])));
 }
+
+Map<String, String> _dateFilterLabels(BuildContext context) => {
+      'any': context.l10n.anyDate,
+      'today': context.l10n.today,
+      'tomorrow': context.l10n.tomorrow,
+      'weekend': context.l10n.thisWeekend,
+    };
+
+Map<String, String> _eventTypeFilterLabels(BuildContext context) => {
+      'all': context.l10n.mapFilterAll,
+      'in_person': context.l10n.mapFilterInPerson,
+      'online': context.l10n.mapFilterOnline,
+    };
 
 class _MapFilterSheet extends StatefulWidget {
   const _MapFilterSheet(
@@ -835,7 +848,7 @@ class _MapFilterSheetState extends State<_MapFilterSheet> {
   Widget build(BuildContext context) => Container(
       padding: EdgeInsets.fromLTRB(
           20, 12, 20, 20 + MediaQuery.paddingOf(context).bottom),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       child: SingleChildScrollView(
@@ -848,56 +861,48 @@ class _MapFilterSheetState extends State<_MapFilterSheet> {
                 decoration: BoxDecoration(
                     color: AppColors.border,
                     borderRadius: BorderRadius.circular(99)))),
-        const SizedBox(height: 18),
-        const Text('Filters',
+        SizedBox(height: 18),
+        Text(context.l10n.mapFilters,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         _FilterSection(
-            title: 'Distance',
+            title: context.l10n.mapFilterDistance,
             child: _ChoiceRow(
                 options: const ['5 km', '10 km', '25 km', '50 km'],
                 selected: '${filters.radiusKm.toInt()} km',
                 onSelected: (v) => setState(() => filters = filters.copyWith(
                     radiusKm: double.parse(v.split(' ').first))))),
         _FilterSection(
-            title: 'When',
+            title: context.l10n.when,
             child: _ChoiceRow(
-                options: const [
-                  'Any date',
-                  'Today',
-                  'Tomorrow',
-                  'This weekend'
+                options: [
+                  context.l10n.anyDate,
+                  context.l10n.today,
+                  context.l10n.tomorrow,
+                  context.l10n.thisWeekend
                 ],
-                selected: {
-                  'any': 'Any date',
-                  'today': 'Today',
-                  'tomorrow': 'Tomorrow',
-                  'weekend': 'This weekend'
-                }[filters.when]!,
+                selected: _dateFilterLabels(context)[filters.when]!,
                 onSelected: (v) => setState(() => filters = filters.copyWith(
-                        when: {
-                      'Any date': 'any',
-                      'Today': 'today',
-                      'Tomorrow': 'tomorrow',
-                      'This weekend': 'weekend'
-                    }[v]!)))),
+                    when: _dateFilterLabels(context)
+                        .entries
+                        .firstWhere((entry) => entry.value == v)
+                        .key)))),
         _FilterSection(
-            title: 'Type',
+            title: context.l10n.mapFilterType,
             child: _ChoiceRow(
-                options: const ['All', 'In-person', 'Online'],
-                selected: {
-                  'all': 'All',
-                  'in_person': 'In-person',
-                  'online': 'Online'
-                }[filters.eventType]!,
+                options: [
+                  context.l10n.mapFilterAll,
+                  context.l10n.mapFilterInPerson,
+                  context.l10n.mapFilterOnline
+                ],
+                selected: _eventTypeFilterLabels(context)[filters.eventType]!,
                 onSelected: (v) => setState(() => filters = filters.copyWith(
-                        eventType: {
-                      'All': 'all',
-                      'In-person': 'in_person',
-                      'Online': 'online'
-                    }[v]!)))),
+                    eventType: _eventTypeFilterLabels(context)
+                        .entries
+                        .firstWhere((entry) => entry.value == v)
+                        .key)))),
         _FilterSection(
-            title: 'Categories',
+            title: context.l10n.mapCategories,
             child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -906,7 +911,7 @@ class _MapFilterSheetState extends State<_MapFilterSheet> {
                   return FilterChip(
                       label: Text(category.displayName),
                       selected: selected,
-                      selectedColor: const Color(0xFFFFD7E4),
+                      selectedColor: Color(0xFFFFD7E4),
                       checkmarkColor: AppColors.primary,
                       onSelected: (value) {
                         final next = Set<String>.from(filters.categories);
@@ -919,22 +924,22 @@ class _MapFilterSheetState extends State<_MapFilterSheet> {
                 }).toList())),
         SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Free only',
+            title: Text(context.l10n.freeOnly,
                 style: TextStyle(fontWeight: FontWeight.w700)),
             value: filters.freeOnly,
             activeTrackColor: AppColors.primary,
             onChanged: (v) =>
                 setState(() => filters = filters.copyWith(freeOnly: v))),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(children: [
           TextButton(
-              onPressed: () => setState(() => filters = const MapFilters()),
-              child: const Text('Clear all')),
-          const Spacer(),
+              onPressed: () => setState(() => filters = MapFilters()),
+              child: Text(context.l10n.clearAll)),
+          Spacer(),
           Expanded(
               child: FilledButton(
                   onPressed: () => widget.onApply(filters),
-                  child: const Text('Show events')))
+                  child: Text(context.l10n.showEvents)))
         ])
       ])));
 }
@@ -947,8 +952,8 @@ class _FilterSection extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        const SizedBox(height: 9),
+        Text(title, style: TextStyle(fontWeight: FontWeight.w800)),
+        SizedBox(height: 9),
         child
       ]));
 }
@@ -969,7 +974,7 @@ class _ChoiceRow extends StatelessWidget {
           .map((option) => ChoiceChip(
               label: Text(option),
               selected: option == selected,
-              selectedColor: const Color(0xFFFFD7E4),
+              selectedColor: Color(0xFFFFD7E4),
               labelStyle: TextStyle(
                   color: option == selected
                       ? AppColors.primaryDark
@@ -980,8 +985,8 @@ class _ChoiceRow extends StatelessWidget {
 }
 
 void _savePrompt(BuildContext context) =>
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sign in to save events and keep them in sync.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.signInToSaveEventsAndKeepThemI)));
 IconData _categoryIcon(String category) {
   final value = category.toLowerCase();
   if (value.contains('technology') || value.contains('hackathon')) {

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import '../theme/khair_theme.dart';
 import '../utils/emoji_mapper.dart';
@@ -63,10 +64,10 @@ class _KhairButtonState extends State<KhairButton>
               color: widget.isOutlined ? KhairColors.primary : Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
         ] else if (widget.icon != null) ...[
           Icon(widget.icon, size: 18),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
         Text(widget.label),
       ],
@@ -128,7 +129,7 @@ class _KhairCardState extends State<KhairCard> {
       onEnter: widget.hoverable ? (_) => setState(() => _isHovered = true) : null,
       onExit: widget.hoverable ? (_) => setState(() => _isHovered = false) : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: KhairColors.surface,
           borderRadius: KhairRadius.medium,
@@ -284,7 +285,7 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(title, style: KhairTypography.headlineMedium),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(subtitle!, style: KhairTypography.bodyMedium),
                 ],
               ],
@@ -335,20 +336,20 @@ class KhairEmptyState extends StatelessWidget {
                 color: KhairColors.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               title,
               style: KhairTypography.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               message,
               style: KhairTypography.bodyMedium,
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               KhairButton(
                 label: actionLabel!,
                 onPressed: onAction,
@@ -374,12 +375,12 @@ class KhairLoadingState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
+          CircularProgressIndicator(
             color: KhairColors.primary,
             strokeWidth: 3,
           ),
           if (message != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(message!, style: KhairTypography.bodyMedium),
           ],
         ],
@@ -414,28 +415,28 @@ class KhairErrorState extends StatelessWidget {
                 color: KhairColors.errorLight,
                 borderRadius: BorderRadius.circular(40),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.error_outline,
                 size: 36,
                 color: KhairColors.error,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'Something went wrong',
               style: KhairTypography.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               message,
               style: KhairTypography.bodyMedium,
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               KhairButton(
-                label: 'Try Again',
+                label: context.l10n.tryAgain1,
                 onPressed: onRetry,
                 icon: Icons.refresh,
               ),
@@ -467,7 +468,7 @@ class KhairFilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? KhairColors.primary : KhairColors.surfaceVariant,
@@ -485,7 +486,7 @@ class KhairFilterChip extends StatelessWidget {
                 size: 16,
                 color: isSelected ? Colors.white : KhairColors.textSecondary,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
             ],
             Text(
               label,

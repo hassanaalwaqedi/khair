@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-
 import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_brand.dart';
-import '../../../notifications/presentation/bloc/notification_bloc.dart';
-import '../../../notifications/presentation/widgets/notification_dropdown.dart';
+import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 
 /// Compact top app bar: Khair logo · location selector · notification + profile icons
 class HomeAppBar extends StatelessWidget {
@@ -94,66 +90,7 @@ class HomeAppBar extends StatelessWidget {
 
 class _NotificationBell extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NotificationBloc, NotificationState>(
-      buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
-      builder: (context, state) {
-        return GestureDetector(
-          onTap: () => context.push('/notifications'),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    size: 22,
-                  ),
-                ),
-                if (state.unreadCount > 0)
-                  PositionedDirectional(
-                    end: 4,
-                    top: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: KhairColors.error,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: KhairColors.darkSurface,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          state.unreadCount > 9
-                              ? '9+'
-                              : state.unreadCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => const NotificationBellButton(
+        color: Colors.white,
+      );
 }

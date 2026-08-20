@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khair_app/core/locale/l10n_extension.dart';
 
 /// Shared password feedback used by attendee signup and event join flows.
 class PasswordStrengthIndicator extends StatelessWidget {
@@ -13,7 +14,15 @@ class PasswordStrengthIndicator extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8),
       child: Row(children: [
         Expanded(child: LinearProgressIndicator(value: score / 4, color: color, backgroundColor: color.withValues(alpha: .15))),
-        const SizedBox(width: 8), Text(score < 2 ? 'Weak' : score < 4 ? 'Good' : 'Strong', style: TextStyle(color: color, fontSize: 12)),
+        const SizedBox(width: 8),
+        Text(
+          score < 2
+              ? context.l10n.passwordWeak
+              : score < 4
+                  ? context.l10n.passwordGood
+                  : context.l10n.passwordStrong,
+          style: TextStyle(color: color, fontSize: 12),
+        ),
       ]),
     );
   }

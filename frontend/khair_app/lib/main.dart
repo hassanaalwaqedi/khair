@@ -1,8 +1,10 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/crash/crash_reporter.dart';
 import 'core/di/injection.dart';
@@ -17,6 +19,7 @@ import 'core/widgets/offline_indicator.dart';
 import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'core/push/push_notification_service_web.dart'
     if (dart.library.io) 'core/push/push_notification_service.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -26,6 +29,7 @@ void main() {
     sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await initializeDateFormatting();
 
       // Firebase & push notifications are only configured for mobile
       if (!kIsWeb) {
@@ -46,7 +50,7 @@ void main() {
         await PushNotificationService.instance.initialize();
       }
 
-      runApp(const KhairApp());
+      runApp(KhairApp());
     },
   );
 }
@@ -62,7 +66,7 @@ class KhairApp extends StatelessWidget {
           value: getIt<AuthBloc>()..add(CheckAuthStatus()),
         ),
         BlocProvider(
-          create: (_) => LocaleBloc()..add(const LoadSavedLocale()),
+          create: (_) => LocaleBloc()..add(LoadSavedLocale()),
         ),
         BlocProvider(
           // Location is useful, but it must not ask for GPS permission every
@@ -81,8 +85,14 @@ class KhairApp extends StatelessWidget {
         listener: (context, authState) {
           if (authState.isAuthenticated) {
             WebSocketService.instance.connect();
+            getIt<NotificationBloc>().add(
+              const NotificationSessionChanged(true),
+            );
           } else {
             WebSocketService.instance.disconnect();
+            getIt<NotificationBloc>().add(
+              const NotificationSessionChanged(false),
+            );
           }
         },
         child: BlocBuilder<ThemeBloc, ThemeState>(
@@ -94,7 +104,7 @@ class KhairApp extends StatelessWidget {
                     : TextDirection.ltr;
 
                 return MaterialApp.router(
-                  title: 'Khair',
+                  onGenerateTitle: (context) => context.l10n.appTitle,
                   debugShowCheckedModeBanner: false,
                   theme: buildAppTheme(
                     locale: localeState.locale,
@@ -108,13 +118,13 @@ class KhairApp extends StatelessWidget {
                   routerConfig: appRouter,
                   locale: localeState.locale,
                   localeResolutionCallback: (locale, supportedLocales) {
-                    if (locale == null) return const Locale('en');
+                    if (locale == null) return Locale('en');
                     for (final supported in supportedLocales) {
                       if (supported.languageCode == locale.languageCode) {
                         return supported;
                       }
                     }
-                    return const Locale('en');
+                    return Locale('en');
                   },
                   supportedLocales: AppLocalizations.supportedLocales,
                   localizationsDelegates: const [

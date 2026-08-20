@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,17 +42,17 @@ class ReservationSuccessPage extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: AppTheme.successColor.withValues(alpha: 0.15),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.check_circle_rounded,
                     size: 64,
                     color: AppTheme.successColor,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
 
               // Islamic message
-              const Text(
+              Text(
                 'بسم الله الرحمن الرحيم',
                 style: TextStyle(
                   fontSize: 18,
@@ -60,9 +61,9 @@ class ReservationSuccessPage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
-              const Text(
+              Text(
                 'You are registered!',
                 style: TextStyle(
                   fontSize: 28,
@@ -70,7 +71,7 @@ class ReservationSuccessPage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
 
               Text(
                 'May this gathering benefit you.\nYour seat has been confirmed.',
@@ -82,7 +83,7 @@ class ReservationSuccessPage extends StatelessWidget {
                 ),
               ),
               if (isPaid) ...[
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -92,8 +93,8 @@ class ReservationSuccessPage extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: Colors.amber),
-                      const SizedBox(width: 12),
+                      Icon(Icons.info_outline_rounded, color: Colors.amber),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'This is a paid event. Please remember to bring payment to the venue.',
@@ -107,7 +108,7 @@ class ReservationSuccessPage extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 40),
+              SizedBox(height: 40),
 
 
 
@@ -118,8 +119,8 @@ class ReservationSuccessPage extends StatelessWidget {
                   onPressed: () {
                     context.go('/my-events');
                   },
-                  icon: const Icon(Icons.event_rounded, color: Colors.white),
-                  label: const Text('View My Events',
+                  icon: Icon(Icons.event_rounded, color: Colors.white),
+                  label: Text(context.l10n.viewMyEvents,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -130,12 +131,12 @@ class ReservationSuccessPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
 
               // Back to browse
               TextButton(
                 onPressed: () => context.go('/'),
-                child: Text('Back to Events',
+                child: Text(context.l10n.eventDetailsBack,
                     style: TextStyle(color: Colors.grey[600], fontSize: 14)),
               ),
             ],

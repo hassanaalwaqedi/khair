@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -103,14 +104,14 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Terms & Privacy',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Please review and accept our terms to continue.',
               style: TextStyle(
@@ -118,29 +119,29 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
                 fontSize: 14,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             
             // Terms checkbox
             _buildCheckbox(
               value: _termsAccepted,
               onChanged: (v) => setState(() => _termsAccepted = v ?? false),
-              label: 'I accept the ',
+              label: context.l10n.iAcceptThe,
               linkText: 'Terms of Service',
               onLinkTap: () => _openTerms(context),
             ),
             
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             
             // Privacy checkbox
             _buildCheckbox(
               value: _privacyAccepted,
               onChanged: (v) => setState(() => _privacyAccepted = v ?? false),
-              label: 'I accept the ',
+              label: context.l10n.iAcceptThe,
               linkText: 'Privacy Policy',
               onLinkTap: () => _openPrivacy(context),
             ),
             
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             
             // Buttons
             Row(
@@ -149,14 +150,14 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: widget.onDeclined,
-                      child: const Text('Decline'),
+                      child: Text(context.l10n.decline),
                     ),
                   ),
-                if (widget.onDeclined != null) const SizedBox(width: 12),
+                if (widget.onDeclined != null) SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _canProceed ? widget.onAccepted : null,
-                    child: const Text('Accept & Continue'),
+                    child: Text(context.l10n.acceptContinue),
                   ),
                 ),
               ],
@@ -188,13 +189,13 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
             onTap: () => onChanged(!value),
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                style: TextStyle(color: Colors.black87, fontSize: 14),
                 children: [
                   TextSpan(text: label),
                   WidgetSpan(
@@ -202,7 +203,7 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
                       onTap: onLinkTap,
                       child: Text(
                         linkText,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.blue,
                           decoration: TextDecoration.underline,
                         ),
@@ -221,8 +222,8 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
   void _openTerms(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const _PolicyViewDialog(
-        title: 'Terms of Service',
+      builder: (context) => _PolicyViewDialog(
+        title: context.l10n.termsOfService,
         version: LegalService.currentTermsVersion,
       ),
     );
@@ -231,8 +232,8 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
   void _openPrivacy(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const _PolicyViewDialog(
-        title: 'Privacy Policy',
+      builder: (context) => _PolicyViewDialog(
+        title: context.l10n.footerPrivacy,
         version: LegalService.currentPrivacyVersion,
       ),
     );
@@ -253,7 +254,7 @@ class _PolicyViewDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        constraints: BoxConstraints(maxWidth: 500, maxHeight: 600),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -264,25 +265,25 @@ class _PolicyViewDialog extends StatelessWidget {
                 children: [
                   Text(
                     '$title (v$version)',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
+            Divider(height: 1),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   _getPlaceholderText(title),
-                  style: const TextStyle(fontSize: 14, height: 1.6),
+                  style: TextStyle(fontSize: 14, height: 1.6),
                 ),
               ),
             ),
@@ -392,25 +393,25 @@ class _OrganizerAgreementDialogState extends State<OrganizerAgreementDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: BoxConstraints(maxWidth: 500),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Organizer Agreement',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'As an event organizer, you must agree to additional terms.',
               style: TextStyle(color: Colors.grey[600]),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             Container(
               height: 200,
@@ -420,7 +421,7 @@ class _OrganizerAgreementDialogState extends State<OrganizerAgreementDialog> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey[300]!),
               ),
-              child: const SingleChildScrollView(
+              child: SingleChildScrollView(
                 child: Text(
                   '''Organizer Agreement
 
@@ -445,7 +446,7 @@ Violation of these terms may result in suspension or termination.
               ),
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             Row(
               children: [
@@ -453,7 +454,7 @@ Violation of these terms may result in suspension or termination.
                   value: _accepted,
                   onChanged: (v) => setState(() => _accepted = v ?? false),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'I agree to the Organizer Agreement',
                     style: TextStyle(fontSize: 14),
@@ -462,21 +463,21 @@ Violation of these terms may result in suspension or termination.
               ],
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: widget.onDeclined,
-                    child: const Text('Cancel'),
+                    child: Text(context.l10n.adminCancel),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _accepted ? widget.onAccepted : null,
-                    child: const Text('Accept'),
+                    child: Text(context.l10n.accept),
                   ),
                 ),
               ],

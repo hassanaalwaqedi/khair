@@ -64,14 +64,14 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Title
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         context.l10n.filterEventsTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -82,21 +82,21 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Location
                   Text(
                     context.l10n.eventDetailsLocation,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: _countryController,
                     decoration: InputDecoration(
                       labelText: context.l10n.filterEventsCountry,
-                      prefixIcon: const Icon(Icons.public),
+                      prefixIcon: Icon(Icons.public),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -106,12 +106,12 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: _cityController,
                     decoration: InputDecoration(
                       labelText: context.l10n.city,
-                      prefixIcon: const Icon(Icons.location_city),
+                      prefixIcon: Icon(Icons.location_city),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -121,16 +121,16 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       });
                     },
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Event Type
                   Text(
                     context.l10n.filterEventsType,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -143,16 +143,16 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       _buildTypeChip('other', context.l10n.eventTypeOther),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Language
                   Text(
                     context.l10n.filterEventsLanguage,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -163,25 +163,25 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
                       _buildLanguageChip('es', context.l10n.langSpanish),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
                   // Apply button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _applyFilters,
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: Text(
                         context.l10n.applyFilters,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                 ],
               ),
             ),
@@ -233,7 +233,7 @@ class _EventFilterSheetState extends State<EventFilterSheet> {
 
   void _resetFilters() {
     setState(() {
-      _filter = const EventFilter();
+      _filter = EventFilter();
       _countryController.clear();
       _cityController.clear();
     });

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,7 +23,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
     super.initState();
     final state = context.read<OrganizerBloc>().state;
     if (state.events.isEmpty) {
-      context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
+      context.read<OrganizerBloc>().add(LoadOrganizerEvents());
     }
   }
 
@@ -31,7 +32,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
     final completed = bloc.stream.firstWhere(
       (state) => state.eventsStatus != OrganizerStatus.loading,
     );
-    bloc.add(const LoadOrganizerEvents());
+    bloc.add(LoadOrganizerEvents());
     await completed;
   }
 
@@ -41,12 +42,12 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analytics'),
+        title: Text(context.l10n.orgAnalytics),
       ),
       body: BlocBuilder<OrganizerBloc, OrganizerState>(
         builder: (context, state) {
           if (state.isEventsLoading && state.events.isEmpty) {
-            return const KhairLoadingState(message: 'Loading analytics...');
+            return KhairLoadingState(message: context.l10n.loadingAnalytics);
           }
 
           if (state.eventsStatus == OrganizerStatus.failure &&
@@ -54,7 +55,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
             return KhairErrorState(
               message: state.errorMessage ?? 'Failed to load analytics data.',
               onRetry: () {
-                context.read<OrganizerBloc>().add(const LoadOrganizerEvents());
+                context.read<OrganizerBloc>().add(LoadOrganizerEvents());
               },
             );
           }
@@ -80,13 +81,13 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
             color: KhairColors.primary,
             onRefresh: _refreshEvents,
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Overview', style: KhairTypography.h3),
-                  const SizedBox(height: 16),
+                  Text(context.l10n.overview, style: KhairTypography.h3),
+                  SizedBox(height: 16),
 
                   // Main stat cards
                   LayoutBuilder(
@@ -97,34 +98,34 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                           children: [
                             Expanded(
                               child: AnimatedStatCard(
-                                label: 'Total Events',
+                                label: context.l10n.orgTotalEvents,
                                 value: total,
                                 icon: Icons.event_rounded,
                                 color: KhairColors.primary,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: AnimatedStatCard(
-                                label: 'Approved',
+                                label: context.l10n.orgApproved,
                                 value: approved,
                                 icon: Icons.check_circle_rounded,
                                 color: KhairColors.success,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: AnimatedStatCard(
-                                label: 'Pending',
+                                label: context.l10n.statusPending,
                                 value: pending,
                                 icon: Icons.pending_rounded,
                                 color: KhairColors.warning,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: AnimatedStatCard(
-                                label: 'Rejected',
+                                label: context.l10n.statusRejected,
                                 value: rejected,
                                 icon: Icons.cancel_rounded,
                                 color: KhairColors.error,
@@ -139,16 +140,16 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                             children: [
                               Expanded(
                                 child: AnimatedStatCard(
-                                  label: 'Total Events',
+                                  label: context.l10n.orgTotalEvents,
                                   value: total,
                                   icon: Icons.event_rounded,
                                   color: KhairColors.primary,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: 12),
                               Expanded(
                                 child: AnimatedStatCard(
-                                  label: 'Approved',
+                                  label: context.l10n.orgApproved,
                                   value: approved,
                                   icon: Icons.check_circle_rounded,
                                   color: KhairColors.success,
@@ -156,21 +157,21 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(
                             children: [
                               Expanded(
                                 child: AnimatedStatCard(
-                                  label: 'Pending',
+                                  label: context.l10n.statusPending,
                                   value: pending,
                                   icon: Icons.pending_rounded,
                                   color: KhairColors.warning,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: 12),
                               Expanded(
                                 child: AnimatedStatCard(
-                                  label: 'Rejected',
+                                  label: context.l10n.statusRejected,
                                   value: rejected,
                                   icon: Icons.cancel_rounded,
                                   color: KhairColors.error,
@@ -183,25 +184,25 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                     },
                   ),
 
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   // Timeline section
-                  Text('Timeline', style: KhairTypography.h3),
-                  const SizedBox(height: 16),
+                  Text(context.l10n.timeline, style: KhairTypography.h3),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: AnimatedStatCard(
-                          label: 'Upcoming',
+                          label: context.l10n.upcomingTab,
                           value: upcoming,
                           icon: Icons.upcoming_rounded,
                           color: KhairColors.info,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: AnimatedStatCard(
-                          label: 'Past',
+                          label: context.l10n.past,
                           value: past,
                           icon: Icons.history_rounded,
                           color: KhairColors.textTertiary,
@@ -210,11 +211,11 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   // Events by type
-                  Text('Events by Type', style: KhairTypography.h3),
-                  const SizedBox(height: 16),
+                  Text(context.l10n.eventsByType, style: KhairTypography.h3),
+                  SizedBox(height: 16),
 
                   if (typeMap.isEmpty)
                     Container(
@@ -269,7 +270,7 @@ class _OrganizerAnalyticsPageState extends State<OrganizerAnalyticsPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: LinearProgressIndicator(

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -42,7 +43,7 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load trust data: $e')),
+          SnackBar(content: Text(context.l10n.adminActionFailed)),
         );
       }
     }
@@ -52,8 +53,8 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Organizer Trust Profile')),
-        body: const Center(child: CircularProgressIndicator()),
+        appBar: AppBar(title: Text(context.l10n.organizerTrustProfile)),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -65,29 +66,29 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Organizer Trust Profile'),
+        title: Text(context.l10n.organizerTrustProfile),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
         ),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchTrustData,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderCard(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _buildTrustScoreCard(score),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _buildMetricsGrid(approved, rejected, reports, warnings),
-              const SizedBox(height: 24),
-              const Text('Trust Actions',
+              SizedBox(height: 24),
+              Text(context.l10n.trustActions,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _buildActionButtons(),
             ],
           ),
@@ -116,20 +117,20 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
               color: Colors.white.withAlpha(51),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.business, color: Colors.white, size: 32),
+            child: Icon(Icons.business, color: Colors.white, size: 32),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Organizer #${widget.organizerId.substring(0, 8)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -138,7 +139,7 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
                   ),
                   child: Text(
                     _trustState.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -162,9 +163,9 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
       ),
       child: Column(
         children: [
-          const Text('Trust Score',
+          Text(context.l10n.trustScore,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Stack(
             alignment: Alignment.center,
             children: [
@@ -200,7 +201,7 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1.5,
@@ -228,12 +229,12 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(value,
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(label,
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
             textAlign: TextAlign.center),
@@ -247,14 +248,14 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
       children: [
         if (_trustState == 'active') ...[
           _buildActionButton('Issue Warning', Icons.warning, AppTheme.warningColor, 'warn'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _buildActionButton('Suspend', Icons.pause_circle, Colors.orange, 'suspend'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _buildActionButton('Ban', Icons.block, AppTheme.errorColor, 'ban'),
         ],
         if (_trustState == 'warning') ...[
           _buildActionButton('Reinstate', Icons.check_circle, AppTheme.successColor, 'reinstate'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _buildActionButton('Suspend', Icons.pause_circle, Colors.orange, 'suspend'),
         ],
         if (_trustState == 'suspended' || _trustState == 'banned') ...[
@@ -310,12 +311,12 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Are you sure you want to $label this organizer?'),
-            const SizedBox(height: 16),
+            Text(context.l10n.ownerDeleteConfirm),
+            SizedBox(height: 16),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Reason (required)',
+              decoration: InputDecoration(
+                labelText: context.l10n.reasonRequired,
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -325,7 +326,7 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.adminCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -333,7 +334,7 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
               _performAction(action, reasonController.text);
             },
             style: ElevatedButton.styleFrom(backgroundColor: color),
-            child: Text(label, style: const TextStyle(color: Colors.white)),
+            child: Text(label, style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -349,14 +350,14 @@ class _OrganizerTrustPageState extends State<OrganizerTrustPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Action completed: $action')),
+          SnackBar(content: Text(context.l10n.adminActionSuccess)),
         );
       }
       _fetchTrustData(); // Refresh
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e')),
+          SnackBar(content: Text(context.l10n.adminActionFailed)),
         );
       }
     }

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -128,15 +129,15 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       setState(() {
         _loading = false;
         _error = status == 403
-            ? 'Your account does not have access to the organizer application.'
-            : 'We could not load your organizer application. Try again.';
+            ? context.l10n.organizerAccessDenied
+            : context.l10n.organizerApplicationLoadFailed;
       });
     } catch (e) {
       if (!mounted) return;
       if (kDebugMode) debugPrint('OrganizerAccessPage unexpected error: $e');
       setState(() {
         _loading = false;
-        _error = 'We could not load your organizer application. Try again.';
+        _error = context.l10n.organizerApplicationLoadFailed;
       });
     }
   }
@@ -212,7 +213,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   void _queueSave() {
     if (_loading || _showStatus || _submitting) return;
     _autosave?.cancel();
-    _autosave = Timer(const Duration(milliseconds: 750), () {
+    _autosave = Timer(Duration(milliseconds: 750), () {
       unawaited(_save(quiet: true));
     });
   }
@@ -230,7 +231,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       return true;
     } catch (error) {
       if (!mounted) return false;
-      final message = _errorText(error, 'We could not save your draft.');
+      final message = _errorText(error, context.l10n.draftSaveFailed);
       // Only show a snackbar — never set _error here, because that would
       // replace the form with the "Try again" error page.
       if (!quiet) _snack(message);
@@ -242,7 +243,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
 
   Future<void> _continue() async {
     if (_isTransitioning) return;
-    if (_step >= _stepTitles.length - 1) return;
+    if (_step >= _stepTitles(context).length - 1) return;
     final validation = _validateStep(_step);
     if (validation != null) {
       _snack(validation);
@@ -261,39 +262,39 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   String? _validateStep(int step) {
     if (step == 0) {
       if (_publicName.text.trim().length < 2) {
-        return 'Enter your public organizer name.';
+        return context.l10n.enterPublicOrganizerName;
       }
       if (_representative.text.trim().length < 2) {
-        return 'Enter the responsible representative.';
+        return context.l10n.enterResponsibleRepresentative;
       }
       if (!_email.text.trim().contains('@')) {
-        return 'Enter your verified account email.';
+        return context.l10n.enterVerifiedAccountEmail;
       }
       if (_city.text.trim().length < 2) {
-        return 'Enter your city.';
+        return context.l10n.enterCity;
       }
       if (_description.text.trim().length < 50) {
-        return 'Add at least 50 characters about your organization.';
+        return context.l10n.organizationDescriptionMinLength;
       }
     }
     if (step == 1) {
       if (_application?['has_public_logo'] != true) {
-        return 'Upload a public logo or profile image.';
+        return context.l10n.uploadLogoRequired;
       }
       if (_organizerType == 'individual' &&
           _application?['has_representative_photo'] != true) {
-        return 'Upload your public profile photo.';
+        return context.l10n.uploadRepresentativePhotoRequired;
       }
     }
     if (step == 2) {
       if (_eventPlan.text.trim().length < 50) {
-        return 'Describe your event plan in at least 50 characters.';
+        return context.l10n.eventPlanMinLength;
       }
       if (_categories.isEmpty) {
-        return 'Choose at least one planned event category.';
+        return context.l10n.chooseEventCategory;
       }
       if (!_guidelinesAccepted) {
-        return 'Accept the Khair Organizer Standards to continue.';
+        return context.l10n.acceptOrganizerStandards;
       }
     }
     return null;
@@ -321,7 +322,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       });
     } catch (error) {
       if (mounted) {
-        _snack(_errorText(error, 'We could not submit your application.'));
+        _snack(_errorText(error, context.l10n.organizerApplicationSubmitFailed));
       }
     } finally {
       if (mounted) {
@@ -364,9 +365,9 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           _logoPreview = bytes;
         }
       });
-      _snack('Upload complete. Your image remains private until approval.');
+      _snack(context.l10n.imageUploadComplete);
     } catch (error) {
-      if (mounted) _snack(_errorText(error, 'Image upload failed.'));
+      if (mounted) _snack(_errorText(error, context.l10n.imageUploadFailed));
     }
   }
 
@@ -388,9 +389,9 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       );
       if (!mounted) return;
       setState(() => _documents.add(file));
-      _snack('Verification document uploaded securely.');
+      _snack(context.l10n.documentUploadComplete);
     } catch (error) {
-      if (mounted) _snack(_errorText(error, 'Document upload failed.'));
+      if (mounted) _snack(_errorText(error, context.l10n.documentUploadFailed));
     }
   }
 
@@ -399,19 +400,19 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         showDragHandle: true,
         builder: (context) => SafeArea(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const ListTile(
-              title: Text('What does this document verify?',
+            ListTile(
+              title: Text(context.l10n.whatDoesThisDocumentVerify,
                   style: TextStyle(fontWeight: FontWeight.w800)),
             ),
-            for (final item in const {
-              'registration': 'Organization registration',
-              'charity_registration': 'Charity registration',
-              'community_document': 'Community document',
-              'school_company_document': 'School or company document',
-              'other': 'Other supporting document',
+            for (final item in {
+              'registration': context.l10n.organizationRegistration,
+              'charity_registration': context.l10n.charityRegistration,
+              'community_document': context.l10n.communityDocument,
+              'school_company_document': context.l10n.schoolCompanyDocument,
+              'other': context.l10n.otherSupportingDocument,
             }.entries)
               ListTile(
-                leading: const Icon(Icons.description_outlined),
+                leading: Icon(Icons.description_outlined),
                 title: Text(item.value),
                 onTap: () => Navigator.pop(context, item.key),
               ),
@@ -423,7 +424,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     final url = _linkUrl.text.trim();
     final parsed = Uri.tryParse(url);
     if (parsed == null || parsed.scheme != 'https' || parsed.host.isEmpty) {
-      _snack('Add a complete https:// link.');
+      _snack(context.l10n.addHttpsLink);
       return;
     }
     setState(() {
@@ -437,13 +438,13 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     final url = _evidenceUrl.text.trim();
     final note = _evidenceNote.text.trim();
     if (url.isEmpty && note.isEmpty) {
-      _snack('Add a URL or a short note for this evidence.');
+      _snack(context.l10n.addEvidenceUrlOrNote);
       return;
     }
     final parsed = Uri.tryParse(url);
     if (url.isNotEmpty &&
         (parsed == null || parsed.scheme != 'https' || parsed.host.isEmpty)) {
-      _snack('Add a complete https:// evidence URL.');
+      _snack(context.l10n.addHttpsEvidenceUrl);
       return;
     }
     setState(() {
@@ -474,15 +475,15 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null && _application == null) {
       return Scaffold(
         body: Center(
           child: FilledButton.icon(
             onPressed: _load,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try again'),
+            icon: Icon(Icons.refresh),
+            label: Text(context.l10n.tryAgain),
           ),
         ),
       );
@@ -498,23 +499,25 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xfffdfbfc),
+        backgroundColor: Color(0xfffdfbfc),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
             onPressed: () => context.go('/'),
-            icon: const Icon(Icons.close_rounded),
-            tooltip: 'Close organizer application',
+            icon: Icon(Icons.close_rounded),
+            tooltip: context.l10n.closeOrganizerApplication,
           ),
-          title: const Text('Become an organizer'),
+          title: Text(context.l10n.becomeAnOrganizer),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsetsDirectional.only(end: 16),
               child: Center(
-                child: Text(_saving ? 'Saving…' : 'Draft saved securely',
+                child: Text(_saving
+                    ? context.l10n.savingDraft
+                    : context.l10n.draftSavedSecurely,
                     style:
-                        const TextStyle(fontSize: 12, color: Colors.black54)),
+                        TextStyle(fontSize: 12, color: Colors.black54)),
               ),
             ),
           ],
@@ -524,24 +527,24 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           child: LayoutBuilder(
             builder: (context, constraints) => Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 980),
+                constraints: BoxConstraints(maxWidth: 980),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 116),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _progress(),
-                      const SizedBox(height: 30),
-                      Text(_stepTitles[_step],
-                          style: const TextStyle(
+                      SizedBox(height: 30),
+                      Text(_stepTitles(context)[_step],
+                          style: TextStyle(
                               fontSize: 31,
                               fontWeight: FontWeight.w800,
                               color: _ink)),
-                      const SizedBox(height: 8),
-                      Text(_stepDescriptions[_step],
-                          style: const TextStyle(
+                      SizedBox(height: 8),
+                      Text(_stepDescriptions(context)[_step],
+                          style: TextStyle(
                               fontSize: 16, color: Color(0xff716b7d))),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _stepBody(),
                     ],
                   ),
@@ -553,7 +556,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         bottomNavigationBar: SafeArea(
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-            decoration: const BoxDecoration(color: Colors.white, boxShadow: [
+            decoration: BoxDecoration(color: Colors.white, boxShadow: [
               BoxShadow(
                   color: Color(0x16000000),
                   blurRadius: 14,
@@ -564,17 +567,17 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                 TextButton.icon(
                   onPressed:
                       _submitting ? null : () => setState(() => _step -= 1),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Back'),
+                  icon: Icon(Icons.arrow_back),
+                  label: Text(context.l10n.createEventBack),
                 ),
-              const Spacer(),
+              Spacer(),
               FilledButton.icon(
                 style: FilledButton.styleFrom(
-                    backgroundColor: _pink, minimumSize: const Size(172, 52)),
+                    backgroundColor: _pink, minimumSize: Size(172, 52)),
                 onPressed:
                     _submitting ? null : (_step == 3 ? _submit : _continue),
                 icon: _submitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
@@ -582,7 +585,9 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     : Icon(_step == 3
                         ? Icons.verified_rounded
                         : Icons.arrow_forward_rounded),
-                label: Text(_step == 3 ? 'Submit for review' : 'Continue'),
+              label: Text(_step == 3
+                  ? context.l10n.submitForReview
+                  : context.l10n.registrationContinue),
               ),
             ]),
           ),
@@ -591,21 +596,22 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     );
   }
 
-  static const _stepTitles = [
-    'Tell us about you',
-    'Build trust',
-    'Your events',
-    'Review your application',
-  ];
-  static const _stepDescriptions = [
-    'Set up the public identity people will see on Khair.',
-    'Add the image and optional evidence that help us verify your application.',
-    'Show the kinds of safe, meaningful events you plan to host.',
-    'Confirm the details before sending your application to the Khair review team.',
-  ];
+  List<String> _stepTitles(BuildContext context) => [
+        context.l10n.tellUsAboutYou,
+        context.l10n.buildTrust,
+        context.l10n.yourEvents,
+        context.l10n.reviewYourApplication,
+      ];
+
+  List<String> _stepDescriptions(BuildContext context) => [
+        context.l10n.tellUsAboutYouDescription,
+        context.l10n.buildTrustDescription,
+        context.l10n.yourEventsDescription,
+        context.l10n.reviewYourApplicationDescription,
+      ];
 
   Widget _progress() => Semantics(
-        label: 'Organizer application step ${_step + 1} of 4',
+        label: context.l10n.organizerApplicationStep(_step + 1),
         child: Row(
           children: List.generate(4, (index) {
             final active = index <= _step;
@@ -616,21 +622,21 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                   height: 31,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: active ? _pink : const Color(0xfff0edf1),
+                    color: active ? _pink : Color(0xfff0edf1),
                     shape: BoxShape.circle,
                   ),
-                  child: Text('${index + 1}',
+                  child: Text(context.l10n.stepNumber(index + 1),
                       style: TextStyle(
                           fontWeight: FontWeight.w800,
                           color:
-                              active ? Colors.white : const Color(0xff746f7d))),
+                              active ? Colors.white : Color(0xff746f7d))),
                 ),
                 if (index < 3)
                   Expanded(
                       child: Container(
                           height: 3,
                           color:
-                              index < _step ? _pink : const Color(0xffeeeaf0))),
+                              index < _step ? _pink : Color(0xffeeeaf0))),
               ]),
             );
           }),
@@ -652,18 +658,18 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
 
   Widget _aboutStep() => _panel(
         children: [
-          const _FieldLabel('Organizer type'),
+          _FieldLabel(context.l10n.organizerType),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: {
-              'individual': 'Individual',
-              'community': 'Community',
-              'mosque': 'Mosque',
-              'charity': 'Charity',
-              'company': 'Company',
-              'school': 'School',
-              'other': 'Other',
+              'individual': context.l10n.individual,
+              'community': context.l10n.catCommunity,
+              'mosque': context.l10n.registrationOrgTypeMosque,
+              'charity': context.l10n.registrationOrgTypeCharity,
+              'company': context.l10n.company,
+              'school': context.l10n.school,
+              'other': context.l10n.other,
             }
                 .entries
                 .map((entry) => ChoiceChip(
@@ -677,153 +683,150 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     ))
                 .toList(),
           ),
-          const SizedBox(height: 24),
-          _field(_publicName, 'Public organizer name'),
-          const SizedBox(height: 14),
-          _field(_representative, 'Responsible representative'),
-          const SizedBox(height: 14),
-          _field(_email, 'Verified account email',
+          SizedBox(height: 24),
+          _field(_publicName, context.l10n.publicOrganizerName),
+          SizedBox(height: 14),
+          _field(_representative, context.l10n.responsibleRepresentative),
+          SizedBox(height: 14),
+          _field(_email, context.l10n.verifiedAccountEmail,
               keyboardType: TextInputType.emailAddress),
-          const SizedBox(height: 14),
-          _field(_phone, 'Phone (optional, international format)',
+          SizedBox(height: 14),
+          _field(_phone, context.l10n.phoneInternationalOptional,
               keyboardType: TextInputType.phone),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Row(children: [
             Expanded(
               child: TextFormField(
                 initialValue: _country,
                 textCapitalization: TextCapitalization.characters,
                 maxLength: 2,
-                decoration: const InputDecoration(
-                    labelText: 'Country code', hintText: 'TR'),
+                decoration: InputDecoration(
+                    labelText: context.l10n.countryCode, hintText: context.l10n.tr),
                 onChanged: (value) {
                   setState(() => _country = value.trim().toUpperCase());
                   _queueSave();
                 },
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(child: _field(_city, 'City')),
+            SizedBox(width: 14),
+            Expanded(child: _field(_city, context.l10n.city)),
           ]),
-          const SizedBox(height: 14),
-          _field(_description, 'About your organization',
+          SizedBox(height: 14),
+          _field(_description, context.l10n.aboutYourOrganization,
               hint:
-                  'Who are you, what is your purpose, and why should the Khair community trust your events?',
+                  context.l10n.aboutYourOrganizationHint,
               maxLines: 5),
         ],
       );
 
   Widget _trustStep() => _panel(children: [
         _uploadCard(
-          title: 'Public logo or profile image',
-          subtitle: 'JPG, PNG, or WebP · up to 5 MB. Private until approved.',
+          title: context.l10n.publicLogoOrProfileImage,
+          subtitle: context.l10n.jpgPngOrWebpUpTo5MbPrivateUnti,
           bytes: _logoPreview,
           isUploaded: _application?['has_public_logo'] == true,
           onPressed: () => _pickImage(representativePhoto: false),
         ),
         if (_organizerType == 'individual') ...[
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _uploadCard(
-            title: 'Public representative photo',
-            subtitle:
-                'Required for individual organizers. Visible only after approval.',
+            title: context.l10n.publicRepresentativePhoto,
+            subtitle: context.l10n.requiredForIndividualOrganizer,
             bytes: _representativePreview,
             isUploaded: _application?['has_representative_photo'] == true,
             onPressed: () => _pickImage(representativePhoto: true),
           ),
         ],
-        const SizedBox(height: 26),
-        const Text('Official links',
+        SizedBox(height: 26),
+        Text(context.l10n.officialLinks,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        const Text(
-            'Optional, but useful for a faster review. Only add official public links.'),
-        const SizedBox(height: 12),
+        SizedBox(height: 6),
+        Text(context.l10n.optionalButUsefulForFasterReview),
+        SizedBox(height: 12),
         _addLinkRow(),
         _linkChips(),
-        const Divider(height: 40),
-        const Text('Verification evidence',
+        Divider(height: 40),
+        Text(context.l10n.verificationEvidence,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        const Text(
-            'Documents are encrypted in private storage and are accessible only to authorized Khair reviewers.'),
-        const SizedBox(height: 12),
+        SizedBox(height: 6),
+        Text(context.l10n.documentsAreEncryptedInPrivate),
+        SizedBox(height: 12),
         _addEvidenceRow(),
         _evidenceChips(),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _pickDocument,
-          icon: const Icon(Icons.upload_file_outlined),
-          label: const Text('Upload verification document'),
+          icon: Icon(Icons.upload_file_outlined),
+          label: Text(context.l10n.uploadVerificationDocument),
         ),
         if (_documents.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           ..._documents.map((file) => Material(
                 color: Colors.transparent,
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading:
-                      const Icon(Icons.verified_user_outlined, color: _pink),
+                      Icon(Icons.verified_user_outlined, color: _pink),
                   title: Text(_string(file['original_filename'],
-                      fallback: 'Secure document')),
-                  subtitle: Text('${_string(file['file_type'])} · private'),
-                  trailing: const Icon(Icons.lock_outline, size: 18),
+                      fallback: context.l10n.secureDocument)),
+                  subtitle: Text(context.l10n.privateDocumentType(
+                      file['file_type']?.toString() ?? '')),
+                  trailing: Icon(Icons.lock_outline, size: 18),
                 ),
               )),
         ],
       ]);
 
   Widget _eventsStep() => _panel(children: [
-        _field(_eventPlan, 'What events will you host?',
+        _field(_eventPlan, context.l10n.whatEventsWillYouHost,
             hint:
-                'Describe your event ideas, frequency, safety plan, and the value for your community.',
+                context.l10n.eventPlanDescriptionHint,
             maxLines: 5),
-        const SizedBox(height: 22),
-        const Text('Planned event categories',
+        SizedBox(height: 22),
+        Text(context.l10n.plannedEventCategories,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _selectionChips(
-          const {
-            'community': 'Community',
-            'charity': 'Charity',
-            'lecture': 'Lecture',
-            'workshop': 'Workshop',
-            'conference': 'Conference',
-            'family': 'Family',
-            'youth': 'Youth',
-            'technology': 'Technology',
-            'online': 'Online',
-            'education': 'Education',
-            'social_gathering': 'Social gathering',
-            'other': 'Other',
+          {
+            'community': context.l10n.catCommunity,
+            'charity': context.l10n.catCharity,
+            'lecture': context.l10n.lecture,
+            'workshop': context.l10n.workshop,
+            'conference': context.l10n.conference,
+            'family': context.l10n.categoryFamily,
+            'youth': context.l10n.categoryYouth,
+            'technology': context.l10n.technology,
+            'online': context.l10n.online,
+            'education': context.l10n.education,
+            'social_gathering': context.l10n.socialGathering,
+            'other': context.l10n.other,
           },
           _categories,
         ),
-        const SizedBox(height: 22),
-        const Text('Typical audience',
+        SizedBox(height: 22),
+        Text(context.l10n.typicalAudience,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        _selectionChips(const {
-          'everyone': 'Everyone',
-          'families': 'Families',
-          'youth': 'Youth',
-          'students': 'Students',
-          'professionals': 'Professionals',
-          'men': 'Men',
-          'women': 'Women',
-          'other': 'Other',
+        SizedBox(height: 8),
+        _selectionChips({
+          'everyone': context.l10n.everyone,
+          'families': context.l10n.families,
+          'youth': context.l10n.categoryYouth,
+          'students': context.l10n.students,
+          'professionals': context.l10n.professionals,
+          'men': context.l10n.men,
+          'women': context.l10n.women,
+          'other': context.l10n.other,
         }, _audiences),
-        const SizedBox(height: 26),
+        SizedBox(height: 26),
         Material(
           color: Colors.transparent,
           child: CheckboxListTile(
             value: _guidelinesAccepted,
             contentPadding: EdgeInsets.zero,
             activeColor: _pink,
-            title: const Text('I accept the Khair Organizer Standards',
+            title: Text(context.l10n.iAcceptTheKhairOrganizerStanda,
                 style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text(
-                'I will keep events safe, respectful, accurate, and inclusive. Version 2026-08.'),
+            subtitle: Text(context.l10n.iWillKeepEventsSafeRespectfulA),
             onChanged: (value) {
               setState(() => _guidelinesAccepted = value ?? false);
               _queueSave();
@@ -834,8 +837,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           alignment: AlignmentDirectional.centerStart,
           child: TextButton.icon(
             onPressed: _showGuidelines,
-            icon: const Icon(Icons.menu_book_outlined),
-            label: const Text('Read Organizer Standards · v2026-08'),
+            icon: Icon(Icons.menu_book_outlined),
+            label: Text(context.l10n.readOrganizerStandardsV202608),
           ),
         ),
       ]);
@@ -851,39 +854,39 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Khair Organizer Standards',
+                    Text(context.l10n.khairOrganizerStandards,
                         style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    const Text('Version 2026-08',
+                    SizedBox(height: 4),
+                    Text(context.l10n.version202608,
                         style: TextStyle(color: Color(0xff716b7d))),
-                    const SizedBox(height: 20),
-                    for (final rule in const [
-                      'Publish accurate, complete event information and update attendees promptly when plans change.',
-                      'Create safe, respectful gatherings. Do not discriminate, harass, mislead, or facilitate harmful activity.',
-                      'Use only images, names, documents, and links you are entitled to share.',
-                      'Protect attendee privacy and never use Khair data for unsolicited contact or unrelated marketing.',
-                      'Follow local law, venue requirements, and Khair content and community policies.',
-                      'Cooperate with review requests and keep your organizer profile and verification material current.',
+                    SizedBox(height: 20),
+                    for (final rule in [
+                      context.l10n.organizerRuleAccurate,
+                      context.l10n.organizerRuleSafe,
+                      context.l10n.organizerRuleRights,
+                      context.l10n.organizerRulePrivacy,
+                      context.l10n.organizerRuleLaw,
+                      context.l10n.organizerRuleReview,
                     ])
                       Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.check_circle_outline,
+                              Icon(Icons.check_circle_outline,
                                   color: _pink, size: 20),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 10),
                               Expanded(
                                   child: Text(rule,
-                                      style: const TextStyle(height: 1.45))),
+                                      style: TextStyle(height: 1.45))),
                             ]),
                       ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     FilledButton(
                       style: FilledButton.styleFrom(backgroundColor: _pink),
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('I understand'),
+                      child: Text(context.l10n.iUnderstand),
                     ),
                   ]),
             ),
@@ -892,38 +895,47 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
       );
 
   Widget _reviewStep() => _panel(children: [
-        _reviewGroup('Public profile', [
-          _reviewLine('Type', _organizerType),
-          _reviewLine('Name', _publicName.text.trim()),
-          _reviewLine('Representative', _representative.text.trim()),
-          _reviewLine('Contact email', _email.text.trim()),
-          _reviewLine('Location', '${_city.text.trim()}, $_country'),
+        _reviewGroup(context.l10n.publicProfile, [
+          _reviewLine(context.l10n.type, _localizedDisplay(context, _organizerType)),
+          _reviewLine(context.l10n.name, _publicName.text.trim()),
+          _reviewLine(context.l10n.representative, _representative.text.trim()),
+          _reviewLine(context.l10n.contactEmail, _email.text.trim()),
+          _reviewLine(context.l10n.location,
+              '${_city.text.trim()}, $_country'),
         ]),
-        _reviewGroup('Trust material', [
+        _reviewGroup(context.l10n.trustMaterial, [
           _reviewLine(
-              'Public image',
+              context.l10n.publicImage,
               _application?['has_public_logo'] == true
-                  ? 'Uploaded'
-                  : 'Missing'),
-          _reviewLine('Official links', '${_links.length} added'),
-          _reviewLine('Evidence', '${_evidence.length} added'),
-          _reviewLine('Private documents', '${_documents.length} uploaded'),
+                  ? context.l10n.uploaded
+                  : context.l10n.missing),
+          _reviewLine(context.l10n.officialLinks,
+              context.l10n.itemsCount(_links.length, context.l10n.added)),
+          _reviewLine(context.l10n.evidence,
+              context.l10n.itemsCount(_evidence.length, context.l10n.added)),
+          _reviewLine(context.l10n.privateDocuments,
+              context.l10n.itemsCount(_documents.length, context.l10n.uploaded)),
         ]),
-        _reviewGroup('Events', [
-          _reviewLine('Categories', _categories.map(_display).join(', ')),
+        _reviewGroup(context.l10n.events, [
+          _reviewLine(context.l10n.categories,
+              _categories.map((item) => _localizedDisplay(context, item)).join(', ')),
           _reviewLine(
-              'Audience',
+              context.l10n.audience,
               _audiences.isEmpty
-                  ? 'Not specified'
-                  : _audiences.map(_display).join(', ')),
+                  ? context.l10n.notSpecified
+                  : _audiences
+                      .map((item) => _localizedDisplay(context, item))
+                      .join(', ')),
           _reviewLine(
-              'Standards', _guidelinesAccepted ? 'Accepted' : 'Not accepted'),
+              context.l10n.standards,
+              _guidelinesAccepted
+                  ? context.l10n.accepted
+                  : context.l10n.notAccepted),
         ]),
-        const SizedBox(height: 12),
-        const _Notice(
+        SizedBox(height: 12),
+        _Notice(
           icon: Icons.admin_panel_settings_outlined,
-          text:
-              'A Khair admin will review this application. You will receive an in-app notification, push notification when available, and an email after a decision.',
+          text: context.l10n.reviewNotice,
         ),
       ]);
 
@@ -936,32 +948,30 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
     final isDraft = status == 'draft';
     
     final title = isApproved
-        ? 'You are approved to organize'
+        ? context.l10n.organizerApproved
         : needsRevision
-            ? 'Your application needs changes'
+            ? context.l10n.applicationNeedsChanges
             : rejected
-                ? 'Your application was not approved'
+                ? context.l10n.applicationNotApproved
                 : suspended
-                    ? 'Your organizer account is suspended'
+                    ? context.l10n.organizerAccountSuspended
                     : isDraft
-                        ? 'Your application is incomplete'
-                        : 'Your application is under review';
+                        ? context.l10n.applicationIncomplete
+                        : context.l10n.applicationUnderReview;
     final message = isApproved
-        ? 'Organizer tools are now available on your account.'
+        ? context.l10n.organizerToolsAvailable
         : needsRevision
             ? _string(_application?['admin_user_message'],
-                fallback:
-                    'Review the feedback, update your draft, and submit again when ready.')
+                fallback: context.l10n.reviewFeedbackAndResubmit)
             : rejected
                 ? _string(_application?['admin_user_message'],
-                    fallback:
-                        'This application is closed. Contact Khair support if you need help with the decision.')
+                    fallback: context.l10n.applicationClosedContactSupport)
                 : suspended
                     ? _string(_application?['admin_user_message'],
-                        fallback: 'Contact Khair support for more information.')
+                        fallback: context.l10n.contactSupportForMoreInformation)
                     : isDraft
-                        ? 'Complete and submit your application to start organizing events.'
-                        : 'Your details, evidence, and event plan are securely with the Khair review team.';
+                        ? context.l10n.completeApplicationToOrganize
+                        : context.l10n.applicationWithReviewTeam;
     final icon = isApproved
         ? Icons.verified_rounded
         : needsRevision
@@ -974,13 +984,13 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                         ? Icons.edit_document
                         : Icons.hourglass_top_rounded;
     return Scaffold(
-      backgroundColor: const Color(0xfffdfbfc),
+      backgroundColor: Color(0xfffdfbfc),
       appBar: AppBar(
           leading: IconButton(
-              onPressed: () => context.go('/'), icon: const Icon(Icons.close))),
+              onPressed: () => context.go('/'), icon: Icon(Icons.close))),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
+          constraints: BoxConstraints(maxWidth: 580),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Card(
@@ -992,27 +1002,35 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                       radius: 34,
                       backgroundColor: _pink.withValues(alpha: .12),
                       child: Icon(icon, size: 38, color: _pink)),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Text(title,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
                           color: _ink)),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(message,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                           height: 1.5, color: Color(0xff716b7d))),
                   if ((needsRevision || rejected) &&
                       _string(_application?['admin_reason_code'])
                           .isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
-                        'Reason: ${_display(_string(_application?['admin_reason_code']))}',
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                        context.l10n.reasonLabel,
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        _localizedDisplay(context,
+                            _string(_application?['admin_reason_code'])),
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
                   ],
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                         backgroundColor: _pink,
@@ -1054,12 +1072,12 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                             ? Icons.edit_outlined
                             : Icons.refresh),
                     label: Text(isApproved
-                        ? 'Open organizer hub'
+                        ? context.l10n.openOrganizerHub
                         : needsRevision
-                            ? 'Update application'
+                            ? context.l10n.updateApplication
                             : rejected
-                                ? 'Back to discover'
-                                : 'Refresh status'),
+                                ? context.l10n.backToDiscover
+                                : context.l10n.refreshStatus),
                   ),
                 ]),
               ),
@@ -1076,18 +1094,22 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xffeee9ee))),
+            border: Border.all(color: Color(0xffeee9ee))),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: children),
       );
 
   Widget _field(TextEditingController controller, String label,
           {String? hint, int maxLines = 1, TextInputType? keyboardType}) =>
-      TextField(
+        TextField(
         controller: controller,
         onChanged: (_) => _queueSave(),
         maxLines: maxLines,
         keyboardType: keyboardType,
+        textDirection: (keyboardType == TextInputType.phone ||
+                        keyboardType == TextInputType.emailAddress ||
+                        keyboardType == TextInputType.url)
+                       ? TextDirection.ltr : null,
         decoration: InputDecoration(
             labelText: label,
             hintText: hint,
@@ -1107,10 +1129,10 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 160),
+          constraints: BoxConstraints(minHeight: 160),
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-              color: const Color(0xfffff4f7),
+              color: Color(0xfffff4f7),
               border: Border.all(color: _pink.withValues(alpha: .45)),
               borderRadius: BorderRadius.circular(18)),
           child: Row(children: [
@@ -1136,24 +1158,26 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                             size: 36)),
               ),
             ),
-            const SizedBox(width: 18),
+            SizedBox(width: 18),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                   Text(title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 16)),
-                  const SizedBox(height: 5),
+                  SizedBox(height: 5),
                   Text(
                       isUploaded
-                          ? 'Uploaded securely. Tap to replace.'
+                          ? context.l10n.uploadedSecurelyTapToReplace
                           : subtitle,
-                      style: const TextStyle(color: Color(0xff716b7d))),
-                  const SizedBox(height: 12),
-                  Text(isUploaded ? 'Replace image' : 'Choose image',
-                      style: const TextStyle(
+                      style: TextStyle(color: Color(0xff716b7d))),
+                  SizedBox(height: 12),
+                  Text(isUploaded
+                      ? context.l10n.replaceImage
+                      : context.l10n.chooseImage,
+                      style: TextStyle(
                           color: _pink, fontWeight: FontWeight.w800)),
                 ])),
           ]),
@@ -1171,16 +1195,18 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
               'other'
             ]
                 .map((item) =>
-                    DropdownMenuItem(value: item, child: Text(_label(item))))
+                    DropdownMenuItem(
+                        value: item,
+                        child: Text(_localizedDisplay(context, item))))
                 .toList(),
             onChanged: (value) => setState(() => _linkPlatform = value!)),
-        const SizedBox(width: 12),
-        Expanded(child: _field(_linkUrl, 'https://…')),
-        const SizedBox(width: 8),
+        SizedBox(width: 12),
+        Expanded(child: _field(_linkUrl, context.l10n.httpsLinkHint)),
+        SizedBox(width: 8),
         IconButton(
             onPressed: _addLink,
             color: _pink,
-            icon: const Icon(Icons.add_circle)),
+            icon: Icon(Icons.add_circle)),
       ]);
 
   Widget _addEvidenceRow() => Column(children: [
@@ -1188,7 +1214,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           Expanded(
               child: DropdownButtonFormField<String>(
                   initialValue: _evidenceType,
-                  decoration: const InputDecoration(labelText: 'Evidence type'),
+        decoration: InputDecoration(labelText: context.l10n.evidenceType),
                   items: const [
                     'official_website',
                     'verified_social',
@@ -1199,28 +1225,30 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
                     'other'
                   ]
                       .map((item) => DropdownMenuItem(
-                          value: item, child: Text(_display(item))))
+                          value: item,
+                          child: Text(_localizedDisplay(context, item))))
                       .toList(),
                   onChanged: (value) =>
                       setState(() => _evidenceType = value!))),
-          const SizedBox(width: 12),
-          Expanded(child: _field(_evidenceUrl, 'Evidence URL (optional)')),
+          SizedBox(width: 12),
+          Expanded(
+              child: _field(_evidenceUrl, context.l10n.evidenceUrlOptional)),
         ]),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         Row(children: [
-          Expanded(child: _field(_evidenceNote, 'Short note (optional)')),
-          const SizedBox(width: 8),
+          Expanded(child: _field(_evidenceNote, context.l10n.shortNoteOptional)),
+          SizedBox(width: 8),
           IconButton(
               onPressed: _addEvidence,
               color: _pink,
-              icon: const Icon(Icons.add_circle)),
+              icon: Icon(Icons.add_circle)),
         ]),
       ]);
 
   Widget _linkChips() => _removableChips(
           _links
               .map((item) =>
-                  '${_label(item['platform'] ?? '')}: ${item['url'] ?? ''}')
+                  '${_localizedDisplay(context, item['platform'] ?? '')}: ${item['url'] ?? ''}')
               .toList(), (index) {
         setState(() => _links.removeAt(index));
         _queueSave();
@@ -1229,7 +1257,7 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
   Widget _evidenceChips() => _removableChips(
           _evidence
               .map((item) =>
-                  '${_display(item['evidence_type'] ?? '')}${(item['url'] ?? '').isNotEmpty ? ': ${item['url']}' : ''}')
+                  '${_localizedDisplay(context, item['evidence_type'] ?? '')}${(item['url'] ?? '').isNotEmpty ? ': ${item['url']}' : ''}')
               .toList(), (index) {
         setState(() => _evidence.removeAt(index));
         _queueSave();
@@ -1276,8 +1304,8 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
               style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
+                  TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          SizedBox(height: 8),
           ...children,
         ]),
       );
@@ -1288,20 +1316,90 @@ class _OrganizerAccessPageState extends State<OrganizerAccessPage> {
           SizedBox(
               width: 145,
               child: Text(label,
-                  style: const TextStyle(color: Color(0xff716b7d)))),
+                  style: TextStyle(color: Color(0xff716b7d)))),
           Expanded(
-              child: Text(value.isEmpty ? 'Not provided' : value,
-                  style: const TextStyle(fontWeight: FontWeight.w600))),
+              child: Text(value.isEmpty ? context.l10n.notProvided : value,
+                  style: TextStyle(fontWeight: FontWeight.w600))),
         ]),
       );
+
+  String _localizedDisplay(BuildContext context, String value) {
+    final l10n = context.l10n;
+    switch (value) {
+      case 'individual':
+        return l10n.individual;
+      case 'community':
+        return l10n.catCommunity;
+      case 'mosque':
+        return l10n.registrationOrgTypeMosque;
+      case 'charity':
+        return l10n.registrationOrgTypeCharity;
+      case 'company':
+        return l10n.company;
+      case 'school':
+        return l10n.school;
+      case 'other':
+        return l10n.other;
+      case 'website':
+        return l10n.website;
+      case 'instagram':
+        return l10n.instagram;
+      case 'facebook':
+        return l10n.facebook;
+      case 'linkedin':
+        return l10n.linkedin;
+      case 'official_website':
+        return l10n.officialWebsite;
+      case 'verified_social':
+        return l10n.verifiedSocial;
+      case 'registration':
+        return l10n.organizationRegistration;
+      case 'charity_registration':
+        return l10n.charityRegistration;
+      case 'community_document':
+        return l10n.communityDocument;
+      case 'school_company_document':
+        return l10n.schoolCompanyDocument;
+      case 'lecture':
+        return l10n.lecture;
+      case 'workshop':
+        return l10n.workshop;
+      case 'conference':
+        return l10n.conference;
+      case 'family':
+        return l10n.categoryFamily;
+      case 'youth':
+        return l10n.categoryYouth;
+      case 'technology':
+        return l10n.technology;
+      case 'online':
+        return l10n.online;
+      case 'education':
+        return l10n.education;
+      case 'social_gathering':
+        return l10n.socialGathering;
+      case 'everyone':
+        return l10n.everyone;
+      case 'families':
+        return l10n.families;
+      case 'students':
+        return l10n.students;
+      case 'professionals':
+        return l10n.professionals;
+      case 'men':
+        return l10n.men;
+      case 'women':
+        return l10n.women;
+      default:
+        return _display(value);
+    }
+  }
 
   String _display(String value) => value
       .split('_')
       .map((part) =>
           part.isEmpty ? '' : '${part[0].toUpperCase()}${part.substring(1)}')
       .join(' ');
-  static String _label(String value) =>
-      value.isEmpty ? '' : '${value[0].toUpperCase()}${value.substring(1)}';
 }
 
 class _FieldLabel extends StatelessWidget {
@@ -1311,7 +1409,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Text(value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
       );
 }
 
@@ -1323,12 +1421,12 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: const Color(0xfffff4f7),
+            color: Color(0xfffff4f7),
             borderRadius: BorderRadius.circular(16)),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: const Color(0xfff43f75)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(height: 1.45))),
+          Icon(icon, color: Color(0xfff43f75)),
+          SizedBox(width: 12),
+          Expanded(child: Text(text, style: TextStyle(height: 1.45))),
         ]),
       );
 }

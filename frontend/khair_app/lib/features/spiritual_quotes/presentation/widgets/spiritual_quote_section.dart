@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../tokens/tokens.dart';
 import '../../domain/entities/spiritual_quote.dart';
@@ -122,7 +123,7 @@ class _SpiritualQuoteSectionState extends State<SpiritualQuoteSection> {
           if (_hasError)
             TextButton(
               onPressed: _loadQuote,
-              child: Text(l10n?.retry ?? 'Retry'),
+              child: Text(l10n?.retry ?? context.l10n.retry),
             ),
         ],
       ),

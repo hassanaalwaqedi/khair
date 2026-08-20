@@ -54,7 +54,7 @@ class _EventSearchPageState extends State<EventSearchPage> {
       return;
     }
     setState(() => _loading = true);
-    _debounce = Timer(const Duration(milliseconds: 400), () => _search(query));
+    _debounce = Timer(Duration(milliseconds: 400), () => _search(query));
   }
 
   Future<void> _search(String query) async {
@@ -99,7 +99,7 @@ class _EventSearchPageState extends State<EventSearchPage> {
                     icon: Icon(Icons.arrow_back_rounded, color: tp),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Expanded(
                     child: Container(
                       height: 46,
@@ -112,7 +112,7 @@ class _EventSearchPageState extends State<EventSearchPage> {
                       child: Row(
                         children: [
                           Icon(Icons.search_rounded, color: ts, size: 20),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             child: TextField(
                               controller: _controller,
@@ -147,7 +147,7 @@ class _EventSearchPageState extends State<EventSearchPage> {
             // ── Body ──
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator())
                   : !_hasSearched
                       ? _buildInitialState(ts)
                       : _results.isEmpty
@@ -166,7 +166,7 @@ class _EventSearchPageState extends State<EventSearchPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.search_rounded, size: 64, color: ts.withValues(alpha: 0.3)),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             context.l10n.searchEventsHint,
             style: TextStyle(color: ts, fontSize: 14),
@@ -182,12 +182,12 @@ class _EventSearchPageState extends State<EventSearchPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.event_busy_rounded, size: 64, color: ts.withValues(alpha: 0.3)),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             context.l10n.noEventsFound,
             style: TextStyle(color: ts, fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             context.l10n.searchEventsHint,
             style: TextStyle(color: ts, fontSize: 13),

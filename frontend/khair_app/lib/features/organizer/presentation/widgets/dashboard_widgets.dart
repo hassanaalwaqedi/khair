@@ -341,7 +341,7 @@ class DashboardShimmer extends StatelessWidget {
               4,
               (_) => const Expanded(
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 12),
+                  padding: EdgeInsetsDirectional.only(end: 12),
                   child: ShimmerLoading(height: 100),
                 ),
               ),

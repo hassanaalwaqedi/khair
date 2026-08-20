@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +6,8 @@ import '../../../../core/theme/khair_theme.dart';
 import '../../../../core/widgets/khair_brand.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../bloc/notification_bloc.dart';
+import '../notification_presentation.dart';
+import 'notification_detail_sheet.dart';
 
 /// Notification dropdown overlay with unread badge
 class NotificationDropdown extends StatelessWidget {
@@ -12,7 +15,7 @@ class NotificationDropdown extends StatelessWidget {
 
   static void show(BuildContext context) {
     final bloc = context.read<NotificationBloc>();
-    bloc.add(const LoadNotifications());
+    bloc.add(LoadNotifications());
 
     showModalBottomSheet(
       context: context,
@@ -20,7 +23,7 @@ class NotificationDropdown extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
-        child: const _NotificationSheet(),
+        child: _NotificationSheet(),
       ),
     );
   }
@@ -41,7 +44,7 @@ class _NotificationSheet extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: isDark ? Color(0xFF1A1A2E) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -63,14 +66,14 @@ class _NotificationSheet extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Notifications',
+                  context.l10n.notifications,
                   style: KhairTypography.headlineSmall.copyWith(
                     color: isDark
                         ? KhairColors.darkTextPrimary
                         : KhairColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
                 BlocBuilder<NotificationBloc, NotificationState>(
                   buildWhen: (prev, curr) =>
                       prev.unreadCount != curr.unreadCount,
@@ -80,22 +83,22 @@ class _NotificationSheet extends StatelessWidget {
                       onPressed: () {
                         context
                             .read<NotificationBloc>()
-                            .add(const MarkAllNotificationsRead());
+                            .add(MarkAllNotificationsRead());
                       },
-                      child: const Text('Mark all read'),
+                      child: Text(context.l10n.markAllRead),
                     );
                   },
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1),
           // Content
           Flexible(
             child: BlocBuilder<NotificationBloc, NotificationState>(
               builder: (context, state) {
                 if (state.status == NotificationStatus.loading) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.all(40),
                     child: Center(
                       child: CircularProgressIndicator(
@@ -116,18 +119,18 @@ class _NotificationSheet extends StatelessWidget {
                           size: 48,
                           color: KhairColors.textTertiary,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text(
-                          'No Notifications',
+                          context.l10n.noNotifications,
                           style: KhairTypography.labelLarge.copyWith(
                             color: isDark
                                 ? KhairColors.darkTextPrimary
                                 : KhairColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
-                          'You\'re all caught up!',
+                          context.l10n.notificationsAllCaughtUp,
                           style: KhairTypography.bodySmall,
                         ),
                       ],
@@ -139,7 +142,7 @@ class _NotificationSheet extends StatelessWidget {
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: state.notifications.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => Divider(height: 1),
                   itemBuilder: (context, index) {
                     final notification = state.notifications[index];
                     return _NotificationTile(
@@ -178,14 +181,13 @@ class _NotificationTile extends StatelessWidget {
     Navigator.pop(context);
 
     // Use a short delay to let the dropdown close before opening the dialog
-    Future.delayed(const Duration(milliseconds: 200), () {
+    Future.delayed(Duration(milliseconds: 200), () {
       if (context.mounted) {
-        showDialog(
+        showModalBottomSheet(
           context: context,
-          builder: (_) => _NotificationDetailDialog(
-            notification: notification,
-            isDark: isDark,
-          ),
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => NotificationDetailSheet(notification: notification),
         );
       }
     });
@@ -193,205 +195,108 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final presentation = NotificationPresentationResolver.resolve(
+      notification,
+      context.l10n,
+      Localizations.localeOf(context),
+    );
+
     return InkWell(
       onTap: () => _openDetail(context),
-      child: Container(
-        color: notification.isRead
-            ? Colors.transparent
-            : (isDark
-                ? KhairColors.primary.withValues(alpha: 0.08)
-                : KhairColors.primarySurface.withValues(alpha: 0.5)),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Opacity(
-              opacity: notification.isRead ? .56 : 1,
-              child: const KhairBrandMark(size: 38, decorative: true),
-            ),
-            const SizedBox(width: 12),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Khair',
-                    style: KhairTypography.labelSmall.copyWith(
-                      color: KhairColors.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    notification.title,
-                    style: KhairTypography.labelMedium.copyWith(
-                      color: isDark
-                          ? KhairColors.darkTextPrimary
-                          : KhairColors.textPrimary,
-                      fontWeight: notification.isRead
-                          ? FontWeight.w400
-                          : FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notification.message,
-                    style: KhairTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? KhairColors.darkTextPrimary.withValues(alpha: 0.7)
-                          : KhairColors.textSecondary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(
-                        notification.timeAgo,
-                        style: KhairTypography.labelSmall.copyWith(
-                          color: KhairColors.textTertiary,
-                          fontSize: 11,
-                        ),
+      child: Semantics(
+        button: true,
+        label:
+            '${presentation.title}. ${notification.isRead ? '' : context.l10n.notificationUnread}',
+        child: Container(
+          color: notification.isRead
+              ? Colors.transparent
+              : (isDark
+                  ? KhairColors.primary.withValues(alpha: 0.08)
+                  : KhairColors.primarySurface.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Opacity(
+                opacity: notification.isRead ? .56 : 1,
+                child: KhairBrandMark(size: 38, decorative: true),
+              ),
+              SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Khair',
+                      style: KhairTypography.labelSmall.copyWith(
+                        color: KhairColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        letterSpacing: 0.3,
                       ),
-                      const Spacer(),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 16,
-                        color: isDark ? Colors.white30 : Colors.grey[400],
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      presentation.title,
+                      style: KhairTypography.labelMedium.copyWith(
+                        color: isDark
+                            ? KhairColors.darkTextPrimary
+                            : KhairColors.textPrimary,
+                        fontWeight: notification.isRead
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      presentation.body,
+                      style: KhairTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? KhairColors.darkTextPrimary.withValues(alpha: 0.7)
+                            : KhairColors.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          notification.timeAgo,
+                          style: KhairTypography.labelSmall.copyWith(
+                            color: KhairColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: isDark ? Colors.white30 : Colors.grey[400],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Unread dot
+              if (!notification.isRead)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: KhairColors.primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: KhairColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 4,
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            // Unread dot
-            if (!notification.isRead)
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: KhairColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: KhairColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 4,
-                    ),
-                  ],
                 ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Notification Detail Dialog ──────────────────
-
-class _NotificationDetailDialog extends StatelessWidget {
-  final AppNotification notification;
-  final bool isDark;
-
-  const _NotificationDetailDialog({
-    required this.notification,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with Khair branding
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
-                child: Row(
-                  children: [
-                    const KhairBrandMark(size: 48, decorative: true),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Khair',
-                            style: KhairTypography.headlineSmall.copyWith(
-                              color: KhairColors.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(Icons.access_time_rounded,
-                                  size: 13, color: KhairColors.textTertiary),
-                              const SizedBox(width: 4),
-                              Text(
-                                notification.timeAgo,
-                                style: KhairTypography.labelSmall.copyWith(
-                                  color: KhairColors.textTertiary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close_rounded,
-                          color: isDark ? Colors.white54 : Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Divider(
-                color: isDark ? Colors.white10 : Colors.grey[200],
-                height: 1,
-              ),
-              // Title
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                child: Text(
-                  notification.title,
-                  style: KhairTypography.h2.copyWith(
-                    color: isDark ? Colors.white : KhairColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    height: 1.3,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Full message
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                child: Text(
-                  notification.message,
-                  style: KhairTypography.bodyLarge.copyWith(
-                    color: isDark ? Colors.white70 : KhairColors.textSecondary,
-                    height: 1.7,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -45,7 +46,7 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load audit logs: $e')),
+          SnackBar(content: Text(context.l10n.adminActionFailed)),
         );
       }
     }
@@ -55,28 +56,28 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Audit Logs ($_total)'),
+        title: Text(context.l10n.adminAuditLogsTab),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: Icon(Icons.filter_list),
             onPressed: () => _showFilterSheet(),
           ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : _logs.isEmpty
               ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.receipt_long, size: 64, color: Colors.grey[300]),
-                      const SizedBox(height: 12),
-                      Text('No audit logs found',
+                      SizedBox(height: 12),
+                      Text(context.l10n.noAuditLogsFound,
                           style: TextStyle(color: Colors.grey[500])),
                     ],
                   ),
@@ -123,7 +124,7 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
               size: 20,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,32 +135,32 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
                     children: [
                       TextSpan(
                         text: actorType == 'system' ? 'System' : 'Admin',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       TextSpan(text: ' ${_formatAction(action)} '),
                       TextSpan(
                         text: '$targetType #${targetId.length > 8 ? targetId.substring(0, 8) : targetId}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 if (reason != null && reason.toString().isNotEmpty)
                   Text(
                     reason.toString(),
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                   ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 14, color: Colors.grey[400]),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       DateFormat('MMM d, y • HH:mm').format(createdAt),
                       style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -222,15 +223,15 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Filter Logs',
+            Text(context.l10n.filterLogs,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 FilterChip(
-                  label: const Text('All'),
+                  label: Text(context.l10n.mapFilterAll),
                   selected: _actorTypeFilter == null,
                   onSelected: (_) {
                     setState(() => _actorTypeFilter = null);
@@ -239,7 +240,7 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
                   },
                 ),
                 FilterChip(
-                  label: const Text('Admin'),
+                  label: Text(context.l10n.roleAdmin),
                   selected: _actorTypeFilter == 'admin',
                   onSelected: (_) {
                     setState(() => _actorTypeFilter = 'admin');
@@ -248,7 +249,7 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
                   },
                 ),
                 FilterChip(
-                  label: const Text('System'),
+                  label: Text(context.l10n.system),
                   selected: _actorTypeFilter == 'system',
                   onSelected: (_) {
                     setState(() => _actorTypeFilter = 'system');

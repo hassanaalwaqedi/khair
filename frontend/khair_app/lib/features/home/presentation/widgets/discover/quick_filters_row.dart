@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../../../../../tokens/tokens.dart';
 import '../../../../events/domain/entities/event.dart';
@@ -59,12 +60,13 @@ class _QuickFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final (label, icon) = switch (filter) {
-      QuickFilter.today => ('Today', Icons.calendar_today_outlined),
-      QuickFilter.weekend => ('This weekend', Icons.weekend_outlined),
-      QuickFilter.nearby => ('Near me', Icons.near_me_outlined),
-      QuickFilter.free => ('Free', Icons.sell_outlined),
-      QuickFilter.online => ('Online', Icons.videocam_outlined),
+      QuickFilter.today => (l10n.today, Icons.calendar_today_outlined),
+      QuickFilter.weekend => (l10n.thisWeekend, Icons.weekend_outlined),
+      QuickFilter.nearby => (l10n.nearMe, Icons.near_me_outlined),
+      QuickFilter.free => (l10n.freeLabel, Icons.sell_outlined),
+      QuickFilter.online => (l10n.online, Icons.videocam_outlined),
     };
 
     return AnimatedContainer(

@@ -3,31 +3,33 @@ package support
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"time"
-	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/khair/backend/internal/ai"
 	"github.com/khair/backend/internal/models"
+	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/ws"
 	"github.com/khair/backend/pkg/fcm"
 	"github.com/khair/backend/pkg/storage"
 )
 
 type Service struct {
-	repo            *Repository
-	aiClient        *ai.Client
-	wsHub           *ws.Hub
-	fcmClient       *fcm.Client
-	db              *sql.DB
-	privateR2Store  *storage.PrivateR2Store
+	repo           *Repository
+	aiClient       *ai.Client
+	wsHub          *ws.Hub
+	fcmClient      *fcm.Client
+	db             *sql.DB
+	notifSvc       *notification.Service
+	privateR2Store *storage.PrivateR2Store
 }
 
-func NewService(repo *Repository, aiClient *ai.Client, wsHub *ws.Hub, fcmClient *fcm.Client, db *sql.DB) *Service {
+func NewService(repo *Repository, aiClient *ai.Client, wsHub *ws.Hub, fcmClient *fcm.Client, db *sql.DB, notificationServices ...*notification.Service) *Service {
 	privateStore, _ := storage.NewPrivateR2StoreFromEnv()
-	return &Service{
+	service := &Service{
 		repo:           repo,
 		aiClient:       aiClient,
 		wsHub:          wsHub,
@@ -35,6 +37,10 @@ func NewService(repo *Repository, aiClient *ai.Client, wsHub *ws.Hub, fcmClient 
 		db:             db,
 		privateR2Store: privateStore,
 	}
+	if len(notificationServices) > 0 {
+		service.notifSvc = notificationServices[0]
+	}
+	return service
 }
 
 // StartSession creates a new ticket and immediately answers with AI
@@ -121,7 +127,7 @@ func (s *Service) GetTicketMessages(ticketID uuid.UUID, isSupport bool) ([]*mode
 	if s.privateR2Store != nil {
 		for _, msg := range msgs {
 			if msg.Attachment != nil && msg.Attachment.FileURL != "" {
-				signed, err := s.privateR2Store.SignedURL(msg.Attachment.FileURL, 24 * time.Hour) // 24 hr TTL
+				signed, err := s.privateR2Store.SignedURL(msg.Attachment.FileURL, 24*time.Hour) // 24 hr TTL
 				if err == nil {
 					msg.Attachment.FileURL = signed
 				}
@@ -211,11 +217,11 @@ func (s *Service) SendMessage(ticketID, senderID uuid.UUID, senderType, body, me
 			ticket.FirstHumanResponseAt = &now
 			s.repo.UpdateTicket(ticket)
 		}
-		
+
 		// Send FCM to user
 		if messageType != "internal_note" {
-			s.sendFCMToUser(ticket.UserID, "Khair Support", "Khair Support replied to your ticket.", map[string]string{
-				"type": "support_message",
+			s.sendFCMToUser(ticket.UserID, "support_reply", map[string]string{
+				"type":      "support_message",
 				"ticket_id": ticket.ID.String(),
 			})
 		}
@@ -275,9 +281,9 @@ func (s *Service) UploadAttachment(ctx context.Context, ticketID, senderID uuid.
 			ticket.FirstHumanResponseAt = &now
 			s.repo.UpdateTicket(ticket)
 		}
-		
-		s.sendFCMToUser(ticket.UserID, "Khair Support", "Khair Support sent an attachment.", map[string]string{
-			"type": "support_message",
+
+		s.sendFCMToUser(ticket.UserID, "support_attachment", map[string]string{
+			"type":      "support_message",
 			"ticket_id": ticket.ID.String(),
 		})
 	}
@@ -324,9 +330,20 @@ func (s *Service) broadcastEvent(userID uuid.UUID, eventType string, payload int
 	s.wsHub.BroadcastToUser(userID.String(), eventType, string(dataBytes))
 }
 
-func (s *Service) sendFCMToUser(userID uuid.UUID, title, body string, data map[string]string) {
+func (s *Service) sendFCMToUser(userID uuid.UUID, notificationType string, data map[string]string) {
 	if s.fcmClient == nil || !s.fcmClient.IsEnabled() {
 		return
+	}
+
+	title, body := "Khair Support", "Khair Support replied to your ticket."
+	if notificationType == "support_attachment" {
+		body = "Khair Support sent an attachment to your ticket."
+	}
+	if s.notifSvc != nil {
+		localized, err := s.notifSvc.LocalizeForUser(userID, notificationType, data)
+		if err == nil {
+			title, body = localized.Title, localized.Message
+		}
 	}
 
 	query := `SELECT token FROM device_tokens WHERE user_id = $1`

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../../../../../tokens/tokens.dart';
 import '../../../../events/presentation/bloc/events_bloc.dart';
@@ -48,11 +49,14 @@ class FreeEventsPromo extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        'Discover free events',
+                        l10n.discoverFreeEvents,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -61,13 +65,15 @@ class FreeEventsPromo extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Explore gatherings that don\'t cost a thing',
-                        style: TextStyle(
+                        l10n.freePromoSubtitle,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
                       ),
                     ],
+                  );
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),

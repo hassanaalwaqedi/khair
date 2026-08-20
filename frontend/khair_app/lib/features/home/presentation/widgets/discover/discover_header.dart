@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:khair_app/l10n/generated/app_localizations.dart';
 
 import '../../../../../core/layout/app_breakpoints.dart';
 import '../../../../../core/theme/khair_theme.dart';
@@ -9,6 +10,7 @@ import '../../../../../core/widgets/khair_brand.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../events/presentation/bloc/events_bloc.dart';
 import '../../../../location/presentation/bloc/location_bloc.dart';
+import '../../../../notifications/presentation/widgets/notification_bell_button.dart';
 
 class DiscoverHeader extends StatelessWidget {
   const DiscoverHeader({super.key, required this.onLocation});
@@ -36,11 +38,16 @@ class DiscoverHeader extends StatelessWidget {
             ),
             Expanded(child: _DiscoverLocationButton(onPressed: onLocation)),
             if (auth.isAuthenticated)
+              const NotificationBellButton()
+            else
+              const SizedBox.shrink(),
+            if (auth.isAuthenticated)
               IconButton(
-                tooltip: 'Profile',
+                tooltip: AppLocalizations.of(context)!.profileTooltip,
                 constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 onPressed: () => context.go('/profile'),
-                icon: const Icon(Icons.account_circle_outlined, size: 28, color: AppColors.textPrimary),
+                icon: const Icon(Icons.account_circle_outlined,
+                    size: 28, color: AppColors.textPrimary),
               )
             else
               TextButton(
@@ -50,9 +57,11 @@ class DiscoverHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   backgroundColor: AppColors.primarySoft,
                   foregroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
-                child: const Text('Sign in', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.signIn,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
           ],
         ),
@@ -76,14 +85,17 @@ class _DiscoverLocationButton extends StatelessWidget {
                   : '';
               final city =
                   selectedCity?.isNotEmpty == true ? selectedCity! : cachedCity;
-              final displayCity = city.isEmpty ? 'Choose area' : city;
-              
+              final displayCity = city.isEmpty
+                  ? AppLocalizations.of(context)!.chooseArea
+                  : city;
+
               return Center(
                 child: InkWell(
                   onTap: onPressed,
                   borderRadius: BorderRadius.circular(20),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 6.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -101,7 +113,8 @@ class _DiscoverLocationButton extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textSecondary),
+                        const Icon(Icons.keyboard_arrow_down,
+                            size: 18, color: AppColors.textSecondary),
                       ],
                     ),
                   ),

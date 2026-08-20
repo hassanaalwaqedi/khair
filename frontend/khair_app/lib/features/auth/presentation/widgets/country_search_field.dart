@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models/country_model.dart';
@@ -18,16 +19,17 @@ class CountrySearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const LinearProgressIndicator();
+    if (isLoading) return LinearProgressIndicator();
     return DropdownButtonFormField<Country>(
       key: ValueKey(selectedCountry?.isoCode),
       initialValue: selectedCountry,
       isExpanded: true,
-      decoration: const InputDecoration(hintText: 'Select country'),
+      decoration: InputDecoration(hintText: context.l10n.selectCountry),
       items: countries
           .map((country) => DropdownMenuItem(
                 value: country,
-                child: Text('${country.flagEmoji}  ${country.name}'),
+                child: Text(context.l10n.countryDisplayName(
+                    country.flagEmoji, country.name)),
               ))
           .toList(),
       onChanged: (country) {

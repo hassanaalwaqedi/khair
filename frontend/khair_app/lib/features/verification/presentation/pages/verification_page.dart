@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -48,7 +49,7 @@ class _VerificationPageState extends State<VerificationPage> {
         children: [
           // Emerald gradient background
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -73,7 +74,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 _buildAppBar(context),
                 Expanded(
                   child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
+                    physics: BouncingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +93,7 @@ class _VerificationPageState extends State<VerificationPage> {
                                 color: KhairColors.secondary, size: 40),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         Center(
                           child: Text(
                             'Apply for Official\nOrganizer Status',
@@ -103,7 +104,7 @@ class _VerificationPageState extends State<VerificationPage> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Center(
                           child: Text(
                             'Upload your documents so our team can verify your identity',
@@ -113,7 +114,7 @@ class _VerificationPageState extends State<VerificationPage> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
 
                         // Error message
                         if (_errorMessage != null) ...[
@@ -130,7 +131,7 @@ class _VerificationPageState extends State<VerificationPage> {
                               children: [
                                 Icon(Icons.error_outline,
                                     color: KhairColors.error, size: 20),
-                                const SizedBox(width: 8),
+                                SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     _errorMessage!,
@@ -141,12 +142,12 @@ class _VerificationPageState extends State<VerificationPage> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                         ],
 
                         // Profile Image Upload
                         _buildUploadCard(
-                          title: 'Official Profile Image',
+                          title: context.l10n.officialProfileImage,
                           description:
                               'A clear photo of yourself or your organization\'s logo',
                           icon: Icons.camera_alt_rounded,
@@ -157,11 +158,11 @@ class _VerificationPageState extends State<VerificationPage> {
                           required: true,
                           onTap: _pickProfileImage,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
 
                         // Document Upload
                         _buildUploadCard(
-                          title: 'Qualification Document',
+                          title: context.l10n.qualificationDocument,
                           description:
                               'Certificate, license, or legal document (PDF or image)',
                           icon: Icons.description_rounded,
@@ -172,7 +173,7 @@ class _VerificationPageState extends State<VerificationPage> {
                           required: true,
                           onTap: _pickDocument,
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
 
                         // Confirmation checkbox
                         GestureDetector(
@@ -194,7 +195,7 @@ class _VerificationPageState extends State<VerificationPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
+                                  duration: Duration(milliseconds: 200),
                                   width: 22,
                                   height: 22,
                                   decoration: BoxDecoration(
@@ -211,11 +212,11 @@ class _VerificationPageState extends State<VerificationPage> {
                                     ),
                                   ),
                                   child: _confirmed
-                                      ? const Icon(Icons.check,
+                                      ? Icon(Icons.check,
                                           color: Colors.white, size: 16)
                                       : null,
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     'I confirm that all provided documents are authentic and I am authorized to represent this organization.',
@@ -230,7 +231,7 @@ class _VerificationPageState extends State<VerificationPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
 
                         // Submit button
                         SizedBox(
@@ -240,7 +241,7 @@ class _VerificationPageState extends State<VerificationPage> {
                             onPressed: _canSubmit ? _submit : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: KhairColors.secondary,
-                              foregroundColor: const Color(0xFF1A1A2E),
+                              foregroundColor: Color(0xFF1A1A2E),
                               disabledBackgroundColor:
                                   Colors.white.withValues(alpha: 0.08),
                               disabledForegroundColor:
@@ -251,7 +252,7 @@ class _VerificationPageState extends State<VerificationPage> {
                               elevation: 0,
                             ),
                             child: _isSubmitting
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
@@ -262,8 +263,8 @@ class _VerificationPageState extends State<VerificationPage> {
                                 : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.send_rounded, size: 20),
-                                      const SizedBox(width: 10),
+                                      Icon(Icons.send_rounded, size: 20),
+                                      SizedBox(width: 10),
                                       Text(
                                         'Submit for Review',
                                         style:
@@ -276,7 +277,7 @@ class _VerificationPageState extends State<VerificationPage> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Center(
                           child: TextButton(
                             onPressed: () => context.go('/'),
@@ -410,7 +411,7 @@ class _VerificationPageState extends State<VerificationPage> {
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF0D3522),
+          backgroundColor: Color(0xFF0D3522),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Column(
@@ -422,10 +423,10 @@ class _VerificationPageState extends State<VerificationPage> {
                   color: KhairColors.success.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_rounded,
+                child: Icon(Icons.check_circle_rounded,
                     color: KhairColors.success, size: 36),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 'Submitted!',
                 style: KhairTypography.h2.copyWith(color: Colors.white),
@@ -446,12 +447,12 @@ class _VerificationPageState extends State<VerificationPage> {
                 onPressed: () => context.go('/'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhairColors.secondary,
-                  foregroundColor: const Color(0xFF1A1A2E),
+                  foregroundColor: Color(0xFF1A1A2E),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Start Exploring',
+                child: Text(context.l10n.startExploring,
                     style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
@@ -482,10 +483,10 @@ class _VerificationPageState extends State<VerificationPage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => context.go('/'),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             'Verification',
             style: KhairTypography.headlineSmall.copyWith(
@@ -493,8 +494,8 @@ class _VerificationPageState extends State<VerificationPage> {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const Spacer(),
-          const SizedBox(width: 48), // balance
+          Spacer(),
+          SizedBox(width: 48), // balance
         ],
       ),
     );
@@ -514,7 +515,7 @@ class _VerificationPageState extends State<VerificationPage> {
     return GestureDetector(
       onTap: isUploading ? null : onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: Duration(milliseconds: 250),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isUploaded
@@ -560,7 +561,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: isUploading
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(12),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -575,7 +576,7 @@ class _VerificationPageState extends State<VerificationPage> {
                         size: 24,
                       ),
               ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,7 +602,7 @@ class _VerificationPageState extends State<VerificationPage> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     isUploading
                         ? 'Uploading...'

@@ -30,9 +30,9 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
 
   void _loadDashboardData() {
     final bloc = context.read<OrganizerBloc>();
-    bloc.add(const LoadOrganizerProfile());
-    bloc.add(const LoadOrganizerEvents());
-    bloc.add(const LoadAdminMessages());
+    bloc.add(LoadOrganizerProfile());
+    bloc.add(LoadOrganizerEvents());
+    bloc.add(LoadAdminMessages());
   }
 
   Future<void> _refreshDashboard() async {
@@ -58,7 +58,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         builder: (context, state) {
           // Full loading state → shimmer
           if (state.isProfileLoading && state.organizer == null) {
-            return const DashboardShimmer();
+            return DashboardShimmer();
           }
 
           // Error loading profile (first load)
@@ -82,13 +82,13 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                           color: KhairColors.primarySurface,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.business_rounded,
+                        child: Icon(Icons.business_rounded,
                             size: 40, color: KhairColors.primary),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       Text(context.l10n.orgBecomeOrganizer,
                           style: KhairTypography.headlineSmall),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         context.l10n.orgRegisterPrompt,
                         textAlign: TextAlign.center,
@@ -96,7 +96,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                           color: KhairColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       KhairButton(
                         label: context.l10n.orgRegisterBtn,
                         onPressed: () => context.go('/organizer/apply'),
@@ -122,7 +122,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 final isWide = constraints.maxWidth > 900;
 
                 return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(24),
                   child: isWide
                       ? Row(
@@ -132,7 +132,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                               flex: 3,
                               child: _buildMainContent(state),
                             ),
-                            const SizedBox(width: 24),
+                            SizedBox(width: 24),
                             Expanded(
                               flex: 1,
                               child: _buildSidebar(state),
@@ -142,7 +142,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                       : Column(
                           children: [
                             _buildMainContent(state),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24),
                             _buildSidebar(state),
                           ],
                         ),
@@ -176,7 +176,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
             return Stack(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
+                  icon: Icon(Icons.notifications_outlined),
                   onPressed: () => _showNotifications(context),
                   tooltip: context.l10n.orgNotifications,
                 ),
@@ -186,14 +186,14 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     top: 8,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: KhairColors.error,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         count > 9 ? '9+' : count.toString(),
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 10),
+                            TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),
                   ),
@@ -202,7 +202,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.settings_outlined),
+          icon: Icon(Icons.settings_outlined),
           onPressed: () => context.push('/profile'),
           tooltip: context.l10n.orgSettings,
         ),
@@ -221,7 +221,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         ),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1A1A2E)
+              ? Color(0xFF1A1A2E)
               : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -252,7 +252,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 ],
               ),
             ),
-            const Divider(height: 1),
+            Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(40),
               child: Column(
@@ -260,7 +260,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 children: [
                   Icon(Icons.notifications_none,
                       size: 48, color: KhairColors.textTertiary),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(context.l10n.orgCheckHomeNotif,
                       style: KhairTypography.bodySmall),
                 ],
@@ -290,25 +290,25 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
 
         // Welcome Header
         _buildWelcomeHeader(organizer),
-        const SizedBox(height: 24),
-        const SpiritualQuoteSection(
+        SizedBox(height: 24),
+        SpiritualQuoteSection(
           location: QuoteLocation.dashboard,
           compact: true,
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
 
         // Quick Actions
         Text(context.l10n.orgQuickActions,
             style: KhairTypography.headlineSmall),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _buildQuickActions(isApproved),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
 
         // Analytics Summary
         Text(context.l10n.orgAnalytics, style: KhairTypography.headlineSmall),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _buildAnalyticsSummary(state),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
 
         // Recent Events
         SectionHeader(
@@ -316,11 +316,11 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
           subtitle: context.l10n.orgTotalCount(state.events.length),
           action: TextButton.icon(
             onPressed: () => context.push('/organizer/events'),
-            icon: const Icon(Icons.arrow_forward, size: 16),
+            icon: Icon(Icons.arrow_forward, size: 16),
             label: Text(context.l10n.orgViewAll),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _buildRecentEvents(state),
       ],
     );
@@ -330,7 +330,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
 
   Widget _buildWelcomeHeader(Organizer? organizer) {
     if (organizer == null) {
-      return const ShimmerLoading(height: 120, borderRadius: 20);
+      return ShimmerLoading(height: 120, borderRadius: 20);
     }
 
     return Container(
@@ -356,10 +356,10 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
               color: Colors.white.withAlpha(40),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.business_rounded,
+            child: Icon(Icons.business_rounded,
                 color: Colors.white, size: 32),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +370,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     color: Colors.white.withAlpha(180),
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   organizer.name,
                   style: KhairTypography.h2.copyWith(color: Colors.white),
@@ -398,7 +398,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                   color: Colors.white,
                   size: 16,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   organizer.status.toUpperCase(),
                   style: KhairTypography.labelSmall.copyWith(
@@ -424,7 +424,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         return GridView.count(
           crossAxisCount: crossAxisCount,
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
           childAspectRatio: 1.15,
@@ -473,7 +473,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
       return Row(
         children: List.generate(
           4,
-          (_) => const Expanded(
+          (_) => Expanded(
             child: Padding(
               padding: const EdgeInsetsDirectional.only(end: 12),
               child: ShimmerLoading(height: 100),
@@ -496,34 +496,34 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
             children: [
               Expanded(
                 child: AnimatedStatCard(
-                  label: 'Total Events',
+                  label: context.l10n.orgTotalEvents,
                   value: events.length,
                   icon: Icons.event_rounded,
                   color: KhairColors.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: AnimatedStatCard(
-                  label: 'Approved',
+                  label: context.l10n.orgApproved,
                   value: approved,
                   icon: Icons.check_circle_rounded,
                   color: KhairColors.success,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: AnimatedStatCard(
-                  label: 'Pending',
+                  label: context.l10n.statusPending,
                   value: pending,
                   icon: Icons.pending_rounded,
                   color: KhairColors.warning,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: AnimatedStatCard(
-                  label: 'Rejected',
+                  label: context.l10n.statusRejected,
                   value: rejected,
                   icon: Icons.cancel_rounded,
                   color: KhairColors.error,
@@ -544,7 +544,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     color: KhairColors.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: AnimatedStatCard(
                     label: context.l10n.orgApproved,
@@ -555,7 +555,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -566,7 +566,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     color: KhairColors.warning,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: AnimatedStatCard(
                     label: context.l10n.orgRejected,
@@ -590,7 +590,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
       return Column(
         children: List.generate(
           3,
-          (_) => const Padding(
+          (_) => Padding(
             padding: EdgeInsets.only(bottom: 12),
             child: ShimmerLoading(height: 72),
           ),
@@ -634,17 +634,17 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         children: [
           Icon(Icons.event_note_outlined,
               size: 48, color: KhairColors.textTertiary),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(context.l10n.orgNoEventsYet,
               style: KhairTypography.headlineSmall),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             context.l10n.orgCreateFirstEvent,
             style: KhairTypography.bodyMedium.copyWith(
               color: KhairColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           KhairButton(
             label: context.l10n.orgCreateEvent,
             onPressed: () => context.push('/organizer/events/create'),
@@ -688,7 +688,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,17 +699,17 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   StatusBadge(status: _mapEventStatus(event.status)),
                 ],
               ),
             ),
             PopupMenuButton(
               icon:
-                  const Icon(Icons.more_vert, color: KhairColors.textTertiary),
+                  Icon(Icons.more_vert, color: KhairColors.textTertiary),
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'view', child: Text('View')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'view', child: Text(context.l10n.view)),
+                PopupMenuItem(value: 'edit', child: Text(context.l10n.ownerEdit)),
               ],
               onSelected: (value) {
                 switch (value) {
@@ -743,13 +743,13 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
       children: [
         // Admin Messages
         SectionHeader(title: context.l10n.orgMessages),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
 
         if (state.isMessagesLoading && state.messages.isEmpty)
           Column(
             children: List.generate(
               2,
-              (_) => const Padding(
+              (_) => Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: ShimmerLoading(height: 80),
               ),
@@ -779,7 +779,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
       child: Row(
         children: [
           Icon(Icons.inbox_outlined, color: KhairColors.textTertiary),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Text(
             context.l10n.orgNoMessages,
             style: KhairTypography.bodyMedium.copyWith(
@@ -823,7 +823,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                       ? KhairColors.textTertiary
                       : KhairColors.info,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   _formatDate(message.createdAt),
                   style: KhairTypography.labelSmall.copyWith(
@@ -834,7 +834,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               message.subject,
               style: KhairTypography.labelMedium.copyWith(
@@ -842,7 +842,7 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
                     message.isRead ? FontWeight.normal : FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               message.message,
               style: KhairTypography.bodySmall.copyWith(

@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class AuthVisualPanel extends StatelessWidget {
@@ -28,7 +29,7 @@ class AuthVisualPanel extends StatelessWidget {
             fit: BoxFit.cover,
             filterQuality: FilterQuality.low,
             errorBuilder: (_, __, ___) =>
-                const ColoredBox(color: Color(0xFFFFD9E5)),
+                ColoredBox(color: Color(0xFFFFD9E5)),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -36,8 +37,8 @@ class AuthVisualPanel extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF4A1028).withValues(alpha: isDark ? .6 : .22),
-                  const Color(0xFF58102F).withValues(alpha: .88),
+                  Color(0xFF4A1028).withValues(alpha: isDark ? .6 : .22),
+                  Color(0xFF58102F).withValues(alpha: .88),
                 ],
               ),
             ),
@@ -57,11 +58,11 @@ class AuthVisualPanel extends StatelessWidget {
                     border:
                         Border.all(color: Colors.white.withValues(alpha: .22)),
                   ),
-                  child: const Text('Khair events',
+                  child: Text(context.l10n.khairEvents,
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.w700)),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Text(
                   heading,
                   style: TextStyle(
@@ -72,7 +73,7 @@ class AuthVisualPanel extends StatelessWidget {
                     letterSpacing: -.8,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text(
                   description,
                   style: TextStyle(
@@ -80,15 +81,15 @@ class AuthVisualPanel extends StatelessWidget {
                       fontSize: compact ? 15 : 17,
                       height: 1.5),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
                 const _ValuePoint(
                     icon: Icons.auto_awesome_rounded,
                     text: 'Find inspiring events'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 const _ValuePoint(
                     icon: Icons.groups_2_outlined,
                     text: 'Connect with communities'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 const _ValuePoint(
                     icon: Icons.favorite_border_rounded,
                     text: 'Create unforgettable moments'),
@@ -108,9 +109,9 @@ class _ValuePoint extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
         Icon(icon, color: Colors.white, size: 19),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Text(text,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white, fontWeight: FontWeight.w600)),
       ]);
 }

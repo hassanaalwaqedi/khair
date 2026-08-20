@@ -1,3 +1,4 @@
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +29,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
   Widget build(BuildContext context) {
     final event = widget.event;
     final location = event.isOnline
-        ? 'Online event'
+        ? context.l10n.onlineEvent
         : [event.city, event.country]
             .whereType<String>()
             .where((value) => value.isNotEmpty)
@@ -38,13 +39,13 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedSlide(
-        duration: const Duration(milliseconds: 180),
+        duration: Duration(milliseconds: 180),
         curve: Curves.easeOut,
         offset: Offset(0, _hovered ? -.012 : 0),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: Duration(milliseconds: 180),
           width: MediaQuery.sizeOf(context).width * 0.82,
-          constraints: const BoxConstraints(maxWidth: 360),
+          constraints: BoxConstraints(maxWidth: 360),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
@@ -54,7 +55,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
             ),
             boxShadow: _hovered
                 ? [
-                    const BoxShadow(
+                    BoxShadow(
                         color: Color(0x220F0918),
                         blurRadius: 24,
                         offset: Offset(0, 12))
@@ -85,16 +86,18 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                           child: Row(
                             children: [
                               _Pill(
-                                label: event.isOnline ? 'Online' : 'In-person',
+                                label: event.isOnline
+                                    ? context.l10n.online
+                                    : context.l10n.createEventInPerson,
                                 icon: event.isOnline ? Icons.videocam_rounded : Icons.location_on_rounded,
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               _Pill(
                                 label: event.pricing.isFree
-                                    ? 'Free'
+                                    ? context.l10n.eventDetailsFree
                                     : (event.pricing.amountCents != null
                                         ? '\$${(event.pricing.amountCents! / 100).toStringAsFixed(0)}'
-                                        : 'Paid'),
+                                        : context.l10n.paidEvent),
                                 color: event.pricing.isFree ? AppColors.success : AppColors.primaryDark,
                                 backgroundColor: event.pricing.isFree
                                     ? AppColors.islamicGreenLight
@@ -109,9 +112,11 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                           end: 8,
                           child: Material(
                             color: Colors.white.withValues(alpha: .94),
-                            shape: const CircleBorder(),
+                            shape: CircleBorder(),
                             child: IconButton(
-                              tooltip: _saved ? 'Remove from saved' : 'Save event',
+                              tooltip: _saved
+                                  ? context.l10n.removeFromSaved
+                                  : context.l10n.saveEvent,
                               onPressed: _saving ? null : _toggleSave,
                               icon: Icon(
                                 _saved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
@@ -132,11 +137,11 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                         // Date
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.primaryDark),
-                            const SizedBox(width: 6),
+                            Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.primaryDark),
+                            SizedBox(width: 6),
                             Text(
                               DateFormat('EEE, MMM d · h:mm a').format(event.startDate),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.primaryDark,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -144,46 +149,46 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         // Title
                         Text(
                           event.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w800,
                             fontSize: 18,
                             height: 1.25,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         // Metadata
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textSecondary),
-                            const SizedBox(width: 4),
+                            Icon(Icons.location_on_outlined, size: 15, color: AppColors.textSecondary),
+                            SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 location.isEmpty ? 'Location to be announced' : location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.groups_2_outlined, size: 15, color: AppColors.textSecondary),
-                            const SizedBox(width: 4),
+                            Icon(Icons.groups_2_outlined, size: 15, color: AppColors.textSecondary),
+                            SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 '${event.reservedCount} going${event.organizerName == null ? '' : ' · ${event.organizerName}'}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
@@ -212,7 +217,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
       if (mounted) setState(() => _saved = saved);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('We couldn’t update your saved events.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.savedEventsUpdateError)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -233,14 +238,14 @@ class _EventImage extends StatelessWidget {
   }
 
   Widget _fallback() => DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFFFDCE7), Color(0xFFF7A0BC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Icon(Icons.groups_2_rounded, color: AppColors.primaryDark, size: 46),
         ),
       );
@@ -270,7 +275,7 @@ class _Pill extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
             ],
             Text(
               label,
