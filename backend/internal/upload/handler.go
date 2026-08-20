@@ -3,6 +3,7 @@ package upload
 import (
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -60,7 +61,6 @@ var allowedImageTypes = map[string]bool{
 	"image/jpeg": true,
 	"image/png":  true,
 	"image/webp": true,
-	"image/gif":  true,
 }
 
 // Allowed MIME types for documents
@@ -91,6 +91,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 
 // UploadImage handles image upload
 func (h *Handler) UploadImage(c *gin.Context) {
+	if storageErr := storage.UnavailableError(h.provider); storageErr != nil {
+		log.Printf("[ERROR] public image storage unavailable: %v", storageErr)
+		response.Error(c, http.StatusServiceUnavailable, "Image storage is temporarily unavailable")
+		return
+	}
+
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
 		response.BadRequest(c, "Image file is required")
@@ -98,14 +104,15 @@ func (h *Handler) UploadImage(c *gin.Context) {
 	}
 	defer file.Close()
 
-	if err := h.validateFile(header, allowedImageTypes); err != nil {
+	if err := h.validateFile(header, allowedImageTypes, 5*1024*1024); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	url, err := h.provider.Upload(file, header, "images")
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to upload file")
+		log.Printf("[ERROR] public image upload failed: %v", err)
+		response.Error(c, http.StatusServiceUnavailable, "Image storage is temporarily unavailable")
 		return
 	}
 
@@ -124,7 +131,7 @@ func (h *Handler) UploadDocument(c *gin.Context) {
 	}
 	defer file.Close()
 
-	if err := h.validateFile(header, allowedDocumentTypes); err != nil {
+	if err := h.validateFile(header, allowedDocumentTypes, 10*1024*1024); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
@@ -157,10 +164,9 @@ func (h *Handler) UploadDocument(c *gin.Context) {
 }
 
 // validateFile validates file size and MIME type
-func (h *Handler) validateFile(header *multipart.FileHeader, allowedTypes map[string]bool) error {
-	maxBytes := int64(h.config.MaxFileSizeMB) * 1024 * 1024
+func (h *Handler) validateFile(header *multipart.FileHeader, allowedTypes map[string]bool, maxBytes int64) error {
 	if header.Size > maxBytes {
-		return fmt.Errorf("file too large, maximum size: %dMB", h.config.MaxFileSizeMB)
+		return fmt.Errorf("file too large, maximum size: %dMB", maxBytes/(1024*1024))
 	}
 
 	// Open the file to detect MIME type

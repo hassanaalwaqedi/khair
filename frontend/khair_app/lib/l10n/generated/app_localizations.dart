@@ -6547,7 +6547,7 @@ abstract class AppLocalizations {
   /// No description provided for @jpgPngOrWebpUpTo10Mb169Recomme.
   ///
   /// In en, this message translates to:
-  /// **'JPG, PNG or WebP · up to 10 MB · 16:9 recommended'**
+  /// **'JPG, PNG or WebP · up to 5 MB · 16:9 recommended'**
   String get jpgPngOrWebpUpTo10Mb169Recomme;
 
   /// No description provided for @reviewYourEvent.
@@ -7518,6 +7518,24 @@ abstract class AppLocalizations {
   /// **'Document upload failed.'**
   String get documentUploadFailed;
 
+  /// No description provided for @documentTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This document is larger than 10 MB.'**
+  String get documentTooLarge;
+
+  /// No description provided for @documentUploadFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t upload this document. Your application is safe.'**
+  String get documentUploadFailedSafe;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session expired. Please sign in again.'**
+  String get sessionExpired;
+
   /// No description provided for @organizationRegistration.
   ///
   /// In en, this message translates to:
@@ -7569,7 +7587,7 @@ abstract class AppLocalizations {
   /// No description provided for @savingDraft.
   ///
   /// In en, this message translates to:
-  /// **'Saving?'**
+  /// **'Saving…'**
   String get savingDraft;
 
   /// No description provided for @draftSavedSecurely.
@@ -8297,6 +8315,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved'**
   String get savedLabel;
+
+  /// No description provided for @imageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected image is empty. Choose another image.'**
+  String get imageEmpty;
+
+  /// No description provided for @imageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This image is larger than 5 MB.'**
+  String get imageTooLarge;
+
+  /// No description provided for @imageFormatUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This image format isn\'t supported. Use JPG, PNG, or WebP.'**
+  String get imageFormatUnsupported;
+
+  /// No description provided for @imageInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This image could not be read. Choose another image.'**
+  String get imageInvalid;
+
+  /// No description provided for @imageUploadOfflineSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Your image is safe — tap Retry.'**
+  String get imageUploadOfflineSafe;
+
+  /// No description provided for @imageUploadTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload took too long. Tap Retry.'**
+  String get imageUploadTimedOut;
+
+  /// No description provided for @imageUploadFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t upload this image. Your other information is safe.'**
+  String get imageUploadFailedSafe;
+
+  /// No description provided for @draftSaveOfflineSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t sync your changes. They\'re saved on this device.'**
+  String get draftSaveOfflineSafe;
+
+  /// No description provided for @draftSaveFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save your latest changes. They\'re saved on this device.'**
+  String get draftSaveFailedSafe;
+
+  /// No description provided for @draftChangesNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get draftChangesNotSaved;
+
+  /// No description provided for @uploadInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while the image finishes uploading.'**
+  String get uploadInProgress;
+
+  /// No description provided for @imagePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing image…'**
+  String get imagePreparing;
+
+  /// No description provided for @imageUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading securely…'**
+  String get imageUploading;
+
+  /// No description provided for @imageUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get imageUploaded;
 }
 
 class _AppLocalizationsDelegate

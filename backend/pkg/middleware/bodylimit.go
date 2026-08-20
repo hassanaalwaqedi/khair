@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	// MaxBodySize is the maximum allowed request body size (8 MB).
-	MaxBodySize = 8 << 20 // 8 * 1024 * 1024 = 8388608
+	// MaxBodySize accommodates the 10 MB organizer verification-document
+	// limit plus multipart encoding overhead.
+	MaxBodySize = 12 << 20 // 12 * 1024 * 1024
 )
 
 // BodySizeLimit returns a middleware that rejects requests with bodies larger

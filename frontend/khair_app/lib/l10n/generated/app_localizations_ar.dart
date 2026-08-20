@@ -3388,7 +3388,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get jpgPngOrWebpUpTo10Mb169Recomme =>
-      'JPG, PNG or WebP · up to 10 MB · 16:9 recommended';
+      'JPG وPNG وWebP · حتى 5 ميجابايت · يُفضّل مقاس 16:9';
 
   @override
   String get reviewYourEvent => 'مراجعة فعاليتك';
@@ -3941,6 +3941,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get documentUploadFailed => 'فشل رفع المستند.';
 
   @override
+  String get documentTooLarge => 'حجم المستند أكبر من 10 ميجابايت.';
+
+  @override
+  String get documentUploadFailedSafe =>
+      'تعذر رفع هذا المستند. طلبك محفوظ بأمان.';
+
+  @override
+  String get sessionExpired => 'انتهت جلستك. سجّل الدخول مرة أخرى.';
+
+  @override
   String get organizationRegistration => 'تسجيل المنظمة';
 
   @override
@@ -4356,4 +4366,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get savedLabel => 'محفوظة';
+
+  @override
+  String get imageEmpty => 'الصورة المحددة فارغة. اختر صورة أخرى.';
+
+  @override
+  String get imageTooLarge => 'حجم الصورة أكبر من 5 ميجابايت.';
+
+  @override
+  String get imageFormatUnsupported =>
+      'نوع الصورة غير مدعوم. استخدم JPG أو PNG أو WebP.';
+
+  @override
+  String get imageInvalid => 'تعذر قراءة الصورة. اختر صورة أخرى.';
+
+  @override
+  String get imageUploadOfflineSafe =>
+      'لا يوجد اتصال بالإنترنت. صورتك محفوظة — اضغط لإعادة المحاولة.';
+
+  @override
+  String get imageUploadTimedOut =>
+      'استغرق الرفع وقتًا طويلًا. اضغط لإعادة المحاولة.';
+
+  @override
+  String get imageUploadFailedSafe =>
+      'تعذر رفع هذه الصورة. بيانات طلبك الأخرى محفوظة.';
+
+  @override
+  String get draftSaveOfflineSafe =>
+      'تعذر مزامنة تغييراتك. تم حفظها على هذا الجهاز.';
+
+  @override
+  String get draftSaveFailedSafe =>
+      'تعذر حفظ آخر تغييراتك. تم حفظها على هذا الجهاز.';
+
+  @override
+  String get draftChangesNotSaved => 'تغييرات غير محفوظة';
+
+  @override
+  String get uploadInProgress => 'انتظر حتى يكتمل رفع الصورة.';
+
+  @override
+  String get imagePreparing => 'جارٍ تجهيز الصورة…';
+
+  @override
+  String get imageUploading => 'جارٍ رفع الصورة بأمان…';
+
+  @override
+  String get imageUploaded => 'تم الرفع';
 }

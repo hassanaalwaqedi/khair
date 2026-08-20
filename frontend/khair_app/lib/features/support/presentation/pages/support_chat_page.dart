@@ -47,25 +47,30 @@ class _SupportChatPageState extends State<SupportChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.khairSupport, style: KhairTypography.headlineSmall),
+        title: Text(context.l10n.khairSupport,
+            style: KhairTypography.headlineSmall),
         centerTitle: true,
         actions: [
           BlocBuilder<SupportCubit, SupportState>(
             builder: (context, state) {
-              if (state is SupportSessionActive && state.ticket.status == 'ai_active') {
+              if (state is SupportSessionActive &&
+                  state.ticket.status == 'ai_active') {
                 return TextButton(
                   onPressed: () {
                     context.read<SupportCubit>().escalate();
                   },
-                  child: Text(AppLocalizations.of(context)!.talkToHuman, style: TextStyle(color: KhairColors.primary)),
+                  child: Text(AppLocalizations.of(context)!.talkToHuman,
+                      style: TextStyle(color: KhairColors.primary)),
                 );
               }
-              if (state is SupportSessionActive && state.ticket.status != 'resolved') {
-                 return TextButton(
+              if (state is SupportSessionActive &&
+                  state.ticket.status != 'resolved') {
+                return TextButton(
                   onPressed: () {
                     context.read<SupportCubit>().resolve();
                   },
-                  child: Text(AppLocalizations.of(context)!.resolveTicket, style: TextStyle(color: KhairColors.success)),
+                  child: Text(AppLocalizations.of(context)!.resolveTicket,
+                      style: TextStyle(color: KhairColors.success)),
                 );
               }
               return SizedBox();
@@ -89,7 +94,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
             return Center(child: CircularProgressIndicator());
           }
           if (state is SupportError) {
-            return Center(child: Text(state.error, style: TextStyle(color: Colors.red)));
+            return Center(
+                child: Text(state.error, style: TextStyle(color: Colors.red)));
           }
           if (state is SupportInitial) {
             return _buildStartSession(context);
@@ -127,45 +133,50 @@ class _SupportChatPageState extends State<SupportChatPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Text(AppLocalizations.of(context)!.howCanWeHelpYou, style: KhairTypography.h3, textAlign: TextAlign.center),
-          SizedBox(height: 8),
-          Text(AppLocalizations.of(context)!.askKhairAi, style: KhairTypography.bodyLarge, textAlign: TextAlign.center),
-          SizedBox(height: 32),
-          TextField(
-            controller: _catController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.supportCategory,
-              hintText: AppLocalizations.of(context)!.supportCategoryHint,
-              border: OutlineInputBorder(),
+            Text(AppLocalizations.of(context)!.howCanWeHelpYou,
+                style: KhairTypography.h3, textAlign: TextAlign.center),
+            SizedBox(height: 8),
+            Text(AppLocalizations.of(context)!.askKhairAi,
+                style: KhairTypography.bodyLarge, textAlign: TextAlign.center),
+            SizedBox(height: 32),
+            TextField(
+              controller: _catController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.supportCategory,
+                hintText: AppLocalizations.of(context)!.supportCategoryHint,
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          SizedBox(height: 16),
-          TextField(
-            controller: _subjController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.howCanWeHelp,
-              border: OutlineInputBorder(),
+            SizedBox(height: 16),
+            TextField(
+              controller: _subjController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.howCanWeHelp,
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
-            maxLines: 3,
-          ),
-          SizedBox(height: 24),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: KhairColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+            SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: KhairColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: () {
+                if (_subjController.text.isNotEmpty) {
+                  context.read<SupportCubit>().startSession(
+                        _catController.text.isEmpty
+                            ? 'General'
+                            : _catController.text,
+                        _subjController.text,
+                      );
+                }
+              },
+              child: Text(AppLocalizations.of(context)!.startChat,
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
-            onPressed: () {
-              if (_subjController.text.isNotEmpty) {
-                context.read<SupportCubit>().startSession(
-                  _catController.text.isEmpty ? 'General' : _catController.text,
-                  _subjController.text,
-                );
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.startChat, style: TextStyle(color: Colors.white, fontSize: 16)),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -179,7 +190,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
           children: [
             Icon(Icons.auto_awesome, color: KhairColors.primary, size: 16),
             SizedBox(width: 8),
-            Text(context.l10n.youAreChattingWithKhairAi, style: TextStyle(color: KhairColors.primaryDark, fontWeight: FontWeight.bold)),
+            Text(context.l10n.youAreChattingWithKhairAi,
+                style: TextStyle(
+                    color: KhairColors.primaryDark,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
       );
@@ -193,21 +207,23 @@ class _SupportChatPageState extends State<SupportChatPage> {
             Icon(Icons.support_agent, color: KhairColors.warningDark, size: 20),
             SizedBox(width: 8),
             Expanded(
-              child: Text(AppLocalizations.of(context)!.waitingForSupportAgent, style: TextStyle(color: KhairColors.warningDark)),
+              child: Text(AppLocalizations.of(context)!.waitingForSupportAgent,
+                  style: TextStyle(color: KhairColors.warningDark)),
             ),
           ],
         ),
       );
     }
     if (status == 'resolved') {
-       return Container(
+      return Container(
         color: KhairColors.successLight,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
           children: [
             Icon(Icons.check_circle, color: KhairColors.success, size: 16),
             SizedBox(width: 8),
-            Text(context.l10n.thisTicketHasBeenResolved, style: TextStyle(color: KhairColors.successDark)),
+            Text(context.l10n.thisTicketHasBeenResolved,
+                style: TextStyle(color: KhairColors.successDark)),
           ],
         ),
       );
@@ -229,21 +245,27 @@ class _SupportChatPageState extends State<SupportChatPage> {
               color: KhairColors.neutral100,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(msg.body, style: TextStyle(color: KhairColors.neutral600, fontSize: 12)),
+            child: Text(msg.body,
+                style: TextStyle(color: KhairColors.neutral600, fontSize: 12)),
           ),
         ),
       );
     }
 
     final isAi = msg.senderType == 'ai';
-    final bgColor = isMe ? KhairColors.primary : (isAi ? KhairColors.primarySurface : KhairColors.neutral100);
+    final bgColor = isMe
+        ? KhairColors.primary
+        : (isAi ? KhairColors.primarySurface : KhairColors.neutral100);
     final textColor = isMe ? Colors.white : KhairColors.neutral900;
-    
+
     return Align(
-      alignment: isMe ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
+      alignment: isMe
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: bgColor,
@@ -263,20 +285,25 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (isAi) Icon(Icons.auto_awesome, size: 12, color: KhairColors.primary),
+                    if (isAi)
+                      Icon(Icons.auto_awesome,
+                          size: 12, color: KhairColors.primary),
                     if (isAi) SizedBox(width: 4),
                     Text(
                       isAi ? 'Khair AI' : (msg.senderName ?? 'Support Agent'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isAi ? KhairColors.primaryDark : KhairColors.neutral600,
+                        color: isAi
+                            ? KhairColors.primaryDark
+                            : KhairColors.neutral600,
                       ),
                     ),
                   ],
                 ),
               ),
-            if (msg.attachment != null && msg.attachment!.mimeType.startsWith('image/'))
+            if (msg.attachment != null &&
+                msg.attachment!.mimeType.startsWith('image/'))
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ClipRRect(
@@ -309,7 +336,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), offset: Offset(0, -2), blurRadius: 4),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              offset: Offset(0, -2),
+              blurRadius: 4),
         ],
       ),
       child: SafeArea(
@@ -320,14 +350,17 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 controller: _messageController,
                 enabled: !isLoading,
                 decoration: InputDecoration(
-                  hintText: status == 'resolved' ? 'Type to reopen...' : 'Type a message...',
+                  hintText: status == 'resolved'
+                      ? 'Type to reopen...'
+                      : 'Type a message...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
                   fillColor: KhairColors.neutral100,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 textInputAction: TextInputAction.send,
                 onSubmitted: (val) {
@@ -341,27 +374,51 @@ class _SupportChatPageState extends State<SupportChatPage> {
             SizedBox(width: 8),
             IconButton(
               icon: Icon(Icons.attach_file, color: KhairColors.neutral500),
-              onPressed: isLoading ? null : () async {
-                final picker = ImagePicker();
-                final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-                if (image != null && context.mounted) {
-                  context.read<SupportCubit>().uploadAttachment(image.path);
-                }
-              },
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      final picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        maxWidth: 1600,
+                        imageQuality: 85,
+                      );
+                      if (image != null && context.mounted) {
+                        final bytes = await image.readAsBytes();
+                        if (!context.mounted) return;
+                        if (bytes.length > 10 * 1024 * 1024) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content:
+                                Text('Choose an image smaller than 10 MB.'),
+                          ));
+                          return;
+                        }
+                        context
+                            .read<SupportCubit>()
+                            .uploadAttachment(bytes, image.name);
+                      }
+                    },
             ),
             CircleAvatar(
               backgroundColor: KhairColors.primary,
               child: IconButton(
-                icon: isLoading 
-                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Icon(Icons.send, color: Colors.white, size: 20),
-                onPressed: isLoading ? null : () {
-                  final text = _messageController.text.trim();
-                  if (text.isNotEmpty) {
-                    context.read<SupportCubit>().sendMessage(text);
-                    _messageController.clear();
-                  }
-                },
+                icon: isLoading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : Icon(Icons.send, color: Colors.white, size: 20),
+                onPressed: isLoading
+                    ? null
+                    : () {
+                        final text = _messageController.text.trim();
+                        if (text.isNotEmpty) {
+                          context.read<SupportCubit>().sendMessage(text);
+                          _messageController.clear();
+                        }
+                      },
               ),
             ),
           ],

@@ -60,12 +60,6 @@ func firstConfiguredEnv(keys ...string) string {
 
 func (s *S3Store) Put(ctx context.Context, key string, data []byte, contentType string) error {
 	if !s.configured() {
-		if os.Getenv("GIN_MODE") != "release" {
-			// Local fallback for dev
-			p := "./uploads/" + key
-			os.MkdirAll(path.Dir(p), 0755)
-			return os.WriteFile(p, data, 0644)
-		}
 		return errors.New("private S3-compatible organizer storage is not configured")
 	}
 	if key == "" || strings.HasPrefix(key, "/") || strings.Contains(key, "..") {
@@ -96,13 +90,38 @@ func (s *S3Store) Put(ctx context.Context, key string, data []byte, contentType 
 	return nil
 }
 
+// Delete removes an object after a successful replacement. Missing objects
+// are treated as success so cleanup remains safe and idempotent.
+func (s *S3Store) Delete(ctx context.Context, key string) error {
+	if !s.configured() {
+		return errors.New("private S3-compatible organizer storage is not configured")
+	}
+	if key == "" || strings.HasPrefix(key, "/") || strings.Contains(key, "..") {
+		return errors.New("invalid storage key")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, s.objectURL(key), nil)
+	if err != nil {
+		return err
+	}
+	if err := s.sign(req, sha256Hex(nil), time.Now().UTC()); err != nil {
+		return err
+	}
+	response, err := s.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("delete organizer media from S3: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusNotFound ||
+		(response.StatusCode >= 200 && response.StatusCode < 300) {
+		return nil
+	}
+	bodyBytes, _ := io.ReadAll(response.Body)
+	return fmt.Errorf("S3 delete returned status %d: %s", response.StatusCode, string(bodyBytes))
+}
+
 // SignedGetURL is used only after authorization in admin/document handlers.
 func (s *S3Store) SignedGetURL(key string, ttl time.Duration) (string, error) {
 	if !s.configured() {
-		if os.Getenv("GIN_MODE") != "release" {
-			// Local fallback for dev - return a relative URL that the frontend can load
-			return s.publicBaseURL + "/uploads/" + key, nil
-		}
 		return "", errors.New("private S3-compatible organizer storage is not configured")
 	}
 	if key == "" || strings.Contains(key, "..") {

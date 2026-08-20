@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/image_upload_client.dart';
+import '../../../../core/utils/image_upload_validator.dart';
 
 /// Data source for registration API endpoints
 class RegistrationRemoteDataSource {
@@ -115,6 +117,8 @@ class RegistrationRemoteDataSource {
 
   /// Upload profile image using bytes (web-compatible)
   Future<String> uploadImageBytes(Uint8List bytes, String filename) async {
+    final issue = await inspectImageUpload(filename: filename, bytes: bytes);
+    if (issue != null) throw ArgumentError(imageUploadIssueMessage(issue));
     final formData = FormData.fromMap({
       'image': MultipartFile.fromBytes(
         bytes,
@@ -122,7 +126,21 @@ class RegistrationRemoteDataSource {
       ),
     });
 
-    final response = await _apiClient.post('/upload/image', data: formData);
-    return response.data['data']['url'] as String;
+    final response = await _apiClient.post(
+      '/upload/image',
+      data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
+    );
+    final data = response.data['data'];
+    final url = data is Map ? data['url']?.toString() : null;
+    if (url == null || url.isEmpty) {
+      throw const FormatException(
+          'The upload service did not return an image URL.');
+    }
+    return url;
   }
 }

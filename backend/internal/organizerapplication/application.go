@@ -421,12 +421,19 @@ func (s *Service) UploadLogo(ctx context.Context, userID uuid.UUID, filename, mi
 	if err != nil {
 		return nil, err
 	}
-	key := fmt.Sprintf("organizers/applications/%s/logo/%s", app.ID, safeFilename(filename))
+	previousKey := app.PublicLogoKey
+	key := fmt.Sprintf("organizers/applications/%s/logo/current", app.ID)
 	if err := s.media.Put(ctx, key, data, mime); err != nil {
 		return nil, err
 	}
 	if _, err := s.db.ExecContext(ctx, `UPDATE organizer_applications SET public_logo_key = $2, updated_at = NOW() WHERE id = $1`, app.ID, key); err != nil {
+		if previousKey != key {
+			_ = s.media.Delete(context.Background(), key)
+		}
 		return nil, err
+	}
+	if previousKey != "" && previousKey != key {
+		_ = s.media.Delete(context.Background(), previousKey)
 	}
 	return s.GetMine(ctx, userID)
 }
@@ -439,12 +446,19 @@ func (s *Service) UploadRepresentativePhoto(ctx context.Context, userID uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	key := fmt.Sprintf("organizers/applications/%s/profile/%s", app.ID, safeFilename(filename))
+	previousKey := app.RepresentativePhotoKey
+	key := fmt.Sprintf("organizers/applications/%s/profile/current", app.ID)
 	if err := s.media.Put(ctx, key, data, mime); err != nil {
 		return nil, err
 	}
 	if _, err := s.db.ExecContext(ctx, `UPDATE organizer_applications SET representative_photo_key = $2, updated_at = NOW() WHERE id = $1`, app.ID, key); err != nil {
+		if previousKey != key {
+			_ = s.media.Delete(context.Background(), key)
+		}
 		return nil, err
+	}
+	if previousKey != "" && previousKey != key {
+		_ = s.media.Delete(context.Background(), previousKey)
 	}
 	return s.GetMine(ctx, userID)
 }
@@ -463,6 +477,7 @@ func (s *Service) UploadVerificationFile(ctx context.Context, userID uuid.UUID, 
 	}
 	file := &VerificationFile{ID: uuid.NewString(), FileType: fileType, OriginalFilename: safeDisplayFilename(filename), MimeType: mime, SizeBytes: int64(len(data)), ApplicantNote: strings.TrimSpace(note), UploadedAt: time.Now().UTC()}
 	if _, err := s.db.ExecContext(ctx, `INSERT INTO organizer_verification_files (id, application_id, file_type, storage_key, original_filename, mime_type, size_bytes, applicant_note) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, file.ID, app.ID, file.FileType, key, file.OriginalFilename, file.MimeType, file.SizeBytes, nullable(file.ApplicantNote)); err != nil {
+		_ = s.media.Delete(context.Background(), key)
 		return nil, err
 	}
 	return file, nil

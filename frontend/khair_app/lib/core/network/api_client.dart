@@ -16,8 +16,16 @@ class ApiClient {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
+    ProgressCallback? onSendProgress,
   }) async {
-    return _dio.post(path, data: data, queryParameters: queryParameters);
+    return _dio.post(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      onSendProgress: onSendProgress,
+    );
   }
 
   Future<Response> put(
