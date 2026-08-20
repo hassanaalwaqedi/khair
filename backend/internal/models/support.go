@@ -92,6 +92,10 @@ type CreateSupportConversationRequest struct {
 	Language    string  `json:"language"`
 	ContextType *string `json:"context_type,omitempty"`
 	ContextID   *string `json:"context_id,omitempty"`
+	// ForceNew starts a fresh AI conversation without deleting or changing an
+	// existing human-support ticket. It is only set from the explicit “New AI
+	// chat” action in the client.
+	ForceNew bool `json:"force_new,omitempty"`
 }
 
 // SupportMessageRequest

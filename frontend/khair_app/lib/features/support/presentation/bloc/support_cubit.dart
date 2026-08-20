@@ -73,6 +73,7 @@ class SupportCubit extends Cubit<SupportState> {
     String? initialTicketId,
     String? contextType,
     String? contextId,
+    bool forceNew = false,
   }) async {
     emit(const SupportLoading());
     try {
@@ -91,6 +92,7 @@ class SupportCubit extends Cubit<SupportState> {
         language: language,
         contextType: contextType,
         contextId: contextId,
+        forceNew: forceNew,
       );
       emit(SupportSessionActive(conversation.ticket, conversation.messages));
     } catch (_) {
