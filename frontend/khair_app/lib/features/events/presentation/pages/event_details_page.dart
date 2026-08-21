@@ -1328,8 +1328,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     ));
   }
 
-  bool _isOnline(Event event) =>
-      event.isOnline || event.eventType.toLowerCase().contains('online');
+  // `isOnline` is the canonical event-format flag.  Older rows may contain a
+  // stale `event_type`; falling back to it makes discovery say “In-person”
+  // while the detail page incorrectly exposes online-event UI.
+  bool _isOnline(Event event) => event.isOnline;
 
   bool _isJoined(Event event) =>
       _registrationStatus != null || event.isUserJoined;

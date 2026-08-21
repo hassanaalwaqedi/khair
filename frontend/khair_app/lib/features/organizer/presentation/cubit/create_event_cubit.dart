@@ -35,7 +35,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         description: event.description ?? '',
         category: event.category ?? '',
         tags: event.tags,
-        eventType: event.isOnline ? 'online' : event.eventType,
+        // The editor has two mutually exclusive formats.  `event_type` is a
+        // legacy/filter field and can be stale on events created by older
+        // draft-save builds, so never use it to override the actual mode.
+        eventType: event.isOnline ? 'online' : 'offline',
         language: event.language ?? 'en',
         startDate: start,
         startTime: TimeOfDay(hour: start.hour, minute: start.minute),
