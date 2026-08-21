@@ -231,6 +231,22 @@ type UpdateEventRequest struct {
 	Guidelines                    *string             `json:"guidelines"`
 }
 
+// normalizeEventMode keeps the legacy event_type column and the is_online
+// capability flag aligned. The editor exposes exactly two formats, online
+// and in-person (stored as offline). Older API clients can still submit a
+// non-mode event_type such as "workshop"; in that case we preserve the label
+// and use the explicit boolean rather than changing unrelated legacy data.
+func normalizeEventMode(eventType string, isOnline bool) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(eventType)) {
+	case "online":
+		return "online", true
+	case "offline", "in_person", "in-person", "inperson":
+		return "offline", false
+	default:
+		return eventType, isOnline
+	}
+}
+
 // Create creates a new event
 func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
 	// Creating an event is an organizer privilege. Do not create or approve an
