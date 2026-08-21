@@ -154,9 +154,9 @@ func (r *Repository) UpdateSubject(ticketID uuid.UUID, subject string) error {
 
 func (r *Repository) GetAdminTickets(status string) ([]*models.SupportTicketWithDetails, error) {
 	query := `SELECT t.id, t.user_id, t.assigned_to, t.category, t.subject, t.status, t.priority, t.ai_summary, t.created_at, t.updated_at, t.first_human_response_at, t.resolved_at, t.closed_at, t.language, t.context_type, t.context_id,
-			  COALESCE(NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), ''), 'Khair user') AS user_name,
+			  COALESCE(NULLIF(u.display_name, ''), u.email, 'Khair user') AS user_name,
 			  COALESCE(u.email, '') AS user_email,
-			  NULLIF(CONCAT_WS(' ', a.first_name, a.last_name), '') AS assigned_to_name
+			  NULLIF(COALESCE(a.display_name, a.email, ''), '') AS assigned_to_name
 			  FROM support_tickets t
 			  JOIN users u ON t.user_id = u.id
 			  LEFT JOIN users a ON t.assigned_to = a.id
@@ -236,7 +236,10 @@ func (r *Repository) CreateMessage(msg *models.SupportMessage) error {
 
 func (r *Repository) GetTicketMessages(ticketID uuid.UUID, includeInternal bool) ([]*models.SupportMessage, error) {
 	query := `SELECT m.id, m.ticket_id, m.sender_type, m.sender_user_id, m.body, m.message_type, m.created_at, m.read_at, m.metadata,
-			  u.first_name || ' ' || u.last_name as sender_name,
+			  CASE
+				  WHEN m.sender_user_id IS NULL THEN NULL
+				  ELSE COALESCE(NULLIF(u.display_name, ''), u.email, 'Khair user')
+			  END AS sender_name,
 			  a.id, a.file_url, a.mime_type, a.size_bytes, a.created_at
 			  FROM support_messages m
 			  LEFT JOIN users u ON m.sender_user_id = u.id
