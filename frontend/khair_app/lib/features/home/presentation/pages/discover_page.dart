@@ -159,7 +159,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
                     final searchQuery = state.filter.searchQuery?.trim();
                     final isSearching = searchQuery?.isNotEmpty ?? false;
-                    final featured = state.events.take(5).toList();
+                    // The horizontal list is scrollable, so do not silently
+                    // discard approved events after the first five results.
+                    // Events arrive ordered by start date, and the old limit
+                    // could hide a newly approved event until several older
+                    // events had passed.
+                    final featured = state.events;
                     final weekend = state.events.where(_isThisWeekend).take(6).toList();
                     
                     return SliverMainAxisGroup(
