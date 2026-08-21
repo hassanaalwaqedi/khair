@@ -64,6 +64,11 @@ type GeminiConfig struct {
 	Enabled   bool
 }
 
+// DefaultGeminiModel is the stable model used when no explicit model is set.
+// Keep this value in one place so local, production, and runtime defaults do
+// not drift apart.
+const DefaultGeminiModel = "gemini-2.5-flash"
+
 // EmailConfig holds email provider configuration.
 // Supports Resend (preferred) and SendGrid (fallback).
 type EmailConfig struct {
@@ -115,10 +120,10 @@ func Load() *Config {
 			Pretty: getEnv("LOG_PRETTY", "false") == "true",
 		},
 		Gemini: GeminiConfig{
-			APIKey:    getEnv("GEMINI_API_KEY", ""),
-			Model:     getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
+			APIKey:    strings.TrimSpace(getEnv("GEMINI_API_KEY", "")),
+			Model:     geminiModelFromEnv(),
 			MaxTokens: getEnvAsInt("GEMINI_MAX_TOKENS", 1024),
-			Enabled:   getEnv("GEMINI_API_KEY", "") != "",
+			Enabled:   strings.TrimSpace(getEnv("GEMINI_API_KEY", "")) != "",
 		},
 		Email: buildEmailConfig(),
 		Google: GoogleConfig{
@@ -132,6 +137,14 @@ func Load() *Config {
 	}
 
 	return cfg
+}
+
+func geminiModelFromEnv() string {
+	model := strings.TrimSpace(getEnv("GEMINI_MODEL", DefaultGeminiModel))
+	if model == "" {
+		return DefaultGeminiModel
+	}
+	return model
 }
 
 // getEnv gets an environment variable or returns a default value
