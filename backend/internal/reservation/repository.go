@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 )
 
@@ -48,13 +50,20 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 	var startDate time.Time
 	var endDate sql.NullTime
 	var registrationDeadline sql.NullTime
+	var attendancePolicy string
+	var userGender sql.NullString
 	err = tx.QueryRow(`
-		SELECT capacity, reserved_count, status, start_date, end_date,
-		       registration_deadline
-		FROM events WHERE id = $1 FOR UPDATE`,
-		eventID,
+		SELECT e.capacity, e.reserved_count, e.status, e.start_date, e.end_date,
+		       e.registration_deadline,
+		       COALESCE(NULLIF(e.attendance_policy, ''), NULLIF(e.gender_restriction, ''), 'EVERYONE'),
+		       u.gender
+		FROM events e
+		JOIN users u ON u.id = $2
+		WHERE e.id = $1
+		FOR UPDATE OF e`,
+		eventID, userID,
 	).Scan(&capacity, &reservedCount, &status, &startDate, &endDate,
-		&registrationDeadline)
+		&registrationDeadline, &attendancePolicy, &userGender)
 	if err != nil {
 		return nil, errors.New("event not found")
 	}
@@ -62,6 +71,16 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 	// Check event status — only approved events can be joined
 	if status != "approved" {
 		return nil, errors.New("this event is not accepting registrations")
+	}
+
+	// Eligibility is evaluated from the locked event row and the authenticated
+	// user's persisted profile. No client-supplied gender is accepted here.
+	if eligibilityErr := eligibility.Evaluate(attendancePolicy, userGender.String); eligibilityErr != nil {
+		// The reservation transaction must not be kept open while recording the
+		// aggregate audit event. The audit entry deliberately omits gender.
+		_ = tx.Rollback()
+		r.recordEligibilityRejection(userID, eventID, eligibilityErr)
+		return nil, eligibilityErr
 	}
 
 	// Check if event has already ended
@@ -154,6 +173,17 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		return nil, err
 	}
 	return reg, nil
+}
+
+func (r *Repository) recordEligibilityRejection(userID, eventID uuid.UUID, eligibilityErr error) {
+	code := "event_eligibility_rejected"
+	if typed, ok := eligibilityErr.(*eligibility.Error); ok && typed.Code == eligibility.CodeProfileEligibilityRequired {
+		code = "event_eligibility_profile_required"
+	}
+	_, _ = r.db.Exec(`
+		INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, reason)
+		VALUES ($1, 'system', $2, $3, 'event', $4, $5)
+	`, uuid.New(), userID, code, eventID, "Attendance eligibility evaluation")
 }
 
 // CancelReservation cancels a user's reservation

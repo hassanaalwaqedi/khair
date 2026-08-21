@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
@@ -114,28 +115,31 @@ type CreateEventRequest struct {
 	ImageURL          *string    `json:"image_url"`
 	Capacity          *int       `json:"capacity"`
 	GenderRestriction *string    `json:"gender_restriction"`
+	AttendancePolicy  *string    `json:"attendance_policy"`
 	AgeMin            *int       `json:"age_min"`
 	AgeMax            *int       `json:"age_max"`
 }
 
 // UpdateEventRequest is the DTO for updating events
 type UpdateEventRequest struct {
-	Title             *string    `json:"title"`
-	Description       *string    `json:"description"`
-	EventType         *string    `json:"event_type"`
-	Language          *string    `json:"language"`
-	Country           *string    `json:"country"`
-	City              *string    `json:"city"`
-	Address           *string    `json:"address"`
-	Latitude          *float64   `json:"latitude"`
-	Longitude         *float64   `json:"longitude"`
-	StartDate         *time.Time `json:"start_date"`
-	EndDate           *time.Time `json:"end_date"`
-	ImageURL          *string    `json:"image_url"`
-	Capacity          *int       `json:"capacity"`
-	GenderRestriction *string    `json:"gender_restriction"`
-	AgeMin            *int       `json:"age_min"`
-	AgeMax            *int       `json:"age_max"`
+	Title                         *string    `json:"title"`
+	Description                   *string    `json:"description"`
+	EventType                     *string    `json:"event_type"`
+	Language                      *string    `json:"language"`
+	Country                       *string    `json:"country"`
+	City                          *string    `json:"city"`
+	Address                       *string    `json:"address"`
+	Latitude                      *float64   `json:"latitude"`
+	Longitude                     *float64   `json:"longitude"`
+	StartDate                     *time.Time `json:"start_date"`
+	EndDate                       *time.Time `json:"end_date"`
+	ImageURL                      *string    `json:"image_url"`
+	Capacity                      *int       `json:"capacity"`
+	GenderRestriction             *string    `json:"gender_restriction"`
+	AttendancePolicy              *string    `json:"attendance_policy"`
+	ConfirmAttendancePolicyChange bool       `json:"confirm_attendance_policy_change"`
+	AgeMin                        *int       `json:"age_min"`
+	AgeMax                        *int       `json:"age_max"`
 }
 
 // ListOrgEvents lists events for an organization
@@ -169,6 +173,17 @@ func (s *Service) CreateEvent(orgID uuid.UUID, req *CreateEventRequest) (*models
 		return nil, errors.New("age_min must be less than age_max")
 	}
 
+	policyInput := ""
+	if req.AttendancePolicy != nil {
+		policyInput = *req.AttendancePolicy
+	} else if req.GenderRestriction != nil {
+		policyInput = *req.GenderRestriction
+	}
+	policy, err := eligibility.NormalizePolicy(policyInput)
+	if err != nil {
+		return nil, err
+	}
+	legacy := eligibility.LegacyGenderRestriction(policy)
 	ev := &models.Event{
 		OrganizerID:       orgID,
 		Title:             req.Title,
@@ -184,7 +199,8 @@ func (s *Service) CreateEvent(orgID uuid.UUID, req *CreateEventRequest) (*models
 		EndDate:           req.EndDate,
 		ImageURL:          req.ImageURL,
 		Capacity:          req.Capacity,
-		GenderRestriction: req.GenderRestriction,
+		GenderRestriction: &legacy,
+		AttendancePolicy:  policy,
 		AgeMin:            req.AgeMin,
 		AgeMax:            req.AgeMax,
 		Status:            "draft",
@@ -203,6 +219,14 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 		return nil, errors.New("event not found")
 	}
 	previousStartDate := ev.StartDate
+	previousPolicyInput := ev.AttendancePolicy
+	if previousPolicyInput == "" && ev.GenderRestriction != nil {
+		previousPolicyInput = *ev.GenderRestriction
+	}
+	previousPolicy, err := eligibility.NormalizePolicy(previousPolicyInput)
+	if err != nil {
+		return nil, err
+	}
 
 	if req.Title != nil {
 		ev.Title = *req.Title
@@ -247,7 +271,22 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 		ev.Capacity = req.Capacity
 	}
 	if req.GenderRestriction != nil {
-		ev.GenderRestriction = req.GenderRestriction
+		policy, normalizeErr := eligibility.NormalizePolicy(*req.GenderRestriction)
+		if normalizeErr != nil {
+			return nil, normalizeErr
+		}
+		ev.AttendancePolicy = policy
+		legacy := eligibility.LegacyGenderRestriction(policy)
+		ev.GenderRestriction = &legacy
+	}
+	if req.AttendancePolicy != nil {
+		policy, normalizeErr := eligibility.NormalizePolicy(*req.AttendancePolicy)
+		if normalizeErr != nil {
+			return nil, normalizeErr
+		}
+		ev.AttendancePolicy = policy
+		legacy := eligibility.LegacyGenderRestriction(policy)
+		ev.GenderRestriction = &legacy
 	}
 	if req.AgeMin != nil {
 		ev.AgeMin = req.AgeMin
@@ -256,8 +295,29 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 		ev.AgeMax = req.AgeMax
 	}
 
+	policyChanged := ev.AttendancePolicy != previousPolicy
+	if policyChanged {
+		hasRegistrations, checkErr := s.repo.HasFutureRegistrations(eventID)
+		if checkErr != nil {
+			return nil, checkErr
+		}
+		if hasRegistrations && !req.ConfirmAttendancePolicyChange {
+			return nil, &eligibility.Error{
+				Code:       "ATTENDANCE_POLICY_CHANGE_CONFIRMATION_REQUIRED",
+				HTTPStatus: 409,
+				Message:    "Changing attendance eligibility may affect existing registrations. Please confirm to continue.",
+				Policy:     ev.AttendancePolicy,
+			}
+		}
+	}
+
 	if err := s.repo.UpdateEvent(ev); err != nil {
 		return nil, err
+	}
+	if policyChanged && req.ConfirmAttendancePolicyChange {
+		if err := s.repo.FlagIneligibleRegistrations(eventID, ev.AttendancePolicy); err != nil {
+			return nil, err
+		}
 	}
 	if !ev.StartDate.Equal(previousStartDate) {
 		go s.notifyAttendees(ev, "event_updated", ev.StartDate.UTC().Format(time.RFC3339Nano))

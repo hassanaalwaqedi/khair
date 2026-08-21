@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/ai"
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/pkg/response"
 	"github.com/khair/backend/pkg/storage"
 )
@@ -21,16 +22,18 @@ import (
 // ─── Request / Response types ─────────────────────
 
 type UpdateProfileRequest struct {
-	DisplayName        *string `json:"display_name"`
-	Bio                *string `json:"bio"`
-	City               *string `json:"city"`
-	Country            *string `json:"country"`
-	Location           *string `json:"location"`
-	PreferredLanguage  *string `json:"preferred_language"`
-	AvatarURL          *string `json:"avatar_url"`
-	PushNotifications  *bool   `json:"push_notifications"`
-	EmailNotifications *bool   `json:"email_notifications"`
-	ProfileVisibility  *string `json:"profile_visibility"`
+	DisplayName              *string `json:"display_name"`
+	Bio                      *string `json:"bio"`
+	City                     *string `json:"city"`
+	Country                  *string `json:"country"`
+	Location                 *string `json:"location"`
+	PreferredLanguage        *string `json:"preferred_language"`
+	AvatarURL                *string `json:"avatar_url"`
+	PushNotifications        *bool   `json:"push_notifications"`
+	EmailNotifications       *bool   `json:"email_notifications"`
+	ProfileVisibility        *string `json:"profile_visibility"`
+	Gender                   *string `json:"gender"`
+	ConfirmEligibilityImpact *bool   `json:"confirm_eligibility_impact"`
 }
 
 type ProfileResponse struct {
@@ -44,6 +47,7 @@ type ProfileResponse struct {
 	Location          *string   `json:"location,omitempty"`
 	AvatarURL         *string   `json:"avatar_url,omitempty"`
 	PreferredLanguage string    `json:"preferred_language"`
+	Gender            string    `json:"gender"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -90,13 +94,14 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	var p ProfileResponse
 	err := h.db.QueryRow(`
 		SELECT p.id, p.user_id, u.display_name, u.email, p.bio, p.city, p.country,
-		       p.location, p.avatar_url, p.preferred_language, p.created_at, p.updated_at
+		       p.location, p.avatar_url, p.preferred_language, COALESCE(u.gender, 'NOT_SET'),
+		       p.created_at, p.updated_at
 		FROM profiles p
 		JOIN users u ON u.id = p.user_id
 		WHERE p.user_id = $1`, uid,
 	).Scan(
 		&p.ID, &p.UserID, &p.DisplayName, &p.Email, &p.Bio, &p.City, &p.Country,
-		&p.Location, &p.AvatarURL, &p.PreferredLanguage, &p.CreatedAt, &p.UpdatedAt,
+		&p.Location, &p.AvatarURL, &p.PreferredLanguage, &p.Gender, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		response.NotFound(c, "Profile not found")
@@ -293,6 +298,44 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
+	var requestedGender string
+	previousGender := eligibility.GenderNotSet
+	genderChanged := false
+	if req.Gender != nil {
+		requestedGender = eligibility.NormalizeGender(*req.Gender)
+		var currentGender sql.NullString
+		if err := h.db.QueryRow(`SELECT gender FROM users WHERE id = $1`, uid).Scan(&currentGender); err != nil {
+			response.InternalServerError(c, "Failed to load profile eligibility")
+			return
+		}
+		previousGender = eligibility.NormalizeGender(currentGender.String)
+		genderChanged = requestedGender != eligibility.NormalizeGender(currentGender.String)
+		if genderChanged {
+			var affected bool
+			if err := h.db.QueryRow(`
+				SELECT EXISTS(
+					SELECT 1
+					FROM event_registrations er
+					JOIN events e ON e.id = er.event_id
+					WHERE er.user_id = $1
+					  AND er.status IN ('pending', 'confirmed', 'reserved')
+					  AND COALESCE(e.end_date, e.start_date) > NOW()
+					  AND COALESCE(e.attendance_policy, 'EVERYONE') <> 'EVERYONE'
+					  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2 <> 'WOMAN')
+					    OR (e.attendance_policy = 'MEN_ONLY' AND $2 <> 'MAN'))
+				)`, uid, requestedGender).Scan(&affected); err != nil {
+				response.InternalServerError(c, "Failed to check affected registrations")
+				return
+			}
+			if affected && (req.ConfirmEligibilityImpact == nil || !*req.ConfirmEligibilityImpact) {
+				response.ErrorWithCode(c, http.StatusConflict,
+					"ELIGIBILITY_CHANGE_CONFIRMATION_REQUIRED",
+					"Changing this profile detail may affect upcoming event registrations. Please confirm to continue.")
+				return
+			}
+		}
+	}
+
 	// ── AI Text Moderation (fail-open) ──
 	textsToCheck := []string{}
 	if req.DisplayName != nil && *req.DisplayName != "" {
@@ -418,6 +461,47 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		)
 		if err != nil {
 			log.Printf("[WARN] Failed to update display_name for %s: %v", uid, err)
+		}
+	}
+	if req.Gender != nil {
+		if _, err := h.db.Exec(`
+			UPDATE users
+			SET gender = $1, gender_updated_at = CASE WHEN $1 = COALESCE(gender, 'NOT_SET') THEN gender_updated_at ELSE $2 END, updated_at = $2
+			WHERE id = $3`, requestedGender, now, uid); err != nil {
+			log.Printf("[WARN] Failed to update gender for %s: %v", uid, err)
+			response.InternalServerError(c, "Failed to update profile eligibility")
+			return
+		}
+		if genderChanged && req.ConfirmEligibilityImpact != nil && *req.ConfirmEligibilityImpact {
+			if _, err := h.db.Exec(`
+				UPDATE event_registrations er
+				SET eligibility_review_required = true, updated_at = NOW()
+				FROM events e
+				WHERE er.event_id = e.id
+				  AND er.user_id = $1
+				  AND er.status IN ('pending', 'confirmed', 'reserved')
+				  AND COALESCE(e.end_date, e.start_date) > NOW()
+				  AND COALESCE(e.attendance_policy, 'EVERYONE') <> 'EVERYONE'
+				  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2 <> 'WOMAN')
+				    OR (e.attendance_policy = 'MEN_ONLY' AND $2 <> 'MAN'))`, uid, requestedGender); err != nil {
+				log.Printf("[WARN] Failed to flag affected registrations for %s: %v", uid, err)
+				response.InternalServerError(c, "Failed to flag affected registrations")
+				return
+			}
+		}
+		if genderChanged {
+			if _, err := h.db.Exec(`
+				INSERT INTO audit_logs
+					(id, actor_type, actor_id, action, target_type, target_id, old_value, new_value, reason, ip_address, user_agent)
+				VALUES (gen_random_uuid(), 'system', $1, 'profile_gender_changed', 'user', $1, $2::jsonb, $3::jsonb, $4, $5, $6)`,
+				uid,
+				fmt.Sprintf(`{"gender":"%s"}`, previousGender),
+				fmt.Sprintf(`{"gender":"%s"}`, requestedGender),
+				"User updated private eligibility information",
+				c.ClientIP(),
+				c.GetHeader("User-Agent")); err != nil {
+				log.Printf("[WARN] Failed to write profile eligibility audit for %s: %v", uid, err)
+			}
 		}
 	}
 	if req.PushNotifications != nil || req.EmailNotifications != nil || req.ProfileVisibility != nil {

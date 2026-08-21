@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/error/failures.dart';
+import '../entities/attendance_policy.dart';
 import '../entities/event.dart';
 
 abstract class EventsRepository {
@@ -47,6 +48,7 @@ class CreateEventParams {
   final String? venueName;
   final int? capacity;
   final String? genderRestriction;
+  final String? attendancePolicy;
   final int? ageMin;
   final DateTime? registrationDeadline;
   final String? registrationMode;
@@ -76,6 +78,7 @@ class CreateEventParams {
     this.venueName,
     this.capacity,
     this.genderRestriction,
+    this.attendancePolicy,
     this.ageMin,
     this.registrationDeadline,
     this.registrationMode,
@@ -112,7 +115,14 @@ class CreateEventParams {
       'join_instructions': joinInstructions,
       'venue_name': venueName,
       'capacity': capacity,
-      'gender_restriction': genderRestriction,
+      'attendance_policy': attendancePolicy ??
+          (genderRestriction == null
+              ? null
+              : AttendancePolicy.normalize(genderRestriction)),
+      'gender_restriction': genderRestriction == null
+          ? null
+          : AttendancePolicy.legacyGenderRestriction(
+              attendancePolicy ?? genderRestriction),
       'age_min': ageMin,
       'registration_deadline': registrationDeadline?.toUtc().toIso8601String(),
       'registration_mode': registrationMode,
@@ -142,6 +152,7 @@ class CreateEventParams {
         venueName: venueName,
         capacity: capacity,
         genderRestriction: genderRestriction,
+        attendancePolicy: attendancePolicy,
         ageMin: ageMin,
         registrationDeadline: registrationDeadline,
         registrationMode: registrationMode,
@@ -172,6 +183,7 @@ class UpdateEventParams {
   final String? venueName;
   final int? capacity;
   final String? genderRestriction;
+  final String? attendancePolicy;
   final int? ageMin;
   final DateTime? registrationDeadline;
   final String? registrationMode;
@@ -200,6 +212,7 @@ class UpdateEventParams {
     this.venueName,
     this.capacity,
     this.genderRestriction,
+    this.attendancePolicy,
     this.ageMin,
     this.registrationDeadline,
     this.registrationMode,
@@ -237,8 +250,14 @@ class UpdateEventParams {
     if (joinInstructions != null) json['join_instructions'] = joinInstructions;
     if (venueName != null) json['venue_name'] = venueName;
     if (capacity != null) json['capacity'] = capacity;
-    if (genderRestriction != null)
+    if (attendancePolicy != null) {
+      json['attendance_policy'] = AttendancePolicy.normalize(attendancePolicy);
+      json['gender_restriction'] =
+          AttendancePolicy.legacyGenderRestriction(attendancePolicy);
+    } else if (genderRestriction != null) {
       json['gender_restriction'] = genderRestriction;
+      json['attendance_policy'] = AttendancePolicy.normalize(genderRestriction);
+    }
     if (ageMin != null) json['age_min'] = ageMin;
     if (registrationDeadline != null) {
       json['registration_deadline'] =

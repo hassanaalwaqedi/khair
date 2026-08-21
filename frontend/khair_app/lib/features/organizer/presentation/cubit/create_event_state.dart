@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
+import '../../../events/domain/entities/attendance_policy.dart';
+
 enum CreateEventStatus {
   initial,
   saving,
@@ -36,7 +38,9 @@ class CreateEventFormData extends Equatable {
   final String? onlinePlatform;
   final String? onlineLink;
   final String? onlineInstructions;
-  final String genderPolicy; // mixed | male_only | female_only
+
+  /// Stable attendance policy; legacy draft values are normalized on load.
+  final String genderPolicy;
   final String agePolicy; // all_ages | 18_plus | families | custom
   final int? customMinAge;
   final bool unlimitedCapacity;
@@ -77,7 +81,7 @@ class CreateEventFormData extends Equatable {
     this.onlinePlatform = 'zoom',
     this.onlineLink,
     this.onlineInstructions,
-    this.genderPolicy = 'mixed',
+    this.genderPolicy = AttendancePolicy.everyone,
     this.agePolicy = 'all_ages',
     this.customMinAge,
     this.unlimitedCapacity = true,
@@ -275,7 +279,7 @@ class CreateEventFormData extends Equatable {
       onlinePlatform: json['onlinePlatform'] ?? 'zoom',
       onlineLink: json['onlineLink'],
       onlineInstructions: json['onlineInstructions'],
-      genderPolicy: json['genderPolicy'] ?? 'mixed',
+      genderPolicy: AttendancePolicy.normalize(json['genderPolicy'] as String?),
       agePolicy: json['agePolicy'] ?? 'all_ages',
       customMinAge: json['customMinAge'],
       unlimitedCapacity: json['unlimitedCapacity'] ?? true,

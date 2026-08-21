@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 )
 
@@ -281,7 +282,7 @@ func (r *Repository) ListOrgEvents(orgID uuid.UUID, status *string, page, pageSi
 		SELECT e.id, e.organizer_id, e.title, e.description, e.event_type, e.language,
 			e.country, e.city, e.address, e.latitude, e.longitude, e.start_date,
 			e.end_date, e.image_url, e.capacity, e.reserved_count,
-			e.gender_restriction, e.age_min, e.age_max,
+			e.gender_restriction, e.attendance_policy, e.age_min, e.age_max,
 			e.status, e.rejection_reason, e.created_at, e.updated_at
 		FROM events e %s
 		ORDER BY e.created_at DESC
@@ -302,7 +303,7 @@ func (r *Repository) ListOrgEvents(orgID uuid.UUID, status *string, page, pageSi
 			&ev.ID, &ev.OrganizerID, &ev.Title, &ev.Description, &ev.EventType, &ev.Language,
 			&ev.Country, &ev.City, &ev.Address, &ev.Latitude, &ev.Longitude, &ev.StartDate,
 			&ev.EndDate, &ev.ImageURL, &ev.Capacity, &ev.ReservedCount,
-			&ev.GenderRestriction, &ev.AgeMin, &ev.AgeMax,
+			&ev.GenderRestriction, &ev.AttendancePolicy, &ev.AgeMin, &ev.AgeMax,
 			&ev.Status, &ev.RejectionReason, &ev.CreatedAt, &ev.UpdatedAt,
 		); err != nil {
 			return nil, 0, err
@@ -317,14 +318,14 @@ func (r *Repository) CreateEvent(ev *models.Event) error {
 	return r.db.QueryRow(`
 		INSERT INTO events (organizer_id, title, description, event_type, language,
 			country, city, address, latitude, longitude, start_date, end_date,
-			image_url, capacity, gender_restriction, age_min, age_max, status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+			image_url, capacity, gender_restriction, attendance_policy, age_min, age_max, status)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
 		RETURNING id, created_at, updated_at
 	`,
 		ev.OrganizerID, ev.Title, ev.Description, ev.EventType, ev.Language,
 		ev.Country, ev.City, ev.Address, ev.Latitude, ev.Longitude,
 		ev.StartDate, ev.EndDate, ev.ImageURL, ev.Capacity,
-		ev.GenderRestriction, ev.AgeMin, ev.AgeMax, ev.Status,
+		ev.GenderRestriction, ev.AttendancePolicy, ev.AgeMin, ev.AgeMax, ev.Status,
 	).Scan(&ev.ID, &ev.CreatedAt, &ev.UpdatedAt)
 }
 
@@ -335,14 +336,49 @@ func (r *Repository) UpdateEvent(ev *models.Event) error {
 			title=$2, description=$3, event_type=$4, language=$5,
 			country=$6, city=$7, address=$8, latitude=$9, longitude=$10,
 			start_date=$11, end_date=$12, image_url=$13, capacity=$14,
-			gender_restriction=$15, age_min=$16, age_max=$17
+			gender_restriction=$15, attendance_policy=$16, age_min=$17, age_max=$18
 		WHERE id=$1
 	`,
 		ev.ID, ev.Title, ev.Description, ev.EventType, ev.Language,
 		ev.Country, ev.City, ev.Address, ev.Latitude, ev.Longitude,
 		ev.StartDate, ev.EndDate, ev.ImageURL, ev.Capacity,
-		ev.GenderRestriction, ev.AgeMin, ev.AgeMax,
+		ev.GenderRestriction, ev.AttendancePolicy, ev.AgeMin, ev.AgeMax,
 	)
+	return err
+}
+
+// HasFutureRegistrations reports whether changing eligibility could affect
+// attendees who still have an active or upcoming registration.
+func (r *Repository) HasFutureRegistrations(eventID uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1
+			FROM event_registrations er
+			JOIN events e ON e.id = er.event_id
+			WHERE er.event_id = $1
+			  AND er.status IN ('pending', 'confirmed', 'reserved')
+			  AND COALESCE(e.end_date, e.start_date) > NOW()
+		)`, eventID).Scan(&exists)
+	return exists, err
+}
+
+// FlagIneligibleRegistrations preserves existing rows while making affected
+// attendees visible for organizer review after a confirmed policy change.
+func (r *Repository) FlagIneligibleRegistrations(eventID uuid.UUID, policy string) error {
+	if policy == eligibility.PolicyEveryone {
+		return nil
+	}
+	_, err := r.db.Exec(`
+		UPDATE event_registrations er
+		SET eligibility_review_required = true, updated_at = NOW()
+		FROM users u
+		WHERE er.user_id = u.id
+		  AND er.event_id = $1
+		  AND er.status IN ('pending', 'confirmed', 'reserved')
+		  AND (( $2 = 'WOMEN_ONLY' AND UPPER(COALESCE(u.gender, '')) NOT IN ('WOMAN', 'WOMEN', 'FEMALE'))
+		    OR ( $2 = 'MEN_ONLY' AND UPPER(COALESCE(u.gender, '')) NOT IN ('MAN', 'MALE')))`,
+		eventID, policy)
 	return err
 }
 
@@ -358,21 +394,21 @@ func (r *Repository) DuplicateEvent(eventID, orgID uuid.UUID) (*models.Event, er
 	err := r.db.QueryRow(`
 		INSERT INTO events (organizer_id, title, description, event_type, language,
 			country, city, address, latitude, longitude, start_date, end_date,
-			image_url, capacity, gender_restriction, age_min, age_max, status)
+			image_url, capacity, gender_restriction, attendance_policy, age_min, age_max, status)
 		SELECT organizer_id, title || ' (Copy)', description, event_type, language,
 			country, city, address, latitude, longitude, start_date, end_date,
-			image_url, capacity, gender_restriction, age_min, age_max, 'draft'
+			image_url, capacity, gender_restriction, attendance_policy, age_min, age_max, 'draft'
 		FROM events WHERE id = $1 AND organizer_id = $2
 		RETURNING id, organizer_id, title, description, event_type, language,
 			country, city, address, latitude, longitude, start_date, end_date,
 			image_url, capacity, COALESCE(reserved_count, 0),
-			gender_restriction, age_min, age_max,
+			gender_restriction, attendance_policy, age_min, age_max,
 			status, rejection_reason, created_at, updated_at
 	`, eventID, orgID).Scan(
 		&ev.ID, &ev.OrganizerID, &ev.Title, &ev.Description, &ev.EventType, &ev.Language,
 		&ev.Country, &ev.City, &ev.Address, &ev.Latitude, &ev.Longitude,
 		&ev.StartDate, &ev.EndDate, &ev.ImageURL, &ev.Capacity, &ev.ReservedCount,
-		&ev.GenderRestriction, &ev.AgeMin, &ev.AgeMax,
+		&ev.GenderRestriction, &ev.AttendancePolicy, &ev.AgeMin, &ev.AgeMax,
 		&ev.Status, &ev.RejectionReason, &ev.CreatedAt, &ev.UpdatedAt,
 	)
 	if err != nil {
@@ -388,14 +424,14 @@ func (r *Repository) GetEventByID(eventID, orgID uuid.UUID) (*models.Event, erro
 		SELECT id, organizer_id, title, description, event_type, language,
 			country, city, address, latitude, longitude, start_date, end_date,
 			image_url, capacity, reserved_count,
-			gender_restriction, age_min, age_max,
+			gender_restriction, attendance_policy, age_min, age_max,
 			status, rejection_reason, created_at, updated_at
 		FROM events WHERE id = $1 AND organizer_id = $2
 	`, eventID, orgID).Scan(
 		&ev.ID, &ev.OrganizerID, &ev.Title, &ev.Description, &ev.EventType, &ev.Language,
 		&ev.Country, &ev.City, &ev.Address, &ev.Latitude, &ev.Longitude,
 		&ev.StartDate, &ev.EndDate, &ev.ImageURL, &ev.Capacity, &ev.ReservedCount,
-		&ev.GenderRestriction, &ev.AgeMin, &ev.AgeMax,
+		&ev.GenderRestriction, &ev.AttendancePolicy, &ev.AgeMin, &ev.AgeMax,
 		&ev.Status, &ev.RejectionReason, &ev.CreatedAt, &ev.UpdatedAt,
 	)
 	if err != nil {

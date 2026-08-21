@@ -11,6 +11,7 @@ import '../../../../../tokens/tokens.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../events/data/datasources/saved_events_datasource.dart';
 import '../../../../events/domain/entities/event.dart';
+import '../../../../events/presentation/widgets/event_eligibility_badge.dart';
 
 class FeaturedEventCard extends StatefulWidget {
   const FeaturedEventCard({super.key, required this.event});
@@ -50,7 +51,9 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: _hovered ? AppColors.primary.withValues(alpha: .5) : AppColors.border,
+              color: _hovered
+                  ? AppColors.primary.withValues(alpha: .5)
+                  : AppColors.border,
               width: _hovered ? 1.4 : 1,
             ),
             boxShadow: _hovered
@@ -72,7 +75,8 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(23)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(23)),
                     child: Stack(
                       children: [
                         AspectRatio(
@@ -89,7 +93,9 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                                 label: event.isOnline
                                     ? context.l10n.online
                                     : context.l10n.createEventInPerson,
-                                icon: event.isOnline ? Icons.videocam_rounded : Icons.location_on_rounded,
+                                icon: event.isOnline
+                                    ? Icons.videocam_rounded
+                                    : Icons.location_on_rounded,
                               ),
                               SizedBox(width: 8),
                               _Pill(
@@ -98,7 +104,9 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                                     : (event.pricing.amountCents != null
                                         ? '\$${(event.pricing.amountCents! / 100).toStringAsFixed(0)}'
                                         : context.l10n.paidEvent),
-                                color: event.pricing.isFree ? AppColors.success : AppColors.primaryDark,
+                                color: event.pricing.isFree
+                                    ? AppColors.success
+                                    : AppColors.primaryDark,
                                 backgroundColor: event.pricing.isFree
                                     ? AppColors.islamicGreenLight
                                     : AppColors.primarySoft,
@@ -119,11 +127,22 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                                   : context.l10n.saveEvent,
                               onPressed: _saving ? null : _toggleSave,
                               icon: Icon(
-                                _saved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                color: _saved ? AppColors.primary : AppColors.textPrimary,
+                                _saved
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: _saved
+                                    ? AppColors.primary
+                                    : AppColors.textPrimary,
                                 size: 22,
                               ),
                             ),
+                          ),
+                        ),
+                        PositionedDirectional(
+                          bottom: 12,
+                          start: 12,
+                          child: EventEligibilityBadge(
+                            policy: event.effectiveAttendancePolicy,
                           ),
                         ),
                       ],
@@ -137,10 +156,12 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                         // Date
                         Row(
                           children: [
-                            Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.primaryDark),
+                            Icon(Icons.calendar_month_rounded,
+                                size: 16, color: AppColors.primaryDark),
                             SizedBox(width: 6),
                             Text(
-                              DateFormat('EEE, MMM d · h:mm a').format(event.startDate),
+                              DateFormat('EEE, MMM d · h:mm a')
+                                  .format(event.startDate),
                               style: TextStyle(
                                 color: AppColors.primaryDark,
                                 fontSize: 13,
@@ -166,14 +187,20 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                         // Metadata
                         Row(
                           children: [
-                            Icon(Icons.location_on_outlined, size: 15, color: AppColors.textSecondary),
+                            Icon(Icons.location_on_outlined,
+                                size: 15, color: AppColors.textSecondary),
                             SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                location.isEmpty ? 'Location to be announced' : location,
+                                location.isEmpty
+                                    ? 'Location to be announced'
+                                    : location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
@@ -181,14 +208,18 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                         SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(Icons.groups_2_outlined, size: 15, color: AppColors.textSecondary),
+                            Icon(Icons.groups_2_outlined,
+                                size: 15, color: AppColors.textSecondary),
                             SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 '${event.reservedCount} going${event.organizerName == null ? '' : ' · ${event.organizerName}'}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
@@ -208,16 +239,19 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
   Future<void> _toggleSave() async {
     final auth = context.read<AuthBloc>().state;
     if (!auth.isAuthenticated) {
-      context.go('/login?next=${Uri.encodeComponent('/events/${widget.event.id}')}');
+      context.go(
+          '/login?next=${Uri.encodeComponent('/events/${widget.event.id}')}');
       return;
     }
     setState(() => _saving = true);
     try {
-      final saved = await SavedEventsDataSource(getIt<ApiClient>()).toggle(widget.event.id, saved: _saved);
+      final saved = await SavedEventsDataSource(getIt<ApiClient>())
+          .toggle(widget.event.id, saved: _saved);
       if (mounted) setState(() => _saved = saved);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.savedEventsUpdateError)));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.savedEventsUpdateError)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -232,7 +266,8 @@ class _EventImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final image = resolveMediaUrl(event.imageUrl);
     if (image.isNotEmpty) {
-      return Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback());
+      return Image.network(image,
+          fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback());
     }
     return _fallback();
   }
@@ -246,7 +281,8 @@ class _EventImage extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Icon(Icons.groups_2_rounded, color: AppColors.primaryDark, size: 46),
+          child: Icon(Icons.groups_2_rounded,
+              color: AppColors.primaryDark, size: 46),
         ),
       );
 }

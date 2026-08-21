@@ -109,58 +109,61 @@ type Organizer struct {
 
 // Event represents an event
 type Event struct {
-	ID                           uuid.UUID  `json:"id"`
-	OrganizerID                  uuid.UUID  `json:"organizer_id"`
-	Title                        string     `json:"title"`
-	Description                  *string    `json:"description,omitempty"`
-	EventType                    string     `json:"event_type"`
-	Category                     string     `json:"category"`
-	Tags                         []string   `json:"tags,omitempty"`
-	Language                     *string    `json:"language,omitempty"`
-	Country                      *string    `json:"country,omitempty"`
-	City                         *string    `json:"city,omitempty"`
-	Address                      *string    `json:"address,omitempty"`
-	Latitude                     *float64   `json:"latitude,omitempty"`
-	Longitude                    *float64   `json:"longitude,omitempty"`
-	StartDate                    time.Time  `json:"start_date"`
-	EndDate                      *time.Time `json:"end_date,omitempty"`
-	ImageURL                     *string    `json:"image_url,omitempty"`
-	Capacity                     *int       `json:"capacity,omitempty"`
-	ReservedCount                int        `json:"reserved_count"`
-	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
-	AgeMin                       *int       `json:"age_min,omitempty"`
+	ID                           uuid.UUID    `json:"id"`
+	OrganizerID                  uuid.UUID    `json:"organizer_id"`
+	Title                        string       `json:"title"`
+	Description                  *string      `json:"description,omitempty"`
+	EventType                    string       `json:"event_type"`
+	Category                     string       `json:"category"`
+	Tags                         []string     `json:"tags,omitempty"`
+	Language                     *string      `json:"language,omitempty"`
+	Country                      *string      `json:"country,omitempty"`
+	City                         *string      `json:"city,omitempty"`
+	Address                      *string      `json:"address,omitempty"`
+	Latitude                     *float64     `json:"latitude,omitempty"`
+	Longitude                    *float64     `json:"longitude,omitempty"`
+	StartDate                    time.Time    `json:"start_date"`
+	EndDate                      *time.Time   `json:"end_date,omitempty"`
+	ImageURL                     *string      `json:"image_url,omitempty"`
+	Capacity                     *int         `json:"capacity,omitempty"`
+	ReservedCount                int          `json:"reserved_count"`
+	GenderRestriction            *string      `json:"gender_restriction,omitempty"`
+	AttendancePolicy             string       `json:"attendance_policy"`
+	AgeMin                       *int         `json:"age_min,omitempty"`
 	AgeMax                       *int         `json:"age_max,omitempty"`
 	Pricing                      *PricingInfo `json:"pricing,omitempty"`
-	Status                       string     `json:"status"`
-	IsPublished                  bool       `json:"is_published"`
-	IsOnline                     bool       `json:"is_online"`
-	OnlineLink                   *string    `json:"online_link,omitempty"`
-	JoinInstructions             *string    `json:"join_instructions,omitempty"`
-	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
-	VenueName                    *string    `json:"venue_name,omitempty"`
-	OnlinePlatform               *string    `json:"online_platform,omitempty"`
-	RegistrationDeadline         *time.Time `json:"registration_deadline,omitempty"`
-	RegistrationMode             string     `json:"registration_mode"`
-	Timezone                     string     `json:"timezone"`
-	OrganizerGuidelines          *string    `json:"organizer_guidelines,omitempty"`
-	RejectionReason              *string    `json:"rejection_reason,omitempty"`
-	ReviewedBy                   *uuid.UUID `json:"reviewed_by,omitempty"`
-	ReviewedAt                   *time.Time `json:"reviewed_at,omitempty"`
-	ApprovedAt                   *time.Time `json:"approved_at,omitempty"`
-	CreatedAt                    time.Time  `json:"created_at"`
-	UpdatedAt                    time.Time  `json:"updated_at"`
+	Status                       string       `json:"status"`
+	IsPublished                  bool         `json:"is_published"`
+	IsOnline                     bool         `json:"is_online"`
+	OnlineLink                   *string      `json:"online_link,omitempty"`
+	JoinInstructions             *string      `json:"join_instructions,omitempty"`
+	JoinLinkVisibleBeforeMinutes int          `json:"join_link_visible_before_minutes"`
+	VenueName                    *string      `json:"venue_name,omitempty"`
+	OnlinePlatform               *string      `json:"online_platform,omitempty"`
+	RegistrationDeadline         *time.Time   `json:"registration_deadline,omitempty"`
+	RegistrationMode             string       `json:"registration_mode"`
+	Timezone                     string       `json:"timezone"`
+	OrganizerGuidelines          *string      `json:"organizer_guidelines,omitempty"`
+	RejectionReason              *string      `json:"rejection_reason,omitempty"`
+	ReviewedBy                   *uuid.UUID   `json:"reviewed_by,omitempty"`
+	ReviewedAt                   *time.Time   `json:"reviewed_at,omitempty"`
+	ApprovedAt                   *time.Time   `json:"approved_at,omitempty"`
+	CreatedAt                    time.Time    `json:"created_at"`
+	UpdatedAt                    time.Time    `json:"updated_at"`
 }
 
 // EventRegistration represents a user's event seat reservation
 type EventRegistration struct {
-	ID            uuid.UUID  `json:"id"`
-	UserID        uuid.UUID  `json:"user_id"`
-	EventID       uuid.UUID  `json:"event_id"`
-	Status        string     `json:"status"`
-	ReservedUntil *time.Time `json:"reserved_until,omitempty"`
-	Attended      bool       `json:"attended"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	ID                        uuid.UUID  `json:"id"`
+	UserID                    uuid.UUID  `json:"user_id"`
+	EventID                   uuid.UUID  `json:"event_id"`
+	Status                    string     `json:"status"`
+	ReservedUntil             *time.Time `json:"reserved_until,omitempty"`
+	Attended                  bool       `json:"attended"`
+	EligibilityReviewRequired bool       `json:"eligibility_review_required,omitempty"`
+	EligibilityReviewedAt     *time.Time `json:"eligibility_reviewed_at,omitempty"`
+	CreatedAt                 time.Time  `json:"created_at"`
+	UpdatedAt                 time.Time  `json:"updated_at"`
 }
 
 // EventWithOrganizer represents an event with organizer details
@@ -272,8 +275,6 @@ type AttendeeInfo struct {
 	UserID         uuid.UUID  `json:"user_id"`
 	Email          string     `json:"email"`
 	DisplayName    *string    `json:"display_name,omitempty"`
-	Gender         *string    `json:"gender,omitempty"`
-	Age            *int       `json:"age,omitempty"`
 	Status         string     `json:"status"`
 	Attended       bool       `json:"attended"`
 	ReservedUntil  *time.Time `json:"reserved_until,omitempty"`

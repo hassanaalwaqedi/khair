@@ -1147,6 +1147,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventGenderFemaleOnly => 'للنساء فقط';
 
   @override
+  String get createEventAttendancePolicy => 'من يمكنه الحضور؟';
+
+  @override
+  String get createEventAttendanceEveryone => 'الجميع';
+
+  @override
+  String get createEventAttendanceEveryoneDescription => 'مفتوحة للجميع';
+
+  @override
+  String get createEventAttendanceMenOnly => 'للرجال فقط';
+
+  @override
+  String get createEventAttendanceMenOnlyDescription => 'للحضور من الرجال';
+
+  @override
+  String get createEventAttendanceWomenOnly => 'للنساء فقط';
+
+  @override
+  String get createEventAttendanceWomenOnlyDescription => 'للحضور من النساء';
+
+  @override
   String get createEventFamilyFriendly => 'مناسب للعائلات';
 
   @override
@@ -3361,6 +3382,56 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get setAttendanceAndAccessPreferen => 'حدد تفضيلات الحضور والوصول.';
+
+  @override
+  String get profileGender => 'بيانات الأهلية حسب الجنس';
+
+  @override
+  String get profileGenderNotSet => 'أفضل عدم الإفصاح';
+
+  @override
+  String get profileGenderMan => 'رجل';
+
+  @override
+  String get profileGenderWoman => 'امرأة';
+
+  @override
+  String get profileGenderPrivacy =>
+      'تُستخدم فقط لتحديد الأهلية للفعاليات المقيدة، ولا تظهر للآخرين.';
+
+  @override
+  String get profileGenderChangeWarning =>
+      'قد يؤثر تغيير هذا الخيار في تسجيلاتك القادمة للفعاليات المقيدة. ستبقى التسجيلات الحالية محفوظة وستُعلَّم للمراجعة.';
+
+  @override
+  String get profileGenderChangeConfirm => 'متابعة';
+
+  @override
+  String get eventEligibilityWomenOnly => 'فعالية للنساء فقط';
+
+  @override
+  String get eventEligibilityMenOnly => 'فعالية للرجال فقط';
+
+  @override
+  String get eventEligibilityRequiredTitle => 'أكمل ملفك الشخصي';
+
+  @override
+  String get eventEligibilityRequiredMessage =>
+      'تفرض هذه الفعالية قيدًا على الحضور. اختر بيانات الأهلية في ملفك الخاص قبل الانضمام.';
+
+  @override
+  String get eventEligibilityCompleteProfile => 'إكمال الملف';
+
+  @override
+  String get eventEligibilityCancel => 'إلغاء';
+
+  @override
+  String get eventEligibilityNotEligible =>
+      'بيانات ملفك لا تطابق أهلية الحضور لهذه الفعالية.';
+
+  @override
+  String get eventJoinError =>
+      'تعذر الانضمام إلى هذه الفعالية الآن. حاول مرة أخرى.';
 
   @override
   String get unlimited => 'غير محدود';

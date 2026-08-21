@@ -614,6 +614,17 @@ ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (
 -- 2. Add gender and age to users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS age INT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gender_updated_at TIMESTAMP WITH TIME ZONE;
+
+UPDATE users
+SET gender = CASE UPPER(TRIM(gender))
+    WHEN 'MALE' THEN 'MAN'
+    WHEN 'MAN' THEN 'MAN'
+    WHEN 'FEMALE' THEN 'WOMAN'
+    WHEN 'WOMAN' THEN 'WOMAN'
+    ELSE NULL
+END
+WHERE gender IS NOT NULL;
 
 -- 3. Add capacity and reserved_count to events
 ALTER TABLE events ADD COLUMN IF NOT EXISTS capacity INT;
@@ -696,8 +707,30 @@ ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended BOOLEAN NOT NU
 
 -- 5. Add gender/age restriction columns to events
 ALTER TABLE events ADD COLUMN IF NOT EXISTS gender_restriction VARCHAR(20);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS attendance_policy VARCHAR(20) NOT NULL DEFAULT 'EVERYONE';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS age_min INTEGER;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS age_max INTEGER;
+
+UPDATE events
+SET attendance_policy = CASE LOWER(TRIM(COALESCE(gender_restriction, '')))
+    WHEN 'female_only' THEN 'WOMEN_ONLY'
+    WHEN 'women_only' THEN 'WOMEN_ONLY'
+    WHEN 'male_only' THEN 'MEN_ONLY'
+    WHEN 'men_only' THEN 'MEN_ONLY'
+    ELSE 'EVERYONE'
+END;
+
+ALTER TABLE events DROP CONSTRAINT IF EXISTS events_attendance_policy_check;
+ALTER TABLE events ADD CONSTRAINT events_attendance_policy_check
+    CHECK (attendance_policy IN ('EVERYONE', 'WOMEN_ONLY', 'MEN_ONLY'));
+
+ALTER TABLE event_registrations
+    ADD COLUMN IF NOT EXISTS eligibility_review_required BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE event_registrations
+    ADD COLUMN IF NOT EXISTS eligibility_reviewed_at TIMESTAMP WITH TIME ZONE;
+CREATE INDEX IF NOT EXISTS idx_event_reg_eligibility_review
+    ON event_registrations(event_id, eligibility_review_required)
+    WHERE eligibility_review_required = true;
 
 -- 6. Backfill: auto-create owner membership for every existing organizer
 INSERT INTO organization_members (id, organization_id, user_id, role, joined_at)

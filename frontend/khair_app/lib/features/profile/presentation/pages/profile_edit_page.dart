@@ -34,6 +34,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final _country = TextEditingController();
   final _city = TextEditingController();
   String _language = 'en';
+  String _gender = 'NOT_SET';
   String? _avatarUrl;
   Uint8List? _preview;
   bool _loading = true;
@@ -48,6 +49,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   String _initialCountry = '';
   String _initialCity = '';
   String _initialLanguage = 'en';
+  String _initialGender = 'NOT_SET';
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       _country.text = data['country']?.toString() ?? '';
       _city.text = data['city']?.toString() ?? '';
       _language = data['preferred_language']?.toString() ?? 'en';
+      _gender = _normalizeGender(data['gender']?.toString());
       _avatarUrl = data['avatar_url']?.toString();
       _captureInitialValues();
       _hydrating = false;
@@ -140,8 +143,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
   }
 
-  Future<void> _save() async {
+  Future<void> _save({bool confirmEligibilityImpact = false}) async {
     if (!_form.currentState!.validate()) return;
+    if (!confirmEligibilityImpact && _gender != _initialGender) {
+      final confirmed = await _confirmGenderChange();
+      if (!mounted || !confirmed) return;
+      return _save(confirmEligibilityImpact: true);
+    }
     setState(() {
       _saving = true;
       _error = null;
@@ -152,6 +160,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         'country': _country.text.trim(),
         'city': _city.text.trim(),
         'preferred_language': _language,
+        'gender': _gender,
+        'confirm_eligibility_impact': confirmEligibilityImpact,
       });
       if (mounted) {
         context.read<LocaleBloc>().add(ChangeLocale(Locale(_language)));
@@ -180,6 +190,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     _initialCountry = _country.text;
     _initialCity = _city.text;
     _initialLanguage = _language;
+    _initialGender = _gender;
     _hasInitialValues = true;
   }
 
@@ -188,7 +199,43 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       (_name.text != _initialName ||
           _country.text != _initialCountry ||
           _city.text != _initialCity ||
-          _language != _initialLanguage);
+          _language != _initialLanguage ||
+          _gender != _initialGender);
+
+  Future<bool> _confirmGenderChange() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(context.l10n.profileGender),
+            content: Text(context.l10n.profileGenderChangeWarning),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(context.l10n.eventEligibilityCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(context.l10n.profileGenderChangeConfirm),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  String _normalizeGender(String? value) {
+    switch ((value ?? '').trim().toUpperCase()) {
+      case 'MAN':
+      case 'MALE':
+        return 'MAN';
+      case 'WOMAN':
+      case 'WOMEN':
+      case 'FEMALE':
+        return 'WOMAN';
+      default:
+        return 'NOT_SET';
+    }
+  }
 
   void _onFieldChanged() {
     if (!_hydrating && mounted) setState(() {});
@@ -293,6 +340,34 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                   controller: _city,
                                   label: context.l10n.city,
                                   icon: Icons.location_city_outlined),
+                              SizedBox(height: 14),
+                              DropdownButtonFormField<String>(
+                                  initialValue: _gender,
+                                  decoration: _decoration(
+                                      context.l10n.profileGender,
+                                      Icons.verified_user_outlined),
+                                  items: [
+                                    DropdownMenuItem(
+                                        value: 'NOT_SET',
+                                        child: Text(
+                                            context.l10n.profileGenderNotSet)),
+                                    DropdownMenuItem(
+                                        value: 'MAN',
+                                        child: Text(
+                                            context.l10n.profileGenderMan)),
+                                    DropdownMenuItem(
+                                        value: 'WOMAN',
+                                        child: Text(
+                                            context.l10n.profileGenderWoman)),
+                                  ],
+                                  onChanged: (value) => setState(
+                                      () => _gender = value ?? 'NOT_SET')),
+                              SizedBox(height: 8),
+                              Text(context.l10n.profileGenderPrivacy,
+                                  style: TextStyle(
+                                      color: dark ? Color(0xFFC5BEC8) : _muted,
+                                      fontSize: 12,
+                                      height: 1.35)),
                               SizedBox(height: 14),
                               DropdownButtonFormField<String>(
                                   initialValue: _language,
