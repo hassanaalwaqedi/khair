@@ -171,12 +171,15 @@ func (h *HealthChecker) ReadinessHandler() gin.HandlerFunc {
 			allHealthy = false
 		}
 
-		// Check Redis
+		// Redis powers cache and rate limiting, but the request middleware is
+		// intentionally fail-open when it is unavailable. Do not prevent the
+		// API from receiving traffic when its required database dependency is
+		// healthy; expose the reduced capability in the readiness payload.
 		redisCheck := h.checkRedis(ctx)
-		response.Checks["redis"] = redisCheck
 		if redisCheck.Status != "healthy" {
-			allHealthy = false
+			redisCheck.Status = "degraded"
 		}
+		response.Checks["redis"] = redisCheck
 
 		if !allHealthy {
 			response.Status = "degraded"
