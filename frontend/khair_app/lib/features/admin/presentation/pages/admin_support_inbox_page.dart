@@ -202,6 +202,18 @@ class _AdminSupportInboxPageState extends State<AdminSupportInboxPage> {
                               isThreeLine: false,
                               trailing: t['status'] == 'waiting_for_agent'
                                   ? ElevatedButton(
+                                      // The application theme makes primary
+                                      // form actions full width. A ListTile
+                                      // trailing action must instead keep its
+                                      // intrinsic width; otherwise it consumes
+                                      // the tile and collapses the ticket text
+                                      // into a single-character column.
+                                      style: ElevatedButton.styleFrom(
+                                        minimumSize: const Size(0, 44),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                      ),
                                       onPressed: _assigningTicketId ==
                                               t['id']?.toString()
                                           ? null
