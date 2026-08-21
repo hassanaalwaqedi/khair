@@ -1,0 +1,2 @@
+-- The data repair is intentionally irreversible. Event format is restored
+-- from the canonical is_online flag during the forward migration.

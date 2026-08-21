@@ -218,6 +218,22 @@ type UpdateEventRequest struct {
 	Guidelines                   *string             `json:"guidelines"`
 }
 
+// normalizeEventMode keeps the legacy event_type column and the is_online
+// capability flag aligned.  The editor exposes exactly two formats, online
+// and in-person (stored as offline).  Older API clients can still submit a
+// non-mode event_type such as "workshop"; in that case we preserve the label
+// and use the explicit boolean rather than changing unrelated legacy data.
+func normalizeEventMode(eventType string, isOnline bool) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(eventType)) {
+	case "online":
+		return "online", true
+	case "offline", "in_person", "in-person", "inperson":
+		return "offline", false
+	default:
+		return eventType, isOnline
+	}
+}
+
 // Create creates a new event
 func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Event, error) {
 	// Creating an event is an organizer privilege. Do not create or approve an
@@ -241,6 +257,7 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	if req.Description == nil || len([]rune(strings.TrimSpace(*req.Description))) < 50 {
 		return nil, errors.New("description must be at least 50 characters")
 	}
+	req.EventType, req.IsOnline = normalizeEventMode(req.EventType, req.IsOnline)
 	if req.Category == "" {
 		req.Category = req.EventType
 	}
@@ -434,7 +451,7 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 		event.Description = req.Description
 	}
 	if req.EventType != nil {
-		event.EventType = *req.EventType
+		event.EventType, event.IsOnline = normalizeEventMode(*req.EventType, event.IsOnline)
 	}
 	if req.Language != nil {
 		event.Language = req.Language
@@ -474,8 +491,15 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	if req.ImageURL != nil {
 		event.ImageURL = req.ImageURL
 	}
-	if req.IsOnline != nil {
+	if req.IsOnline != nil && req.EventType == nil {
 		event.IsOnline = *req.IsOnline
+		// A partial update that changes only the format must still update
+		// the legacy type consumed by discovery filters.
+		if event.IsOnline {
+			event.EventType = "online"
+		} else {
+			event.EventType = "offline"
+		}
 	}
 	if req.OnlineLink != nil {
 		event.OnlineLink = req.OnlineLink
@@ -739,22 +763,33 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 	if req.Timezone == "" {
 		req.Timezone = "UTC"
 	}
+	req.EventType, req.IsOnline = normalizeEventMode(req.EventType, req.IsOnline)
 
 	event := &models.Event{
-		ID:                uuid.New(),
-		OrganizerID:       organizer.ID,
-		Title:             req.Title,
-		Description:       req.Description,
-		EventType:         req.EventType,
-		Language:          req.Language,
-		Country:           req.Country,
-		City:              req.City,
-		Address:           req.Address,
-		Latitude:          req.Latitude,
-		Longitude:         req.Longitude,
-		StartDate:         startDate,
-		EndDate:           endDate,
-		ImageURL:          req.ImageURL,
+		ID:               uuid.New(),
+		OrganizerID:      organizer.ID,
+		Title:            req.Title,
+		Description:      req.Description,
+		EventType:        req.EventType,
+		Language:         req.Language,
+		Country:          req.Country,
+		City:             req.City,
+		Address:          req.Address,
+		Latitude:         req.Latitude,
+		Longitude:        req.Longitude,
+		StartDate:        startDate,
+		EndDate:          endDate,
+		ImageURL:         req.ImageURL,
+		IsOnline:         req.IsOnline,
+		OnlineLink:       req.OnlineLink,
+		JoinInstructions: req.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes: func() int {
+			if req.JoinLinkVisibleBeforeMinutes != nil {
+				return *req.JoinLinkVisibleBeforeMinutes
+			}
+			return 15
+		}(),
+		Pricing:           req.Pricing,
 		Capacity:          req.Capacity,
 		GenderRestriction: req.GenderRestriction,
 		AgeMin:            req.AgeMin,

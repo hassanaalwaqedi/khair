@@ -221,44 +221,44 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 // EventDetailResponse extends EventWithOrganizer with user-specific fields
 type EventDetailResponse struct {
-	ID                           uuid.UUID  `json:"id"`
-	OrganizerID                  uuid.UUID  `json:"organizer_id"`
-	Title                        string     `json:"title"`
-	Description                  *string    `json:"description,omitempty"`
-	EventType                    string     `json:"event_type"`
-	Category                     string     `json:"category"`
-	Tags                         []string   `json:"tags,omitempty"`
-	Language                     *string    `json:"language,omitempty"`
-	Country                      *string    `json:"country,omitempty"`
-	City                         *string    `json:"city,omitempty"`
-	Address                      *string    `json:"address,omitempty"`
-	Latitude                     *float64   `json:"latitude,omitempty"`
-	Longitude                    *float64   `json:"longitude,omitempty"`
-	StartDate                    time.Time  `json:"start_date"`
-	EndDate                      *time.Time `json:"end_date,omitempty"`
-	ImageURL                     *string    `json:"image_url,omitempty"`
-	Capacity                     *int       `json:"capacity,omitempty"`
-	ReservedCount                int        `json:"reserved_count"`
-	GenderRestriction            *string    `json:"gender_restriction,omitempty"`
-	AgeMin                       *int       `json:"age_min,omitempty"`
-	AgeMax                       *int       `json:"age_max,omitempty"`
+	ID                           uuid.UUID           `json:"id"`
+	OrganizerID                  uuid.UUID           `json:"organizer_id"`
+	Title                        string              `json:"title"`
+	Description                  *string             `json:"description,omitempty"`
+	EventType                    string              `json:"event_type"`
+	Category                     string              `json:"category"`
+	Tags                         []string            `json:"tags,omitempty"`
+	Language                     *string             `json:"language,omitempty"`
+	Country                      *string             `json:"country,omitempty"`
+	City                         *string             `json:"city,omitempty"`
+	Address                      *string             `json:"address,omitempty"`
+	Latitude                     *float64            `json:"latitude,omitempty"`
+	Longitude                    *float64            `json:"longitude,omitempty"`
+	StartDate                    time.Time           `json:"start_date"`
+	EndDate                      *time.Time          `json:"end_date,omitempty"`
+	ImageURL                     *string             `json:"image_url,omitempty"`
+	Capacity                     *int                `json:"capacity,omitempty"`
+	ReservedCount                int                 `json:"reserved_count"`
+	GenderRestriction            *string             `json:"gender_restriction,omitempty"`
+	AgeMin                       *int                `json:"age_min,omitempty"`
+	AgeMax                       *int                `json:"age_max,omitempty"`
 	Pricing                      *models.PricingInfo `json:"pricing,omitempty"`
-	Status                       string     `json:"status"`
-	IsPublished                  bool       `json:"is_published"`
-	IsOnline                     bool       `json:"is_online"`
-	OnlineLink                   *string    `json:"online_link,omitempty"`
-	JoinInstructions             *string    `json:"join_instructions,omitempty"`
-	JoinLinkVisibleBeforeMinutes int        `json:"join_link_visible_before_minutes"`
-	VenueName                    *string    `json:"venue_name,omitempty"`
-	OnlinePlatform               *string    `json:"online_platform,omitempty"`
-	RegistrationDeadline         *time.Time `json:"registration_deadline,omitempty"`
-	RegistrationMode             string     `json:"registration_mode"`
-	Timezone                     string     `json:"timezone"`
-	RejectionReason              *string    `json:"rejection_reason,omitempty"`
-	ApprovedAt                   *time.Time `json:"approved_at,omitempty"`
-	CreatedAt                    time.Time  `json:"created_at"`
-	UpdatedAt                    time.Time  `json:"updated_at"`
-	OrganizerName                string     `json:"organizer_name"`
+	Status                       string              `json:"status"`
+	IsPublished                  bool                `json:"is_published"`
+	IsOnline                     bool                `json:"is_online"`
+	OnlineLink                   *string             `json:"online_link,omitempty"`
+	JoinInstructions             *string             `json:"join_instructions,omitempty"`
+	JoinLinkVisibleBeforeMinutes int                 `json:"join_link_visible_before_minutes"`
+	VenueName                    *string             `json:"venue_name,omitempty"`
+	OnlinePlatform               *string             `json:"online_platform,omitempty"`
+	RegistrationDeadline         *time.Time          `json:"registration_deadline,omitempty"`
+	RegistrationMode             string              `json:"registration_mode"`
+	Timezone                     string              `json:"timezone"`
+	RejectionReason              *string             `json:"rejection_reason,omitempty"`
+	ApprovedAt                   *time.Time          `json:"approved_at,omitempty"`
+	CreatedAt                    time.Time           `json:"created_at"`
+	UpdatedAt                    time.Time           `json:"updated_at"`
+	OrganizerName                string              `json:"organizer_name"`
 	// User-specific fields
 	IsUserJoined   bool `json:"is_user_joined"`
 	IsLinkUnlocked bool `json:"is_link_unlocked"`
@@ -294,7 +294,7 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 				isAdmin = true
 			}
 		}
-		
+
 		if !isAdmin {
 			response.NotFound(c, "Event not found")
 			return
@@ -385,7 +385,7 @@ func (h *Handler) GetMeetingAccess(c *gin.Context) {
 		return
 	}
 
-	if !event.IsOnline && event.EventType != "online" {
+	if !event.IsOnline {
 		response.BadRequest(c, "Not an online event")
 		return
 	}
@@ -409,7 +409,7 @@ func (h *Handler) GetMeetingAccess(c *gin.Context) {
 		}
 	}
 
-	// Admin check (if we had an easy admin role check on the context, we would do it here. 
+	// Admin check (if we had an easy admin role check on the context, we would do it here.
 	// For now, rely on organizer/attendee logic).
 
 	if !isAuthorized {
