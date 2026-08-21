@@ -83,4 +83,37 @@ void main() {
     expect(text.data, 'اكتشف التجمعات المفيدة');
     expect(text.textDirection, TextDirection.rtl);
   });
+
+  testWidgets('Arabic localizes Create Event audience controls',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Builder(
+          builder: (context) => Column(
+            children: [
+              Text(AppLocalizations.of(context)!.createEventAudience),
+              Text(AppLocalizations.of(context)!.createEventAudienceWomen),
+              Text(AppLocalizations.of(context)!.createEventAgePreference),
+              Text(AppLocalizations.of(context)!.createEventRegistration),
+              Text(AppLocalizations.of(context)!.createEventPricing),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('الجمهور'), findsOneWidget);
+    expect(find.text('نساء'), findsOneWidget);
+    expect(find.text('تفضيل العمر'), findsOneWidget);
+    expect(find.text('التسجيل'), findsOneWidget);
+    expect(find.text('التسعير'), findsOneWidget);
+  });
 }
