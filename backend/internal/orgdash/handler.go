@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/pkg/response"
 )
@@ -196,6 +197,11 @@ func (h *Handler) UpdateEvent(c *gin.Context) {
 
 	ev, err := h.service.UpdateEvent(orgID, eventID, &req)
 	if err != nil {
+		var eligibilityErr *eligibility.Error
+		if errors.As(err, &eligibilityErr) {
+			response.ErrorWithCode(c, eligibilityErr.HTTPStatus, eligibilityErr.Code, eligibilityErr.Message)
+			return
+		}
 		response.BadRequest(c, err.Error())
 		return
 	}

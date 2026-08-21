@@ -54,7 +54,7 @@ func (r *Repository) ListByEvent(eventID uuid.UUID, search *string, status *stri
 
 	// List
 	query := fmt.Sprintf(`
-		SELECT er.id, er.user_id, u.email, u.display_name, u.gender, u.age,
+		SELECT er.id, er.user_id, u.email, u.display_name,
 			er.status, er.attended, er.reserved_until, er.created_at
 		FROM event_registrations er
 		JOIN users u ON u.id = er.user_id
@@ -74,7 +74,7 @@ func (r *Repository) ListByEvent(eventID uuid.UUID, search *string, status *stri
 	for rows.Next() {
 		var a models.AttendeeInfo
 		if err := rows.Scan(
-			&a.RegistrationID, &a.UserID, &a.Email, &a.DisplayName, &a.Gender, &a.Age,
+			&a.RegistrationID, &a.UserID, &a.Email, &a.DisplayName,
 			&a.Status, &a.Attended, &a.ReservedUntil, &a.RegisteredAt,
 		); err != nil {
 			return nil, 0, err
@@ -153,8 +153,7 @@ func (r *Repository) GetEventOrgID(eventID uuid.UUID) (uuid.UUID, error) {
 // ExportCSV generates CSV data for all attendees of an event
 func (r *Repository) ExportCSV(eventID uuid.UUID) ([]byte, error) {
 	rows, err := r.db.Query(`
-		SELECT u.email, COALESCE(u.display_name, ''), COALESCE(u.gender, ''),
-			COALESCE(u.age::text, ''), er.status,
+		SELECT u.email, COALESCE(u.display_name, ''), er.status,
 			CASE WHEN er.attended THEN 'Yes' ELSE 'No' END,
 			er.created_at::text
 		FROM event_registrations er
@@ -171,14 +170,14 @@ func (r *Repository) ExportCSV(eventID uuid.UUID) ([]byte, error) {
 	writer := csv.NewWriter(&buf)
 
 	// Header
-	_ = writer.Write([]string{"Email", "Name", "Gender", "Age", "Status", "Attended", "Registered At"})
+	_ = writer.Write([]string{"Email", "Name", "Status", "Attended", "Registered At"})
 
 	for rows.Next() {
-		var email, name, gender, age, status, attended, registeredAt string
-		if err := rows.Scan(&email, &name, &gender, &age, &status, &attended, &registeredAt); err != nil {
+		var email, name, status, attended, registeredAt string
+		if err := rows.Scan(&email, &name, &status, &attended, &registeredAt); err != nil {
 			return nil, err
 		}
-		_ = writer.Write([]string{email, name, gender, age, status, attended, registeredAt})
+		_ = writer.Write([]string{email, name, status, attended, registeredAt})
 	}
 
 	writer.Flush()

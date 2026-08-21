@@ -11,6 +11,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/utils/image_upload_client.dart';
 import '../../../../core/utils/image_upload_validator.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/domain/entities/attendance_policy.dart';
 import '../../../events/domain/repositories/events_repository.dart';
 import 'create_event_state.dart';
 
@@ -56,7 +57,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         onlinePlatform: event.onlinePlatform ?? event.meetingPlatform ?? 'zoom',
         onlineLink: event.onlineLink ?? event.meetingUrl,
         onlineInstructions: event.joinInstructions,
-        genderPolicy: event.genderRestriction ?? 'mixed',
+        genderPolicy: AttendancePolicy.normalize(
+            event.attendancePolicy == AttendancePolicy.everyone
+                ? event.genderRestriction
+                : event.attendancePolicy),
         unlimitedCapacity: event.capacity == null,
         capacity: event.capacity,
         registrationDeadline: event.registrationDeadline,
@@ -537,7 +541,9 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         joinInstructions:
             fd.eventType == 'online' ? fd.onlineInstructions : null,
         capacity: fd.unlimitedCapacity ? null : fd.capacity,
-        genderRestriction: fd.genderPolicy,
+        attendancePolicy: AttendancePolicy.normalize(fd.genderPolicy),
+        genderRestriction:
+            AttendancePolicy.legacyGenderRestriction(fd.genderPolicy),
         ageMin: fd.effectiveMinAge,
         registrationDeadline: fd.registrationDeadline,
         registrationMode: fd.registrationMode,

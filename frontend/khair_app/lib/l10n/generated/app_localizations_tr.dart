@@ -1177,6 +1177,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String get createEventGenderFemaleOnly => 'Yalnızca Kadınlar';
 
   @override
+  String get createEventAttendancePolicy => 'Kimler katılabilir?';
+
+  @override
+  String get createEventAttendanceEveryone => 'Herkes';
+
+  @override
+  String get createEventAttendanceEveryoneDescription => 'Herkese açık';
+
+  @override
+  String get createEventAttendanceMenOnly => 'Yalnızca erkekler';
+
+  @override
+  String get createEventAttendanceMenOnlyDescription =>
+      'Erkek katılımcılar için';
+
+  @override
+  String get createEventAttendanceWomenOnly => 'Yalnızca kadınlar';
+
+  @override
+  String get createEventAttendanceWomenOnlyDescription =>
+      'Kadın katılımcılar için';
+
+  @override
   String get createEventFamilyFriendly => 'Aile Dostu';
 
   @override
@@ -3422,7 +3445,57 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get setAttendanceAndAccessPreferen =>
-      'Set attendance and access preferences.';
+      'Katılım ve erişim tercihlerini belirleyin.';
+
+  @override
+  String get profileGender => 'Cinsiyet uygunluğu';
+
+  @override
+  String get profileGenderNotSet => 'Belirtmemeyi tercih ederim';
+
+  @override
+  String get profileGenderMan => 'Erkek';
+
+  @override
+  String get profileGenderWoman => 'Kadın';
+
+  @override
+  String get profileGenderPrivacy =>
+      'Yalnızca kısıtlı etkinliklere uygunluğu belirlemek için kullanılır; herkese gösterilmez.';
+
+  @override
+  String get profileGenderChangeWarning =>
+      'Bu değişiklik, kısıtlı etkinliklerdeki yaklaşan kayıtlarınızı etkileyebilir. Mevcut kayıtlar korunur ve inceleme için işaretlenir.';
+
+  @override
+  String get profileGenderChangeConfirm => 'Devam et';
+
+  @override
+  String get eventEligibilityWomenOnly => 'Yalnızca kadınlara açık etkinlik';
+
+  @override
+  String get eventEligibilityMenOnly => 'Yalnızca erkeklere açık etkinlik';
+
+  @override
+  String get eventEligibilityRequiredTitle => 'Profilinizi tamamlayın';
+
+  @override
+  String get eventEligibilityRequiredMessage =>
+      'Bu etkinlik katılım kısıtlamasına sahip. Katılmadan önce özel profilinizde uygunluk bilgilerinizi seçin.';
+
+  @override
+  String get eventEligibilityCompleteProfile => 'Profili tamamla';
+
+  @override
+  String get eventEligibilityCancel => 'İptal';
+
+  @override
+  String get eventEligibilityNotEligible =>
+      'Profiliniz bu etkinliğin katılım uygunluğunu karşılamıyor.';
+
+  @override
+  String get eventJoinError =>
+      'Etkinliğe şu anda katılamadık. Lütfen tekrar deneyin.';
 
   @override
   String get unlimited => 'Unlimited';

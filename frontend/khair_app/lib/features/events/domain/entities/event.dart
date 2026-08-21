@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'attendance_policy.dart';
+
 class EventPricing extends Equatable {
   final String type; // "free" or "paid"
   final int? amountCents;
@@ -55,6 +57,7 @@ class Event extends Equatable {
   final String? registrationMode;
   final String? timezone;
   final String? genderRestriction;
+  final String attendancePolicy;
   final bool isUserJoined;
   final bool isLinkUnlocked;
   final DateTime createdAt;
@@ -96,6 +99,7 @@ class Event extends Equatable {
     this.registrationMode,
     this.timezone,
     this.genderRestriction,
+    this.attendancePolicy = AttendancePolicy.everyone,
     this.isUserJoined = false,
     this.isLinkUnlocked = false,
     required this.createdAt,
@@ -139,12 +143,21 @@ class Event extends Equatable {
         registrationMode,
         timezone,
         genderRestriction,
+        attendancePolicy,
         isUserJoined,
         isLinkUnlocked,
         createdAt,
         updatedAt,
         pricing,
       ];
+
+  String get effectiveAttendancePolicy =>
+      AttendancePolicy.normalize(attendancePolicy == AttendancePolicy.everyone
+          ? genderRestriction
+          : attendancePolicy);
+
+  bool get isRestrictedEvent =>
+      effectiveAttendancePolicy != AttendancePolicy.everyone;
 }
 
 enum DateFilter { today, thisWeek, thisWeekend, thisMonth }

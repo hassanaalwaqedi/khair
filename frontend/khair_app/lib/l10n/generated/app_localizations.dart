@@ -2296,6 +2296,48 @@ abstract class AppLocalizations {
   /// **'Female Only'**
   String get createEventGenderFemaleOnly;
 
+  /// No description provided for @createEventAttendancePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can attend?'**
+  String get createEventAttendancePolicy;
+
+  /// No description provided for @createEventAttendanceEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get createEventAttendanceEveryone;
+
+  /// No description provided for @createEventAttendanceEveryoneDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to everyone'**
+  String get createEventAttendanceEveryoneDescription;
+
+  /// No description provided for @createEventAttendanceMenOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Men only'**
+  String get createEventAttendanceMenOnly;
+
+  /// No description provided for @createEventAttendanceMenOnlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For male attendees'**
+  String get createEventAttendanceMenOnlyDescription;
+
+  /// No description provided for @createEventAttendanceWomenOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Women only'**
+  String get createEventAttendanceWomenOnly;
+
+  /// No description provided for @createEventAttendanceWomenOnlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For female attendees'**
+  String get createEventAttendanceWomenOnlyDescription;
+
   /// No description provided for @createEventFamilyFriendly.
   ///
   /// In en, this message translates to:
@@ -6501,6 +6543,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set attendance and access preferences.'**
   String get setAttendanceAndAccessPreferen;
+
+  /// No description provided for @profileGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender eligibility'**
+  String get profileGender;
+
+  /// No description provided for @profileGenderNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get profileGenderNotSet;
+
+  /// No description provided for @profileGenderMan.
+  ///
+  /// In en, this message translates to:
+  /// **'Man'**
+  String get profileGenderMan;
+
+  /// No description provided for @profileGenderWoman.
+  ///
+  /// In en, this message translates to:
+  /// **'Woman'**
+  String get profileGenderWoman;
+
+  /// No description provided for @profileGenderPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Used only to determine eligibility for restricted events. It is never shown publicly.'**
+  String get profileGenderPrivacy;
+
+  /// No description provided for @profileGenderChangeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing this may affect your upcoming registrations for restricted events. Existing registrations will be kept and flagged for review.'**
+  String get profileGenderChangeWarning;
+
+  /// No description provided for @profileGenderChangeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get profileGenderChangeConfirm;
+
+  /// No description provided for @eventEligibilityWomenOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Women-only event'**
+  String get eventEligibilityWomenOnly;
+
+  /// No description provided for @eventEligibilityMenOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Men-only event'**
+  String get eventEligibilityMenOnly;
+
+  /// No description provided for @eventEligibilityRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get eventEligibilityRequiredTitle;
+
+  /// No description provided for @eventEligibilityRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This event has an attendance restriction. Choose your eligibility detail in your private profile before joining.'**
+  String get eventEligibilityRequiredMessage;
+
+  /// No description provided for @eventEligibilityCompleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete profile'**
+  String get eventEligibilityCompleteProfile;
+
+  /// No description provided for @eventEligibilityCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get eventEligibilityCancel;
+
+  /// No description provided for @eventEligibilityNotEligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile does not meet this event\'s attendance eligibility.'**
+  String get eventEligibilityNotEligible;
+
+  /// No description provided for @eventJoinError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t join this event right now. Please try again.'**
+  String get eventJoinError;
 
   /// No description provided for @unlimited.
   ///

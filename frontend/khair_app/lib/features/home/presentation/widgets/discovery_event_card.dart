@@ -12,6 +12,7 @@ import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../events/data/datasources/saved_events_datasource.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/presentation/widgets/event_eligibility_badge.dart';
 
 /// Shared event-discovery card for event-focused surfaces. It contains only
 /// compact discovery information; full details remain on the event route.
@@ -114,6 +115,13 @@ class _DiscoveryEventCardState extends State<DiscoveryEventCard> {
                                       : AppColors.textPrimary,
                                   size: 20),
                             ),
+                          ),
+                        ),
+                        PositionedDirectional(
+                          bottom: 10,
+                          start: 12,
+                          child: EventEligibilityBadge(
+                            policy: event.effectiveAttendancePolicy,
                           ),
                         ),
                       ]),

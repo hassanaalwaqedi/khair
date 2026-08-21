@@ -1164,6 +1164,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createEventGenderFemaleOnly => 'Female Only';
 
   @override
+  String get createEventAttendancePolicy => 'Who can attend?';
+
+  @override
+  String get createEventAttendanceEveryone => 'Everyone';
+
+  @override
+  String get createEventAttendanceEveryoneDescription => 'Open to everyone';
+
+  @override
+  String get createEventAttendanceMenOnly => 'Men only';
+
+  @override
+  String get createEventAttendanceMenOnlyDescription => 'For male attendees';
+
+  @override
+  String get createEventAttendanceWomenOnly => 'Women only';
+
+  @override
+  String get createEventAttendanceWomenOnlyDescription =>
+      'For female attendees';
+
+  @override
   String get createEventFamilyFriendly => 'Family Friendly';
 
   @override
@@ -3407,6 +3429,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setAttendanceAndAccessPreferen =>
       'Set attendance and access preferences.';
+
+  @override
+  String get profileGender => 'Gender eligibility';
+
+  @override
+  String get profileGenderNotSet => 'Prefer not to say';
+
+  @override
+  String get profileGenderMan => 'Man';
+
+  @override
+  String get profileGenderWoman => 'Woman';
+
+  @override
+  String get profileGenderPrivacy =>
+      'Used only to determine eligibility for restricted events. It is never shown publicly.';
+
+  @override
+  String get profileGenderChangeWarning =>
+      'Changing this may affect your upcoming registrations for restricted events. Existing registrations will be kept and flagged for review.';
+
+  @override
+  String get profileGenderChangeConfirm => 'Continue';
+
+  @override
+  String get eventEligibilityWomenOnly => 'Women-only event';
+
+  @override
+  String get eventEligibilityMenOnly => 'Men-only event';
+
+  @override
+  String get eventEligibilityRequiredTitle => 'Complete your profile';
+
+  @override
+  String get eventEligibilityRequiredMessage =>
+      'This event has an attendance restriction. Choose your eligibility detail in your private profile before joining.';
+
+  @override
+  String get eventEligibilityCompleteProfile => 'Complete profile';
+
+  @override
+  String get eventEligibilityCancel => 'Cancel';
+
+  @override
+  String get eventEligibilityNotEligible =>
+      'Your profile does not meet this event\'s attendance eligibility.';
+
+  @override
+  String get eventJoinError =>
+      'We couldn\'t join this event right now. Please try again.';
 
   @override
   String get unlimited => 'Unlimited';

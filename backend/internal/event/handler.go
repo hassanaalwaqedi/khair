@@ -1,6 +1,7 @@
 package event
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/pkg/config"
 	"github.com/khair/backend/pkg/middleware"
@@ -240,6 +242,7 @@ type EventDetailResponse struct {
 	Capacity                     *int                `json:"capacity,omitempty"`
 	ReservedCount                int                 `json:"reserved_count"`
 	GenderRestriction            *string             `json:"gender_restriction,omitempty"`
+	AttendancePolicy             string              `json:"attendance_policy"`
 	AgeMin                       *int                `json:"age_min,omitempty"`
 	AgeMax                       *int                `json:"age_max,omitempty"`
 	Pricing                      *models.PricingInfo `json:"pricing,omitempty"`
@@ -338,6 +341,7 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 		Capacity:                     event.Capacity,
 		ReservedCount:                event.ReservedCount,
 		GenderRestriction:            event.GenderRestriction,
+		AttendancePolicy:             event.AttendancePolicy,
 		AgeMin:                       event.AgeMin,
 		AgeMax:                       event.AgeMax,
 		Pricing:                      event.Pricing,
@@ -497,6 +501,11 @@ func (h *Handler) Update(c *gin.Context) {
 
 	event, err := h.service.Update(userID, id, &req)
 	if err != nil {
+		var eligibilityErr *eligibility.Error
+		if errors.As(err, &eligibilityErr) {
+			response.ErrorWithCode(c, eligibilityErr.HTTPStatus, eligibilityErr.Code, eligibilityErr.Message)
+			return
+		}
 		response.BadRequest(c, err.Error())
 		return
 	}

@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/pkg/config"
@@ -157,8 +158,8 @@ func (s *Service) ProcessStep2(req *Step2Request) (*Step2Response, *models.User,
 		return nil, nil, err
 	}
 
-	gender := strings.ToLower(strings.TrimSpace(req.Gender))
-	if gender != "male" && gender != "female" {
+	gender := eligibility.NormalizeGender(req.Gender)
+	if gender == eligibility.GenderNotSet {
 		return nil, nil, errors.New("gender must be 'male' or 'female'")
 	}
 

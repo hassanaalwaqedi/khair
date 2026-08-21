@@ -14,6 +14,7 @@ import '../../../auth/data/datasources/countries_datasource.dart';
 import '../../../auth/data/models/country_model.dart';
 import '../../../auth/presentation/widgets/country_search_field.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/domain/entities/attendance_policy.dart';
 import '../cubit/create_event_cubit.dart';
 import '../cubit/create_event_state.dart';
 
@@ -818,34 +819,34 @@ class _CreateEventViewState extends State<_CreateEventView> {
         title: context.l10n.whoIsThisEventFor,
         subtitle: context.l10n.setAttendanceAndAccessPreferen,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _sectionLabel('Audience', dark),
+          _sectionLabel(context.l10n.createEventAttendancePolicy, dark),
           SizedBox(height: 10),
           Row(children: [
             Expanded(
                 child: _selectCard(
                     Icons.groups_outlined,
-                    'Mixed',
-                    'Open to everyone',
-                    data.genderPolicy == 'mixed',
-                    () => cubit.updateGenderPolicy('mixed'),
+                    context.l10n.createEventAttendanceEveryone,
+                    context.l10n.createEventAttendanceEveryoneDescription,
+                    data.genderPolicy == AttendancePolicy.everyone,
+                    () => cubit.updateGenderPolicy(AttendancePolicy.everyone),
                     dark)),
             SizedBox(width: 10),
             Expanded(
                 child: _selectCard(
                     Icons.man_outlined,
-                    'Men',
-                    'For male attendees',
-                    data.genderPolicy == 'male_only',
-                    () => cubit.updateGenderPolicy('male_only'),
+                    context.l10n.createEventAttendanceMenOnly,
+                    context.l10n.createEventAttendanceMenOnlyDescription,
+                    data.genderPolicy == AttendancePolicy.menOnly,
+                    () => cubit.updateGenderPolicy(AttendancePolicy.menOnly),
                     dark)),
             SizedBox(width: 10),
             Expanded(
                 child: _selectCard(
                     Icons.woman_outlined,
-                    'Women',
-                    'For female attendees',
-                    data.genderPolicy == 'female_only',
-                    () => cubit.updateGenderPolicy('female_only'),
+                    context.l10n.createEventAttendanceWomenOnly,
+                    context.l10n.createEventAttendanceWomenOnlyDescription,
+                    data.genderPolicy == AttendancePolicy.womenOnly,
+                    () => cubit.updateGenderPolicy(AttendancePolicy.womenOnly),
                     dark))
           ]),
           SizedBox(height: 24),
@@ -1789,8 +1790,8 @@ class _LivePreview extends StatelessWidget {
                           SizedBox(height: 7),
                           _previewLine(
                               Icons.groups_outlined,
-                              _titleCase(
-                                  data.genderPolicy.replaceAll('_', ' ')),
+                              _attendancePolicyLabel(
+                                  context, data.genderPolicy),
                               dark)
                         ]
                       ]))
@@ -1808,6 +1809,17 @@ class _LivePreview extends StatelessWidget {
                     fontSize: 12,
                     color: dark ? Colors.white60 : _CreateColors.muted)))
       ]);
+}
+
+String _attendancePolicyLabel(BuildContext context, String policy) {
+  switch (AttendancePolicy.normalize(policy)) {
+    case AttendancePolicy.womenOnly:
+      return context.l10n.createEventAttendanceWomenOnly;
+    case AttendancePolicy.menOnly:
+      return context.l10n.createEventAttendanceMenOnly;
+    default:
+      return context.l10n.createEventAttendanceEveryone;
+  }
 }
 
 String _titleCase(String value) => value

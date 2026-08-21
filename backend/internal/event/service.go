@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
@@ -33,6 +34,13 @@ type OrganizerRepository interface {
 	GetByID(id uuid.UUID) (*models.Organizer, error)
 	GetByUserID(userID uuid.UUID) (*models.Organizer, error)
 	Create(org *models.Organizer) error
+}
+
+func pointerString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 func NewService(db *sql.DB, organizerRepo OrganizerRepository) *Service {
@@ -103,6 +111,7 @@ type CreateEventRequest struct {
 	VenueName                    *string             `json:"venue_name"`
 	Capacity                     *int                `json:"capacity"`
 	GenderRestriction            *string             `json:"gender_restriction"`
+	AttendancePolicy             *string             `json:"attendance_policy"`
 	AgeMin                       *int                `json:"age_min"`
 	RegistrationDeadline         *string             `json:"registration_deadline"`
 	RegistrationMode             string              `json:"registration_mode"`
@@ -136,6 +145,7 @@ type DraftEventRequest struct {
 	VenueName                    *string             `json:"venue_name"`
 	Capacity                     *int                `json:"capacity"`
 	GenderRestriction            *string             `json:"gender_restriction"`
+	AttendancePolicy             *string             `json:"attendance_policy"`
 	AgeMin                       *int                `json:"age_min"`
 	RegistrationDeadline         *string             `json:"registration_deadline"`
 	RegistrationMode             string              `json:"registration_mode"`
@@ -178,6 +188,7 @@ func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
 		VenueName:                    d.VenueName,
 		Capacity:                     d.Capacity,
 		GenderRestriction:            d.GenderRestriction,
+		AttendancePolicy:             d.AttendancePolicy,
 		AgeMin:                       d.AgeMin,
 		RegistrationDeadline:         d.RegistrationDeadline,
 		RegistrationMode:             d.RegistrationMode,
@@ -188,34 +199,36 @@ func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
 
 // UpdateEventRequest represents a request to update an event
 type UpdateEventRequest struct {
-	Title                        *string             `json:"title"`
-	Description                  *string             `json:"description"`
-	Category                     *string             `json:"category"`
-	Tags                         *[]string           `json:"tags"`
-	EventType                    *string             `json:"event_type"`
-	Language                     *string             `json:"language"`
-	Country                      *string             `json:"country"`
-	City                         *string             `json:"city"`
-	Address                      *string             `json:"address"`
-	Latitude                     *float64            `json:"latitude"`
-	Longitude                    *float64            `json:"longitude"`
-	StartDate                    *string             `json:"start_date"`
-	EndDate                      *string             `json:"end_date"`
-	ImageURL                     *string             `json:"image_url"`
-	IsOnline                     *bool               `json:"is_online"`
-	OnlineLink                   *string             `json:"online_link"`
-	OnlinePlatform               *string             `json:"online_platform"`
-	JoinInstructions             *string             `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
-	Pricing                      *models.PricingInfo `json:"pricing"`
-	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int                `json:"capacity"`
-	GenderRestriction            *string             `json:"gender_restriction"`
-	AgeMin                       *int                `json:"age_min"`
-	RegistrationDeadline         *string             `json:"registration_deadline"`
-	RegistrationMode             *string             `json:"registration_mode"`
-	Timezone                     *string             `json:"timezone"`
-	Guidelines                   *string             `json:"guidelines"`
+	Title                         *string             `json:"title"`
+	Description                   *string             `json:"description"`
+	Category                      *string             `json:"category"`
+	Tags                          *[]string           `json:"tags"`
+	EventType                     *string             `json:"event_type"`
+	Language                      *string             `json:"language"`
+	Country                       *string             `json:"country"`
+	City                          *string             `json:"city"`
+	Address                       *string             `json:"address"`
+	Latitude                      *float64            `json:"latitude"`
+	Longitude                     *float64            `json:"longitude"`
+	StartDate                     *string             `json:"start_date"`
+	EndDate                       *string             `json:"end_date"`
+	ImageURL                      *string             `json:"image_url"`
+	IsOnline                      *bool               `json:"is_online"`
+	OnlineLink                    *string             `json:"online_link"`
+	OnlinePlatform                *string             `json:"online_platform"`
+	JoinInstructions              *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes  *int                `json:"join_link_visible_before_minutes"`
+	Pricing                       *models.PricingInfo `json:"pricing"`
+	VenueName                     *string             `json:"venue_name"`
+	Capacity                      *int                `json:"capacity"`
+	GenderRestriction             *string             `json:"gender_restriction"`
+	AttendancePolicy              *string             `json:"attendance_policy"`
+	ConfirmAttendancePolicyChange bool                `json:"confirm_attendance_policy_change"`
+	AgeMin                        *int                `json:"age_min"`
+	RegistrationDeadline          *string             `json:"registration_deadline"`
+	RegistrationMode              *string             `json:"registration_mode"`
+	Timezone                      *string             `json:"timezone"`
+	Guidelines                    *string             `json:"guidelines"`
 }
 
 // normalizeEventMode keeps the legacy event_type column and the is_online
@@ -269,6 +282,16 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	}
 	if req.RegistrationMode != "instant" && req.RegistrationMode != "approval_required" {
 		return nil, errors.New("invalid registration mode")
+	}
+	policyInput := ""
+	if req.AttendancePolicy != nil {
+		policyInput = *req.AttendancePolicy
+	} else if req.GenderRestriction != nil {
+		policyInput = *req.GenderRestriction
+	}
+	attendancePolicy, policyErr := eligibility.NormalizePolicy(policyInput)
+	if policyErr != nil {
+		return nil, policyErr
 	}
 	if req.Capacity != nil && *req.Capacity < 1 {
 		return nil, errors.New("capacity must be at least 1")
@@ -338,6 +361,7 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	if req.JoinLinkVisibleBeforeMinutes != nil {
 		joinLinkMinutes = *req.JoinLinkVisibleBeforeMinutes
 	}
+	legacyGenderRestriction := eligibility.LegacyGenderRestriction(attendancePolicy)
 
 	event := &models.Event{
 		ID:                           uuid.New(),
@@ -360,7 +384,8 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
 		Pricing:                      req.Pricing,
 		Capacity:                     req.Capacity,
-		GenderRestriction:            req.GenderRestriction,
+		GenderRestriction:            &legacyGenderRestriction,
+		AttendancePolicy:             attendancePolicy,
 		AgeMin:                       req.AgeMin,
 		Status:                       "pending",
 		CreatedAt:                    time.Now(),
@@ -441,6 +466,10 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	}
 
 	previousStartDate := existingEvent.StartDate
+	previousPolicy, policyErr := eligibility.NormalizePolicy(existingEvent.AttendancePolicy)
+	if policyErr != nil {
+		previousPolicy, _ = eligibility.NormalizePolicy(pointerString(existingEvent.GenderRestriction))
+	}
 
 	// Update fields
 	event := &existingEvent.Event
@@ -534,6 +563,33 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 		}
 		event.Pricing = req.Pricing
 	}
+	if req.AttendancePolicy != nil || req.GenderRestriction != nil {
+		policyInput := pointerString(req.AttendancePolicy)
+		if policyInput == "" {
+			policyInput = pointerString(req.GenderRestriction)
+		}
+		policy, normalizeErr := eligibility.NormalizePolicy(policyInput)
+		if normalizeErr != nil {
+			return nil, normalizeErr
+		}
+		if policy != previousPolicy {
+			hasRegistrations, countErr := s.repo.HasFutureRegistrations(eventID)
+			if countErr != nil {
+				return nil, fmt.Errorf("check existing registrations: %w", countErr)
+			}
+			if hasRegistrations && !req.ConfirmAttendancePolicyChange {
+				return nil, &eligibility.Error{
+					Code:       "ATTENDANCE_POLICY_CHANGE_CONFIRMATION_REQUIRED",
+					HTTPStatus: 409,
+					Message:    "Confirm the attendance policy change because existing registrations may be affected.",
+					Policy:     policy,
+				}
+			}
+		}
+		event.AttendancePolicy = policy
+		legacy := eligibility.LegacyGenderRestriction(policy)
+		event.GenderRestriction = &legacy
+	}
 	if req.Title != nil {
 		title := strings.TrimSpace(*req.Title)
 		if len([]rune(title)) < 3 || len([]rune(title)) > 120 {
@@ -546,6 +602,11 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 
 	if err := s.repo.Update(event); err != nil {
 		return nil, fmt.Errorf("update event: %w", err)
+	}
+	if event.AttendancePolicy != previousPolicy && req.ConfirmAttendancePolicyChange {
+		if err := s.repo.FlagIneligibleRegistrations(event.ID, event.AttendancePolicy); err != nil {
+			return nil, fmt.Errorf("flag affected registrations: %w", err)
+		}
 	}
 	var registrationDeadline *time.Time
 	if req.RegistrationDeadline != nil && strings.TrimSpace(*req.RegistrationDeadline) != "" {
@@ -765,6 +826,18 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 	}
 	req.EventType, req.IsOnline = normalizeEventMode(req.EventType, req.IsOnline)
 
+	policyInput := ""
+	if req.AttendancePolicy != nil {
+		policyInput = *req.AttendancePolicy
+	} else if req.GenderRestriction != nil {
+		policyInput = *req.GenderRestriction
+	}
+	attendancePolicy, policyErr := eligibility.NormalizePolicy(policyInput)
+	if policyErr != nil {
+		return nil, policyErr
+	}
+	legacyGenderRestriction := eligibility.LegacyGenderRestriction(attendancePolicy)
+
 	event := &models.Event{
 		ID:               uuid.New(),
 		OrganizerID:      organizer.ID,
@@ -791,7 +864,8 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 		}(),
 		Pricing:           req.Pricing,
 		Capacity:          req.Capacity,
-		GenderRestriction: req.GenderRestriction,
+		GenderRestriction: &legacyGenderRestriction,
+		AttendancePolicy:  attendancePolicy,
 		AgeMin:            req.AgeMin,
 		Status:            "draft",
 		CreatedAt:         time.Now(),

@@ -21,6 +21,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../events/data/datasources/join_datasource.dart';
 import '../../../events/data/datasources/saved_events_datasource.dart';
 import '../../../events/domain/entities/event.dart';
+import '../../../events/domain/entities/attendance_policy.dart';
 import '../../../events/domain/repositories/events_repository.dart';
 import '../../../organizer/data/datasources/organizer_remote_datasource.dart';
 import '../../../organizer/domain/entities/organizer.dart';
@@ -49,6 +50,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   bool _isSaved = false;
   bool _saveLoading = false;
   bool _joinLoading = false;
+  String? _eligibilityErrorCode;
 
   Map<String, dynamic>? _meetingAccess;
   bool _isLoadingMeeting = false;
@@ -228,6 +230,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     _buildSummary(event, colors),
                     SizedBox(height: 25),
                     _buildKeyInformation(event, colors),
+                    if (event.isRestrictedEvent) ...[
+                      SizedBox(height: 18),
+                      _buildEligibilityBanner(event, colors),
+                    ],
                     SizedBox(height: 22),
                     _buildInlineActions(event, colors),
                     SizedBox(height: 28),
@@ -486,6 +492,38 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildEligibilityBanner(Event event, _PageColors colors) {
+    final womenOnly =
+        event.effectiveAttendancePolicy == AttendancePolicy.womenOnly;
+    final label = womenOnly
+        ? context.l10n.eventEligibilityWomenOnly
+        : context.l10n.eventEligibilityMenOnly;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.softRose,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: .25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.verified_user_outlined,
+              color: AppColors.primary, size: 22),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(label,
+                style: TextStyle(
+                    color: colors.primaryText,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -793,9 +831,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     final description = event.description?.trim();
     final extras = <String>[
       ...event.tags,
-      if (event.genderRestriction != null &&
-          event.genderRestriction!.trim().isNotEmpty)
-        _label(event.genderRestriction!, context),
+      if (event.effectiveAttendancePolicy == AttendancePolicy.womenOnly)
+        context.l10n.eventEligibilityWomenOnly,
+      if (event.effectiveAttendancePolicy == AttendancePolicy.menOnly)
+        context.l10n.eventEligibilityMenOnly,
       if (event.language != null && event.language!.trim().isNotEmpty)
         _label(event.language!, context),
     ].where((tag) => tag.trim().isNotEmpty).take(6).toList();
@@ -1091,16 +1130,20 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     final ended = _isEnded(event);
     final joined = _isJoined(event);
     final closed = _isRegistrationClosed(event);
-    final canJoin = !ended && !closed && !joined && !(_isFull(event));
+    final ineligible = _eligibilityErrorCode == 'EVENT_NOT_ELIGIBLE';
+    final canJoin =
+        !ended && !closed && !joined && !ineligible && !(_isFull(event));
     final label = ended
         ? context.l10n.eventDetailsEventEnded
         : closed
             ? context.l10n.registrationClosed
             : joined
                 ? context.l10n.joined
-                : _isFull(event)
-                    ? context.l10n.eventDetailsEventFull
-                    : context.l10n.eventDetailsJoin;
+                : ineligible
+                    ? context.l10n.eventEligibilityNotEligible
+                    : _isFull(event)
+                        ? context.l10n.eventDetailsEventFull
+                        : context.l10n.eventDetailsJoin;
     return Material(
       color: colors.surface,
       elevation: 12,
@@ -1239,12 +1282,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     try {
       await getIt<JoinDataSource>().joinEvent(event.id);
       if (!mounted) return;
-      setState(() => _registrationStatus = 'confirmed');
+      setState(() {
+        _registrationStatus = 'confirmed';
+        _eligibilityErrorCode = null;
+      });
       _fetchMeetingAccess();
       _showSnack('You’re going! Your place is reserved.');
       context.read<EventsBloc>().add(LoadEventDetails(event.id));
     } catch (error) {
-      if (mounted) _showJoinError(error);
+      if (mounted) await _showJoinError(error, event);
     } finally {
       if (mounted) setState(() => _joinLoading = false);
     }
@@ -1282,16 +1328,47 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     }
   }
 
-  void _showJoinError(Object error) {
-    var message = 'We couldn’t join this event.';
+  Future<void> _showJoinError(Object error, Event event) async {
+    String? code;
     if (error is DioException && error.response?.data is Map) {
       final data = error.response!.data as Map;
-      final server = (data['message'] ?? data['error'] ?? '').toString();
-      if (server.isNotEmpty && !server.contains('DioException')) {
-        message = server;
-      }
+      code = (data['error'] ?? '').toString();
     }
-    _showSnack(message);
+
+    if (code == 'PROFILE_ELIGIBILITY_REQUIRED') {
+      final complete = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(context.l10n.eventEligibilityRequiredTitle),
+              content: Text(context.l10n.eventEligibilityRequiredMessage),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(context.l10n.eventEligibilityCancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(context.l10n.eventEligibilityCompleteProfile),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!complete || !mounted) return;
+      final changed = await context.push<bool>('/profile/edit');
+      if (changed == true && mounted) await _handleJoin(event);
+      return;
+    }
+
+    if (code == 'EVENT_NOT_ELIGIBLE') {
+      if (mounted) {
+        setState(() => _eligibilityErrorCode = code);
+        _showSnack(context.l10n.eventEligibilityNotEligible);
+      }
+      return;
+    }
+
+    _showSnack(context.l10n.eventJoinError);
   }
 
   Future<void> _shareEvent(Event event) async {
