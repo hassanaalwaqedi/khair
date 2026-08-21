@@ -235,12 +235,18 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   ],
                 ),
               ),
-              // Keep navigation pinned to the viewport. Putting it inside the
-              // scrolling body allowed it to disappear below the editor on
-              // shorter browser windows.
-              bottomNavigationBar: SafeArea(
+              // A persistent bottom sheet keeps the primary action in the
+              // viewport after every wizard transition. The editor reserves
+              // enough space for it, so its final fields are never obscured.
+              bottomSheet: SafeArea(
                 top: false,
-                child: _bottomBar(context, state, dark),
+                child: Semantics(
+                  container: true,
+                  label: state.isLastStep
+                      ? context.l10n.postEvent
+                      : context.l10n.createEventContinue,
+                  child: _bottomBar(context, state, dark),
+                ),
               ),
             ),
           );
@@ -425,8 +431,10 @@ class _CreateEventViewState extends State<_CreateEventView> {
         final availableWidth =
             (constraints.maxWidth - horizontalPadding * 2).clamp(0.0, 1180.0);
         final content = SingleChildScrollView(
-          padding:
-              EdgeInsets.fromLTRB(horizontalPadding, 10, horizontalPadding, 32),
+          // This bottom padding keeps the final controls reachable above the
+          // persistent wizard footer on phones, tablets, and desktop web.
+          padding: EdgeInsets.fromLTRB(
+              horizontalPadding, 10, horizontalPadding, 128),
           child: Center(
             child: SizedBox(
               width: availableWidth,
