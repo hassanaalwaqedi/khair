@@ -11,6 +11,7 @@ import '../../../../../tokens/tokens.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../events/data/datasources/saved_events_datasource.dart';
 import '../../../../events/domain/entities/event.dart';
+import '../../../../events/presentation/widgets/event_eligibility_badge.dart';
 
 class CompactEventCard extends StatefulWidget {
   const CompactEventCard({super.key, required this.event});
@@ -49,7 +50,9 @@ class _CompactEventCardState extends State<CompactEventCard> {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _hovered ? AppColors.primary.withValues(alpha: .5) : AppColors.border,
+              color: _hovered
+                  ? AppColors.primary.withValues(alpha: .5)
+                  : AppColors.border,
               width: _hovered ? 1.4 : 1,
             ),
             boxShadow: _hovered
@@ -71,7 +74,8 @@ class _CompactEventCardState extends State<CompactEventCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(19)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(19)),
                     child: Stack(
                       children: [
                         AspectRatio(
@@ -88,7 +92,9 @@ class _CompactEventCardState extends State<CompactEventCard> {
                                 label: event.isOnline
                                     ? context.l10n.online
                                     : context.l10n.createEventInPerson,
-                                icon: event.isOnline ? Icons.videocam_rounded : Icons.location_on_rounded,
+                                icon: event.isOnline
+                                    ? Icons.videocam_rounded
+                                    : Icons.location_on_rounded,
                               ),
                             ],
                           ),
@@ -106,13 +112,25 @@ class _CompactEventCardState extends State<CompactEventCard> {
                                   : context.l10n.saveEvent,
                               onPressed: _saving ? null : _toggleSave,
                               icon: Icon(
-                                _saved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                color: _saved ? AppColors.primary : AppColors.textPrimary,
+                                _saved
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: _saved
+                                    ? AppColors.primary
+                                    : AppColors.textPrimary,
                                 size: 18,
                               ),
-                              constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+                              constraints:
+                                  BoxConstraints(minWidth: 32, minHeight: 32),
                               padding: EdgeInsets.zero,
                             ),
+                          ),
+                        ),
+                        PositionedDirectional(
+                          bottom: 10,
+                          start: 10,
+                          child: EventEligibilityBadge(
+                            policy: event.effectiveAttendancePolicy,
                           ),
                         ),
                       ],
@@ -125,7 +143,8 @@ class _CompactEventCardState extends State<CompactEventCard> {
                       children: [
                         // Date
                         Text(
-                          DateFormat('EEE, MMM d · h:mm a').format(event.startDate),
+                          DateFormat('EEE, MMM d · h:mm a')
+                              .format(event.startDate),
                           style: TextStyle(
                             color: AppColors.primaryDark,
                             fontSize: 12,
@@ -149,14 +168,20 @@ class _CompactEventCardState extends State<CompactEventCard> {
                         // Metadata
                         Row(
                           children: [
-                            Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
+                            Icon(Icons.location_on_outlined,
+                                size: 14, color: AppColors.textSecondary),
                             SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                location.isEmpty ? 'Location to be announced' : location,
+                                location.isEmpty
+                                    ? 'Location to be announced'
+                                    : location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
@@ -176,16 +201,19 @@ class _CompactEventCardState extends State<CompactEventCard> {
   Future<void> _toggleSave() async {
     final auth = context.read<AuthBloc>().state;
     if (!auth.isAuthenticated) {
-      context.go('/login?next=${Uri.encodeComponent('/events/${widget.event.id}')}');
+      context.go(
+          '/login?next=${Uri.encodeComponent('/events/${widget.event.id}')}');
       return;
     }
     setState(() => _saving = true);
     try {
-      final saved = await SavedEventsDataSource(getIt<ApiClient>()).toggle(widget.event.id, saved: _saved);
+      final saved = await SavedEventsDataSource(getIt<ApiClient>())
+          .toggle(widget.event.id, saved: _saved);
       if (mounted) setState(() => _saved = saved);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.savedEventsUpdateError)));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.savedEventsUpdateError)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -200,7 +228,8 @@ class _EventImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final image = resolveMediaUrl(event.imageUrl);
     if (image.isNotEmpty) {
-      return Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback());
+      return Image.network(image,
+          fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback());
     }
     return _fallback();
   }
@@ -214,7 +243,8 @@ class _EventImage extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Icon(Icons.groups_2_rounded, color: AppColors.primaryDark, size: 36),
+          child: Icon(Icons.groups_2_rounded,
+              color: AppColors.primaryDark, size: 36),
         ),
       );
 }

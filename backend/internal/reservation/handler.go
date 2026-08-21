@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/event"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
@@ -75,6 +76,10 @@ func (h *Handler) JoinEvent(c *gin.Context) {
 
 	reg, err := h.service.ReserveSeat(uid, eventID)
 	if err != nil {
+		if eligibilityErr, ok := err.(*eligibility.Error); ok {
+			response.ErrorWithCode(c, eligibilityErr.HTTPStatus, eligibilityErr.Code, eligibilityErr.Message)
+			return
+		}
 		response.BadRequest(c, err.Error())
 		return
 	}

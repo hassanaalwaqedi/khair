@@ -1,4 +1,5 @@
 import '../../domain/entities/event.dart';
+import '../../domain/entities/attendance_policy.dart';
 
 class EventModel extends Event {
   const EventModel({
@@ -36,6 +37,7 @@ class EventModel extends Event {
     super.registrationMode,
     super.timezone,
     super.genderRestriction,
+    super.attendancePolicy,
     super.isUserJoined,
     super.isLinkUnlocked,
     required super.createdAt,
@@ -84,6 +86,9 @@ class EventModel extends Event {
       registrationMode: json['registration_mode'] as String?,
       timezone: json['timezone'] as String?,
       genderRestriction: json['gender_restriction'] as String?,
+      attendancePolicy: AttendancePolicy.normalize(
+          json['attendance_policy'] as String? ??
+              json['gender_restriction'] as String?),
       isUserJoined: json['is_user_joined'] as bool? ?? false,
       isLinkUnlocked: json['is_link_unlocked'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -135,6 +140,7 @@ class EventModel extends Event {
       'registration_mode': registrationMode,
       'timezone': timezone,
       'gender_restriction': genderRestriction,
+      'attendance_policy': attendancePolicy,
       'is_user_joined': isUserJoined,
       'is_link_unlocked': isLinkUnlocked,
       'created_at': createdAt.toIso8601String(),

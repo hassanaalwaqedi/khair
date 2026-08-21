@@ -83,6 +83,17 @@ func Error(c *gin.Context, statusCode int, message string) {
 	})
 }
 
+// ErrorWithCode preserves a machine-readable error code while keeping the
+// human-readable message localized by the API layer.
+func ErrorWithCode(c *gin.Context, statusCode int, code, message string) {
+	c.Header("Content-Type", jsonContentTypeUTF8)
+	c.JSON(statusCode, Response{
+		Success: false,
+		Message: i18n.TranslateForContext(c, message),
+		Error:   code,
+	})
+}
+
 // BadRequest sends a 400 response
 func BadRequest(c *gin.Context, message string) {
 	Error(c, http.StatusBadRequest, message)

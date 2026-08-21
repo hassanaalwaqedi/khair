@@ -22,14 +22,15 @@ func NewService(db *sql.DB) *Service {
 
 // Overview contains top-level platform metrics.
 type Overview struct {
-	TotalUsers      int64   `json:"total_users"`
-	ActiveUsers     int64   `json:"active_users"`
-	TotalOrganizers int64   `json:"total_organizers"`
-	TotalEvents     int64   `json:"total_events"`
-	ApprovedEvents  int64   `json:"approved_events"`
-	PendingEvents   int64   `json:"pending_events"`
-	ApprovalRate    float64 `json:"approval_rate"`
-	TotalAttendees  int64   `json:"total_attendees"`
+	TotalUsers            int64   `json:"total_users"`
+	ActiveUsers           int64   `json:"active_users"`
+	TotalOrganizers       int64   `json:"total_organizers"`
+	TotalEvents           int64   `json:"total_events"`
+	ApprovedEvents        int64   `json:"approved_events"`
+	PendingEvents         int64   `json:"pending_events"`
+	ApprovalRate          float64 `json:"approval_rate"`
+	TotalAttendees        int64   `json:"total_attendees"`
+	EligibilityRejections int64   `json:"eligibility_rejections"`
 }
 
 // GetOverview returns platform-wide metrics.
@@ -49,15 +50,21 @@ func (s *Service) GetOverview() (*Overview, error) {
 
 	// Total attendees (registrations)
 	_ = s.db.QueryRow(`SELECT COUNT(*) FROM attendees`).Scan(&o.TotalAttendees)
+	// Aggregate only: no gender or other private eligibility value is exposed.
+	_ = s.db.QueryRow(`
+		SELECT COUNT(*) FROM audit_logs
+		WHERE action IN ('event_eligibility_rejected', 'event_eligibility_profile_required')
+	`).Scan(&o.EligibilityRejections)
 
 	return o, nil
 }
 
 // EventMetrics contains event-related analytics.
 type EventMetrics struct {
-	ByCategory []CategoryCount `json:"by_category"`
-	ByCountry  []CountryCount  `json:"by_country"`
-	ByMonth    []MonthCount    `json:"by_month"`
+	ByCategory         []CategoryCount `json:"by_category"`
+	ByCountry          []CountryCount  `json:"by_country"`
+	ByMonth            []MonthCount    `json:"by_month"`
+	ByAttendancePolicy []PolicyCount   `json:"by_attendance_policy"`
 }
 
 // CategoryCount is events per category.
@@ -76,6 +83,12 @@ type CountryCount struct {
 type MonthCount struct {
 	Month string `json:"month"`
 	Count int64  `json:"count"`
+}
+
+// PolicyCount is the aggregate number of events per attendance policy.
+type PolicyCount struct {
+	Policy string `json:"policy"`
+	Count  int64  `json:"count"`
 }
 
 // GetEventMetrics returns event analytics.
@@ -122,6 +135,21 @@ func (s *Service) GetEventMetrics() (*EventMetrics, error) {
 			var c MonthCount
 			rows3.Scan(&c.Month, &c.Count)
 			m.ByMonth = append(m.ByMonth, c)
+		}
+	}
+
+	rows4, err := s.db.Query(`
+		SELECT COALESCE(attendance_policy, 'EVERYONE'), COUNT(*)
+		FROM events
+		GROUP BY COALESCE(attendance_policy, 'EVERYONE')
+		ORDER BY COALESCE(attendance_policy, 'EVERYONE')
+	`)
+	if err == nil {
+		defer rows4.Close()
+		for rows4.Next() {
+			var p PolicyCount
+			rows4.Scan(&p.Policy, &p.Count)
+			m.ByAttendancePolicy = append(m.ByAttendancePolicy, p)
 		}
 	}
 

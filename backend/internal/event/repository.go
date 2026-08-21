@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"github.com/khair/backend/internal/eligibility"
 	"github.com/khair/backend/internal/models"
 )
 
@@ -115,7 +116,7 @@ type EventFilter struct {
 
 const eventCols = `e.id, e.organizer_id, e.title, e.description, e.event_type, e.category, e.language,
        e.country, e.city, e.address, e.latitude, e.longitude, e.start_date, e.end_date,
-       e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.age_min, e.age_max,
+	   e.image_url, e.capacity, e.reserved_count, e.gender_restriction, e.attendance_policy, e.age_min, e.age_max,
        e.pricing_type, e.price_cents, e.currency, e.payment_method,
        e.status, e.is_published, e.is_online, e.online_link, e.join_instructions,
        e.join_link_visible_before_minutes, e.rejection_reason, e.approved_at,
@@ -129,7 +130,7 @@ const eventWithOrgCols = eventCols + `, o.name as organizer_name`
 
 const bareEventCols = `id, organizer_id, title, description, event_type, category, language,
        country, city, address, latitude, longitude, start_date, end_date,
-       image_url, capacity, reserved_count, gender_restriction, age_min, age_max,
+	   image_url, capacity, reserved_count, gender_restriction, attendance_policy, age_min, age_max,
        pricing_type, price_cents, currency, payment_method,
        status, is_published, is_online, online_link, join_instructions,
        join_link_visible_before_minutes, rejection_reason, approved_at,
@@ -151,7 +152,7 @@ func scanEvent(scanner interface {
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
-		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AttendancePolicy, &event.AgeMin, &event.AgeMax,
 		&pricingType, &amountCents, &currency, &paymentMethod,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
@@ -162,7 +163,7 @@ func scanEvent(scanner interface {
 	if err != nil {
 		return err
 	}
-	
+
 	if pricingType == "" {
 		pricingType = "free"
 	}
@@ -187,7 +188,7 @@ func scanEventWithOrg(scanner interface {
 		&event.ID, &event.OrganizerID, &event.Title, &event.Description, &event.EventType,
 		&event.Category, &event.Language, &event.Country, &event.City, &event.Address, &event.Latitude,
 		&event.Longitude, &event.StartDate, &event.EndDate, &event.ImageURL,
-		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AgeMin, &event.AgeMax,
+		&event.Capacity, &event.ReservedCount, &event.GenderRestriction, &event.AttendancePolicy, &event.AgeMin, &event.AgeMax,
 		&pricingType, &amountCents, &currency, &paymentMethod,
 		&event.Status, &event.IsPublished, &event.IsOnline, &event.OnlineLink, &event.JoinInstructions,
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
@@ -198,7 +199,7 @@ func scanEventWithOrg(scanner interface {
 	if err != nil {
 		return err
 	}
-	
+
 	if pricingType == "" {
 		pricingType = "free"
 	}
@@ -213,14 +214,21 @@ func scanEventWithOrg(scanner interface {
 
 // Create creates a new event
 func (r *Repository) Create(event *models.Event) error {
+	policy, legacyGenderRestriction, err := persistedAttendancePolicy(event)
+	if err != nil {
+		return err
+	}
+	event.AttendancePolicy = policy
+	event.GenderRestriction = legacyGenderRestriction
+
 	query := `
 		INSERT INTO events (id, organizer_id, title, description, event_type, language, 
 		                    country, city, address, latitude, longitude, start_date, end_date, 
 		                    image_url, pricing_type, price_cents, currency, payment_method, is_online, online_link, join_instructions,
-		                    join_link_visible_before_minutes, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+		                    join_link_visible_before_minutes, status, created_at, updated_at, gender_restriction, attendance_policy)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
 	`
-	
+
 	pricingType := "free"
 	var priceCents int64 = 0
 	var currency, paymentMethod *string
@@ -233,7 +241,7 @@ func (r *Repository) Create(event *models.Event) error {
 		paymentMethod = event.Pricing.PaymentMethod
 	}
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		event.ID, event.OrganizerID, event.Title, event.Description, event.EventType,
 		event.Language, event.Country, event.City, event.Address, event.Latitude,
 		event.Longitude, event.StartDate, event.EndDate, event.ImageURL,
@@ -241,6 +249,7 @@ func (r *Repository) Create(event *models.Event) error {
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes, event.Status,
 		event.CreatedAt, event.UpdatedAt,
+		event.GenderRestriction, event.AttendancePolicy,
 	)
 	return err
 }
@@ -497,6 +506,13 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 
 // Update updates an event
 func (r *Repository) Update(event *models.Event) error {
+	policy, legacyGenderRestriction, err := persistedAttendancePolicy(event)
+	if err != nil {
+		return err
+	}
+	event.AttendancePolicy = policy
+	event.GenderRestriction = legacyGenderRestriction
+
 	query := `
 		UPDATE events SET
 			title = $2, description = $3, event_type = $4, language = $5,
@@ -504,10 +520,11 @@ func (r *Repository) Update(event *models.Event) error {
 			start_date = $11, end_date = $12, image_url = $13, status = $14,
 			pricing_type = $15, price_cents = $16, currency = $17, payment_method = $18,
 			is_online = $19, online_link = $20, join_instructions = $21,
-			join_link_visible_before_minutes = $22
+			join_link_visible_before_minutes = $22,
+			gender_restriction = $23, attendance_policy = $24
 		WHERE id = $1
 	`
-	
+
 	pricingType := "free"
 	var priceCents int64 = 0
 	var currency, paymentMethod *string
@@ -520,14 +537,59 @@ func (r *Repository) Update(event *models.Event) error {
 		paymentMethod = event.Pricing.PaymentMethod
 	}
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		event.ID, event.Title, event.Description, event.EventType, event.Language,
 		event.Country, event.City, event.Address, event.Latitude, event.Longitude,
 		event.StartDate, event.EndDate, event.ImageURL, event.Status,
 		pricingType, priceCents, currency, paymentMethod,
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes,
+		event.GenderRestriction, event.AttendancePolicy,
 	)
+	return err
+}
+
+func persistedAttendancePolicy(event *models.Event) (string, *string, error) {
+	policyInput := event.AttendancePolicy
+	if strings.TrimSpace(policyInput) == "" && event.GenderRestriction != nil {
+		policyInput = *event.GenderRestriction
+	}
+	policy, err := eligibility.NormalizePolicy(policyInput)
+	if err != nil {
+		return "", nil, err
+	}
+	legacy := eligibility.LegacyGenderRestriction(policy)
+	return policy, &legacy, nil
+}
+
+// HasFutureRegistrations is used before changing an event's eligibility
+// policy so existing attendees are never silently removed.
+func (r *Repository) HasFutureRegistrations(eventID uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM event_registrations er
+			JOIN events e ON e.id = er.event_id
+			WHERE er.event_id = $1
+			  AND er.status IN ('pending', 'confirmed', 'reserved')
+			  AND COALESCE(e.end_date, e.start_date) > NOW()
+		)`, eventID).Scan(&exists)
+	return exists, err
+}
+
+// FlagIneligibleRegistrations keeps registrations intact while making a
+// policy change visible to organizer review.
+func (r *Repository) FlagIneligibleRegistrations(eventID uuid.UUID, policy string) error {
+	_, err := r.db.Exec(`
+		UPDATE event_registrations er
+		SET eligibility_review_required = true, updated_at = NOW()
+		FROM users u
+		WHERE er.user_id = u.id
+		  AND er.event_id = $1
+		  AND er.status IN ('pending', 'confirmed', 'reserved')
+		  AND $2 <> 'EVERYONE'
+		  AND (($2 = 'WOMEN_ONLY' AND COALESCE(UPPER(u.gender), 'NOT_SET') <> 'WOMAN')
+		    OR ($2 = 'MEN_ONLY' AND COALESCE(UPPER(u.gender), 'NOT_SET') <> 'MAN'))`, eventID, policy)
 	return err
 }
 

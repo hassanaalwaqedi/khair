@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../tokens/tokens.dart';
 import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/event.dart';
+import 'event_eligibility_badge.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
@@ -126,6 +127,13 @@ class _EventCardState extends State<EventCard> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: AppSpacing.x2,
+                          left: AppSpacing.x2,
+                          child: EventEligibilityBadge(
+                            policy: widget.event.effectiveAttendancePolicy,
                           ),
                         ),
                       ],
