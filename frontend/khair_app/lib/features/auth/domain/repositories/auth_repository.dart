@@ -10,6 +10,7 @@ abstract class AuthRepository {
   Future<Either<Failure, AuthResponse>> loginWithGoogle(
       String idToken, String preferredLanguage);
   Future<Either<Failure, void>> logout();
+  Future<Either<Failure, void>> deleteAccount();
   Future<Either<Failure, User?>> getCurrentUser();
   Future<Either<Failure, Organizer?>> getCurrentOrganizer();
   Future<Either<Failure, void>> saveOrganizer(Organizer organizer);

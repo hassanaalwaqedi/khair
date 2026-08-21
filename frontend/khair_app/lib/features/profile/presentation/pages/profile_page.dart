@@ -789,10 +789,59 @@ class _PreferenceSwitch extends StatelessWidget {
 
 class _AccountSafety extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => TextButton.icon(
-      onPressed: () => context.read<AuthBloc>().add(LogoutRequested()),
-      icon: Icon(Icons.logout_outlined),
-      label: Text(context.l10n.signOut1));
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sign out
+        TextButton.icon(
+          onPressed: () => context.read<AuthBloc>().add(LogoutRequested()),
+          icon: const Icon(Icons.logout_outlined),
+          label: Text(context.l10n.signOut1),
+        ),
+        const SizedBox(height: 4),
+        // Danger zone — delete account
+        TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red.shade600,
+          ),
+          icon: const Icon(Icons.delete_forever_outlined),
+          label: const Text('Delete Account'),
+          onPressed: () => _confirmDelete(context),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final authBloc = context.read<AuthBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(
+          'Delete Account?',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: const Text(
+          'This will permanently delete your account, all your registrations, saved events, and personal data. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Forever'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      authBloc.add(DeleteAccountRequested());
+    }
+  }
 }
 
 class _SectionTitle extends StatelessWidget {

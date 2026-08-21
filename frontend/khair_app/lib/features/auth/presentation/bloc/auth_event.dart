@@ -36,6 +36,8 @@ class RegisterRequested extends AuthEvent {
 
 class LogoutRequested extends AuthEvent {}
 
+class DeleteAccountRequested extends AuthEvent {}
+
 class AuthSessionExpired extends AuthEvent {
   const AuthSessionExpired();
 }

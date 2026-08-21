@@ -75,6 +75,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      await _remoteDataSource.deleteAccount();
+      await _clearAuthData();
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(AuthFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, User?>> getCurrentUser() async {
     try {
       final userData = await _secureStorage.read(key: 'user_data');

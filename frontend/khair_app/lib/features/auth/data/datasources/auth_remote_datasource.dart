@@ -7,6 +7,7 @@ abstract class AuthRemoteDataSource {
       String email, String password, String name);
   Future<AuthResponseModel> loginWithGoogle(
       String idToken, String preferredLanguage);
+  Future<void> deleteAccount();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -45,5 +46,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     });
     return AuthResponseModel.fromJson(
         response.data['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _apiClient.delete('/profile');
   }
 }
