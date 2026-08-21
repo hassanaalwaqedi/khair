@@ -257,8 +257,18 @@ Rules:
 
 	aiReply := localizedAIFailure(language)
 	aiFailed := true
-	if s.aiClient != nil && s.aiClient.IsEnabled() {
-		if reply, err := s.aiClient.Generate(ctx, prompt, 0.2); err == nil && strings.TrimSpace(reply) != "" {
+	switch {
+	case s.aiClient == nil:
+		log.Printf("[SUPPORT][AI] Gemini unavailable: client was not initialized")
+	case !s.aiClient.IsEnabled():
+		log.Printf("[SUPPORT][AI] Gemini unavailable: GEMINI_API_KEY is not configured")
+	default:
+		reply, err := s.aiClient.Generate(ctx, prompt, 0.2)
+		if err != nil {
+			log.Printf("[SUPPORT][AI] Gemini generation failed model=%q category=%s", s.aiClient.Model(), ai.FailureCategory(err))
+		} else if strings.TrimSpace(reply) == "" {
+			log.Printf("[SUPPORT][AI] Gemini generation failed model=%q category=empty_response", s.aiClient.Model())
+		} else {
 			aiReply = strings.TrimSpace(reply)
 			aiFailed = false
 		}

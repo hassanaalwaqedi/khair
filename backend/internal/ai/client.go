@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -25,11 +26,17 @@ type Client struct {
 
 // NewClient creates a new Gemini AI client
 func NewClient(cfg config.GeminiConfig) *Client {
+	model := strings.TrimSpace(cfg.Model)
+	if model == "" {
+		model = config.DefaultGeminiModel
+	}
+	apiKey := strings.TrimSpace(cfg.APIKey)
+
 	return &Client{
-		apiKey:    cfg.APIKey,
-		model:     cfg.Model,
+		apiKey:    apiKey,
+		model:     model,
 		maxTokens: cfg.MaxTokens,
-		enabled:   cfg.Enabled,
+		enabled:   cfg.Enabled && apiKey != "",
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -38,7 +45,50 @@ func NewClient(cfg config.GeminiConfig) *Client {
 
 // IsEnabled returns whether the AI client is configured and ready
 func (c *Client) IsEnabled() bool {
-	return c.enabled && c.apiKey != ""
+	return c != nil && c.enabled && c.apiKey != ""
+}
+
+// Model returns the configured Gemini model without exposing credentials.
+func (c *Client) Model() string {
+	if c == nil {
+		return ""
+	}
+	return c.model
+}
+
+// FailureCategory converts a provider failure into a small, safe diagnostic
+// label. It intentionally excludes raw provider bodies, prompts, and keys so
+// it can be recorded in production logs.
+func FailureCategory(err error) string {
+	if err == nil {
+		return ""
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "timeout"
+	}
+	if errors.Is(err, context.Canceled) {
+		return "cancelled"
+	}
+
+	message := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(message, "missing api key"):
+		return "not_configured"
+	case strings.Contains(message, "error 401"), strings.Contains(message, "error 403"):
+		return "authentication_or_permission"
+	case strings.Contains(message, "error 404"):
+		return "model_not_found"
+	case strings.Contains(message, "error 400"):
+		return "invalid_request"
+	case strings.Contains(message, "rate limited"), strings.Contains(message, "error 429"):
+		return "rate_limited"
+	case strings.Contains(message, "error 5"):
+		return "provider_unavailable"
+	case strings.Contains(message, "request failed"):
+		return "network_error"
+	default:
+		return "unknown"
+	}
 }
 
 // ---------- Gemini REST API types ----------
