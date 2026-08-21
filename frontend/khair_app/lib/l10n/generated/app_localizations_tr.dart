@@ -1082,7 +1082,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get createEventTitleLabel => 'Etkinlik Başlığı';
 
   @override
-  String get createEventTitleHint => 'İlgi çekici bir etkinlik başlığı girin';
+  String get createEventTitleHint =>
+      'Etkinliğinize açık ve akılda kalıcı bir başlık verin';
 
   @override
   String get createEventCategoryLabel => 'Kategori';
@@ -1100,10 +1101,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get createEventEventTypeLabel => 'Etkinlik Türü';
 
   @override
-  String get createEventInPerson => 'Yüz Yüze';
+  String get createEventInPerson => 'Yüz yüze';
 
   @override
-  String get createEventOnline => 'Çevrimiçi';
+  String get createEventOnline => 'Çevrim içi';
 
   @override
   String get createEventLanguageLabel => 'Dil';
@@ -1127,7 +1128,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get createEventCountry => 'Ülke';
 
   @override
-  String get createEventCityHint => 'ör: İstanbul';
+  String get createEventCityHint => 'Bir şehir arayın veya girin';
 
   @override
   String get createEventAddress => 'Mekan Adresi';
@@ -3374,132 +3375,133 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationClose => 'Bildirimi kapat';
 
   @override
-  String get createAnEvent => 'Create an event';
+  String get createAnEvent => 'Etkinlik oluştur';
 
   @override
-  String get saveDraft => 'Save draft';
+  String get saveDraft => 'Taslağı kaydet';
 
   @override
-  String get letsStartWithTheBasics => 'Let’s start with the basics';
+  String get letsStartWithTheBasics => 'Temel bilgilerle başlayalım';
 
   @override
   String get tellPeopleWhatYourEventIsAbout =>
-      'Tell people what your event is about.';
+      'İnsanlara etkinliğinizin ne hakkında olduğunu anlatın.';
 
   @override
-  String get eventTitle1 => 'Event title';
+  String get eventTitle1 => 'Etkinlik başlığı';
 
   @override
-  String get suggestCategoryWithAi => 'Suggest category with AI';
+  String get suggestCategoryWithAi => 'AI ile kategori öner';
 
   @override
   String get whenAndWhereIsItHappening => 'Ne zaman ve nerede gerçekleşiyor?';
 
   @override
   String get giveAttendeesTheDetailsTheyNee =>
-      'Give attendees the details they need to plan ahead.';
+      'Katılımcılara önceden plan yapmaları için gereken bilgileri verin.';
 
   @override
-  String get timezone => 'Timezone';
+  String get timezone => 'Saat dilimi';
 
   @override
-  String get venueName => 'Venue name';
+  String get venueName => 'Mekân adı';
 
   @override
-  String get streetAddress => 'Street address';
+  String get streetAddress => 'Açık adres';
 
   @override
-  String get pinpointTheLocation => 'Pinpoint the location';
+  String get pinpointTheLocation => 'Konumu işaretleyin';
 
   @override
-  String get meetingUrl => 'Meeting URL';
+  String get meetingUrl => 'Toplantı bağlantısı';
 
   @override
-  String get instructionsOptional => 'Instructions (optional)';
+  String get instructionsOptional => 'Talimatlar (isteğe bağlı)';
 
   @override
   String get whoIsThisEventFor => 'Bu etkinlik kime yönelik?';
 
   @override
   String get setAttendanceAndAccessPreferen =>
-      'Set attendance and access preferences.';
+      'Katılım ve erişim tercihlerini ayarlayın.';
 
   @override
-  String get unlimited => 'Unlimited';
+  String get unlimited => 'Sınırsız';
 
   @override
-  String get limited => 'Limited';
+  String get limited => 'Sınırlı';
 
   @override
   String get paidOnlineEventsAreNotSupporte =>
-      'Paid online events are not supported yet.';
+      'Ücretli çevrim içi etkinlikler henüz desteklenmiyor.';
 
   @override
-  String get price => 'Price';
+  String get price => 'Fiyat';
 
   @override
-  String get currency => 'Currency';
+  String get currency => 'Para birimi';
 
   @override
   String get anythingAttendeesShouldKnowOpt =>
       'Katılımcıların bilmesi gereken bir şey var mı? (isteğe bağlı)';
 
   @override
-  String get makeYourEventStandOut => 'Make your event stand out';
+  String get makeYourEventStandOut => 'Etkinliğinizi öne çıkarın';
 
   @override
   String get addAStrongCoverImageSoPeopleIn =>
-      'Add a strong cover image so people instantly understand your event.';
+      'İnsanların etkinliğinizi hemen anlaması için güçlü bir kapak görseli ekleyin.';
 
   @override
-  String get replaceCoverImage => 'Replace cover image';
+  String get replaceCoverImage => 'Kapak görselini değiştir';
 
   @override
   String get jpgPngOrWebpUpTo10Mb169Recomme =>
       'JPG, PNG veya WebP · en fazla 5 MB · 16:9 önerilir';
 
   @override
-  String get reviewYourEvent => 'Review your event';
+  String get reviewYourEvent => 'Etkinliğinizi gözden geçirin';
 
   @override
   String get makeSureEverythingLooksRightBe =>
-      'Make sure everything looks right before sending it to Khair moderation.';
+      'Khair incelemesine göndermeden önce her şeyin doğru olduğundan emin olun.';
 
   @override
-  String get readyToSubmit => 'Ready to submit';
+  String get readyToSubmit => 'Göndermeye hazır';
 
   @override
-  String get submission => 'Submission';
+  String get submission => 'Gönderim';
 
   @override
   String get yourEventWillBeSavedAsPendingR =>
-      'Your event will be saved as pending review. It becomes discoverable only after admin approval.';
+      'Etkinliğiniz inceleme bekliyor olarak kaydedilir. Yalnızca yönetici onayından sonra keşfedilebilir olur.';
 
   @override
   String get iConfirmTheseEventDetailsAreAc =>
-      'I confirm these event details are accurate.';
+      'Bu etkinlik ayrıntılarının doğru olduğunu onaylıyorum.';
 
   @override
   String get aiSuggestion => 'AI suggestion';
 
   @override
-  String get yourEventIsUnderReview => 'Your event is under review';
+  String get yourEventIsUnderReview => 'Etkinliğiniz inceleniyor';
 
   @override
   String get yourEventHasBeenSubmittedForRe =>
-      'Your event has been submitted for review. We will notify you when moderation is complete.';
+      'Etkinliğiniz inceleme için gönderildi. İnceleme tamamlandığında size bildireceğiz.';
 
   @override
-  String get backToOrganizerHub => 'Back to Organizer Hub';
+  String get backToOrganizerHub => 'Organizatör merkezine dön';
 
   @override
-  String get chooseACoverImage => 'Choose a cover image';
+  String get chooseACoverImage => 'Kapak görseli seçin';
 
   @override
-  String get dragAndDropOrTapToBrowse => 'Drag and drop or tap to browse';
+  String get dragAndDropOrTapToBrowse =>
+      'Sürükleyip bırakın veya göz atmak için dokunun';
 
   @override
-  String get livePreview => 'Live preview';
+  String get livePreview => 'Canlı ön izleme';
 
   @override
   String get whatDoesThisDocumentVerify => 'Bu belge neyi doğruluyor?';
@@ -4500,4 +4502,374 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get imageUploaded => 'Yüklendi';
+
+  @override
+  String get createEventEditorDraft => 'Taslak düzenleyici';
+
+  @override
+  String get createEventSavedJustNow => 'Az önce kaydedildi';
+
+  @override
+  String get createEventStepBasics => 'Temel bilgiler';
+
+  @override
+  String get createEventStepDateLocation => 'Tarih ve konum';
+
+  @override
+  String get createEventStepAudience => 'Katılımcılar';
+
+  @override
+  String get createEventCategory => 'Kategori';
+
+  @override
+  String get createEventSearchCategories => 'Kategorilerde ara';
+
+  @override
+  String get createEventCategoriesUnavailable =>
+      'Kategoriler Khair\'de kullanılabilir olduğunda burada görünecek.';
+
+  @override
+  String get createEventAiSuggests => 'Khair AI şunu öneriyor:';
+
+  @override
+  String get createEventAiCategoryReason => 'Başlığınıza ve açıklamanıza göre.';
+
+  @override
+  String get createEventUseSuggestion => 'Öneriyi kullan';
+
+  @override
+  String get createEventDescriptionHint =>
+      'Katılımcılara ne beklemeleri gerektiğini, etkinliğin kimler için olduğunu ve neden katılmaları gerektiğini anlatın.';
+
+  @override
+  String get createEventTags => 'Etiketler';
+
+  @override
+  String get createEventTagsHint =>
+      'Ağ kurma, aile, hayır gibi etiketler ekleyin…';
+
+  @override
+  String get createEventFormat => 'Etkinlik formatı';
+
+  @override
+  String get createEventInPersonSubtitle => 'Fiziksel bir konumda buluşun';
+
+  @override
+  String get createEventOnlineSubtitle => 'Etkinliği çevrim içi düzenleyin';
+
+  @override
+  String get createEventLanguage => 'Etkinlik dili';
+
+  @override
+  String get createEventLanguageEnglish => 'İngilizce';
+
+  @override
+  String get createEventLanguageArabic => 'Arapça';
+
+  @override
+  String get createEventLanguageTurkish => 'Türkçe';
+
+  @override
+  String get createEventDateAndTime => 'Tarih ve saat';
+
+  @override
+  String get createEventStartDate => 'Başlangıç tarihi';
+
+  @override
+  String get createEventStartTime => 'Başlangıç saati';
+
+  @override
+  String get createEventEndDateOptional => 'Bitiş tarihi (isteğe bağlı)';
+
+  @override
+  String get createEventEndTimeOptional => 'Bitiş saati (isteğe bağlı)';
+
+  @override
+  String get createEventSelectDate => 'Tarih seçin';
+
+  @override
+  String get createEventSelectTime => 'Saat seçin';
+
+  @override
+  String get createEventLocation => 'Konum';
+
+  @override
+  String get createEventCountriesUnavailable =>
+      'Ülke verileri yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.';
+
+  @override
+  String get createEventVenueHint => 'Mekân adı (isteğe bağlı)';
+
+  @override
+  String get createEventStreetAddressHint => 'Sokak, bina, semt';
+
+  @override
+  String get createEventMapSearch => 'Konum ara';
+
+  @override
+  String get createEventUseCurrentLocation => 'Mevcut konumumu kullan';
+
+  @override
+  String get createEventMapTapToSelect => 'Seçmek için dokunun';
+
+  @override
+  String get createEventMapSelectedLocation => 'Seçilen konum';
+
+  @override
+  String get createEventSearching => 'Aranıyor…';
+
+  @override
+  String get createEventOnlineDetails => 'Çevrim içi etkinlik ayrıntıları';
+
+  @override
+  String get createEventPlatformZoom => 'Zoom';
+
+  @override
+  String get createEventPlatformMeet => 'Google Meet';
+
+  @override
+  String get createEventPlatformTeams => 'Microsoft Teams';
+
+  @override
+  String get createEventPlatformOther => 'Diğer';
+
+  @override
+  String get createEventMeetingUrlHint => 'https://…';
+
+  @override
+  String get createEventInstructionsHint =>
+      'Katılımcıların katılmadan önce bilmesi gerekenler';
+
+  @override
+  String get createEventMeetingProtected =>
+      'Toplantı bağlantısı korunur ve Khair erişim politikasına göre yalnızca uygun katılımcılarla paylaşılır.';
+
+  @override
+  String get createEventAudience => 'Katılımcılar';
+
+  @override
+  String get createEventAudienceMixed => 'Karma';
+
+  @override
+  String get createEventAudienceMixedSubtitle => 'Herkese açık';
+
+  @override
+  String get createEventAudienceMen => 'Erkekler';
+
+  @override
+  String get createEventAudienceMenSubtitle => 'Erkek katılımcılar için';
+
+  @override
+  String get createEventAudienceWomen => 'Kadınlar';
+
+  @override
+  String get createEventAudienceWomenSubtitle => 'Kadın katılımcılar için';
+
+  @override
+  String get createEventAgePreference => 'Yaş tercihi';
+
+  @override
+  String get createEventAgeAll => 'Tüm yaşlar';
+
+  @override
+  String get createEventAge18Plus => '18+';
+
+  @override
+  String get createEventAgeFamilies => 'Aileler';
+
+  @override
+  String get createEventAgeCustom => 'Özel';
+
+  @override
+  String get createEventMaximumAttendees => 'En fazla katılımcı';
+
+  @override
+  String get createEventRegistration => 'Kayıt';
+
+  @override
+  String get createEventInstantJoin => 'Anında katılım';
+
+  @override
+  String get createEventApprovalRequired => 'Onay gerekli';
+
+  @override
+  String get createEventRegistrationDeadlineOptional =>
+      'Kayıt son tarihi (isteğe bağlı)';
+
+  @override
+  String get createEventPricing => 'Fiyatlandırma';
+
+  @override
+  String get createEventFree => 'Ücretsiz';
+
+  @override
+  String get createEventPaid => 'Ücretli';
+
+  @override
+  String get createEventPriceHint => 'örn. 50';
+
+  @override
+  String get createEventPaymentAtVenue =>
+      'Ödeme etkinlik mekânında alınacaktır. Khair ödemeleri işlemez.';
+
+  @override
+  String get createEventGuidelinesHint =>
+      'Kimliğinizi getirin, 15 dakika erken gelin…';
+
+  @override
+  String get createEventImageStorageInfo =>
+      'Gerçek bir görsel yüklenmelidir. Dosya Khair depolamasına gönderilir ve kalıcı bağlantı taslağınızla kaydedilir.';
+
+  @override
+  String get createEventPreview => 'Ön izleme';
+
+  @override
+  String get createEventCheckTitle => 'Etkinlik başlığı';
+
+  @override
+  String get createEventCheckDescription => 'Açıklama';
+
+  @override
+  String get createEventCheckDate => 'Tarih';
+
+  @override
+  String get createEventCheckLocation => 'Konum';
+
+  @override
+  String get createEventCheckCoverImage => 'Kapak görseli';
+
+  @override
+  String get createEventCheckAudience => 'Katılımcılar';
+
+  @override
+  String get createEventCheckCapacity => 'Kapasite';
+
+  @override
+  String get createEventAiThinking => 'Khair AI düşünüyor…';
+
+  @override
+  String get createEventGenerateDescription => 'Khair AI ile açıklama oluştur';
+
+  @override
+  String get createEventImproveDescription =>
+      'Khair AI ile açıklamayı iyileştir';
+
+  @override
+  String get createEventSubmittedMessage =>
+      'Etkinliğiniz inceleme için gönderildi. İnceleme tamamlandığında size bildireceğiz.';
+
+  @override
+  String get createEventPreviewTitle => 'Etkinlik başlığınız';
+
+  @override
+  String get createEventLocationPending => 'Konum daha sonra eklenecek';
+
+  @override
+  String get createEventCategoryMeetup => 'Buluşma';
+
+  @override
+  String get createEventCategoryLectures => 'Dersler';
+
+  @override
+  String get createEventCategorySeminar => 'Seminer';
+
+  @override
+  String get createEventCategoryConference => 'Konferans';
+
+  @override
+  String get createEventCategoryWorkshop => 'Atölye';
+
+  @override
+  String get createEventCategoryCharity => 'Hayır';
+
+  @override
+  String get createEventCategoryCommunity => 'Topluluk';
+
+  @override
+  String get createEventCategoryQuran => 'Kur\'an';
+
+  @override
+  String get createEventCategoryKnowledge => 'İlim';
+
+  @override
+  String get createEventCategoryYouth => 'Gençlik';
+
+  @override
+  String get createEventCategoryFamily => 'Aile';
+
+  @override
+  String get createEventCategoryRetreat => 'Kamp';
+
+  @override
+  String get createEventCategoryWebinar => 'Web semineri';
+
+  @override
+  String get createEventCategoryFestival => 'Festival';
+
+  @override
+  String get createEventCategoryBusiness => 'İş dünyası';
+
+  @override
+  String get createEventCategoryEducation => 'Eğitim';
+
+  @override
+  String get createEventCategoryTechnology => 'Teknoloji';
+
+  @override
+  String get createEventCategorySports => 'Spor';
+
+  @override
+  String get createEventCategoryHackathon => 'Hackathon';
+
+  @override
+  String get createEventCategoryNetworking => 'Ağ kurma';
+
+  @override
+  String get createEventCategoryEnvironment => 'Çevre';
+
+  @override
+  String get createEventCategoryCulture => 'Kültür';
+
+  @override
+  String get createEventCategoryArts => 'Sanat';
+
+  @override
+  String get createEventCategoryWellness => 'Sağlıklı yaşam';
+
+  @override
+  String get createEventCategoryHealth => 'Sağlık';
+
+  @override
+  String get createEventCategoryCareer => 'Kariyer';
+
+  @override
+  String get createEventCategoryEntrepreneurship => 'Girişimcilik';
+
+  @override
+  String get createEventCategoryParenting => 'Ebeveynlik';
+
+  @override
+  String get createEventCategoryEntertainment => 'Eğlence';
+
+  @override
+  String get createEventCategoryTravel => 'Seyahat';
+
+  @override
+  String get createEventCategoryFood => 'Yemek';
+
+  @override
+  String get createEventCategoryVolunteering => 'Gönüllülük';
+
+  @override
+  String get createEventCategoryOther => 'Diğer';
+
+  @override
+  String createEventCharacterCount(int value, int max) {
+    return '$value / $max';
+  }
+
+  @override
+  String createEventCharacterCountWithMinimum(int value, int max, int minimum) {
+    return '$value / $max · en az $minimum';
+  }
 }

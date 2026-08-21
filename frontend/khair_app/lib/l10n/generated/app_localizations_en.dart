@@ -1069,7 +1069,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createEventTitleLabel => 'Event Title';
 
   @override
-  String get createEventTitleHint => 'Enter a compelling event title';
+  String get createEventTitleHint => 'Give your event a clear, memorable title';
 
   @override
   String get createEventCategoryLabel => 'Category';
@@ -1087,7 +1087,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createEventEventTypeLabel => 'Event Type';
 
   @override
-  String get createEventInPerson => 'In-Person';
+  String get createEventInPerson => 'In-person';
 
   @override
   String get createEventOnline => 'Online';
@@ -1114,7 +1114,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createEventCountry => 'Country';
 
   @override
-  String get createEventCityHint => 'e.g. Riyadh';
+  String get createEventCityHint => 'Search or enter a city';
 
   @override
   String get createEventAddress => 'Venue Address';
@@ -4480,4 +4480,374 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageUploaded => 'Uploaded';
+
+  @override
+  String get createEventEditorDraft => 'Draft editor';
+
+  @override
+  String get createEventSavedJustNow => 'Saved just now';
+
+  @override
+  String get createEventStepBasics => 'Basics';
+
+  @override
+  String get createEventStepDateLocation => 'Date & Location';
+
+  @override
+  String get createEventStepAudience => 'Audience';
+
+  @override
+  String get createEventCategory => 'Category';
+
+  @override
+  String get createEventSearchCategories => 'Search categories';
+
+  @override
+  String get createEventCategoriesUnavailable =>
+      'Categories will appear here when they are available from Khair.';
+
+  @override
+  String get createEventAiSuggests => 'Khair AI suggests';
+
+  @override
+  String get createEventAiCategoryReason =>
+      'Based on your title and description.';
+
+  @override
+  String get createEventUseSuggestion => 'Use suggestion';
+
+  @override
+  String get createEventDescriptionHint =>
+      'Tell people what to expect, who this event is for, and why they should join.';
+
+  @override
+  String get createEventTags => 'Tags';
+
+  @override
+  String get createEventTagsHint =>
+      'Add tags such as networking, family, charity…';
+
+  @override
+  String get createEventFormat => 'Event format';
+
+  @override
+  String get createEventInPersonSubtitle => 'Meet at a physical location';
+
+  @override
+  String get createEventOnlineSubtitle => 'Host the event virtually';
+
+  @override
+  String get createEventLanguage => 'Event language';
+
+  @override
+  String get createEventLanguageEnglish => 'English';
+
+  @override
+  String get createEventLanguageArabic => 'Arabic';
+
+  @override
+  String get createEventLanguageTurkish => 'Turkish';
+
+  @override
+  String get createEventDateAndTime => 'Date and time';
+
+  @override
+  String get createEventStartDate => 'Start date';
+
+  @override
+  String get createEventStartTime => 'Start time';
+
+  @override
+  String get createEventEndDateOptional => 'End date (optional)';
+
+  @override
+  String get createEventEndTimeOptional => 'End time (optional)';
+
+  @override
+  String get createEventSelectDate => 'Select date';
+
+  @override
+  String get createEventSelectTime => 'Select time';
+
+  @override
+  String get createEventLocation => 'Location';
+
+  @override
+  String get createEventCountriesUnavailable =>
+      'Country data could not be loaded. Check your connection and try again.';
+
+  @override
+  String get createEventVenueHint => 'Optional venue name';
+
+  @override
+  String get createEventStreetAddressHint => 'Street, building, district';
+
+  @override
+  String get createEventMapSearch => 'Search location';
+
+  @override
+  String get createEventUseCurrentLocation => 'Use my location';
+
+  @override
+  String get createEventMapTapToSelect => 'Tap to select';
+
+  @override
+  String get createEventMapSelectedLocation => 'Selected location';
+
+  @override
+  String get createEventSearching => 'Searching…';
+
+  @override
+  String get createEventOnlineDetails => 'Online event details';
+
+  @override
+  String get createEventPlatformZoom => 'Zoom';
+
+  @override
+  String get createEventPlatformMeet => 'Google Meet';
+
+  @override
+  String get createEventPlatformTeams => 'Microsoft Teams';
+
+  @override
+  String get createEventPlatformOther => 'Other';
+
+  @override
+  String get createEventMeetingUrlHint => 'https://…';
+
+  @override
+  String get createEventInstructionsHint =>
+      'Anything attendees should know before joining';
+
+  @override
+  String get createEventMeetingProtected =>
+      'The meeting link is protected and is only shared with eligible attendees according to Khair’s access policy.';
+
+  @override
+  String get createEventAudience => 'Audience';
+
+  @override
+  String get createEventAudienceMixed => 'Mixed';
+
+  @override
+  String get createEventAudienceMixedSubtitle => 'Open to everyone';
+
+  @override
+  String get createEventAudienceMen => 'Men';
+
+  @override
+  String get createEventAudienceMenSubtitle => 'For male attendees';
+
+  @override
+  String get createEventAudienceWomen => 'Women';
+
+  @override
+  String get createEventAudienceWomenSubtitle => 'For female attendees';
+
+  @override
+  String get createEventAgePreference => 'Age preference';
+
+  @override
+  String get createEventAgeAll => 'All ages';
+
+  @override
+  String get createEventAge18Plus => '18+';
+
+  @override
+  String get createEventAgeFamilies => 'Families';
+
+  @override
+  String get createEventAgeCustom => 'Custom';
+
+  @override
+  String get createEventMaximumAttendees => 'Maximum attendees';
+
+  @override
+  String get createEventRegistration => 'Registration';
+
+  @override
+  String get createEventInstantJoin => 'Instant join';
+
+  @override
+  String get createEventApprovalRequired => 'Approval required';
+
+  @override
+  String get createEventRegistrationDeadlineOptional =>
+      'Registration deadline (optional)';
+
+  @override
+  String get createEventPricing => 'Pricing';
+
+  @override
+  String get createEventFree => 'Free';
+
+  @override
+  String get createEventPaid => 'Paid';
+
+  @override
+  String get createEventPriceHint => 'e.g. 50';
+
+  @override
+  String get createEventPaymentAtVenue =>
+      'Payment will be collected at the venue. Khair does not process payments.';
+
+  @override
+  String get createEventGuidelinesHint => 'Bring ID, arrive 15 minutes early…';
+
+  @override
+  String get createEventImageStorageInfo =>
+      'A real image upload is required. The file is sent to Khair storage and the permanent URL is saved with your draft.';
+
+  @override
+  String get createEventPreview => 'Preview';
+
+  @override
+  String get createEventCheckTitle => 'Event title';
+
+  @override
+  String get createEventCheckDescription => 'Description';
+
+  @override
+  String get createEventCheckDate => 'Date';
+
+  @override
+  String get createEventCheckLocation => 'Location';
+
+  @override
+  String get createEventCheckCoverImage => 'Cover image';
+
+  @override
+  String get createEventCheckAudience => 'Audience';
+
+  @override
+  String get createEventCheckCapacity => 'Capacity';
+
+  @override
+  String get createEventAiThinking => 'Khair AI is thinking…';
+
+  @override
+  String get createEventGenerateDescription =>
+      'Generate description with Khair AI';
+
+  @override
+  String get createEventImproveDescription => 'Improve with Khair AI';
+
+  @override
+  String get createEventSubmittedMessage =>
+      'Your event has been submitted for review. We will notify you when moderation is complete.';
+
+  @override
+  String get createEventPreviewTitle => 'Your event title';
+
+  @override
+  String get createEventLocationPending => 'Location to be added';
+
+  @override
+  String get createEventCategoryMeetup => 'Meetup';
+
+  @override
+  String get createEventCategoryLectures => 'Lectures';
+
+  @override
+  String get createEventCategorySeminar => 'Seminar';
+
+  @override
+  String get createEventCategoryConference => 'Conference';
+
+  @override
+  String get createEventCategoryWorkshop => 'Workshop';
+
+  @override
+  String get createEventCategoryCharity => 'Charity';
+
+  @override
+  String get createEventCategoryCommunity => 'Community';
+
+  @override
+  String get createEventCategoryQuran => 'Quran';
+
+  @override
+  String get createEventCategoryKnowledge => 'Knowledge';
+
+  @override
+  String get createEventCategoryYouth => 'Youth';
+
+  @override
+  String get createEventCategoryFamily => 'Family';
+
+  @override
+  String get createEventCategoryRetreat => 'Retreat';
+
+  @override
+  String get createEventCategoryWebinar => 'Webinar';
+
+  @override
+  String get createEventCategoryFestival => 'Festival';
+
+  @override
+  String get createEventCategoryBusiness => 'Business';
+
+  @override
+  String get createEventCategoryEducation => 'Education';
+
+  @override
+  String get createEventCategoryTechnology => 'Technology';
+
+  @override
+  String get createEventCategorySports => 'Sports';
+
+  @override
+  String get createEventCategoryHackathon => 'Hackathon';
+
+  @override
+  String get createEventCategoryNetworking => 'Networking';
+
+  @override
+  String get createEventCategoryEnvironment => 'Environment';
+
+  @override
+  String get createEventCategoryCulture => 'Culture';
+
+  @override
+  String get createEventCategoryArts => 'Arts';
+
+  @override
+  String get createEventCategoryWellness => 'Wellness';
+
+  @override
+  String get createEventCategoryHealth => 'Health';
+
+  @override
+  String get createEventCategoryCareer => 'Career';
+
+  @override
+  String get createEventCategoryEntrepreneurship => 'Entrepreneurship';
+
+  @override
+  String get createEventCategoryParenting => 'Parenting';
+
+  @override
+  String get createEventCategoryEntertainment => 'Entertainment';
+
+  @override
+  String get createEventCategoryTravel => 'Travel';
+
+  @override
+  String get createEventCategoryFood => 'Food';
+
+  @override
+  String get createEventCategoryVolunteering => 'Volunteering';
+
+  @override
+  String get createEventCategoryOther => 'Other';
+
+  @override
+  String createEventCharacterCount(int value, int max) {
+    return '$value / $max';
+  }
+
+  @override
+  String createEventCharacterCountWithMinimum(int value, int max, int minimum) {
+    return '$value / $max · minimum $minimum';
+  }
 }

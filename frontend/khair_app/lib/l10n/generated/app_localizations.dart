@@ -2113,7 +2113,7 @@ abstract class AppLocalizations {
   /// No description provided for @createEventTitleHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter a compelling event title'**
+  /// **'Give your event a clear, memorable title'**
   String get createEventTitleHint;
 
   /// No description provided for @createEventCategoryLabel.
@@ -2149,7 +2149,7 @@ abstract class AppLocalizations {
   /// No description provided for @createEventInPerson.
   ///
   /// In en, this message translates to:
-  /// **'In-Person'**
+  /// **'In-person'**
   String get createEventInPerson;
 
   /// No description provided for @createEventOnline.
@@ -2203,7 +2203,7 @@ abstract class AppLocalizations {
   /// No description provided for @createEventCityHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Riyadh'**
+  /// **'Search or enter a city'**
   String get createEventCityHint;
 
   /// No description provided for @createEventAddress.
@@ -8411,6 +8411,714 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploaded'**
   String get imageUploaded;
+
+  /// No description provided for @createEventEditorDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft editor'**
+  String get createEventEditorDraft;
+
+  /// No description provided for @createEventSavedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved just now'**
+  String get createEventSavedJustNow;
+
+  /// No description provided for @createEventStepBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Basics'**
+  String get createEventStepBasics;
+
+  /// No description provided for @createEventStepDateLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & Location'**
+  String get createEventStepDateLocation;
+
+  /// No description provided for @createEventStepAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get createEventStepAudience;
+
+  /// No description provided for @createEventCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get createEventCategory;
+
+  /// No description provided for @createEventSearchCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories'**
+  String get createEventSearchCategories;
+
+  /// No description provided for @createEventCategoriesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories will appear here when they are available from Khair.'**
+  String get createEventCategoriesUnavailable;
+
+  /// No description provided for @createEventAiSuggests.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair AI suggests'**
+  String get createEventAiSuggests;
+
+  /// No description provided for @createEventAiCategoryReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your title and description.'**
+  String get createEventAiCategoryReason;
+
+  /// No description provided for @createEventUseSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use suggestion'**
+  String get createEventUseSuggestion;
+
+  /// No description provided for @createEventDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell people what to expect, who this event is for, and why they should join.'**
+  String get createEventDescriptionHint;
+
+  /// No description provided for @createEventTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get createEventTags;
+
+  /// No description provided for @createEventTagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tags such as networking, family, charity…'**
+  String get createEventTagsHint;
+
+  /// No description provided for @createEventFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Event format'**
+  String get createEventFormat;
+
+  /// No description provided for @createEventInPersonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet at a physical location'**
+  String get createEventInPersonSubtitle;
+
+  /// No description provided for @createEventOnlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Host the event virtually'**
+  String get createEventOnlineSubtitle;
+
+  /// No description provided for @createEventLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Event language'**
+  String get createEventLanguage;
+
+  /// No description provided for @createEventLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get createEventLanguageEnglish;
+
+  /// No description provided for @createEventLanguageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get createEventLanguageArabic;
+
+  /// No description provided for @createEventLanguageTurkish.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get createEventLanguageTurkish;
+
+  /// No description provided for @createEventDateAndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Date and time'**
+  String get createEventDateAndTime;
+
+  /// No description provided for @createEventStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get createEventStartDate;
+
+  /// No description provided for @createEventStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time'**
+  String get createEventStartTime;
+
+  /// No description provided for @createEventEndDateOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'End date (optional)'**
+  String get createEventEndDateOptional;
+
+  /// No description provided for @createEventEndTimeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'End time (optional)'**
+  String get createEventEndTimeOptional;
+
+  /// No description provided for @createEventSelectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get createEventSelectDate;
+
+  /// No description provided for @createEventSelectTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Select time'**
+  String get createEventSelectTime;
+
+  /// No description provided for @createEventLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get createEventLocation;
+
+  /// No description provided for @createEventCountriesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Country data could not be loaded. Check your connection and try again.'**
+  String get createEventCountriesUnavailable;
+
+  /// No description provided for @createEventVenueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional venue name'**
+  String get createEventVenueHint;
+
+  /// No description provided for @createEventStreetAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Street, building, district'**
+  String get createEventStreetAddressHint;
+
+  /// No description provided for @createEventMapSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search location'**
+  String get createEventMapSearch;
+
+  /// No description provided for @createEventUseCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my location'**
+  String get createEventUseCurrentLocation;
+
+  /// No description provided for @createEventMapTapToSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select'**
+  String get createEventMapTapToSelect;
+
+  /// No description provided for @createEventMapSelectedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected location'**
+  String get createEventMapSelectedLocation;
+
+  /// No description provided for @createEventSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get createEventSearching;
+
+  /// No description provided for @createEventOnlineDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Online event details'**
+  String get createEventOnlineDetails;
+
+  /// No description provided for @createEventPlatformZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get createEventPlatformZoom;
+
+  /// No description provided for @createEventPlatformMeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Meet'**
+  String get createEventPlatformMeet;
+
+  /// No description provided for @createEventPlatformTeams.
+  ///
+  /// In en, this message translates to:
+  /// **'Microsoft Teams'**
+  String get createEventPlatformTeams;
+
+  /// No description provided for @createEventPlatformOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get createEventPlatformOther;
+
+  /// No description provided for @createEventMeetingUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://…'**
+  String get createEventMeetingUrlHint;
+
+  /// No description provided for @createEventInstructionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything attendees should know before joining'**
+  String get createEventInstructionsHint;
+
+  /// No description provided for @createEventMeetingProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting link is protected and is only shared with eligible attendees according to Khair’s access policy.'**
+  String get createEventMeetingProtected;
+
+  /// No description provided for @createEventAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get createEventAudience;
+
+  /// No description provided for @createEventAudienceMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed'**
+  String get createEventAudienceMixed;
+
+  /// No description provided for @createEventAudienceMixedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to everyone'**
+  String get createEventAudienceMixedSubtitle;
+
+  /// No description provided for @createEventAudienceMen.
+  ///
+  /// In en, this message translates to:
+  /// **'Men'**
+  String get createEventAudienceMen;
+
+  /// No description provided for @createEventAudienceMenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For male attendees'**
+  String get createEventAudienceMenSubtitle;
+
+  /// No description provided for @createEventAudienceWomen.
+  ///
+  /// In en, this message translates to:
+  /// **'Women'**
+  String get createEventAudienceWomen;
+
+  /// No description provided for @createEventAudienceWomenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For female attendees'**
+  String get createEventAudienceWomenSubtitle;
+
+  /// No description provided for @createEventAgePreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Age preference'**
+  String get createEventAgePreference;
+
+  /// No description provided for @createEventAgeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All ages'**
+  String get createEventAgeAll;
+
+  /// No description provided for @createEventAge18Plus.
+  ///
+  /// In en, this message translates to:
+  /// **'18+'**
+  String get createEventAge18Plus;
+
+  /// No description provided for @createEventAgeFamilies.
+  ///
+  /// In en, this message translates to:
+  /// **'Families'**
+  String get createEventAgeFamilies;
+
+  /// No description provided for @createEventAgeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get createEventAgeCustom;
+
+  /// No description provided for @createEventMaximumAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum attendees'**
+  String get createEventMaximumAttendees;
+
+  /// No description provided for @createEventRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration'**
+  String get createEventRegistration;
+
+  /// No description provided for @createEventInstantJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant join'**
+  String get createEventInstantJoin;
+
+  /// No description provided for @createEventApprovalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval required'**
+  String get createEventApprovalRequired;
+
+  /// No description provided for @createEventRegistrationDeadlineOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration deadline (optional)'**
+  String get createEventRegistrationDeadlineOptional;
+
+  /// No description provided for @createEventPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing'**
+  String get createEventPricing;
+
+  /// No description provided for @createEventFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get createEventFree;
+
+  /// No description provided for @createEventPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get createEventPaid;
+
+  /// No description provided for @createEventPriceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 50'**
+  String get createEventPriceHint;
+
+  /// No description provided for @createEventPaymentAtVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment will be collected at the venue. Khair does not process payments.'**
+  String get createEventPaymentAtVenue;
+
+  /// No description provided for @createEventGuidelinesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring ID, arrive 15 minutes early…'**
+  String get createEventGuidelinesHint;
+
+  /// No description provided for @createEventImageStorageInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'A real image upload is required. The file is sent to Khair storage and the permanent URL is saved with your draft.'**
+  String get createEventImageStorageInfo;
+
+  /// No description provided for @createEventPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get createEventPreview;
+
+  /// No description provided for @createEventCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Event title'**
+  String get createEventCheckTitle;
+
+  /// No description provided for @createEventCheckDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get createEventCheckDescription;
+
+  /// No description provided for @createEventCheckDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get createEventCheckDate;
+
+  /// No description provided for @createEventCheckLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get createEventCheckLocation;
+
+  /// No description provided for @createEventCheckCoverImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image'**
+  String get createEventCheckCoverImage;
+
+  /// No description provided for @createEventCheckAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get createEventCheckAudience;
+
+  /// No description provided for @createEventCheckCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get createEventCheckCapacity;
+
+  /// No description provided for @createEventAiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair AI is thinking…'**
+  String get createEventAiThinking;
+
+  /// No description provided for @createEventGenerateDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate description with Khair AI'**
+  String get createEventGenerateDescription;
+
+  /// No description provided for @createEventImproveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Improve with Khair AI'**
+  String get createEventImproveDescription;
+
+  /// No description provided for @createEventSubmittedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event has been submitted for review. We will notify you when moderation is complete.'**
+  String get createEventSubmittedMessage;
+
+  /// No description provided for @createEventPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event title'**
+  String get createEventPreviewTitle;
+
+  /// No description provided for @createEventLocationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Location to be added'**
+  String get createEventLocationPending;
+
+  /// No description provided for @createEventCategoryMeetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetup'**
+  String get createEventCategoryMeetup;
+
+  /// No description provided for @createEventCategoryLectures.
+  ///
+  /// In en, this message translates to:
+  /// **'Lectures'**
+  String get createEventCategoryLectures;
+
+  /// No description provided for @createEventCategorySeminar.
+  ///
+  /// In en, this message translates to:
+  /// **'Seminar'**
+  String get createEventCategorySeminar;
+
+  /// No description provided for @createEventCategoryConference.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference'**
+  String get createEventCategoryConference;
+
+  /// No description provided for @createEventCategoryWorkshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop'**
+  String get createEventCategoryWorkshop;
+
+  /// No description provided for @createEventCategoryCharity.
+  ///
+  /// In en, this message translates to:
+  /// **'Charity'**
+  String get createEventCategoryCharity;
+
+  /// No description provided for @createEventCategoryCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get createEventCategoryCommunity;
+
+  /// No description provided for @createEventCategoryQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get createEventCategoryQuran;
+
+  /// No description provided for @createEventCategoryKnowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge'**
+  String get createEventCategoryKnowledge;
+
+  /// No description provided for @createEventCategoryYouth.
+  ///
+  /// In en, this message translates to:
+  /// **'Youth'**
+  String get createEventCategoryYouth;
+
+  /// No description provided for @createEventCategoryFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get createEventCategoryFamily;
+
+  /// No description provided for @createEventCategoryRetreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Retreat'**
+  String get createEventCategoryRetreat;
+
+  /// No description provided for @createEventCategoryWebinar.
+  ///
+  /// In en, this message translates to:
+  /// **'Webinar'**
+  String get createEventCategoryWebinar;
+
+  /// No description provided for @createEventCategoryFestival.
+  ///
+  /// In en, this message translates to:
+  /// **'Festival'**
+  String get createEventCategoryFestival;
+
+  /// No description provided for @createEventCategoryBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get createEventCategoryBusiness;
+
+  /// No description provided for @createEventCategoryEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get createEventCategoryEducation;
+
+  /// No description provided for @createEventCategoryTechnology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get createEventCategoryTechnology;
+
+  /// No description provided for @createEventCategorySports.
+  ///
+  /// In en, this message translates to:
+  /// **'Sports'**
+  String get createEventCategorySports;
+
+  /// No description provided for @createEventCategoryHackathon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hackathon'**
+  String get createEventCategoryHackathon;
+
+  /// No description provided for @createEventCategoryNetworking.
+  ///
+  /// In en, this message translates to:
+  /// **'Networking'**
+  String get createEventCategoryNetworking;
+
+  /// No description provided for @createEventCategoryEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment'**
+  String get createEventCategoryEnvironment;
+
+  /// No description provided for @createEventCategoryCulture.
+  ///
+  /// In en, this message translates to:
+  /// **'Culture'**
+  String get createEventCategoryCulture;
+
+  /// No description provided for @createEventCategoryArts.
+  ///
+  /// In en, this message translates to:
+  /// **'Arts'**
+  String get createEventCategoryArts;
+
+  /// No description provided for @createEventCategoryWellness.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness'**
+  String get createEventCategoryWellness;
+
+  /// No description provided for @createEventCategoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get createEventCategoryHealth;
+
+  /// No description provided for @createEventCategoryCareer.
+  ///
+  /// In en, this message translates to:
+  /// **'Career'**
+  String get createEventCategoryCareer;
+
+  /// No description provided for @createEventCategoryEntrepreneurship.
+  ///
+  /// In en, this message translates to:
+  /// **'Entrepreneurship'**
+  String get createEventCategoryEntrepreneurship;
+
+  /// No description provided for @createEventCategoryParenting.
+  ///
+  /// In en, this message translates to:
+  /// **'Parenting'**
+  String get createEventCategoryParenting;
+
+  /// No description provided for @createEventCategoryEntertainment.
+  ///
+  /// In en, this message translates to:
+  /// **'Entertainment'**
+  String get createEventCategoryEntertainment;
+
+  /// No description provided for @createEventCategoryTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel'**
+  String get createEventCategoryTravel;
+
+  /// No description provided for @createEventCategoryFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get createEventCategoryFood;
+
+  /// No description provided for @createEventCategoryVolunteering.
+  ///
+  /// In en, this message translates to:
+  /// **'Volunteering'**
+  String get createEventCategoryVolunteering;
+
+  /// No description provided for @createEventCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get createEventCategoryOther;
+
+  /// No description provided for @createEventCharacterCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / {max}'**
+  String createEventCharacterCount(int value, int max);
+
+  /// No description provided for @createEventCharacterCountWithMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / {max} · minimum {minimum}'**
+  String createEventCharacterCountWithMinimum(int value, int max, int minimum);
 }
 
 class _AppLocalizationsDelegate

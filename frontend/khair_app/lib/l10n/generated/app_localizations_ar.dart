@@ -1011,7 +1011,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventStepMedia => 'الوسائط';
 
   @override
-  String get createEventStepReview => 'المراجعة';
+  String get createEventStepReview => 'مراجعة';
 
   @override
   String get createEventSuccess => 'تم إرسال الفعالية للمراجعة بنجاح!';
@@ -1052,7 +1052,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventTitleLabel => 'عنوان الفعالية';
 
   @override
-  String get createEventTitleHint => 'أدخل عنواناً جذاباً للفعالية';
+  String get createEventTitleHint => 'امنح فعاليتك عنوانًا واضحًا ولافتًا';
 
   @override
   String get createEventCategoryLabel => 'الفئة';
@@ -1073,7 +1073,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventInPerson => 'حضوري';
 
   @override
-  String get createEventOnline => 'عن بُعد';
+  String get createEventOnline => 'عبر الإنترنت';
 
   @override
   String get createEventLanguageLabel => 'اللغة';
@@ -1097,7 +1097,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createEventCountry => 'الدولة';
 
   @override
-  String get createEventCityHint => 'مثال: الرياض';
+  String get createEventCityHint => 'ابحث عن مدينة أو أدخلها';
 
   @override
   String get createEventAddress => 'عنوان المكان';
@@ -3387,7 +3387,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addAStrongCoverImageSoPeopleIn =>
-      'Add a strong cover image so people instantly understand your event.';
+      'أضف صورة غلاف واضحة ليتمكن الناس من فهم فعاليتك فورًا.';
 
   @override
   String get replaceCoverImage => 'استبدال صورة الغلاف';
@@ -3401,7 +3401,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get makeSureEverythingLooksRightBe =>
-      'Make sure everything looks right before sending it to Khair moderation.';
+      'تأكد من صحة كل التفاصيل قبل إرسالها إلى فريق مراجعة خير.';
 
   @override
   String get readyToSubmit => 'جاهز للإرسال';
@@ -3411,11 +3411,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yourEventWillBeSavedAsPendingR =>
-      'Your event will be saved as pending review. It becomes discoverable only after admin approval.';
+      'ستُحفظ فعاليتك بانتظار المراجعة، وستظهر للناس بعد موافقة الإدارة فقط.';
 
   @override
   String get iConfirmTheseEventDetailsAreAc =>
-      'I confirm these event details are accurate.';
+      'أؤكد أن تفاصيل هذه الفعالية صحيحة.';
 
   @override
   String get aiSuggestion => 'اقتراح الذكاء الاصطناعي';
@@ -3425,7 +3425,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yourEventHasBeenSubmittedForRe =>
-      'Your event has been submitted for review. We will notify you when moderation is complete.';
+      'أُرسلت فعاليتك للمراجعة. سنبلغك عند اكتمال المراجعة.';
 
   @override
   String get backToOrganizerHub => 'العودة إلى لوحة المنظم';
@@ -4420,4 +4420,372 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get imageUploaded => 'تم الرفع';
+
+  @override
+  String get createEventEditorDraft => 'محرر المسودة';
+
+  @override
+  String get createEventSavedJustNow => 'حُفظت للتو';
+
+  @override
+  String get createEventStepBasics => 'الأساسيات';
+
+  @override
+  String get createEventStepDateLocation => 'التاريخ والموقع';
+
+  @override
+  String get createEventStepAudience => 'الجمهور';
+
+  @override
+  String get createEventCategory => 'الفئة';
+
+  @override
+  String get createEventSearchCategories => 'ابحث في الفئات';
+
+  @override
+  String get createEventCategoriesUnavailable =>
+      'ستظهر الفئات هنا عند توفرها من خير.';
+
+  @override
+  String get createEventAiSuggests => 'يقترح ذكاء خير الاصطناعي';
+
+  @override
+  String get createEventAiCategoryReason => 'استنادًا إلى العنوان والوصف.';
+
+  @override
+  String get createEventUseSuggestion => 'استخدم الاقتراح';
+
+  @override
+  String get createEventDescriptionHint =>
+      'أخبر الناس بما يمكن توقعه، ولمن هذه الفعالية، ولماذا ينبغي لهم الانضمام.';
+
+  @override
+  String get createEventTags => 'الوسوم';
+
+  @override
+  String get createEventTagsHint =>
+      'أضف وسومًا مثل التواصل، العائلة، الأعمال الخيرية…';
+
+  @override
+  String get createEventFormat => 'صيغة الفعالية';
+
+  @override
+  String get createEventInPersonSubtitle => 'تُقام في موقع فعلي';
+
+  @override
+  String get createEventOnlineSubtitle => 'أقم الفعالية افتراضيًا';
+
+  @override
+  String get createEventLanguage => 'لغة الفعالية';
+
+  @override
+  String get createEventLanguageEnglish => 'الإنجليزية';
+
+  @override
+  String get createEventLanguageArabic => 'العربية';
+
+  @override
+  String get createEventLanguageTurkish => 'التركية';
+
+  @override
+  String get createEventDateAndTime => 'التاريخ والوقت';
+
+  @override
+  String get createEventStartDate => 'تاريخ البدء';
+
+  @override
+  String get createEventStartTime => 'وقت البدء';
+
+  @override
+  String get createEventEndDateOptional => 'تاريخ الانتهاء (اختياري)';
+
+  @override
+  String get createEventEndTimeOptional => 'وقت الانتهاء (اختياري)';
+
+  @override
+  String get createEventSelectDate => 'اختر التاريخ';
+
+  @override
+  String get createEventSelectTime => 'اختر الوقت';
+
+  @override
+  String get createEventLocation => 'الموقع';
+
+  @override
+  String get createEventCountriesUnavailable =>
+      'تعذر تحميل بيانات البلدان. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get createEventVenueHint => 'اسم المكان (اختياري)';
+
+  @override
+  String get createEventStreetAddressHint => 'الشارع، المبنى، الحي';
+
+  @override
+  String get createEventMapSearch => 'ابحث عن موقع';
+
+  @override
+  String get createEventUseCurrentLocation => 'استخدم موقعي الحالي';
+
+  @override
+  String get createEventMapTapToSelect => 'اضغط للتحديد';
+
+  @override
+  String get createEventMapSelectedLocation => 'الموقع المحدد';
+
+  @override
+  String get createEventSearching => 'جارٍ البحث…';
+
+  @override
+  String get createEventOnlineDetails => 'تفاصيل الفعالية عبر الإنترنت';
+
+  @override
+  String get createEventPlatformZoom => 'زووم';
+
+  @override
+  String get createEventPlatformMeet => 'Google Meet';
+
+  @override
+  String get createEventPlatformTeams => 'Microsoft Teams';
+
+  @override
+  String get createEventPlatformOther => 'أخرى';
+
+  @override
+  String get createEventMeetingUrlHint => 'https://…';
+
+  @override
+  String get createEventInstructionsHint =>
+      'أي معلومات ينبغي أن يعرفها الحاضرون قبل الانضمام';
+
+  @override
+  String get createEventMeetingProtected =>
+      'رابط الاجتماع محمي ولا يُشارك إلا مع الحاضرين المؤهلين وفقًا لسياسة وصول خير.';
+
+  @override
+  String get createEventAudience => 'الجمهور';
+
+  @override
+  String get createEventAudienceMixed => 'مختلط';
+
+  @override
+  String get createEventAudienceMixedSubtitle => 'مفتوحة للجميع';
+
+  @override
+  String get createEventAudienceMen => 'رجال';
+
+  @override
+  String get createEventAudienceMenSubtitle => 'للحاضرين من الرجال';
+
+  @override
+  String get createEventAudienceWomen => 'نساء';
+
+  @override
+  String get createEventAudienceWomenSubtitle => 'للحاضرات من النساء';
+
+  @override
+  String get createEventAgePreference => 'تفضيل العمر';
+
+  @override
+  String get createEventAgeAll => 'كل الأعمار';
+
+  @override
+  String get createEventAge18Plus => '+18';
+
+  @override
+  String get createEventAgeFamilies => 'العائلات';
+
+  @override
+  String get createEventAgeCustom => 'مخصص';
+
+  @override
+  String get createEventMaximumAttendees => 'الحد الأقصى للحاضرين';
+
+  @override
+  String get createEventRegistration => 'التسجيل';
+
+  @override
+  String get createEventInstantJoin => 'انضمام فوري';
+
+  @override
+  String get createEventApprovalRequired => 'يتطلب موافقة';
+
+  @override
+  String get createEventRegistrationDeadlineOptional =>
+      'موعد إغلاق التسجيل (اختياري)';
+
+  @override
+  String get createEventPricing => 'التسعير';
+
+  @override
+  String get createEventFree => 'مجاني';
+
+  @override
+  String get createEventPaid => 'مدفوع';
+
+  @override
+  String get createEventPriceHint => 'مثال: 50';
+
+  @override
+  String get createEventPaymentAtVenue =>
+      'يُحصّل الدفع في موقع الفعالية. لا تعالج خير المدفوعات.';
+
+  @override
+  String get createEventGuidelinesHint => 'أحضر الهوية، وصل قبل 15 دقيقة…';
+
+  @override
+  String get createEventImageStorageInfo =>
+      'يلزم رفع صورة فعلية. يُرسل الملف إلى مساحة تخزين خير ويُحفظ الرابط الدائم مع مسودتك.';
+
+  @override
+  String get createEventPreview => 'معاينة';
+
+  @override
+  String get createEventCheckTitle => 'عنوان الفعالية';
+
+  @override
+  String get createEventCheckDescription => 'الوصف';
+
+  @override
+  String get createEventCheckDate => 'التاريخ';
+
+  @override
+  String get createEventCheckLocation => 'الموقع';
+
+  @override
+  String get createEventCheckCoverImage => 'صورة الغلاف';
+
+  @override
+  String get createEventCheckAudience => 'الجمهور';
+
+  @override
+  String get createEventCheckCapacity => 'السعة';
+
+  @override
+  String get createEventAiThinking => 'يفكر ذكاء خير الاصطناعي…';
+
+  @override
+  String get createEventGenerateDescription => 'أنشئ وصفًا بذكاء خير الاصطناعي';
+
+  @override
+  String get createEventImproveDescription => 'حسّن الوصف بذكاء خير الاصطناعي';
+
+  @override
+  String get createEventSubmittedMessage =>
+      'أُرسلت فعاليتك للمراجعة. سنبلغك عند اكتمال المراجعة.';
+
+  @override
+  String get createEventPreviewTitle => 'عنوان فعاليتك';
+
+  @override
+  String get createEventLocationPending => 'سيُضاف الموقع لاحقًا';
+
+  @override
+  String get createEventCategoryMeetup => 'لقاء';
+
+  @override
+  String get createEventCategoryLectures => 'محاضرات';
+
+  @override
+  String get createEventCategorySeminar => 'ندوة';
+
+  @override
+  String get createEventCategoryConference => 'مؤتمر';
+
+  @override
+  String get createEventCategoryWorkshop => 'ورشة عمل';
+
+  @override
+  String get createEventCategoryCharity => 'خيري';
+
+  @override
+  String get createEventCategoryCommunity => 'مجتمعي';
+
+  @override
+  String get createEventCategoryQuran => 'القرآن';
+
+  @override
+  String get createEventCategoryKnowledge => 'معرفة';
+
+  @override
+  String get createEventCategoryYouth => 'شباب';
+
+  @override
+  String get createEventCategoryFamily => 'عائلة';
+
+  @override
+  String get createEventCategoryRetreat => 'خلوة';
+
+  @override
+  String get createEventCategoryWebinar => 'ندوة عبر الإنترنت';
+
+  @override
+  String get createEventCategoryFestival => 'مهرجان';
+
+  @override
+  String get createEventCategoryBusiness => 'أعمال';
+
+  @override
+  String get createEventCategoryEducation => 'تعليم';
+
+  @override
+  String get createEventCategoryTechnology => 'تقنية';
+
+  @override
+  String get createEventCategorySports => 'رياضة';
+
+  @override
+  String get createEventCategoryHackathon => 'هاكاثون';
+
+  @override
+  String get createEventCategoryNetworking => 'تواصل';
+
+  @override
+  String get createEventCategoryEnvironment => 'بيئة';
+
+  @override
+  String get createEventCategoryCulture => 'ثقافة';
+
+  @override
+  String get createEventCategoryArts => 'فنون';
+
+  @override
+  String get createEventCategoryWellness => 'عافية';
+
+  @override
+  String get createEventCategoryHealth => 'صحة';
+
+  @override
+  String get createEventCategoryCareer => 'مسار مهني';
+
+  @override
+  String get createEventCategoryEntrepreneurship => 'ريادة الأعمال';
+
+  @override
+  String get createEventCategoryParenting => 'تربية الأطفال';
+
+  @override
+  String get createEventCategoryEntertainment => 'ترفيه';
+
+  @override
+  String get createEventCategoryTravel => 'سفر';
+
+  @override
+  String get createEventCategoryFood => 'طعام';
+
+  @override
+  String get createEventCategoryVolunteering => 'تطوع';
+
+  @override
+  String get createEventCategoryOther => 'أخرى';
+
+  @override
+  String createEventCharacterCount(int value, int max) {
+    return '$value / $max';
+  }
+
+  @override
+  String createEventCharacterCountWithMinimum(int value, int max, int minimum) {
+    return '$value / $max · الحد الأدنى $minimum';
+  }
 }
