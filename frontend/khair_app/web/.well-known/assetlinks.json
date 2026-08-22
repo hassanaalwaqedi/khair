@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.khair.khair_app",
+    "sha256_cert_fingerprints": [
+      "37:5C:FD:83:D2:4A:24:43:5C:66:C6:BB:AA:E0:57:83:C6:55:32:26:B0:8C:56:C3:AB:49:05:67:96:89:F0:53"
+    ]
+  }
+}]

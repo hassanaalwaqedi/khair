@@ -10,7 +10,7 @@
         android:usesCleartextTraffic="false">
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="khair_general" />
+            android:value="khair_messages" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_stat_khair_notification" />
@@ -44,9 +44,12 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https" android:host="khair-it-app.web.app"/>
-                <data android:scheme="https" android:host="khair.app"/>
-                <data android:scheme="https" android:host="khair.it.com"/>
+                <data android:scheme="https"
+                      android:host="khair.it.com"
+                      android:pathPrefix="/events/" />
+                <data android:scheme="https"
+                      android:host="khair-it-app.web.app"
+                      android:pathPrefix="/events/" />
             </intent-filter>
             <!-- The app scheme provides a reliable mobile fallback while the
                  website association file verifies the HTTPS domains. -->

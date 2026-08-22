@@ -248,6 +248,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 	{
 		notifications.GET("", h.List)
 		notifications.GET("/unread-count", h.UnreadCount)
+		// Combined summary for computing launcher badge totals.
+		notifications.GET("/unread-summary", h.UnreadSummary)
 		notifications.PUT("/:id/read", h.MarkRead)
 		notifications.PUT("/read-all", h.MarkAllRead)
 	}
@@ -287,6 +289,40 @@ func (h *Handler) UnreadCount(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"unread_count": count})
+}
+
+// UnreadSummary returns a structured breakdown of unread counts.
+// unread_messages is reserved for a future messaging feature and is always 0
+// in the current release. Clients should use the total_unread field for the
+// launcher badge count so the structure can be extended without a client update.
+func (h *Handler) UnreadSummary(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		response.Success(c, gin.H{
+			"unread_notifications": 0,
+			"unread_messages":      0,
+			"total_unread":         0,
+		})
+		return
+	}
+
+	count, err := h.service.GetUnreadCount(uid)
+	if err != nil {
+		fmt.Printf("[NOTIFICATION] Error getting unread summary for user %s: %v\n", uid, err)
+		response.Success(c, gin.H{
+			"unread_notifications": 0,
+			"unread_messages":      0,
+			"total_unread":         0,
+		})
+		return
+	}
+
+	response.Success(c, gin.H{
+		"unread_notifications": count,
+		"unread_messages":      0, // placeholder for future messaging feature
+		"total_unread":         count,
+	})
 }
 
 // MarkRead marks a single notification as read

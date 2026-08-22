@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../domain/entities/notification_entity.dart';
 import '../../data/repositories/notification_repository_impl.dart';
+import '../../../../core/push/badge_service.dart';
 
 const _notifPollInterval = Duration(seconds: 10);
 
@@ -127,6 +128,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
     _isAuthenticated = event.isAuthenticated;
     _lastUnreadCount = 0;
     if (!_isAuthenticated) {
+      BadgeService.instance.clearBadge();
       emit(const NotificationState());
       return;
     }
@@ -174,11 +176,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
         // Silently ignore auth failures — user not logged in
         // Reset count to 0 to avoid stale badge
         if (state.unreadCount != 0) {
+          BadgeService.instance.clearBadge();
           emit(state.copyWith(unreadCount: 0));
         }
       },
       (count) {
         emit(state.copyWith(unreadCount: count));
+        BadgeService.instance.updateBadge(count);
         // If count changed, auto-fetch full notifications
         if (count != _lastUnreadCount) {
           _lastUnreadCount = count;
@@ -215,6 +219,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
           return n;
         }).toList();
         final unread = updated.where((n) => !n.isRead).length;
+        BadgeService.instance.updateBadge(unread);
         emit(state.copyWith(
           notifications: updated,
           unreadCount: unread,
@@ -242,6 +247,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
             createdAt: n.createdAt,
           );
         }).toList();
+        BadgeService.instance.clearBadge();
         emit(state.copyWith(
           notifications: updated,
           unreadCount: 0,

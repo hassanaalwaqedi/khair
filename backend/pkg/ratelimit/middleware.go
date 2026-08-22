@@ -102,6 +102,11 @@ func (l *Limiter) CheckLimit(ctx context.Context, action string, identifier stri
 
 	key := fmt.Sprintf("%s:%s:%s", keyPrefix, action, identifier)
 
+	if l.redis == nil {
+		// If Redis is not available, fail open and allow the request
+		return true, limit, nil
+	}
+
 	// Get current count
 	count, err := l.redis.Get(ctx, key).Int()
 	if err != nil && err != redis.Nil {
