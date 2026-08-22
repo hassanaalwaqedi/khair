@@ -146,6 +146,7 @@ func main() {
 		appLogger.Warn("Redis connection failed (rate limiting disabled)",
 			logger.String("error", err.Error()),
 		)
+		redisClient = nil
 	} else {
 		appLogger.Info("Redis connection established")
 	}
