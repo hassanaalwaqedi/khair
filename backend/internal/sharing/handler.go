@@ -144,7 +144,7 @@ func (s *Service) ogPage(data *EventShareData) string {
 			image = s.baseURL + image
 		}
 	}
-	frontend := fmt.Sprintf("%s/#/events/%s", s.frontendURL, data.EventID)
+	frontend := fmt.Sprintf("%s/events/%s", s.frontendURL, data.EventID)
 	return fmt.Sprintf(`<!doctype html><html><head><meta charset="utf-8"><title>%s — Khair</title><meta name="description" content="%s"><meta property="og:type" content="website"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:image" content="%s"><meta property="og:url" content="%s"><meta http-equiv="refresh" content="0;url=%s"></head><body><h1>%s</h1><p>%s</p><a href="%s">Open on Khair</a></body></html>`, title, desc, title, desc, image, data.PublicURL, frontend, title, desc, frontend)
 }
 
@@ -298,5 +298,5 @@ func (s *Service) frontendEventURL(eventID string) string {
 	if frontend == "" {
 		frontend = "https://khair.it.com"
 	}
-	return fmt.Sprintf("%s/#/events/%s", frontend, eventID)
+	return fmt.Sprintf("%s/events/%s", frontend, eventID)
 }
