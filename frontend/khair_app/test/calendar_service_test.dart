@@ -19,6 +19,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         status: 'published',
+        pricing: const EventPricing(type: 'free'),
       );
 
       final url = CalendarService.buildGoogleCalendarUrl(
@@ -58,6 +59,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         status: 'published',
+        pricing: const EventPricing(type: 'free'),
       );
 
       final url = CalendarService.buildGoogleCalendarUrl(event, null);
@@ -84,6 +86,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         status: 'published',
+        pricing: const EventPricing(type: 'free'),
       );
 
       final url = CalendarService.buildGoogleCalendarUrl(event, null);

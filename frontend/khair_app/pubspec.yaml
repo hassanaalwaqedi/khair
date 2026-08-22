@@ -79,29 +79,29 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/branding/khair_logo_app_icon.png"
+  image_path: "assets/branding/khair_logo_app_icon.webp"
   remove_alpha_ios: true
   min_sdk_android: 21
   adaptive_icon_background: "#F43F75"
-  adaptive_icon_foreground: "assets/branding/khair_logo_notification.png"
+  adaptive_icon_foreground: "assets/branding/khair_logo_notification.webp"
   web:
     generate: true
-    image_path: "assets/branding/khair_logo_app_icon.png"
+    image_path: "assets/branding/khair_logo_app_icon.webp"
     background_color: "#FCFAFB"
     theme_color: "#F43F75"
   windows:
     generate: true
-    image_path: "assets/branding/khair_logo_app_icon.png"
+    image_path: "assets/branding/khair_logo_app_icon.webp"
 
 flutter_native_splash:
   color: "#FCFAFB"
-  image: assets/branding/khair_logo_primary.png
+  image: assets/branding/khair_logo_primary.webp
   android: true
   ios: true
   web: true
   android_12:
     color: "#FCFAFB"
-    image: assets/branding/khair_logo_primary.png
+    image: assets/branding/khair_logo_primary.webp
     icon_background_color: "#FCFAFB"
   fullscreen: true
 
@@ -110,4 +110,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/branding/
-    - video_khair.mp4

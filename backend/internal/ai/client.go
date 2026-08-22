@@ -101,6 +101,7 @@ type GeminiRequest struct {
 
 // GeminiContent holds a single message turn
 type GeminiContent struct {
+	Role  string       `json:"role,omitempty"`
 	Parts []GeminiPart `json:"parts"`
 }
 
@@ -135,6 +136,107 @@ type GeminiCandidate struct {
 
 // ---------- Core method ----------
 
+// sendRequest centralizes the HTTP logic, timeout limits, and exponential backoff.
+func (c *Client) sendRequest(ctx context.Context, reqBody GeminiRequest) (*GeminiResponse, error) {
+	if !c.IsEnabled() {
+		return nil, fmt.Errorf("gemini AI is not enabled (missing API key)")
+	}
+
+	// Create a safe bounded timeout context (e.g. 30s) so that the Flutter client (usually 60s)
+	// doesn't disconnect before we return a safe fallback.
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	url := fmt.Sprintf(
+		"https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
+		c.model, c.apiKey,
+	)
+
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	// Retry up to 3 times for rate-limit (429) errors or transient 5xx network errors.
+	maxRetries := 3
+	backoff := 2 * time.Second
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(timeoutCtx, http.MethodPost, url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+				return nil, err
+			}
+			// Transient network error, retry.
+			log.Printf("[AI] Network error, retrying in %v (attempt %d/%d): %v", backoff, attempt+1, maxRetries, err)
+			time.Sleep(backoff)
+			backoff *= 2
+			continue
+		}
+
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("read response: %w", err)
+		}
+
+		// Handle rate limiting (429) or transient 5xx errors with retry
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
+			if attempt < maxRetries {
+				log.Printf("[AI] Transient error %d, retrying in %v (attempt %d/%d)", resp.StatusCode, backoff, attempt+1, maxRetries)
+				select {
+				case <-time.After(backoff):
+					backoff *= 2 // exponential backoff
+					continue
+				case <-timeoutCtx.Done():
+					return nil, fmt.Errorf("request cancelled during backoff: %w", timeoutCtx.Err())
+				}
+			}
+			return nil, fmt.Errorf("gemini API failed after %d retries, last status %d", maxRetries, resp.StatusCode)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("gemini API error %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		var geminiResp GeminiResponse
+		if err := json.Unmarshal(respBody, &geminiResp); err != nil {
+			return nil, fmt.Errorf("unmarshal response: %w", err)
+		}
+
+		if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+			return nil, fmt.Errorf("empty response from gemini")
+		}
+
+		return &geminiResp, nil
+	}
+
+	return nil, fmt.Errorf("gemini API: exhausted retries")
+}
+
+// GenerateChat sends a conversational history to Gemini and returns a plain-text reply.
+func (c *Client) GenerateChat(ctx context.Context, history []GeminiContent, temperature float64) (string, error) {
+	reqBody := GeminiRequest{
+		Contents: history,
+		GenerationConfig: GeminiGenerationConfig{
+			Temperature:      temperature,
+			MaxOutputTokens:  c.maxTokens,
+		},
+	}
+
+	geminiResp, err := c.sendRequest(ctx, reqBody)
+	if err != nil {
+		return "", err
+	}
+	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
+}
+
 // Generate sends a plain-text prompt to Gemini and returns a plain-text reply.
 // Structured consumers should use GenerateJSON so the model is explicitly
 // asked for JSON instead of making a user-facing chat reply look like JSON.
@@ -142,18 +244,8 @@ func (c *Client) Generate(ctx context.Context, prompt string, temperature float6
 	return c.generate(ctx, prompt, temperature, "")
 }
 
-// generate includes automatic retry with exponential backoff for 429
-// rate-limit errors. responseMimeType is reserved for structured callers.
+// generate builds the request for single prompt generation.
 func (c *Client) generate(ctx context.Context, prompt string, temperature float64, responseMimeType string) (string, error) {
-	if !c.IsEnabled() {
-		return "", fmt.Errorf("gemini AI is not enabled (missing API key)")
-	}
-
-	url := fmt.Sprintf(
-		"https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-		c.model, c.apiKey,
-	)
-
 	reqBody := GeminiRequest{
 		Contents: []GeminiContent{
 			{Parts: []GeminiPart{{Text: prompt}}},
@@ -165,65 +257,11 @@ func (c *Client) generate(ctx context.Context, prompt string, temperature float6
 		},
 	}
 
-	bodyBytes, err := json.Marshal(reqBody)
+	geminiResp, err := c.sendRequest(ctx, reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshal request: %w", err)
+		return "", err
 	}
-
-	// Retry up to 5 times for rate-limit (429) errors
-	maxRetries := 5
-	backoff := 2 * time.Second
-
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
-		if err != nil {
-			return "", fmt.Errorf("create request: %w", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			return "", fmt.Errorf("gemini request failed: %w", err)
-		}
-
-		respBody, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return "", fmt.Errorf("read response: %w", err)
-		}
-
-		// Handle rate limiting with retry
-		if resp.StatusCode == http.StatusTooManyRequests {
-			if attempt < maxRetries {
-				log.Printf("[AI] Rate limited (429), retrying in %v (attempt %d/%d)", backoff, attempt+1, maxRetries)
-				select {
-				case <-time.After(backoff):
-					backoff *= 2 // exponential backoff
-					continue
-				case <-ctx.Done():
-					return "", fmt.Errorf("request cancelled during rate-limit backoff")
-				}
-			}
-			return "", fmt.Errorf("gemini API rate limited after %d retries", maxRetries)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("gemini API error %d: %s", resp.StatusCode, string(respBody))
-		}
-
-		var geminiResp GeminiResponse
-		if err := json.Unmarshal(respBody, &geminiResp); err != nil {
-			return "", fmt.Errorf("unmarshal response: %w", err)
-		}
-
-		if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
-			return "", fmt.Errorf("empty response from gemini")
-		}
-
-		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
-	}
-
-	return "", fmt.Errorf("gemini API: exhausted retries")
+	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
 }
 
 // GenerateJSON sends a prompt and parses the JSON response into the target struct
@@ -285,6 +323,7 @@ If the text contains any violation, set passed=false and provide a clear, respec
 	var result TextModerationResult
 	if err := c.GenerateJSON(ctx, prompt, 0.1, &result); err != nil {
 		// On AI error, allow content (fail-open) but log
+		log.Printf("[AI] Text moderation failed (fail-open): %v", err)
 		return &TextModerationResult{Passed: true}, nil
 	}
 
@@ -302,11 +341,6 @@ func (c *Client) ModerateImage(ctx context.Context, base64Data, mimeType string)
 	if !c.IsEnabled() {
 		return &ImageModerationResult{Passed: true}, nil
 	}
-
-	url := fmt.Sprintf(
-		"https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-		c.model, c.apiKey,
-	)
 
 	reqBody := GeminiRequest{
 		Contents: []GeminiContent{
@@ -345,43 +379,15 @@ If inappropriate, set passed=false and provide a clear, respectful warning.`,
 		},
 	}
 
-	bodyBytes, err := json.Marshal(reqBody)
+	geminiResp, err := c.sendRequest(ctx, reqBody)
 	if err != nil {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-
-	var geminiResp GeminiResponse
-	if err := json.Unmarshal(respBody, &geminiResp); err != nil {
-		return &ImageModerationResult{Passed: true}, nil
-	}
-
-	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+		log.Printf("[AI] Image moderation failed (fail-open): %v", err)
 		return &ImageModerationResult{Passed: true}, nil
 	}
 
 	var result ImageModerationResult
 	if err := json.Unmarshal([]byte(geminiResp.Candidates[0].Content.Parts[0].Text), &result); err != nil {
+		log.Printf("[AI] Image moderation unmarshal failed (fail-open): %v", err)
 		return &ImageModerationResult{Passed: true}, nil
 	}
 

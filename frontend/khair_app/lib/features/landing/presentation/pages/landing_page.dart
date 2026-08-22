@@ -10,7 +10,6 @@ import 'package:khair_app/features/events/domain/entities/event.dart';
 import 'package:khair_app/features/events/presentation/bloc/events_bloc.dart';
 import 'package:khair_app/l10n/generated/app_localizations.dart';
 import 'package:khair_app/core/locale/l10n_extension.dart';
-import 'package:video_player/video_player.dart';
 
 /// Landing Page - First impression & trust building
 /// Fetches real stats and featured events from API
@@ -23,9 +22,7 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   late EventsBloc _eventsBloc;
-  late VideoPlayerController _videoController;
   StreamSubscription<EventsState>? _eventsSubscription;
-  bool _videoReady = false;
 
   // Stats loaded from API (with fallback defaults)
   int _eventCount = 0;
@@ -41,27 +38,11 @@ class _LandingPageState extends State<LandingPage> {
     super.initState();
     _eventsBloc = getIt<EventsBloc>();
     _loadStats();
-    _initVideo();
-  }
-
-  Future<void> _initVideo() async {
-    _videoController = VideoPlayerController.asset('video_khair.mp4')
-      ..setLooping(true)
-      ..setVolume(0);
-    try {
-      await _videoController.initialize();
-      if (!mounted) return;
-      setState(() => _videoReady = true);
-      await _videoController.play();
-    } catch (_) {
-      if (mounted) setState(() => _videoReady = false);
-    }
   }
 
   @override
   void dispose() {
     _eventsSubscription?.cancel();
-    _videoController.dispose();
     _eventsBloc.close();
     super.dispose();
   }
@@ -198,28 +179,16 @@ class _LandingPageState extends State<LandingPage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Video background
-          if (_videoReady)
-            ClipRect(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _videoController.value.size.width,
-                  height: _videoController.value.size.height,
-                  child: VideoPlayer(_videoController),
-                ),
-              ),
-            )
-          else
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0A2E1C), Color(0xFF14553A)],
-                ),
+          // Background gradient fallback
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0A2E1C), Color(0xFF14553A)],
               ),
             ),
+          ),
 
           // Dark gradient overlay for readability
           DecoratedBox(
@@ -261,36 +230,6 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                 ),
               ],
-            ),
-          ),
-
-          // Play/pause toggle
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _videoController.value.isPlaying
-                      ? _videoController.pause()
-                      : _videoController.play();
-                });
-              },
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(
-                  _videoReady && _videoController.value.isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
             ),
           ),
         ],

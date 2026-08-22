@@ -334,6 +334,26 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		response.BadRequest(c, "Display name must be 80 characters or fewer")
 		return
 	}
+	if req.Bio != nil && len([]rune(strings.TrimSpace(*req.Bio))) > 500 {
+		response.BadRequest(c, "Bio must be 500 characters or fewer")
+		return
+	}
+	if req.City != nil && len([]rune(strings.TrimSpace(*req.City))) > 100 {
+		response.BadRequest(c, "City name must be 100 characters or fewer")
+		return
+	}
+	if req.Country != nil && len([]rune(strings.TrimSpace(*req.Country))) > 100 {
+		response.BadRequest(c, "Country name must be 100 characters or fewer")
+		return
+	}
+	if req.Location != nil && len([]rune(strings.TrimSpace(*req.Location))) > 100 {
+		response.BadRequest(c, "Location must be 100 characters or fewer")
+		return
+	}
+	if req.AvatarURL != nil && len([]rune(strings.TrimSpace(*req.AvatarURL))) > 1024 {
+		response.BadRequest(c, "Avatar URL must be 1024 characters or fewer")
+		return
+	}
 	if req.PreferredLanguage != nil && *req.PreferredLanguage != "en" && *req.PreferredLanguage != "ar" && *req.PreferredLanguage != "tr" {
 		response.BadRequest(c, "Unsupported preferred language")
 		return

@@ -32,7 +32,7 @@ class PushNotificationService {
   static PushNotificationService get instance => _instance;
   PushNotificationService._();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  FirebaseMessaging get _messaging => FirebaseMessaging.instance;
   bool _initialized = false;
   bool _isAuthenticated = false;
   bool _activationInProgress = false;

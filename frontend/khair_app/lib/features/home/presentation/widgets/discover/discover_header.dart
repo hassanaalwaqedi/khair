@@ -27,16 +27,19 @@ class DiscoverHeader extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const KhairBrand(
-              size: 27,
-              gap: 7,
-              nameStyle: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+            Flexible(
+              flex: 1,
+              child: const KhairBrand(
+                size: 27,
+                gap: 7,
+                nameStyle: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-            Expanded(child: _DiscoverLocationButton(onPressed: onLocation)),
+            Expanded(flex: 2, child: _DiscoverLocationButton(onPressed: onLocation)),
             if (auth.isAuthenticated)
               const NotificationBellButton()
             else

@@ -170,6 +170,17 @@ func (s *Service) SendUserMessage(ctx context.Context, ticketID, userID uuid.UUI
 		return nil, fmt.Errorf("access denied")
 	}
 
+	// Idempotency check: prevent duplicate user messages if the user clicks Retry
+	lastMsgs, _ := s.repo.GetTicketMessages(ticketID, false)
+	if len(lastMsgs) > 0 {
+		lastMsg := lastMsgs[len(lastMsgs)-1]
+		if lastMsg.SenderType == "user" && lastMsg.Body == body && time.Since(lastMsg.CreatedAt) < 60*time.Second {
+			// This is a duplicate retry. Swallow it and return the last message.
+			// The original AI generation is likely still running in the background.
+			return []*models.SupportMessage{lastMsg}, nil
+		}
+	}
+
 	userMsg := &models.SupportMessage{
 		TicketID: ticketID, SenderType: "user", SenderUserID: &userID,
 		Body: body, MessageType: "text",
@@ -240,8 +251,8 @@ func (s *Service) generateAIReply(ctx context.Context, userID uuid.UUID, ticket 
 		}
 	}
 
-	prompt := fmt.Sprintf(`You are Khair AI, the clearly-labelled AI support assistant for Khair, an Islamic events platform.
-Reply in %s unless the user writes in another language. A user said: "%s"
+	systemInstruction := fmt.Sprintf(`You are Khair AI, the clearly-labelled AI support assistant for Khair, an Islamic events platform.
+Reply in %s unless the user writes in another language.
 
 Safe user context: role=%s, organizer_status=%s, support_context=%s.
 
@@ -253,7 +264,49 @@ Rules:
 2. Only state Khair capabilities or policies supplied in the context or safe user context.
 3. If you do not know, say so and offer Khair Support; never invent an answer.
 4. Do not claim to be human, reveal internal data, give arbitrary URLs, or expose implementation details.
-5. Keep the answer plain text.`, language, body, role, organizerStatus, dereferenceContext(ticket.ContextType), kbContext)
+5. Keep the answer plain text.`, language, role, organizerStatus, dereferenceContext(ticket.ContextType), kbContext)
+
+	// Fetch up to 10 previous messages for context
+	historyMsgs, _ := s.repo.GetTicketMessages(ticket.ID, false)
+	var chatHistory []ai.GeminiContent
+	
+	// Add system instruction as the first user message
+	chatHistory = append(chatHistory, ai.GeminiContent{
+		Role:  "user",
+		Parts: []ai.GeminiPart{{Text: "System Instructions: " + systemInstruction}},
+	})
+	chatHistory = append(chatHistory, ai.GeminiContent{
+		Role:  "model",
+		Parts: []ai.GeminiPart{{Text: "Understood. I am Khair AI."}},
+	})
+
+	// Add historical messages (limit to last 10 to avoid token bloat)
+	startIdx := 0
+	if len(historyMsgs) > 10 {
+		startIdx = len(historyMsgs) - 10
+	}
+	
+	for i := startIdx; i < len(historyMsgs); i++ {
+		msg := historyMsgs[i]
+		if msg.MessageType != "text" || msg.Body == "" {
+			continue
+		}
+		role := "user"
+		if msg.SenderType == "ai" || msg.SenderType == "support" {
+			role = "model"
+		}
+		chatHistory = append(chatHistory, ai.GeminiContent{
+			Role:  role,
+			Parts: []ai.GeminiPart{{Text: msg.Body}},
+		})
+	}
+	
+	// Ensure the last message in history isn't from the model (Gemini requires alternating roles or user last)
+	// We append the current user body explicitly
+	chatHistory = append(chatHistory, ai.GeminiContent{
+		Role:  "user",
+		Parts: []ai.GeminiPart{{Text: body}},
+	})
 
 	aiReply := localizedAIFailure(language)
 	aiFailed := true
@@ -263,9 +316,13 @@ Rules:
 	case !s.aiClient.IsEnabled():
 		log.Printf("[SUPPORT][AI] Gemini unavailable: GEMINI_API_KEY is not configured")
 	default:
-		reply, err := s.aiClient.Generate(ctx, prompt, 0.2)
+		// Use background context so navigating away doesn't kill the AI generation,
+		// but apply a strict 45-second timeout to prevent indefinite survival of the goroutine.
+		bgCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+		defer cancel()
+		reply, err := s.aiClient.GenerateChat(bgCtx, chatHistory, 0.2)
 		if err != nil {
-			log.Printf("[SUPPORT][AI] Gemini generation failed model=%q category=%s", s.aiClient.Model(), ai.FailureCategory(err))
+			log.Printf("[SUPPORT][AI] Gemini generation failed model=%q category=%s err=%v", s.aiClient.Model(), ai.FailureCategory(err), err)
 		} else if strings.TrimSpace(reply) == "" {
 			log.Printf("[SUPPORT][AI] Gemini generation failed model=%q category=empty_response", s.aiClient.Model())
 		} else {

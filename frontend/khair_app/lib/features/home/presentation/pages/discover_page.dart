@@ -208,7 +208,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 390,
+                            height: 420,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -240,7 +240,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           ),
                           SliverToBoxAdapter(
                             child: SizedBox(
-                              height: 250,
+                              height: 280,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -378,64 +378,82 @@ class _DiscoverPageState extends State<DiscoverPage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(sheetL10n.chooseYourArea,
-                    style:
-                        const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading:
-                    const Icon(Icons.my_location_rounded, color: AppColors.primary),
-                title: Text(sheetL10n.useCurrentLocationShort),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  setState(() => _locationRequestInFlight = true);
-                  context.read<LocationBloc>().add(ResolveLocationEvent());
-                },
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: controller,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (value) {
-                  context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
-                  Navigator.of(sheetContext).pop();
-                },
-                decoration: InputDecoration(
-                  labelText: sheetL10n.city,
-                  prefixIcon: const Icon(Icons.location_city_outlined),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    context
-                        .read<EventsBloc>()
-                        .add(UpdateBaseCity(controller.text.trim()));
-                    Navigator.of(sheetContext).pop();
-                  },
-                  child: Text(sheetL10n.showEvents),
-                ),
-              ),
+      builder: (sheetContext) {
+        return Padding(
+          // Shift content up when keyboard is visible
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(sheetL10n.chooseYourArea,
+                        style:
+                            const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+                  ),
+                  const SizedBox(height: 16),
+                  // Use InkWell + Row instead of ListTile to avoid invisible ink warning
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      setState(() => _locationRequestInFlight = true);
+                      context.read<LocationBloc>().add(ResolveLocationEvent());
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.my_location_rounded, color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Text(sheetL10n.useCurrentLocationShort,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controller,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (value) {
+                      context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
+                      Navigator.of(sheetContext).pop();
+                    },
+                    decoration: InputDecoration(
+                      labelText: sheetL10n.city,
+                      prefixIcon: const Icon(Icons.location_city_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        context
+                            .read<EventsBloc>()
+                            .add(UpdateBaseCity(controller.text.trim()));
+                        Navigator.of(sheetContext).pop();
+                      },
+                      child: Text(sheetL10n.showEvents),
+                    ),
+                  ),
             ],
           ),
         ),
       ),
     );
+    },
+    );
     controller.dispose();
   }
 }
+
 
 class _EmptyDiscovery extends StatelessWidget {
   const _EmptyDiscovery(
