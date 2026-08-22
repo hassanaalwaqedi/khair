@@ -386,8 +386,8 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 					  AND er.status IN ('pending', 'confirmed', 'reserved')
 					  AND COALESCE(e.end_date, e.start_date) > NOW()
 					  AND COALESCE(e.attendance_policy, 'EVERYONE') <> 'EVERYONE'
-					  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2 <> 'WOMAN')
-					    OR (e.attendance_policy = 'MEN_ONLY' AND $2 <> 'MAN'))
+					  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2::varchar <> 'WOMAN')
+					    OR (e.attendance_policy = 'MEN_ONLY' AND $2::varchar <> 'MAN'))
 				)`, uid, requestedGender).Scan(&affected); err != nil {
 				response.InternalServerError(c, "Failed to check affected registrations")
 				return
@@ -531,7 +531,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	if req.Gender != nil {
 		if _, err := h.db.Exec(`
 			UPDATE users
-			SET gender = $1, gender_updated_at = CASE WHEN $1 = COALESCE(gender, 'NOT_SET') THEN gender_updated_at ELSE $2 END, updated_at = $2
+			SET gender = $1, gender_updated_at = CASE WHEN $1::varchar = COALESCE(gender, 'NOT_SET') THEN gender_updated_at ELSE $2 END, updated_at = $2
 			WHERE id = $3`, requestedGender, now, uid); err != nil {
 			log.Printf("[WARN] Failed to update gender for %s: %v", uid, err)
 			response.InternalServerError(c, "Failed to update profile eligibility")
@@ -547,8 +547,8 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 				  AND er.status IN ('pending', 'confirmed', 'reserved')
 				  AND COALESCE(e.end_date, e.start_date) > NOW()
 				  AND COALESCE(e.attendance_policy, 'EVERYONE') <> 'EVERYONE'
-				  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2 <> 'WOMAN')
-				    OR (e.attendance_policy = 'MEN_ONLY' AND $2 <> 'MAN'))`, uid, requestedGender); err != nil {
+				  AND ((e.attendance_policy = 'WOMEN_ONLY' AND $2::varchar <> 'WOMAN')
+				    OR (e.attendance_policy = 'MEN_ONLY' AND $2::varchar <> 'MAN'))`, uid, requestedGender); err != nil {
 				log.Printf("[WARN] Failed to flag affected registrations for %s: %v", uid, err)
 				response.InternalServerError(c, "Failed to flag affected registrations")
 				return
