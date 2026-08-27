@@ -42,10 +42,13 @@ type EventRepository interface {
 	UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error
 	UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error
 	ListPending() ([]models.EventWithOrganizer, error)
+	ListPendingEventUpdates() ([]models.EventWithOrganizer, error)
+	GetPendingEventUpdate(eventID uuid.UUID) (*models.EventUpdateRequest, error)
+	ReviewEventUpdate(eventID uuid.UUID, status string, reason *string, reviewerID uuid.UUID) (*models.EventWithOrganizer, error)
 }
 
 type StatusUpdateRequest struct {
-	Status          string  `json:"status" binding:"required,oneof=approved rejected needs_revision published"`
+	Status          string  `json:"status" binding:"required,oneof=approved rejected needs_revision published cancelled"`
 	RejectionReason *string `json:"rejection_reason"`
 }
 
@@ -114,7 +117,15 @@ func (s *Service) UpdateOrganizerStatus(id uuid.UUID, req *StatusUpdateRequest) 
 }
 
 func (s *Service) ListPendingEvents() ([]models.EventWithOrganizer, error) {
-	return s.eventRepo.ListPending()
+	events, err := s.eventRepo.ListPending()
+	if err != nil {
+		return nil, err
+	}
+	updates, err := s.eventRepo.ListPendingEventUpdates()
+	if err != nil {
+		return nil, err
+	}
+	return append(events, updates...), nil
 }
 
 func (s *Service) GetEvent(id uuid.UUID) (*models.EventWithOrganizer, error) {
@@ -122,6 +133,36 @@ func (s *Service) GetEvent(id uuid.UUID) (*models.EventWithOrganizer, error) {
 }
 
 func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, reviewerID uuid.UUID) (*models.EventWithOrganizer, error) {
+	// An approved/published event with a pending organizer snapshot is reviewed
+	// through the same admin queue, while the original event status remains
+	// untouched until approval.
+	if _, err := s.eventRepo.GetPendingEventUpdate(id); err == nil {
+		if req.Status == "published" {
+			req.Status = "approved"
+		}
+		if req.Status != "approved" && req.Status != "rejected" && req.Status != "needs_revision" {
+			return nil, errors.New("only approve, reject, or request changes is valid for an event update")
+		}
+		if req.Status == "rejected" && (req.RejectionReason == nil || strings.TrimSpace(*req.RejectionReason) == "") {
+			return nil, errors.New("rejection reason is required when rejecting")
+		}
+		if req.Status == "needs_revision" && (req.RejectionReason == nil || strings.TrimSpace(*req.RejectionReason) == "") {
+			return nil, errors.New("revision notes are required")
+		}
+		updated, err := s.eventRepo.ReviewEventUpdate(id, req.Status, req.RejectionReason, reviewerID)
+		if err != nil {
+			return nil, fmt.Errorf("review event update: %w", err)
+		}
+		if req.Status == "approved" {
+			s.invalidateEventCaches(id)
+		}
+		var orgUserID uuid.UUID
+		if err := s.db.QueryRow(`SELECT user_id FROM organizers WHERE id = $1`, updated.OrganizerID).Scan(&orgUserID); err == nil {
+			s.notifyOrganizerEventStatus(orgUserID, updated, req.Status, req.RejectionReason)
+		}
+		return updated, nil
+	}
+
 	evt, err := s.eventRepo.GetByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("get event: %w", err)
@@ -153,13 +194,7 @@ func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, revi
 	if req.Status == "approved" || req.Status == "published" {
 		evt.IsPublished = true
 
-		// Invalidate Redis caches so the public API returns fresh data
-		if s.cacheService != nil {
-			ctx := context.Background()
-			_ = s.cacheService.InvalidateEventList(ctx)
-			_ = s.cacheService.InvalidateEventDetail(ctx, id.String())
-			_ = s.cacheService.InvalidateGeoSearch(ctx)
-		}
+		s.invalidateEventCaches(id)
 
 		// Broadcast real-time SSE event
 		if s.sseHub != nil {
@@ -179,6 +214,16 @@ func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, revi
 	}
 
 	return evt, nil
+}
+
+func (s *Service) invalidateEventCaches(id uuid.UUID) {
+	if s.cacheService == nil {
+		return
+	}
+	ctx := context.Background()
+	_ = s.cacheService.InvalidateEventList(ctx)
+	_ = s.cacheService.InvalidateEventDetail(ctx, id.String())
+	_ = s.cacheService.InvalidateGeoSearch(ctx)
 }
 
 func (s *Service) notifyOrganizerApplicationStatus(org *models.Organizer, status string, reason *string) {

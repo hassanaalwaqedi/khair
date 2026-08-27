@@ -2,7 +2,9 @@ package event
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -521,7 +523,8 @@ func (r *Repository) Update(event *models.Event) error {
 			pricing_type = $15, price_cents = $16, currency = $17, payment_method = $18,
 			is_online = $19, online_link = $20, join_instructions = $21,
 			join_link_visible_before_minutes = $22,
-			gender_restriction = $23, attendance_policy = $24
+			gender_restriction = $23, attendance_policy = $24,
+			age_min = $25, age_max = $26
 		WHERE id = $1
 	`
 
@@ -544,9 +547,211 @@ func (r *Repository) Update(event *models.Event) error {
 		pricingType, priceCents, currency, paymentMethod,
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes,
-		event.GenderRestriction, event.AttendancePolicy,
+		event.GenderRestriction, event.AttendancePolicy, event.AgeMin, event.AgeMax,
 	)
 	return err
+}
+
+// CreateOrUpdatePendingEventUpdate stores one pending snapshot per event.
+// Autosave in the organizer editor may call this more than once, so replacing
+// the existing pending snapshot is intentional and keeps the admin queue clean.
+func (r *Repository) CreateOrUpdatePendingEventUpdate(eventID, organizerID, requestedBy uuid.UUID, proposed *models.Event) error {
+	payload, err := json.Marshal(proposed)
+	if err != nil {
+		return fmt.Errorf("marshal proposed event: %w", err)
+	}
+	_, err = r.db.Exec(`
+		INSERT INTO event_update_requests
+			(event_id, organizer_id, requested_by, proposed_event, status, rejection_reason, reviewed_by, reviewed_at)
+		VALUES ($1, $2, $3, $4, 'pending', NULL, NULL, NULL)
+		ON CONFLICT (event_id) WHERE status = 'pending'
+		DO UPDATE SET
+			organizer_id = EXCLUDED.organizer_id,
+			requested_by = EXCLUDED.requested_by,
+			proposed_event = EXCLUDED.proposed_event,
+			status = 'pending',
+			rejection_reason = NULL,
+			reviewed_by = NULL,
+			reviewed_at = NULL,
+			updated_at = NOW()`, eventID, organizerID, requestedBy, payload)
+	return err
+}
+
+func (r *Repository) GetPendingEventUpdate(eventID uuid.UUID) (*models.EventUpdateRequest, error) {
+	var request models.EventUpdateRequest
+	var payload []byte
+	var requestedBy, reviewedBy sql.NullString
+	if err := r.db.QueryRow(`
+		SELECT id, event_id, organizer_id, requested_by, proposed_event, status,
+		       rejection_reason, reviewed_by, created_at, reviewed_at
+		FROM event_update_requests
+		WHERE event_id = $1 AND status = 'pending'`, eventID).Scan(
+		&request.ID, &request.EventID, &request.OrganizerID, &requestedBy, &payload,
+		&request.Status, &request.RejectionReason, &reviewedBy,
+		&request.CreatedAt, &request.ReviewedAt,
+	); err != nil {
+		return nil, err
+	}
+	if requestedBy.Valid {
+		if id, err := uuid.Parse(requestedBy.String); err == nil {
+			request.RequestedBy = &id
+		}
+	}
+	if reviewedBy.Valid {
+		if id, err := uuid.Parse(reviewedBy.String); err == nil {
+			request.ReviewedBy = &id
+		}
+	}
+	if err := json.Unmarshal(payload, &request.ProposedEvent); err != nil {
+		return nil, fmt.Errorf("decode proposed event: %w", err)
+	}
+	return &request, nil
+}
+
+// ListPendingEventUpdates returns proposed versions shaped like events so the
+// existing admin event review screen can display them without changing the
+// public event read model.
+func (r *Repository) ListPendingEventUpdates() ([]models.EventWithOrganizer, error) {
+	rows, err := r.db.Query(`
+		SELECT id, event_id
+		FROM event_update_requests
+		WHERE status = 'pending'
+		ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.EventWithOrganizer
+	for rows.Next() {
+		var requestID, eventID uuid.UUID
+		if err := rows.Scan(&requestID, &eventID); err != nil {
+			return nil, err
+		}
+		request, err := r.GetPendingEventUpdate(eventID)
+		if err != nil {
+			return nil, err
+		}
+		current, err := r.GetByID(eventID)
+		if err != nil {
+			return nil, err
+		}
+		proposed := request.ProposedEvent
+		proposed.ID = current.ID
+		proposed.OrganizerID = current.OrganizerID
+		// This is a response-only status. The database event remains approved or
+		// published until the update is reviewed.
+		proposed.Status = "pending_update"
+		proposed.IsPublished = current.IsPublished
+		events = append(events, models.EventWithOrganizer{
+			Event:         proposed,
+			OrganizerName: current.OrganizerName,
+		})
+		_ = requestID // kept in the query for stable future response contracts
+	}
+	return events, rows.Err()
+}
+
+// ReviewEventUpdate approves or rejects the current pending update for an
+// event. Approval applies the snapshot atomically with the request status.
+func (r *Repository) ReviewEventUpdate(eventID uuid.UUID, status string, reason *string, reviewerID uuid.UUID) (*models.EventWithOrganizer, error) {
+	request, err := r.GetPendingEventUpdate(eventID)
+	if err != nil {
+		return nil, err
+	}
+	if status != "approved" && status != "rejected" && status != "needs_revision" {
+		return nil, errors.New("invalid event update review status")
+	}
+
+	if status != "approved" {
+		_, err = r.db.Exec(`
+			UPDATE event_update_requests
+			SET status = $2, rejection_reason = $3, reviewed_by = $4,
+			    reviewed_at = NOW(), updated_at = NOW()
+			WHERE id = $1 AND status = 'pending'`, request.ID, status, reason, reviewerID)
+		if err != nil {
+			return nil, err
+		}
+		return r.GetByID(eventID)
+	}
+
+	proposed := request.ProposedEvent
+	policy, legacyGenderRestriction, err := persistedAttendancePolicy(&proposed)
+	if err != nil {
+		return nil, err
+	}
+	proposed.AttendancePolicy = policy
+	proposed.GenderRestriction = legacyGenderRestriction
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var currentStatus string
+	var isPublished bool
+	if err := tx.QueryRow(`SELECT status, is_published FROM events WHERE id = $1 FOR UPDATE`, eventID).Scan(&currentStatus, &isPublished); err != nil {
+		return nil, err
+	}
+	if currentStatus != "approved" && currentStatus != "published" {
+		return nil, errors.New("event is no longer available for this update")
+	}
+
+	pricingType := "free"
+	var priceCents int64
+	var currency, paymentMethod *string
+	if proposed.Pricing != nil {
+		pricingType = proposed.Pricing.Type
+		if proposed.Pricing.AmountCents != nil {
+			priceCents = *proposed.Pricing.AmountCents
+		}
+		currency = proposed.Pricing.Currency
+		paymentMethod = proposed.Pricing.PaymentMethod
+	}
+	_, err = tx.Exec(`
+		UPDATE events SET
+			title=$2, description=$3, event_type=$4, language=$5, country=$6,
+			city=$7, address=$8, latitude=$9, longitude=$10, start_date=$11,
+			end_date=$12, image_url=$13, pricing_type=$14, price_cents=$15,
+			currency=$16, payment_method=$17, is_online=$18, online_link=$19,
+			join_instructions=$20, join_link_visible_before_minutes=$21,
+			gender_restriction=$22, attendance_policy=$23, age_min=$24,
+			age_max=$25, category=$26, venue_name=$27, online_platform=$28,
+			registration_deadline=$29, registration_mode=$30, timezone=$31,
+			organizer_guidelines=$32, status=$33, is_published=$34
+		WHERE id=$1`, eventID, proposed.Title, proposed.Description, proposed.EventType,
+		proposed.Language, proposed.Country, proposed.City, proposed.Address,
+		proposed.Latitude, proposed.Longitude, proposed.StartDate, proposed.EndDate,
+		proposed.ImageURL, pricingType, priceCents, currency, paymentMethod,
+		proposed.IsOnline, proposed.OnlineLink, proposed.JoinInstructions,
+		proposed.JoinLinkVisibleBeforeMinutes, proposed.GenderRestriction,
+		proposed.AttendancePolicy, proposed.AgeMin, proposed.AgeMax, proposed.Category,
+		proposed.VenueName, proposed.OnlinePlatform, proposed.RegistrationDeadline,
+		proposed.RegistrationMode, proposed.Timezone, proposed.OrganizerGuidelines,
+		currentStatus, isPublished)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = tx.Exec(`DELETE FROM event_tags WHERE event_id = $1`, eventID); err != nil {
+		return nil, err
+	}
+	for _, tag := range normalizeTags(proposed.Tags) {
+		if _, err = tx.Exec(`INSERT INTO event_tags (event_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING`, eventID, tag); err != nil {
+			return nil, err
+		}
+	}
+	if _, err = tx.Exec(`
+		UPDATE event_update_requests
+		SET status = 'approved', rejection_reason = NULL, reviewed_by = $2,
+		    reviewed_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND status = 'pending'`, request.ID, reviewerID); err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return r.GetByID(eventID)
 }
 
 func persistedAttendancePolicy(event *models.Event) (string, *string, error) {
@@ -600,6 +805,21 @@ func (r *Repository) Delete(id uuid.UUID) error {
 	return err
 }
 
+func (r *Repository) Cancel(id uuid.UUID) error {
+	_, err := r.db.Exec(`UPDATE events SET status = 'cancelled', is_published = false WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) HasActiveRegistrations(eventID uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM event_registrations
+			WHERE event_id = $1 AND status IN ('pending', 'confirmed', 'reserved')
+		)`, eventID).Scan(&exists)
+	return exists, err
+}
+
 // ListByOrganizerID retrieves events by organizer ID
 func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, error) {
 	query := `SELECT ` + bareEventCols + `
@@ -627,6 +847,10 @@ func (r *Repository) ListByOrganizerID(organizerID uuid.UUID) ([]models.Event, e
 
 // UpdateStatus updates the status of an event
 func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error {
+	if status == "cancelled" {
+		_, err := r.db.Exec(`UPDATE events SET status = $2, rejection_reason = $3, is_published = false WHERE id = $1`, id, status, rejectionReason)
+		return err
+	}
 	if status == "approved" || status == "published" {
 		query := `UPDATE events SET status = $2, rejection_reason = $3, is_published = true, approved_at = NOW() WHERE id = $1`
 		_, err := r.db.Exec(query, id, status, rejectionReason)
@@ -639,6 +863,11 @@ func (r *Repository) UpdateStatus(id uuid.UUID, status string, rejectionReason *
 
 // UpdateStatusWithReviewer updates the status of an event and records who reviewed it
 func (r *Repository) UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error {
+	if status == "cancelled" {
+		query := `UPDATE events SET status = $2, rejection_reason = $3, reviewed_by = $4, reviewed_at = NOW(), is_published = false WHERE id = $1`
+		_, err := r.db.Exec(query, id, status, rejectionReason, reviewedBy)
+		return err
+	}
 	if status == "approved" || status == "published" {
 		query := `UPDATE events SET status = $2, rejection_reason = $3, reviewed_by = $4, reviewed_at = NOW(), is_published = true, approved_at = NOW() WHERE id = $1`
 		_, err := r.db.Exec(query, id, status, rejectionReason, reviewedBy)

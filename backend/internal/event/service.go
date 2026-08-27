@@ -599,14 +599,29 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	if req.Description != nil && event.Status != "draft" && len([]rune(strings.TrimSpace(*req.Description))) < 50 {
 		return nil, errors.New("description must be at least 50 characters")
 	}
-
-	if err := s.repo.Update(event); err != nil {
-		return nil, fmt.Errorf("update event: %w", err)
+	if req.AgeMin != nil {
+		event.AgeMin = req.AgeMin
 	}
-	if event.AttendancePolicy != previousPolicy && req.ConfirmAttendancePolicyChange {
-		if err := s.repo.FlagIneligibleRegistrations(event.ID, event.AttendancePolicy); err != nil {
-			return nil, fmt.Errorf("flag affected registrations: %w", err)
-		}
+	if req.Category != nil {
+		event.Category = *req.Category
+	}
+	if req.Tags != nil {
+		event.Tags = *req.Tags
+	}
+	if req.VenueName != nil {
+		event.VenueName = req.VenueName
+	}
+	if req.OnlinePlatform != nil {
+		event.OnlinePlatform = req.OnlinePlatform
+	}
+	if req.RegistrationMode != nil {
+		event.RegistrationMode = *req.RegistrationMode
+	}
+	if req.Timezone != nil {
+		event.Timezone = *req.Timezone
+	}
+	if req.Guidelines != nil {
+		event.OrganizerGuidelines = req.Guidelines
 	}
 	var registrationDeadline *time.Time
 	if req.RegistrationDeadline != nil && strings.TrimSpace(*req.RegistrationDeadline) != "" {
@@ -615,6 +630,25 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 			return nil, errors.New("registration deadline must be before the event start")
 		}
 		registrationDeadline = &deadline
+		event.RegistrationDeadline = registrationDeadline
+	}
+
+	// Once an event is public, edits are submitted as a replacement snapshot.
+	// The current event remains visible and usable until an admin approves it.
+	if existingEvent.Status == "approved" || existingEvent.Status == "published" {
+		if err := s.repo.CreateOrUpdatePendingEventUpdate(event.ID, organizer.ID, userID, event); err != nil {
+			return nil, fmt.Errorf("submit event update for review: %w", err)
+		}
+		return event, nil
+	}
+
+	if err := s.repo.Update(event); err != nil {
+		return nil, fmt.Errorf("update event: %w", err)
+	}
+	if event.AttendancePolicy != previousPolicy && req.ConfirmAttendancePolicyChange {
+		if err := s.repo.FlagIneligibleRegistrations(event.ID, event.AttendancePolicy); err != nil {
+			return nil, fmt.Errorf("flag affected registrations: %w", err)
+		}
 	}
 	if err := s.repo.UpdateEditorMetadata(event.ID, req.Category, req.Tags, req.VenueName, req.OnlinePlatform, registrationDeadline, req.RegistrationMode, req.Timezone, req.Guidelines); err != nil {
 		return nil, fmt.Errorf("save event editor data: %w", err)
@@ -707,7 +741,63 @@ func (s *Service) Delete(userID uuid.UUID, eventID uuid.UUID) error {
 		return errors.New("you don't have permission to delete this event")
 	}
 
+	// Public events are cancelled (not hard-deleted) so attendee, payment, and
+	// audit records remain available. Organizer cancellation is allowed only
+	// more than 24 hours before the start; later cancellations need admin action.
+	if existingEvent.Status == "approved" || existingEvent.Status == "published" {
+		if time.Until(existingEvent.StartDate) <= 24*time.Hour {
+			return errors.New("cancellation within 24 hours of the event requires admin approval")
+		}
+		if err := s.repo.Cancel(eventID); err != nil {
+			return fmt.Errorf("cancel event: %w", err)
+		}
+		s.notifyAttendeesOfCancellation(eventID, existingEvent.Title)
+		return nil
+	}
+
+	activeRegistrations, err := s.repo.HasActiveRegistrations(eventID)
+	if err != nil {
+		return fmt.Errorf("check event registrations: %w", err)
+	}
+	if activeRegistrations {
+		return errors.New("this event has active registrations and must be cancelled instead of deleted")
+	}
+
 	return s.repo.Delete(eventID)
+}
+
+func (s *Service) notifyAttendeesOfCancellation(eventID uuid.UUID, title string) {
+	if s.notifications == nil {
+		return
+	}
+	rows, err := s.db.Query(`
+		SELECT DISTINCT user_id FROM event_registrations
+		WHERE event_id = $1 AND status IN ('confirmed', 'reserved')`, eventID)
+	if err != nil {
+		log.Printf("[EVENT] cancellation recipients lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		data := map[string]string{
+			"type": "event_cancelled", "entity_type": "event",
+			"entity_id": eventID.String(), "event_id": eventID.String(),
+			"event_title": title,
+		}
+		copy, notificationID, created, err := s.notifications.CreateLocalizedOnce(
+			userID, "event_cancelled", data, "event_cancelled:"+eventID.String())
+		if err != nil {
+			continue
+		}
+		if s.pushService != nil && created {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
+	}
 }
 
 // SubmitForReview changes event status to pending

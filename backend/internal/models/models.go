@@ -172,6 +172,22 @@ type EventWithOrganizer struct {
 	OrganizerName string `json:"organizer_name"`
 }
 
+// EventUpdateRequest is an organizer-submitted replacement for an already
+// approved event. The live event remains unchanged until an administrator
+// approves the proposed snapshot.
+type EventUpdateRequest struct {
+	ID              uuid.UUID  `json:"id"`
+	EventID         uuid.UUID  `json:"event_id"`
+	OrganizerID     uuid.UUID  `json:"organizer_id"`
+	ProposedEvent   Event      `json:"proposed_event"`
+	Status          string     `json:"status"`
+	RejectionReason *string    `json:"rejection_reason,omitempty"`
+	RequestedBy     *uuid.UUID `json:"requested_by,omitempty"`
+	ReviewedBy      *uuid.UUID `json:"reviewed_by,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	ReviewedAt      *time.Time `json:"reviewed_at,omitempty"`
+}
+
 // ── Organization Dashboard Models ──
 
 // OrgRole constants for organization RBAC

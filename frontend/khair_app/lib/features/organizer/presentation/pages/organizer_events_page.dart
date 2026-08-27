@@ -269,7 +269,10 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                   ),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text(context.l10n.ownerDelete,
+                  child: Text(
+                      event.status == 'approved' || event.status == 'published'
+                          ? 'Cancel event'
+                          : context.l10n.ownerDelete,
                       style: TextStyle(color: KhairColors.error)),
                 ),
               ],
@@ -285,6 +288,9 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
                   case 'notify':
                     _showNotifyAttendeesDialog(context, event);
                     break;
+                  case 'delete':
+                    _confirmDelete(context, event);
+                    break;
                 }
               },
             ),
@@ -299,6 +305,48 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
         event.status == 'approved' || event.status == 'published';
     context.push(
         publicEvent ? '/events/${event.id}' : '/organizer/events/${event.id}');
+  }
+
+  Future<void> _confirmDelete(BuildContext context, Event event) async {
+    final isPublic = event.status == 'approved' || event.status == 'published';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isPublic ? 'Cancel event?' : 'Delete event?'),
+        content: Text(isPublic
+            ? 'This will hide the event from discovery and notify confirmed attendees. Organizer cancellation is unavailable within 24 hours of the start time.'
+            : 'This event will be permanently deleted if it has no active registrations.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: KhairColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(isPublic ? 'Cancel event' : context.l10n.ownerDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await getIt<ApiClient>().delete('/events/${event.id}');
+      if (!context.mounted) return;
+      context.read<OrganizerBloc>().add(LoadOrganizerEvents());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isPublic ? 'Event cancelled' : 'Event deleted')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: KhairColors.error,
+        ),
+      );
+    }
   }
 
   void _showNotifyAttendeesDialog(BuildContext ctx, Event event) {
@@ -524,8 +572,12 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
         return 'Published';
       case 'pending':
         return 'Pending Review';
+      case 'pending_update':
+        return 'Update Pending';
       case 'rejected':
         return 'Rejected';
+      case 'cancelled':
+        return 'Cancelled';
       case 'draft':
         return 'Draft';
       default:
