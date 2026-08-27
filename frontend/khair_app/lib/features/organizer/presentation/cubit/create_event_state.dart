@@ -353,6 +353,8 @@ class CreateEventState extends Equatable {
   final List<String> categoryOptions;
   final bool categoriesLoading;
   final bool isLocalDraftLoaded;
+  final bool requiresUpdateApproval;
+  final bool isDirty;
 
   CreateEventState({
     this.currentStep = 0,
@@ -368,6 +370,8 @@ class CreateEventState extends Equatable {
     this.categoryOptions = const [],
     this.categoriesLoading = false,
     this.isLocalDraftLoaded = false,
+    this.requiresUpdateApproval = false,
+    this.isDirty = false,
   }) : formData = formData ?? CreateEventFormData();
 
   CreateEventState copyWith({
@@ -384,6 +388,8 @@ class CreateEventState extends Equatable {
     List<String>? categoryOptions,
     bool? categoriesLoading,
     bool? isLocalDraftLoaded,
+    bool? requiresUpdateApproval,
+    bool? isDirty,
   }) {
     return CreateEventState(
       currentStep: currentStep ?? this.currentStep,
@@ -400,6 +406,9 @@ class CreateEventState extends Equatable {
       categoryOptions: categoryOptions ?? this.categoryOptions,
       categoriesLoading: categoriesLoading ?? this.categoriesLoading,
       isLocalDraftLoaded: isLocalDraftLoaded ?? this.isLocalDraftLoaded,
+      requiresUpdateApproval:
+          requiresUpdateApproval ?? this.requiresUpdateApproval,
+      isDirty: isDirty ?? this.isDirty,
     );
   }
 
@@ -421,5 +430,7 @@ class CreateEventState extends Equatable {
         categoryOptions,
         categoriesLoading,
         isLocalDraftLoaded,
+        requiresUpdateApproval,
+        isDirty,
       ];
 }

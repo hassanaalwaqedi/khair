@@ -195,7 +195,7 @@ func (h *Handler) UpdateEvent(c *gin.Context) {
 		return
 	}
 
-	ev, err := h.service.UpdateEvent(orgID, eventID, &req)
+	ev, err := h.service.UpdateEvent(orgID, eventID, &req, actorID)
 	if err != nil {
 		var eligibilityErr *eligibility.Error
 		if errors.As(err, &eligibilityErr) {

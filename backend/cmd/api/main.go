@@ -584,3 +584,15 @@ func (a *eventRepoAdapter) UpdateStatusWithReviewer(id uuid.UUID, status string,
 func (a *eventRepoAdapter) ListPending() ([]models.EventWithOrganizer, error) {
 	return a.repo.ListPending()
 }
+
+func (a *eventRepoAdapter) ListPendingEventUpdates() ([]models.EventWithOrganizer, error) {
+	return a.repo.ListPendingEventUpdates()
+}
+
+func (a *eventRepoAdapter) GetPendingEventUpdate(eventID uuid.UUID) (*models.EventUpdateRequest, error) {
+	return a.repo.GetPendingEventUpdate(eventID)
+}
+
+func (a *eventRepoAdapter) ReviewEventUpdate(eventID uuid.UUID, status string, reason *string, reviewerID uuid.UUID) (*models.EventWithOrganizer, error) {
+	return a.repo.ReviewEventUpdate(eventID, status, reason, reviewerID)
+}

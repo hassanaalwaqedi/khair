@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/khair/backend/internal/eligibility"
+	eventpkg "github.com/khair/backend/internal/event"
 	"github.com/khair/backend/internal/models"
 	"github.com/khair/backend/internal/notification"
 	"github.com/khair/backend/internal/push"
@@ -17,13 +18,14 @@ import (
 // Service handles organization dashboard business logic
 type Service struct {
 	repo          *Repository
+	eventRepo     *eventpkg.Repository
 	notifications *notification.Service
 	pushService   *push.Service
 }
 
 // NewService creates a new orgdash service
 func NewService(db *sql.DB) *Service {
-	return &Service{repo: NewRepository(db)}
+	return &Service{repo: NewRepository(db), eventRepo: eventpkg.NewRepository(db)}
 }
 
 // GetRepository returns the repository for external use
@@ -213,10 +215,20 @@ func (s *Service) CreateEvent(orgID uuid.UUID, req *CreateEventRequest) (*models
 }
 
 // UpdateEvent updates an existing event
-func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEventRequest) (*models.Event, error) {
+func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEventRequest, requestedBy ...uuid.UUID) (*models.Event, error) {
 	ev, err := s.repo.GetEventByID(eventID, orgID)
 	if err != nil {
 		return nil, errors.New("event not found")
+	}
+	// The org dashboard read model predates several event fields. Before
+	// creating an approval snapshot, load the complete event so fields that
+	// this DTO does not edit (tags, pricing, online settings, etc.) survive.
+	if ev.Status == "approved" || ev.Status == "published" {
+		full, fullErr := s.eventRepo.GetByID(eventID)
+		if fullErr != nil || full.OrganizerID != orgID {
+			return nil, errors.New("event not found")
+		}
+		ev = &full.Event
 	}
 	previousStartDate := ev.StartDate
 	previousPolicyInput := ev.AttendancePolicy
@@ -311,6 +323,17 @@ func (s *Service) UpdateEvent(orgID uuid.UUID, eventID uuid.UUID, req *UpdateEve
 		}
 	}
 
+	if ev.Status == "approved" || ev.Status == "published" {
+		actorID := uuid.Nil
+		if len(requestedBy) > 0 {
+			actorID = requestedBy[0]
+		}
+		if err := s.repo.CreateOrUpdatePendingEventUpdate(eventID, orgID, actorID, ev); err != nil {
+			return nil, err
+		}
+		return ev, nil
+	}
+
 	if err := s.repo.UpdateEvent(ev); err != nil {
 		return nil, err
 	}
@@ -330,6 +353,9 @@ func (s *Service) CancelEvent(orgID, eventID uuid.UUID) error {
 	ev, err := s.repo.GetEventByID(eventID, orgID)
 	if err != nil {
 		return errors.New("event not found")
+	}
+	if time.Until(ev.StartDate) <= 24*time.Hour {
+		return errors.New("cancellation within 24 hours of the event requires admin approval")
 	}
 	if err := s.repo.CancelEvent(eventID); err != nil {
 		return err

@@ -347,6 +347,33 @@ func (r *Repository) UpdateEvent(ev *models.Event) error {
 	return err
 }
 
+// CreateOrUpdatePendingEventUpdate stores an approved-event edit as a review
+// snapshot. It intentionally shares the event review table with the main
+// organizer event API.
+func (r *Repository) CreateOrUpdatePendingEventUpdate(eventID, organizerID, requestedBy uuid.UUID, proposed *models.Event) error {
+	payload, err := json.Marshal(proposed)
+	if err != nil {
+		return err
+	}
+	var requestedByValue interface{} = requestedBy
+	if requestedBy == uuid.Nil {
+		requestedByValue = nil
+	}
+	_, err = r.db.Exec(`
+		INSERT INTO event_update_requests
+			(event_id, organizer_id, requested_by, proposed_event, status)
+		VALUES ($1, $2, $3, $4, 'pending')
+		ON CONFLICT (event_id) WHERE status = 'pending'
+		DO UPDATE SET
+			organizer_id = EXCLUDED.organizer_id,
+			requested_by = EXCLUDED.requested_by,
+			proposed_event = EXCLUDED.proposed_event,
+			status = 'pending', rejection_reason = NULL, reviewed_by = NULL,
+			reviewed_at = NULL, updated_at = NOW()`,
+		eventID, organizerID, requestedByValue, payload)
+	return err
+}
+
 // HasFutureRegistrations reports whether changing eligibility could affect
 // attendees who still have an active or upcoming registration.
 func (r *Repository) HasFutureRegistrations(eventID uuid.UUID) (bool, error) {
@@ -382,9 +409,9 @@ func (r *Repository) FlagIneligibleRegistrations(eventID uuid.UUID, policy strin
 	return err
 }
 
-// CancelEvent sets event status to 'draft' (cancelled)
+// CancelEvent keeps the event row for attendee and audit history.
 func (r *Repository) CancelEvent(eventID uuid.UUID) error {
-	_, err := r.db.Exec(`UPDATE events SET status = 'draft' WHERE id = $1`, eventID)
+	_, err := r.db.Exec(`UPDATE events SET status = 'cancelled', is_published = false WHERE id = $1`, eventID)
 	return err
 }
 

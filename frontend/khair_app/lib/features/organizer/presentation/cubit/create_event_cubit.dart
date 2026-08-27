@@ -75,6 +75,8 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       ),
       status: CreateEventStatus.initial,
       isLocalDraftLoaded: true,
+      requiresUpdateApproval:
+          event.status == 'approved' || event.status == 'published',
     ));
   }
 
@@ -89,6 +91,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
           formData: formData,
           status: CreateEventStatus.initial,
           isLocalDraftLoaded: true,
+          isDirty: true,
         ));
       } else {
         emit(state.copyWith(isLocalDraftLoaded: true));
@@ -157,7 +160,8 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   void updateFormData(CreateEventFormData formData) {
-    emit(state.copyWith(formData: formData, status: CreateEventStatus.initial));
+    emit(state.copyWith(
+        formData: formData, status: CreateEventStatus.initial, isDirty: true));
     _scheduleAutosave();
   }
 
@@ -223,6 +227,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(state.copyWith(
       formData: state.formData.copyWith(category: suggestion),
       aiCategorySuggestion: '',
+      isDirty: true,
     ));
     _scheduleAutosave();
   }
@@ -233,6 +238,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(state.copyWith(
       formData: state.formData.copyWith(description: suggestion),
       aiDescriptionSuggestion: '',
+      isDirty: true,
     ));
     _scheduleAutosave();
   }
@@ -455,6 +461,17 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(state.copyWith(status: CreateEventStatus.submitting));
     final draft = await _persistDraft(emitSavedState: false);
     if (draft == null || isClosed) return;
+
+    // Approved events are edited through an admin-reviewed replacement
+    // snapshot. The update endpoint already submitted it for review; calling
+    // the new-event submit transition here would incorrectly move the live
+    // event back to pending.
+    if (state.requiresUpdateApproval) {
+      await clearLocalDraft();
+      if (!isClosed) emit(state.copyWith(status: CreateEventStatus.success));
+      return;
+    }
+
     final result = await _eventsRepository.submitForReview(draft.id);
     result.fold(
       (failure) => emit(state.copyWith(
@@ -470,7 +487,9 @@ class CreateEventCubit extends Cubit<CreateEventState> {
 
   Future<void> disposeAutosave() async {
     _autosaveTimer?.cancel();
-    if (state.formData.title.trim().isNotEmpty) await _persistDraft();
+    if (state.isDirty && state.formData.title.trim().isNotEmpty) {
+      await _persistDraft();
+    }
   }
 
   Future<dynamic> _persistDraft({
@@ -502,6 +521,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
               ? CreateEventStatus.saved
               : CreateEventStatus.submitting,
           lastSavedAt: DateTime.now(),
+          isDirty: false,
         ));
         return event;
       },
@@ -552,7 +572,8 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       );
 
   void _update(CreateEventFormData data, {bool schedule = true}) {
-    emit(state.copyWith(formData: data, status: CreateEventStatus.initial));
+    emit(state.copyWith(
+        formData: data, status: CreateEventStatus.initial, isDirty: true));
     if (schedule) _scheduleAutosave();
   }
 

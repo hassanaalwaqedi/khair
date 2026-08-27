@@ -43,13 +43,40 @@ class AdminEventReviewPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (event.status == 'pending_update') ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: KhairColors.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: KhairColors.primary.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.edit_note, color: KhairColors.primary),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'This is an organizer update awaiting approval. The current public version remains live until you approve it.',
+                              style: TextStyle(height: 1.35),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 18),
+                  ],
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: KhairColors.primary.withOpacity(0.1),
+                          color: KhairColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -67,7 +94,7 @@ class AdminEventReviewPage extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
