@@ -150,6 +150,8 @@
   "pageNotFound": "Page not found",
   "goHome": "Go Home",
   "toggleTheme": "Toggle theme",
+  "darkMode": "Dark mode",
+  "lightMode": "Light mode",
   "locating": "Locating...",
   "trending": "Trending",
   "clear": "Clear",

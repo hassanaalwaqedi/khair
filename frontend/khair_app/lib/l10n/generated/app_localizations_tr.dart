@@ -458,6 +458,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get toggleTheme => 'Temayı değiştir';
 
   @override
+  String get darkMode => 'Karanlık mod';
+
+  @override
+  String get lightMode => 'Aydınlık mod';
+
+  @override
   String get locating => 'Konum belirleniyor...';
 
   @override

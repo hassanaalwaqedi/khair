@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/theme/theme_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/profile_overview_datasource.dart';
 
@@ -548,35 +549,50 @@ class _Preferences extends StatelessWidget {
   final ProfileOverview overview;
   final VoidCallback onUpdated;
   @override
-  Widget build(BuildContext context) =>
-      _Panel(title: context.l10n.preferences, children: [
-        _PreferenceSwitch(
-            icon: Icons.notifications_none_rounded,
-            title: context.l10n.orgNotifications,
-            subtitle: overview.preferences.pushNotifications
-                ? context.l10n.pushNotificationsOn
-                : context.l10n.pushNotificationsOff,
-            value: overview.preferences.pushNotifications,
-            onChanged: (value) => _save(context, push: value)),
-        _PreferenceSwitch(
-            icon: Icons.email_outlined,
-            title: context.l10n.emailUpdates,
-            subtitle: overview.preferences.emailNotifications
-                ? context.l10n.emailNotificationsOn
-                : context.l10n.emailNotificationsOff,
-            value: overview.preferences.emailNotifications,
-            onChanged: (value) => _save(context, email: value)),
-        _DetailRow(Icons.language_outlined, context.l10n.language,
-            _language(context, overview.preferences.language), onTap: () async {
-          final changed = await context.push<bool>('/profile/edit');
-          if (changed == true) onUpdated();
-        }),
-        _DetailRow(Icons.location_on_outlined, context.l10n.location,
-            overview.preferences.locationLabel, onTap: () async {
-          final changed = await context.push<bool>('/profile/edit');
-          if (changed == true) onUpdated();
-        }),
-      ]);
+  Widget build(BuildContext context) {
+    final themeState = context.watch<ThemeBloc>().state;
+    return _Panel(title: context.l10n.preferences, children: [
+      _PreferenceSwitch(
+          icon: themeState.isDark
+              ? Icons.dark_mode_outlined
+              : Icons.light_mode_outlined,
+          title: context.l10n.toggleTheme,
+          subtitle: themeState.isDark
+              ? context.l10n.darkMode
+              : context.l10n.lightMode,
+          value: themeState.isDark,
+          onChanged: (value) => context.read<ThemeBloc>().add(
+                SetThemeMode(value ? ThemeMode.dark : ThemeMode.light),
+              )),
+      _PreferenceSwitch(
+          icon: Icons.notifications_none_rounded,
+          title: context.l10n.orgNotifications,
+          subtitle: overview.preferences.pushNotifications
+              ? context.l10n.pushNotificationsOn
+              : context.l10n.pushNotificationsOff,
+          value: overview.preferences.pushNotifications,
+          onChanged: (value) => _save(context, push: value)),
+      _PreferenceSwitch(
+          icon: Icons.email_outlined,
+          title: context.l10n.emailUpdates,
+          subtitle: overview.preferences.emailNotifications
+              ? context.l10n.emailNotificationsOn
+              : context.l10n.emailNotificationsOff,
+          value: overview.preferences.emailNotifications,
+          onChanged: (value) => _save(context, email: value)),
+      _DetailRow(Icons.language_outlined, context.l10n.language,
+          _language(context, overview.preferences.language), onTap: () async {
+        final changed = await context.push<bool>('/profile/edit');
+        if (changed == true) onUpdated();
+      }),
+      _DetailRow(Icons.location_on_outlined, context.l10n.location,
+          overview.preferences.locationLabel, onTap: () async {
+        final changed = await context.push<bool>('/profile/edit');
+        if (changed == true) onUpdated();
+      }),
+    ]);
+  }
+
   Future<void> _save(BuildContext context, {bool? push, bool? email}) async {
     try {
       await getIt<ProfileOverviewDataSource>().updatePreferences(
