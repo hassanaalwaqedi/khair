@@ -244,7 +244,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                 child: Semantics(
                   container: true,
                   label: state.isLastStep
-                      ? context.l10n.postEvent
+                      ? context.l10n.createEventSubmit
                       : context.l10n.createEventContinue,
                   child: _bottomBar(context, state, dark),
                 ),
@@ -1577,7 +1577,22 @@ class _CreateEventViewState extends State<_CreateEventView> {
                               : _CreateColors.border)),
                 ),
               Spacer(),
-              if (state.isLastStep)
+              if (state.isLastStep) ...[
+                OutlinedButton.icon(
+                  onPressed: busy ? null : cubit.saveDraft,
+                  icon: Icon(Icons.bookmark_border_rounded, size: 17),
+                  label: Text(context.l10n.createEventSaveDraft),
+                  style: OutlinedButton.styleFrom(
+                      foregroundColor:
+                          dark ? Colors.white70 : _CreateColors.text,
+                      side: BorderSide(
+                          color: dark
+                              ? _CreateColors.darkBorder
+                              : _CreateColors.border),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14)),
+                ),
+                SizedBox(width: 10),
                 FilledButton.icon(
                   onPressed: busy ? null : cubit.submitEvent,
                   icon: busy
@@ -1588,15 +1603,15 @@ class _CreateEventViewState extends State<_CreateEventView> {
                               strokeWidth: 2, color: Colors.white))
                       : Icon(Icons.send_rounded, size: 17),
                   label: Text(busy
-                      ? context.l10n.postingEvent
-                      : context.l10n.postEvent),
+                      ? context.l10n.createEventSubmitting
+                      : context.l10n.createEventSubmit),
                   style: FilledButton.styleFrom(
                       backgroundColor: _CreateColors.rose,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 14)),
-                )
-              else
+                ),
+              ] else
                 FilledButton.icon(
                   onPressed: busy
                       ? null
