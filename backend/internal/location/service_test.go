@@ -53,3 +53,10 @@ func TestSearchQueryVariantsCorrectsEmaarTypo(t *testing.T) {
 		t.Fatalf("unexpected search variants: %#v", variants)
 	}
 }
+
+func TestSearchQueryVariantsTranslatesArabicPlaceTerm(t *testing.T) {
+	variants := searchQueryVariants("مقهى إعمار")
+	if len(variants) != 2 || variants[1] != "cafe Emaar" {
+		t.Fatalf("unexpected Arabic search variants: %#v", variants)
+	}
+}

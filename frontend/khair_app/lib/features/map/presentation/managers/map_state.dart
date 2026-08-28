@@ -15,6 +15,8 @@ class MapState extends Equatable {
     required this.locationPermissionDenied,
     required this.isOffline,
     required this.showSearchAreaButton,
+    required this.places,
+    required this.isSearchingPlaces,
     this.selectedEvent,
     this.errorMessage,
   });
@@ -32,6 +34,8 @@ class MapState extends Equatable {
       locationPermissionDenied: false,
       isOffline: false,
       showSearchAreaButton: false,
+      places: [],
+      isSearchingPlaces: false,
     );
   }
 
@@ -46,6 +50,8 @@ class MapState extends Equatable {
   final bool locationPermissionDenied;
   final bool isOffline;
   final bool showSearchAreaButton;
+  final List<NominatimPlace> places;
+  final bool isSearchingPlaces;
   final MapEvent? selectedEvent;
   final String? errorMessage;
 
@@ -61,6 +67,8 @@ class MapState extends Equatable {
     bool? locationPermissionDenied,
     bool? isOffline,
     bool? showSearchAreaButton,
+    List<NominatimPlace>? places,
+    bool? isSearchingPlaces,
     MapEvent? selectedEvent,
     String? errorMessage,
     bool clearSelectedEvent = false,
@@ -79,6 +87,8 @@ class MapState extends Equatable {
           locationPermissionDenied ?? this.locationPermissionDenied,
       isOffline: isOffline ?? this.isOffline,
       showSearchAreaButton: showSearchAreaButton ?? this.showSearchAreaButton,
+      places: places ?? this.places,
+      isSearchingPlaces: isSearchingPlaces ?? this.isSearchingPlaces,
       selectedEvent:
           clearSelectedEvent ? null : (selectedEvent ?? this.selectedEvent),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
@@ -98,6 +108,8 @@ class MapState extends Equatable {
         locationPermissionDenied,
         isOffline,
         showSearchAreaButton,
+        places,
+        isSearchingPlaces,
         selectedEvent,
         errorMessage,
       ];

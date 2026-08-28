@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/network/connectivity_service.dart';
+import '../../../../core/services/nominatim_service.dart';
 import '../../data/services/geo_service.dart';
 import '../../domain/models/map_models.dart';
 import 'marker_cluster_manager.dart';
@@ -29,6 +30,8 @@ class MapStateManager extends Cubit<MapState> {
   StreamSubscription<bool>? _connectivitySub;
   String _sessionHash = '';
   DateTime? _rateLimitedUntil;
+  int _placeSearchGeneration = 0;
+  String _placeSearchLanguage = 'en';
 
   LatLng? _northEast;
   LatLng? _southWest;
@@ -87,6 +90,41 @@ class MapStateManager extends Cubit<MapState> {
       zoom: state.zoom,
       forceRefresh: true,
     );
+    if (state.filters.search.isNotEmpty) {
+      await searchPlaces(state.filters.search, language: _placeSearchLanguage);
+    }
+  }
+
+  /// Searches both Khair events and nearby OpenStreetMap places. Place search
+  /// is explicit, so moving the map never creates a request storm.
+  Future<void> searchPlaces(String query, {String language = 'en'}) async {
+    final trimmed = query.trim();
+    _placeSearchLanguage = language;
+    final generation = ++_placeSearchGeneration;
+    if (trimmed.isEmpty) {
+      emit(state.copyWith(places: [], isSearchingPlaces: false));
+      return;
+    }
+
+    emit(state.copyWith(isSearchingPlaces: true));
+    final results = await NominatimService.search(
+      trimmed,
+      latitude: state.center.latitude,
+      longitude: state.center.longitude,
+      language: language,
+    );
+    if (isClosed || generation != _placeSearchGeneration) return;
+    emit(state.copyWith(places: results, isSearchingPlaces: false));
+  }
+
+  void onPlaceTapped(NominatimPlace place) {
+    _trackInteraction(
+      'place_tap',
+      latitude: place.lat,
+      longitude: place.lng,
+      distanceKm: place.distanceKm,
+      metadata: {'name': place.name ?? place.displayName},
+    );
   }
 
   // ─── Viewport tracking (NO auto-fetch) ────────
@@ -119,6 +157,9 @@ class MapStateManager extends Cubit<MapState> {
       zoom: state.zoom,
       forceRefresh: true,
     );
+    if (state.filters.search.isNotEmpty) {
+      await searchPlaces(state.filters.search, language: _placeSearchLanguage);
+    }
   }
 
   // ─── Data fetching ────────────────────────────
