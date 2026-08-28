@@ -585,6 +585,10 @@ func (a *eventRepoAdapter) ListPending() ([]models.EventWithOrganizer, error) {
 	return a.repo.ListPending()
 }
 
+func (a *eventRepoAdapter) ListAll() ([]models.EventWithOrganizer, error) {
+	return a.repo.ListAll()
+}
+
 func (a *eventRepoAdapter) ListPendingEventUpdates() ([]models.EventWithOrganizer, error) {
 	return a.repo.ListPendingEventUpdates()
 }

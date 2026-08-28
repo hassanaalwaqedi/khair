@@ -155,8 +155,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 ),
               ),
             ),
-            Tab(
-                icon: Icon(Icons.notifications_active), text: 'Notifications'),
+            Tab(icon: Icon(Icons.notifications_active), text: 'Notifications'),
           ],
         ),
       ),
@@ -184,17 +183,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           if (state.notificationSendStatus == AdminStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                    context.l10n.notificationSentTo(
-                        state.notificationSentCount ?? 0)),
+                content: Text(context.l10n
+                    .notificationSentTo(state.notificationSentCount ?? 0)),
                 backgroundColor: KhairColors.success,
               ),
             );
           } else if (state.notificationSendStatus == AdminStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content:
-                    Text(state.errorMessage ?? context.l10n.failedToSendNotification),
+                content: Text(state.errorMessage ??
+                    context.l10n.failedToSendNotification),
                 backgroundColor: KhairColors.error,
               ),
             );
@@ -583,6 +581,7 @@ class _EventsTab extends StatelessWidget {
           prev.status != curr.status ||
           prev.eventsStatus != curr.eventsStatus ||
           prev.pendingEvents != curr.pendingEvents ||
+          prev.allEvents != curr.allEvents ||
           prev.actionStatus != curr.actionStatus,
       builder: (context, state) {
         if (state.status == AdminStatus.loading ||
@@ -597,13 +596,13 @@ class _EventsTab extends StatelessWidget {
           );
         }
 
-        final events = state.pendingEvents;
+        final events = state.allEvents;
 
         if (events.isEmpty) {
           return _EmptyView(
             icon: Icons.event_available_outlined,
-            title: context.l10n.adminNoPendingEvents,
-            subtitle: context.l10n.adminAllEventsReviewed,
+            title: 'No events',
+            subtitle: 'There are no events to manage.',
           );
         }
 
@@ -618,7 +617,7 @@ class _EventsTab extends StatelessWidget {
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Text(
-                  context.l10n.adminPendingReview(events.length),
+                  '${context.l10n.adminEventsTab} (${events.length})',
                   style: KhairTypography.headlineSmall.copyWith(
                     color: isDark
                         ? KhairColors.darkTextPrimary
@@ -654,6 +653,9 @@ class _EventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
+    final canReview = event.status == 'pending' ||
+        event.status == 'draft' ||
+        event.status == 'pending_update';
 
     return Material(
       color: isDark ? KhairColors.darkCard : KhairColors.surface,
@@ -672,112 +674,129 @@ class _EventCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: KhairColors.secondaryLight.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.event, color: KhairColors.secondary),
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: KhairColors.secondaryLight.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.event, color: KhairColors.secondary),
+                  ),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.title,
+                          style: KhairTypography.labelLarge.copyWith(
+                            color: isDark
+                                ? KhairColors.darkTextPrimary
+                                : KhairColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'by ${event.organizerName ?? 'Unknown'}',
+                          style: KhairTypography.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 12),
+              // Event details
+              _DetailRow(
+                icon: Icons.calendar_today,
+                label: context.l10n.adminDate,
+                value: dateFormat.format(event.startDate),
+              ),
+              if (event.eventType.isNotEmpty)
+                _DetailRow(
+                  icon: Icons.category_outlined,
+                  label: context.l10n.adminType,
+                  value: event.eventType,
+                ),
+              if (event.city != null || event.country != null)
+                _DetailRow(
+                  icon: Icons.location_on_outlined,
+                  label: context.l10n.adminLocation,
+                  value: [event.city, event.country]
+                      .where((e) => e != null)
+                      .join(', '),
+                ),
+
+              if (canReview) ...[
+                SizedBox(height: 16),
+                Row(
                   children: [
-                    Text(
-                      event.title,
-                      style: KhairTypography.labelLarge.copyWith(
-                        color: isDark
-                            ? KhairColors.darkTextPrimary
-                            : KhairColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isActionLoading
+                            ? null
+                            : () => _showRejectDialog(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: KhairColors.error,
+                          side: BorderSide(color: KhairColors.error),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: KhairRadius.medium,
+                          ),
+                        ),
+                        child: Text(context.l10n.adminReject),
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'by ${event.organizerName ?? 'Unknown'}',
-                      style: KhairTypography.bodySmall,
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isActionLoading
+                            ? null
+                            : () {
+                                context
+                                    .read<AdminBloc>()
+                                    .add(ApproveEvent(event.id));
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: KhairColors.success,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: KhairRadius.medium,
+                          ),
+                        ),
+                        child: isActionLoading
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(context.l10n.adminApprove),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
-          // Event details
-          _DetailRow(
-            icon: Icons.calendar_today,
-            label: context.l10n.adminDate,
-            value: dateFormat.format(event.startDate),
-          ),
-          if (event.eventType.isNotEmpty)
-            _DetailRow(
-              icon: Icons.category_outlined,
-              label: context.l10n.adminType,
-              value: event.eventType,
-            ),
-          if (event.city != null || event.country != null)
-            _DetailRow(
-              icon: Icons.location_on_outlined,
-              label: context.l10n.adminLocation,
-              value: [event.city, event.country]
-                  .where((e) => e != null)
-                  .join(', '),
-            ),
-
-          SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
+              ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
                   onPressed:
-                      isActionLoading ? null : () => _showRejectDialog(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: KhairColors.error,
-                    side: BorderSide(color: KhairColors.error),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: KhairRadius.medium,
-                    ),
+                      isActionLoading ? null : () => _showDeleteDialog(context),
+                  icon: Icon(Icons.delete_forever, color: KhairColors.error),
+                  label: Text(
+                    'Delete event',
+                    style: TextStyle(color: KhairColors.error),
                   ),
-                  child: Text(context.l10n.adminReject),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: isActionLoading
-                      ? null
-                      : () {
-                          context.read<AdminBloc>().add(ApproveEvent(event.id));
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: KhairColors.success,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: KhairRadius.medium,
-                    ),
-                  ),
-                  child: isActionLoading
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(context.l10n.adminApprove),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-      ),
+        ),
       ),
     );
   }
@@ -830,6 +849,31 @@ class _EventCard extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
             child: Text(context.l10n.adminReject),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Delete event?'),
+        content: Text(
+            'This will immediately remove the event from public discovery. Confirmed attendees and the organizer will be notified.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.adminCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: KhairColors.error),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<AdminBloc>().add(DeleteEvent(event.id));
+            },
+            child: Text('Delete event'),
           ),
         ],
       ),
@@ -1360,8 +1404,8 @@ class _UserCard extends StatelessWidget {
                   value: 'delete',
                   child: ListTile(
                       leading: Icon(Icons.delete_forever, color: Colors.red),
-                      title:
-                          Text(context.l10n.ownerDelete, style: TextStyle(color: Colors.red)),
+                      title: Text(context.l10n.ownerDelete,
+                          style: TextStyle(color: Colors.red)),
                       dense: true,
                       contentPadding: EdgeInsets.zero)),
             ],
@@ -1445,9 +1489,8 @@ class _UserCard extends StatelessWidget {
                   destructive ? KhairColors.error : KhairColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: Text(destructive
-                ? context.l10n.delete
-                : context.l10n.confirm),
+            child:
+                Text(destructive ? context.l10n.delete : context.l10n.confirm),
           ),
         ],
       ),
@@ -1470,7 +1513,7 @@ class _UserCard extends StatelessWidget {
             TextField(
               controller: reasonCtrl,
               decoration: InputDecoration(
-                labelText: context.l10n.reasonOptional,
+                  labelText: context.l10n.reasonOptional,
                   hintText: context.l10n.adminProvideReason),
               maxLines: 2,
             ),
@@ -1549,7 +1592,8 @@ class _QuotesTabState extends State<_QuotesTab> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: KhairColors.error),
-            child: Text(context.l10n.ownerDelete, style: TextStyle(color: Colors.white)),
+            child: Text(context.l10n.ownerDelete,
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -1599,28 +1643,36 @@ class _QuotesTabState extends State<_QuotesTab> {
               children: [
                 DropdownButtonFormField<String>(
                   initialValue: type,
-                    decoration: InputDecoration(labelText: context.l10n.evidenceType),
+                  decoration:
+                      InputDecoration(labelText: context.l10n.evidenceType),
                   items: [
-                    DropdownMenuItem(value: 'quran', child: Text(context.l10n.mapFilterQuran)),
-                    DropdownMenuItem(value: 'hadith', child: Text(context.l10n.spiritualQuoteTypeHadith)),
+                    DropdownMenuItem(
+                        value: 'quran',
+                        child: Text(context.l10n.mapFilterQuran)),
+                    DropdownMenuItem(
+                        value: 'hadith',
+                        child: Text(context.l10n.spiritualQuoteTypeHadith)),
                   ],
                   onChanged: (v) => setDialogState(() => type = v!),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: textCtrl,
-                  decoration: InputDecoration(labelText: context.l10n.arabicText),
+                  decoration:
+                      InputDecoration(labelText: context.l10n.arabicText),
                   textDirection: TextDirection.rtl,
                   maxLines: 3,
                 ),
                 SizedBox(height: 12),
                 TextField(
                     controller: sourceCtrl,
-                    decoration: InputDecoration(labelText: context.l10n.source)),
+                    decoration:
+                        InputDecoration(labelText: context.l10n.source)),
                 SizedBox(height: 12),
                 TextField(
                     controller: refCtrl,
-                    decoration: InputDecoration(labelText: context.l10n.reference)),
+                    decoration:
+                        InputDecoration(labelText: context.l10n.reference)),
                 SizedBox(height: 12),
                 SwitchListTile(
                   title: Text(context.l10n.ownerActive),
@@ -1768,7 +1820,8 @@ class _QuotesTabState extends State<_QuotesTab> {
                       Icon(Icons.format_quote,
                           size: 64, color: KhairColors.textTertiary),
                       SizedBox(height: 16),
-                      Text(context.l10n.noQuotesYet, style: KhairTypography.bodyMedium),
+                      Text(context.l10n.noQuotesYet,
+                          style: KhairTypography.bodyMedium),
                     ],
                   ),
                 )
@@ -1843,8 +1896,7 @@ class _QuotesTabState extends State<_QuotesTab> {
                                   ),
                                 Spacer(),
                                 IconButton(
-                                  icon:
-                                      Icon(Icons.edit_outlined, size: 18),
+                                  icon: Icon(Icons.edit_outlined, size: 18),
                                   onPressed: () => _showQuoteDialog(q),
                                   tooltip: context.l10n.ownerEdit,
                                 ),
@@ -1986,8 +2038,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child:
-                    Icon(Icons.notifications_active, color: Colors.white),
+                child: Icon(Icons.notifications_active, color: Colors.white),
               ),
               SizedBox(width: 14),
               Column(
@@ -2123,8 +2174,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.person,
-                        size: 18, color: KhairColors.primary),
+                    Icon(Icons.person, size: 18, color: KhairColors.primary),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -2175,8 +2225,8 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: KhairColors.primary, width: 1.5),
+                    borderSide:
+                        BorderSide(color: KhairColors.primary, width: 1.5),
                   ),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -2186,8 +2236,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                 buildWhen: (prev, curr) =>
                     prev.searchedUsers != curr.searchedUsers,
                 builder: (context, state) {
-                  if (state.searchedUsers.isEmpty)
-                    return SizedBox(height: 12);
+                  if (state.searchedUsers.isEmpty) return SizedBox(height: 12);
                   return Container(
                     margin: const EdgeInsets.only(top: 4),
                     constraints: BoxConstraints(maxHeight: 180),
@@ -2293,8 +2342,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: KhairColors.primary, width: 1.5),
+                borderSide: BorderSide(color: KhairColors.primary, width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -2339,8 +2387,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: KhairColors.primary, width: 1.5),
+                borderSide: BorderSide(color: KhairColors.primary, width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -2357,8 +2404,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline,
-                    size: 18, color: KhairColors.info),
+                Icon(Icons.info_outline, size: 18, color: KhairColors.info),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -2398,8 +2444,7 @@ class _NotificationsTabState extends State<_NotificationsTab> {
                         : _target == 'all'
                             ? 'Send to All Users'
                             : 'Send to User',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: KhairColors.primary,

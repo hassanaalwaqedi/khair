@@ -22,6 +22,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<RejectOrganizer>(_onRejectOrganizer);
     on<ApproveEvent>(_onApproveEvent);
     on<RejectEvent>(_onRejectEvent);
+    on<DeleteEvent>(_onDeleteEvent);
     on<ResolveReport>(_onResolveReport);
     on<LoadUsers>(_onLoadUsers);
     on<LoadStats>(_onLoadStats);
@@ -47,17 +48,20 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       _adminRepository.getPendingEvents(),
       _adminRepository.getPendingReports(),
       _adminRepository.getPendingVerifications(),
+      _adminRepository.getAllEvents(),
     ]);
 
     final organizersResult = results[0];
     final eventsResult = results[1];
     final reportsResult = results[2];
     final verificationsResult = results[3];
+    final allEventsResult = results[4];
 
     List<Organizer> organizers = [];
     List<Event> events = [];
     List<Report> reports = [];
     List<VerificationRequest> verifications = [];
+    List<Event> allEvents = [];
     String? error;
 
     organizersResult.fold(
@@ -80,6 +84,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       (data) => verifications = data as List<VerificationRequest>,
     );
 
+    allEventsResult.fold(
+      (failure) => error ??= failure.message,
+      (data) => allEvents = data as List<Event>,
+    );
+
     if (error != null) {
       emit(state.copyWith(
         status: AdminStatus.failure,
@@ -90,6 +99,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         status: AdminStatus.success,
         pendingOrganizers: organizers,
         pendingEvents: events,
+        allEvents: allEvents,
         pendingReports: reports,
         verificationRequests: verifications,
       ));
@@ -123,6 +133,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     emit(state.copyWith(eventsStatus: AdminStatus.loading));
 
     final result = await _adminRepository.getPendingEvents();
+    final allEventsResult = await _adminRepository.getAllEvents();
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -132,6 +143,10 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       (events) => emit(state.copyWith(
         eventsStatus: AdminStatus.success,
         pendingEvents: events,
+        allEvents: allEventsResult.fold(
+          (_) => state.allEvents,
+          (allEvents) => allEvents,
+        ),
       )),
     );
   }
@@ -230,12 +245,15 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         errorMessage: failure.message,
       )),
       (updatedEvent) {
-        final updated = state.pendingEvents
-            .where((e) => e.id != event.eventId)
+        final updated =
+            state.pendingEvents.where((e) => e.id != event.eventId).toList();
+        final allEvents = state.allEvents
+            .map((e) => e.id == event.eventId ? updatedEvent : e)
             .toList();
         emit(state.copyWith(
           actionStatus: AdminStatus.success,
           pendingEvents: updated,
+          allEvents: allEvents,
         ));
       },
     );
@@ -258,14 +276,42 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         errorMessage: failure.message,
       )),
       (updatedEvent) {
-        final updated = state.pendingEvents
-            .where((e) => e.id != event.eventId)
+        final updated =
+            state.pendingEvents.where((e) => e.id != event.eventId).toList();
+        final allEvents = state.allEvents
+            .map((e) => e.id == event.eventId ? updatedEvent : e)
             .toList();
         emit(state.copyWith(
           actionStatus: AdminStatus.success,
           pendingEvents: updated,
+          allEvents: allEvents,
         ));
       },
+    );
+  }
+
+  Future<void> _onDeleteEvent(
+    DeleteEvent event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(actionStatus: AdminStatus.loading));
+
+    final result = await _adminRepository.updateEventStatus(
+      event.eventId,
+      const StatusUpdateParams(status: 'cancelled'),
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        actionStatus: AdminStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => emit(state.copyWith(
+        actionStatus: AdminStatus.success,
+        pendingEvents:
+            state.pendingEvents.where((e) => e.id != event.eventId).toList(),
+        allEvents: state.allEvents.where((e) => e.id != event.eventId).toList(),
+      )),
     );
   }
 
@@ -289,9 +335,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         errorMessage: failure.message,
       )),
       (report) {
-        final updated = state.pendingReports
-            .where((r) => r.id != event.reportId)
-            .toList();
+        final updated =
+            state.pendingReports.where((r) => r.id != event.reportId).toList();
         emit(state.copyWith(
           actionStatus: AdminStatus.success,
           pendingReports: updated,
@@ -338,7 +383,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   ) async {
     emit(state.copyWith(actionStatus: AdminStatus.loading));
 
-    final result = await _adminRepository.updateUserRole(event.userId, event.role);
+    final result =
+        await _adminRepository.updateUserRole(event.userId, event.role);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -359,7 +405,9 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     emit(state.copyWith(actionStatus: AdminStatus.loading));
 
     final result = await _adminRepository.updateUserStatus(
-      event.userId, event.status, reason: event.reason,
+      event.userId,
+      event.status,
+      reason: event.reason,
     );
 
     result.fold(
@@ -451,7 +499,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       return;
     }
 
-    final result = await _adminRepository.searchUsersForNotification(event.query);
+    final result =
+        await _adminRepository.searchUsersForNotification(event.query);
 
     result.fold(
       (failure) => emit(state.copyWith(searchedUsers: const [])),

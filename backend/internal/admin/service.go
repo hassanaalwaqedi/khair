@@ -42,6 +42,7 @@ type EventRepository interface {
 	UpdateStatus(id uuid.UUID, status string, rejectionReason *string) error
 	UpdateStatusWithReviewer(id uuid.UUID, status string, rejectionReason *string, reviewedBy uuid.UUID) error
 	ListPending() ([]models.EventWithOrganizer, error)
+	ListAll() ([]models.EventWithOrganizer, error)
 	ListPendingEventUpdates() ([]models.EventWithOrganizer, error)
 	GetPendingEventUpdate(eventID uuid.UUID) (*models.EventUpdateRequest, error)
 	ReviewEventUpdate(eventID uuid.UUID, status string, reason *string, reviewerID uuid.UUID) (*models.EventWithOrganizer, error)
@@ -128,11 +129,42 @@ func (s *Service) ListPendingEvents() ([]models.EventWithOrganizer, error) {
 	return append(events, updates...), nil
 }
 
+func (s *Service) ListAllEvents() ([]models.EventWithOrganizer, error) {
+	return s.eventRepo.ListAll()
+}
+
 func (s *Service) GetEvent(id uuid.UUID) (*models.EventWithOrganizer, error) {
 	return s.eventRepo.GetByID(id)
 }
 
 func (s *Service) UpdateEventStatus(id uuid.UUID, req *StatusUpdateRequest, reviewerID uuid.UUID) (*models.EventWithOrganizer, error) {
+	// Administrator cancellation is an override: it is allowed for every
+	// event state and does not depend on the organizer's 24-hour rule.
+	if req.Status == "cancelled" {
+		evt, err := s.eventRepo.GetByID(id)
+		if err != nil {
+			return nil, fmt.Errorf("get event: %w", err)
+		}
+		reason := req.RejectionReason
+		if reason == nil || strings.TrimSpace(*reason) == "" {
+			defaultReason := "Removed by an administrator"
+			reason = &defaultReason
+		}
+		if err := s.eventRepo.UpdateStatusWithReviewer(id, "cancelled", reason, reviewerID); err != nil {
+			return nil, fmt.Errorf("cancel event: %w", err)
+		}
+		evt.Status = "cancelled"
+		evt.IsPublished = false
+		evt.RejectionReason = reason
+		s.invalidateEventCaches(id)
+		var orgUserID uuid.UUID
+		if err := s.db.QueryRow(`SELECT user_id FROM organizers WHERE id = $1`, evt.OrganizerID).Scan(&orgUserID); err == nil {
+			s.notifyOrganizerEventStatus(orgUserID, evt, "cancelled", reason)
+		}
+		s.notifyEventAttendeesCancelled(evt)
+		return evt, nil
+	}
+
 	// An approved/published event with a pending organizer snapshot is reviewed
 	// through the same admin queue, while the original event status remains
 	// untouched until approval.
@@ -279,6 +311,8 @@ func (s *Service) notifyOrganizerEventStatus(userID uuid.UUID, event *models.Eve
 		typeName = "event_approved"
 	case "rejected":
 		typeName = "event_rejected"
+	case "cancelled":
+		typeName = "event_cancelled"
 	}
 	data := map[string]string{
 		"type":        typeName,
@@ -302,6 +336,41 @@ func (s *Service) notifyOrganizerEventStatus(userID uuid.UUID, event *models.Eve
 	if s.pushService != nil && created {
 		data["notification_id"] = notificationID.String()
 		s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+	}
+}
+
+func (s *Service) notifyEventAttendeesCancelled(event *models.EventWithOrganizer) {
+	if s.notificationService == nil || event == nil {
+		return
+	}
+	rows, err := s.db.Query(`
+		SELECT DISTINCT user_id FROM event_registrations
+		WHERE event_id = $1 AND status IN ('confirmed', 'reserved')`, event.ID)
+	if err != nil {
+		log.Printf("[ADMIN] attendee cancellation lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		data := map[string]string{
+			"type": "event_cancelled", "entity_type": "event",
+			"entity_id": event.ID.String(), "event_id": event.ID.String(),
+			"event_title": event.Title,
+		}
+		copy, notificationID, created, err := s.notificationService.CreateLocalizedOnce(
+			userID, "event_cancelled", data, "event_cancelled:"+event.ID.String())
+		if err != nil {
+			log.Printf("[ADMIN] attendee cancellation notification failed: %v", err)
+			continue
+		}
+		if s.pushService != nil && created {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
 	}
 }
 

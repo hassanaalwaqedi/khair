@@ -70,6 +70,16 @@ class RejectEvent extends AdminEvent {
   List<Object?> get props => [eventId, reason];
 }
 
+/// Remove an event from the platform as an administrator.
+class DeleteEvent extends AdminEvent {
+  final String eventId;
+
+  const DeleteEvent(this.eventId);
+
+  @override
+  List<Object?> get props => [eventId];
+}
+
 /// Resolve a report
 class ResolveReport extends AdminEvent {
   final String reportId;
@@ -174,7 +184,8 @@ class ReviewVerificationEvent extends AdminEvent {
   final String status; // approved, rejected, more_info_needed
   final String? reviewNotes;
 
-  const ReviewVerificationEvent(this.requestId, this.status, {this.reviewNotes});
+  const ReviewVerificationEvent(this.requestId, this.status,
+      {this.reviewNotes});
 
   @override
   List<Object?> get props => [requestId, status, reviewNotes];

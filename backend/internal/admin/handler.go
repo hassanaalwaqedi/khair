@@ -37,6 +37,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		admin.PUT("/organizers/:id/status", h.UpdateOrganizerStatus)
 
 		// Event management
+		admin.GET("/events", h.ListAllEvents)
 		admin.GET("/events/pending", h.ListPendingEvents)
 		admin.GET("/events/:id", h.GetEvent)
 		admin.PUT("/events/:id/status", h.UpdateEventStatus)
@@ -136,6 +137,15 @@ func (h *Handler) UpdateOrganizerStatus(c *gin.Context) {
 
 func (h *Handler) ListPendingEvents(c *gin.Context) {
 	events, err := h.service.ListPendingEvents()
+	if err != nil {
+		response.InternalServerError(c, err.Error())
+		return
+	}
+	response.Success(c, events)
+}
+
+func (h *Handler) ListAllEvents(c *gin.Context) {
+	events, err := h.service.ListAllEvents()
 	if err != nil {
 		response.InternalServerError(c, err.Error())
 		return

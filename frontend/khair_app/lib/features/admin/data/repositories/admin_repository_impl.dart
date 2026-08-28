@@ -68,7 +68,8 @@ class AdminRepositoryImpl implements AdminRepository {
     StatusUpdateParams params,
   ) async {
     try {
-      final organizer = await _remoteDataSource.updateOrganizerStatus(id, params.toJson());
+      final organizer =
+          await _remoteDataSource.updateOrganizerStatus(id, params.toJson());
       return Right(organizer);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));
@@ -81,6 +82,18 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Either<Failure, List<Event>>> getPendingEvents() async {
     try {
       final events = await _remoteDataSource.getPendingEvents();
+      return Right(events);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Event>>> getAllEvents() async {
+    try {
+      final events = await _remoteDataSource.getAllEvents();
       return Right(events);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));
@@ -107,7 +120,8 @@ class AdminRepositoryImpl implements AdminRepository {
     StatusUpdateParams params,
   ) async {
     try {
-      final event = await _remoteDataSource.updateEventStatus(id, params.toJson());
+      final event =
+          await _remoteDataSource.updateEventStatus(id, params.toJson());
       return Right(event);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));
@@ -156,7 +170,8 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateUserRole(String userId, String role) async {
+  Future<Either<Failure, void>> updateUserRole(
+      String userId, String role) async {
     try {
       await _remoteDataSource.updateUserRole(userId, role);
       return const Right(null);
@@ -168,7 +183,8 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateUserStatus(String userId, String status, {String? reason}) async {
+  Future<Either<Failure, void>> updateUserStatus(String userId, String status,
+      {String? reason}) async {
     try {
       await _remoteDataSource.updateUserStatus(userId, status, reason: reason);
       return const Right(null);
@@ -226,7 +242,8 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> searchUsersForNotification(String query) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      searchUsersForNotification(String query) async {
     try {
       final users = await _remoteDataSource.searchUsersForNotification(query);
       return Right(users);
@@ -238,7 +255,8 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, List<VerificationRequest>>> getPendingVerifications() async {
+  Future<Either<Failure, List<VerificationRequest>>>
+      getPendingVerifications() async {
     try {
       final requests = await _remoteDataSource.getPendingVerifications();
       return Right(requests);
@@ -250,9 +268,11 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, void>> reviewVerification(String id, String status, {String? reviewNotes}) async {
+  Future<Either<Failure, void>> reviewVerification(String id, String status,
+      {String? reviewNotes}) async {
     try {
-      await _remoteDataSource.reviewVerification(id, status, reviewNotes: reviewNotes);
+      await _remoteDataSource.reviewVerification(id, status,
+          reviewNotes: reviewNotes);
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));

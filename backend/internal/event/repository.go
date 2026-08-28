@@ -904,6 +904,31 @@ func (r *Repository) ListPending() ([]models.EventWithOrganizer, error) {
 	return events, nil
 }
 
+// ListAll returns every event for administrator management, including events
+// that are approved, rejected, cancelled, or still in draft.
+func (r *Repository) ListAll() ([]models.EventWithOrganizer, error) {
+	query := `SELECT ` + eventWithOrgCols + `
+		FROM events e
+		JOIN organizers o ON e.organizer_id = o.id
+		ORDER BY e.created_at DESC`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.EventWithOrganizer
+	for rows.Next() {
+		var event models.EventWithOrganizer
+		if err := scanEventWithOrg(rows, &event); err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, rows.Err()
+}
+
 // FindDuplicate checks if a similar event already exists for the same organizer
 func (r *Repository) FindDuplicate(organizerID uuid.UUID, title string, startDate time.Time) (*models.Event, error) {
 	query := `SELECT ` + bareEventCols + `
