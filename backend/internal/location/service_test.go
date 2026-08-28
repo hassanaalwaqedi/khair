@@ -38,3 +38,11 @@ func TestDistanceKm(t *testing.T) {
 		t.Fatalf("one degree distance = %v km, want about 111", got)
 	}
 }
+
+func TestPlaceRankPrefersSelectedCityBeforeDistance(t *testing.T) {
+	outside := PlaceResult{City: "Küçükçekmece", DisplayName: "Küçükçekmece, Turkey", DistanceKm: 1}
+	inside := PlaceResult{City: "Istanbul", DisplayName: "Istanbul, Turkey", DistanceKm: 20}
+	if placeRank(inside, "Istanbul", "Turkey") <= placeRank(outside, "Istanbul", "Turkey") {
+		t.Fatal("selected city should outrank a closer result outside the selected city")
+	}
+}
