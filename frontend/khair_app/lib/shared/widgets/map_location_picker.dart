@@ -317,6 +317,14 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                   ],
                 ),
 
+                // Current-location control: keep this on the map so the
+                // action is discoverable without scrolling below it.
+                PositionedDirectional(
+                  end: 12,
+                  top: 12,
+                  child: _buildMapCurrentLocationButton(),
+                ),
+
                 // Zoom controls
                 PositionedDirectional(
                   end: 12,
@@ -553,7 +561,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                 ),
               )
             else
-              const Text('📌', style: TextStyle(fontSize: 18)),
+              const Icon(Icons.my_location, size: 18, color: Colors.blue),
             const SizedBox(width: 10),
             Text(
               widget.useCurrentLocationLabel,
@@ -566,6 +574,14 @@ class _MapLocationPickerState extends State<MapLocationPicker>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMapCurrentLocationButton() {
+    return _mapButton(
+      icon: Icons.my_location,
+      onTap: _isLocating ? () {} : _useCurrentLocation,
+      isLoading: _isLocating,
     );
   }
 
@@ -639,7 +655,11 @@ class _MapLocationPickerState extends State<MapLocationPicker>
     );
   }
 
-  Widget _mapButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _mapButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isLoading = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -656,7 +676,12 @@ class _MapLocationPickerState extends State<MapLocationPicker>
             ),
           ],
         ),
-        child: Icon(icon, size: 20, color: Colors.black87),
+        child: isLoading
+            ? const Padding(
+                padding: EdgeInsets.all(9),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon, size: 20, color: Colors.black87),
       ),
     );
   }
