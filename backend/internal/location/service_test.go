@@ -60,3 +60,22 @@ func TestSearchQueryVariantsTranslatesArabicPlaceTerm(t *testing.T) {
 		t.Fatalf("unexpected Arabic search variants: %#v", variants)
 	}
 }
+
+func TestPlaceFromPhotonNormalizesCoordinatesAndAddress(t *testing.T) {
+	item := photonFeature{}
+	item.Properties = photonProperties{
+		OSMType: "W", OSMID: 123, OSMKey: "shop", OSMValue: "mall",
+		Name: "Emaar Square AVM", Street: "Ayazma Caddesi",
+		District: "Ünalan", City: "Üsküdar", Country: "Turkey",
+		CountryCode: "tr", Postcode: "34700",
+	}
+	item.Geometry.Coordinates = []float64{29.0708629, 41.0030972}
+
+	place := placeFromPhoton(item)
+	if place.Name != "Emaar Square AVM" || place.Latitude != 41.0030972 || place.Longitude != 29.0708629 {
+		t.Fatalf("unexpected Photon place: %+v", place)
+	}
+	if place.Address != "Ayazma Caddesi, Ünalan, Üsküdar" || place.Provider != "photon" {
+		t.Fatalf("Photon place fields were not normalized: %+v", place)
+	}
+}
