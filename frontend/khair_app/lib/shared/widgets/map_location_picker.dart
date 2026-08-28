@@ -11,6 +11,7 @@ import '../../core/services/nominatim_service.dart';
 typedef OnLocationSelected = void Function(
   double latitude,
   double longitude,
+  String? venueName,
   String? address,
   String? city,
   String? country,
@@ -22,6 +23,9 @@ typedef OnLocationSelected = void Function(
 class MapLocationPicker extends StatefulWidget {
   final double? initialLatitude;
   final double? initialLongitude;
+  final String? initialCity;
+  final String? initialCountry;
+  final String? language;
   final OnLocationSelected onLocationSelected;
   final String searchHint;
   final String useCurrentLocationLabel;
@@ -33,6 +37,9 @@ class MapLocationPicker extends StatefulWidget {
     super.key,
     this.initialLatitude,
     this.initialLongitude,
+    this.initialCity,
+    this.initialCountry,
+    this.language,
     required this.onLocationSelected,
     this.searchHint = 'Search for a place...',
     this.useCurrentLocationLabel = 'Use my current location',
@@ -53,11 +60,13 @@ class _MapLocationPickerState extends State<MapLocationPicker>
 
   LatLng? _selectedPoint;
   String? _resolvedAddress;
+  String? _selectedPlaceName;
   bool _isSearching = false;
   bool _isLocating = false;
   bool _isResolving = false;
   List<NominatimPlace> _searchResults = [];
   Timer? _debounce;
+  int _searchGeneration = 0;
 
   late final AnimationController _pinAnimController;
   late final Animation<double> _pinBounce;
@@ -104,18 +113,21 @@ class _MapLocationPickerState extends State<MapLocationPicker>
 
   Future<void> _reverseGeocode(LatLng point) async {
     setState(() => _isResolving = true);
-    final place =
-        await NominatimService.reverseGeocode(point.latitude, point.longitude);
+    final place = await NominatimService.reverseGeocode(
+        point.latitude, point.longitude,
+        language: widget.language);
 
     if (!mounted) return;
     setState(() {
       _isResolving = false;
+      _selectedPlaceName = place?.name;
       _resolvedAddress = place?.shortAddress;
     });
 
     widget.onLocationSelected(
       point.latitude,
       point.longitude,
+      place?.name,
       place?.shortAddress ?? place?.displayName,
       place?.city,
       place?.country,
@@ -125,15 +137,23 @@ class _MapLocationPickerState extends State<MapLocationPicker>
 
   void _onSearchChanged(String query) {
     _debounce?.cancel();
+    final generation = ++_searchGeneration;
     if (query.trim().isEmpty) {
       setState(() => _searchResults = []);
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
       if (!mounted) return;
       setState(() => _isSearching = true);
-      final results = await NominatimService.search(query);
-      if (!mounted) return;
+      final results = await NominatimService.search(
+        query,
+        city: widget.initialCity,
+        country: widget.initialCountry,
+        latitude: _selectedPoint?.latitude,
+        longitude: _selectedPoint?.longitude,
+        language: widget.language,
+      );
+      if (!mounted || generation != _searchGeneration) return;
       setState(() {
         _searchResults = results;
         _isSearching = false;
@@ -145,6 +165,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
     final point = LatLng(place.lat, place.lng);
     setState(() {
       _selectedPoint = point;
+      _selectedPlaceName = place.name;
       _resolvedAddress = place.shortAddress;
       _searchResults = [];
       _searchController.clear();
@@ -157,6 +178,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
     widget.onLocationSelected(
       place.lat,
       place.lng,
+      place.name,
       place.shortAddress,
       place.city,
       place.country,
@@ -355,6 +377,11 @@ class _MapLocationPickerState extends State<MapLocationPicker>
           const SizedBox(height: 14),
           _buildSelectedInfo(),
         ],
+        const SizedBox(height: 6),
+        const Text(
+          'Map data © OpenStreetMap contributors',
+          style: TextStyle(color: Colors.white38, fontSize: 10),
+        ),
       ],
     );
   }
@@ -398,8 +425,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
               : _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: Icon(Icons.close,
-                          color: Colors.white.withValues(alpha: 0.4),
-                          size: 18),
+                          color: Colors.white.withValues(alpha: 0.4), size: 18),
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _searchResults = []);
@@ -444,8 +470,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
             onTap: () => _selectSearchResult(place),
             borderRadius: BorderRadius.circular(10),
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   const Text('📍', style: TextStyle(fontSize: 16)),
@@ -455,7 +480,9 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          place.city ?? place.displayName.split(',').first,
+                          place.name?.isNotEmpty == true
+                              ? place.name!
+                              : place.displayName.split(',').first,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -466,7 +493,13 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          place.displayName,
+                          [
+                            if (place.category?.isNotEmpty == true)
+                              place.category!,
+                            place.shortAddress,
+                            if (place.distanceKm != null)
+                              '${place.distanceKm!.toStringAsFixed(1)} km',
+                          ].join(' • '),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 11,
@@ -573,7 +606,12 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                   )
                 else
                   Text(
-                    _resolvedAddress ?? '${_selectedPoint!.latitude.toStringAsFixed(5)}, ${_selectedPoint!.longitude.toStringAsFixed(5)}',
+                    [
+                      if (_selectedPlaceName?.isNotEmpty == true)
+                        _selectedPlaceName!,
+                      _resolvedAddress ??
+                          '${_selectedPoint!.latitude.toStringAsFixed(5)}, ${_selectedPoint!.longitude.toStringAsFixed(5)}',
+                    ].join('\n'),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 13,
