@@ -279,20 +279,29 @@ func (p *nominatimProvider) Search(ctx context.Context, query, city, country, la
 
 func (p *nominatimProvider) searchPhoton(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
 	var raw photonFeatureCollection
-	searchQuery := query
-	if city != "" {
-		searchQuery += ", " + city
-	}
-	if country != "" {
-		searchQuery += ", " + country
-	}
-	values := url.Values{
-		"q":     {searchQuery},
-		"limit": {"8"},
-		"lang":  {language},
-	}
-	if err := p.photonRequest(ctx, "api/", values, &raw); err != nil {
-		return nil, err
+	for _, variant := range searchQueryVariants(query) {
+		searchQuery := variant
+		if city != "" {
+			searchQuery += ", " + city
+		}
+		if country != "" {
+			searchQuery += ", " + country
+		}
+		values := url.Values{
+			"q":     {searchQuery},
+			"limit": {"8"},
+		}
+		setPhotonLanguage(values, language)
+		if lat != nil && lng != nil {
+			values.Set("lat", strconv.FormatFloat(*lat, 'f', 6, 64))
+			values.Set("lon", strconv.FormatFloat(*lng, 'f', 6, 64))
+		}
+		if err := p.photonRequest(ctx, "api/", values, &raw); err != nil {
+			return nil, err
+		}
+		if len(raw.Features) > 0 {
+			break
+		}
 	}
 	results := make([]PlaceResult, 0, len(raw.Features))
 	for _, item := range raw.Features {
@@ -385,10 +394,10 @@ func (p *nominatimProvider) Reverse(ctx context.Context, lat, lng float64, langu
 
 func (p *nominatimProvider) reversePhoton(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error) {
 	values := url.Values{
-		"lat":  {strconv.FormatFloat(lat, 'f', 6, 64)},
-		"lon":  {strconv.FormatFloat(lng, 'f', 6, 64)},
-		"lang": {language},
+		"lat": {strconv.FormatFloat(lat, 'f', 6, 64)},
+		"lon": {strconv.FormatFloat(lng, 'f', 6, 64)},
 	}
+	setPhotonLanguage(values, language)
 	var raw photonFeatureCollection
 	if err := p.photonRequest(ctx, "reverse", values, &raw); err != nil {
 		return nil, err
@@ -398,6 +407,16 @@ func (p *nominatimProvider) reversePhoton(ctx context.Context, lat, lng float64,
 	}
 	result := placeFromPhoton(raw.Features[0])
 	return &result, nil
+}
+
+// Photon currently accepts only a limited set of language codes. Omitting the
+// parameter lets it return the source language instead of failing the request
+// for Arabic or Turkish users.
+func setPhotonLanguage(values url.Values, language string) {
+	switch strings.ToLower(strings.TrimSpace(language)) {
+	case "en", "de", "fr", "it":
+		values.Set("lang", strings.ToLower(strings.TrimSpace(language)))
+	}
 }
 
 func placeFromPhoton(item photonFeature) PlaceResult {
