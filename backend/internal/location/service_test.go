@@ -46,3 +46,10 @@ func TestPlaceRankPrefersSelectedCityBeforeDistance(t *testing.T) {
 		t.Fatal("selected city should outrank a closer result outside the selected city")
 	}
 }
+
+func TestSearchQueryVariantsCorrectsEmaarTypo(t *testing.T) {
+	variants := searchQueryVariants("emmar mall")
+	if len(variants) != 2 || variants[1] != "emaar mall" {
+		t.Fatalf("unexpected search variants: %#v", variants)
+	}
+}
