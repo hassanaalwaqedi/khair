@@ -436,7 +436,7 @@ func (s *Service) ListPublic(filter *EventFilter) ([]models.EventWithOrganizer, 
 	isPublished := true
 	filter.IsPublished = &isPublished
 	// Default to future events only if no explicit start date filter is provided
-	if filter.StartDate == nil {
+	if filter.StartDate == nil && filter.EndDate == nil {
 		now := time.Now()
 		filter.StartDate = &now
 	}

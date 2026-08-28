@@ -12,7 +12,7 @@ class KhairBrandMark extends StatelessWidget {
     this.decorative = false,
   });
 
-  static const asset = 'assets/branding/khair_logo_primary.png';
+  static const asset = 'assets/branding/khair_logo_primary.webp';
 
   final double size;
   final bool decorative;
@@ -59,13 +59,16 @@ class KhairBrand extends StatelessWidget {
       children: [
         KhairBrandMark(size: size, decorative: true),
         SizedBox(width: gap),
-        Text(
-          'Khair',
-          style: nameStyle ??
-              Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                  ),
+        Flexible(
+          child: Text(
+            context.l10n.appTitle,
+            style: nameStyle ??
+                Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
+                    ),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );

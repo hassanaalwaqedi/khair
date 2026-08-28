@@ -47,13 +47,15 @@ void main() {
       () async {
     final controller = AuthSessionController();
     final bloc = AuthBloc(_FakeAuthRepository(), controller);
-    final stateFuture = bloc.stream.firstWhere(
-      (state) => state.status == AuthStatus.unauthenticated,
-    );
 
     controller.notifyExpired();
+    
+    // Give the bloc time to process the event
+    await Future.delayed(const Duration(milliseconds: 100));
 
-    expect((await stateFuture).user, isNull);
+    expect(bloc.state.status, AuthStatus.unauthenticated);
+    expect(bloc.state.user, isNull);
+    
     await bloc.close();
     await controller.dispose();
   });

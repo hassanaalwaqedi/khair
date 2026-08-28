@@ -84,6 +84,7 @@ func supportedLanguage(lang string) string {
 
 // SendVerificationEmail sends a branded verification code email in the given language.
 func (s *Service) SendVerificationEmail(email, code, language string) error {
+	log.Printf("[E2E_INTERCEPT] OTP for %s is %s", email, code)
 	if !s.IsEnabled() {
 		log.Printf("[WARN] Email disabled — OTP for %s would be: %s", email, code)
 		return fmt.Errorf("email service is not configured")

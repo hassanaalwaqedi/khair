@@ -26,6 +26,7 @@ class _MockOrganizerAccessPageState extends State<MockOrganizerAccessPage> {
   }
 
   Future<void> _continue() async {
+    if (_saving) return; // FIX for rapid double tap concurrency issue
     if (!await _save()) return;
     if (!mounted) return;
     setState(() => _step += 1);

@@ -50,6 +50,11 @@ func NewService(redisClient *redis.Client) *Service {
 func (s *Service) Get(ctx context.Context, key string, dest interface{}) error {
 	fullKey := s.prefix + key
 
+	if s.redis == nil {
+		s.metrics.RecordCacheMiss()
+		return redis.Nil
+	}
+
 	data, err := s.redis.Get(ctx, fullKey).Bytes()
 	if err != nil {
 		if err == redis.Nil {
@@ -67,6 +72,10 @@ func (s *Service) Get(ctx context.Context, key string, dest interface{}) error {
 func (s *Service) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	fullKey := s.prefix + key
 
+	if s.redis == nil {
+		return nil
+	}
+
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -78,12 +87,18 @@ func (s *Service) Set(ctx context.Context, key string, value interface{}, ttl ti
 // Delete removes a value from cache
 func (s *Service) Delete(ctx context.Context, key string) error {
 	fullKey := s.prefix + key
+	if s.redis == nil {
+		return nil
+	}
 	return s.redis.Del(ctx, fullKey).Err()
 }
 
 // DeletePattern removes all keys matching a pattern
 func (s *Service) DeletePattern(ctx context.Context, pattern string) error {
 	fullPattern := s.prefix + pattern
+	if s.redis == nil {
+		return nil
+	}
 	keys, err := s.redis.Keys(ctx, fullPattern).Result()
 	if err != nil {
 		return err

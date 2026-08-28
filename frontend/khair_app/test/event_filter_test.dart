@@ -37,7 +37,7 @@ void main() {
 
     final cleared = filter.clearFilters();
 
-    expect(cleared.city, 'Istanbul');
+    expect(cleared.city, isNull);
     expect(cleared.onlineOnly, isFalse);
     expect(cleared.freeOnly, isFalse);
     expect(cleared.dateFilter, isNull);

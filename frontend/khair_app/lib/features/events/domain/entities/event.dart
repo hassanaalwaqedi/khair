@@ -166,11 +166,17 @@ class EventFilter extends Equatable {
   final String? country;
   final String? city;
   final String? eventType;
+  final String? category;
   final String? language;
   final DateTime? startDate;
   final DateTime? endDate;
   final String? searchQuery;
   final DateFilter? dateFilter;
+  final String? pricingType;
+  final double? latitude;
+  final double? longitude;
+  final double? radiusKm;
+  final String? timezone;
   final bool onlineOnly;
   final bool freeOnly;
   final bool trending;
@@ -181,11 +187,17 @@ class EventFilter extends Equatable {
     this.country,
     this.city,
     this.eventType,
+    this.category,
     this.language,
     this.startDate,
     this.endDate,
     this.searchQuery,
     this.dateFilter,
+    this.pricingType,
+    this.latitude,
+    this.longitude,
+    this.radiusKm,
+    this.timezone,
     this.onlineOnly = false,
     this.freeOnly = false,
     this.trending = false,
@@ -197,11 +209,17 @@ class EventFilter extends Equatable {
     String? country,
     String? city,
     String? eventType,
+    String? category,
     String? language,
     DateTime? startDate,
     DateTime? endDate,
     String? searchQuery,
     DateFilter? dateFilter,
+    String? pricingType,
+    double? latitude,
+    double? longitude,
+    double? radiusKm,
+    String? timezone,
     bool? onlineOnly,
     bool? freeOnly,
     bool? trending,
@@ -210,21 +228,33 @@ class EventFilter extends Equatable {
     bool clearCountry = false,
     bool clearCity = false,
     bool clearEventType = false,
+    bool clearCategory = false,
     bool clearLanguage = false,
     bool clearStartDate = false,
     bool clearEndDate = false,
     bool clearSearchQuery = false,
     bool clearDateFilter = false,
+    bool clearPricingType = false,
+    bool clearLatitude = false,
+    bool clearLongitude = false,
+    bool clearRadiusKm = false,
+    bool clearTimezone = false,
   }) {
     return EventFilter(
       country: clearCountry ? null : country ?? this.country,
       city: clearCity ? null : city ?? this.city,
       eventType: clearEventType ? null : eventType ?? this.eventType,
+      category: clearCategory ? null : category ?? this.category,
       language: clearLanguage ? null : language ?? this.language,
       startDate: clearStartDate ? null : startDate ?? this.startDate,
       endDate: clearEndDate ? null : endDate ?? this.endDate,
       searchQuery: clearSearchQuery ? null : searchQuery ?? this.searchQuery,
       dateFilter: clearDateFilter ? null : dateFilter ?? this.dateFilter,
+      pricingType: clearPricingType ? null : pricingType ?? this.pricingType,
+      latitude: clearLatitude ? null : latitude ?? this.latitude,
+      longitude: clearLongitude ? null : longitude ?? this.longitude,
+      radiusKm: clearRadiusKm ? null : radiusKm ?? this.radiusKm,
+      timezone: clearTimezone ? null : timezone ?? this.timezone,
       onlineOnly: onlineOnly ?? this.onlineOnly,
       freeOnly: freeOnly ?? this.freeOnly,
       trending: trending ?? this.trending,
@@ -238,6 +268,7 @@ class EventFilter extends Equatable {
     return EventFilter(
       page: 1,
       pageSize: pageSize,
+      timezone: timezone,
     );
   }
 
@@ -246,9 +277,14 @@ class EventFilter extends Equatable {
       country != null ||
       city != null ||
       eventType != null ||
+      category != null ||
       language != null ||
       dateFilter != null ||
-      searchQuery != null ||
+       searchQuery != null ||
+       pricingType != null ||
+       latitude != null ||
+       longitude != null ||
+       radiusKm != null ||
       onlineOnly ||
       freeOnly ||
       trending;
@@ -262,60 +298,38 @@ class EventFilter extends Equatable {
     if (country != null) params['country'] = country;
     if (city != null) params['city'] = city;
     if (eventType != null) params['event_type'] = eventType;
+    if (category != null) params['category'] = category;
     if (language != null) params['language'] = language;
     if (searchQuery != null && searchQuery!.isNotEmpty) {
       params['search'] = searchQuery;
     }
     if (trending) params['trending'] = 'true';
     if (onlineOnly) params['is_online'] = 'true';
-    if (freeOnly) params['free'] = 'true';
+    if (freeOnly) params['pricing_type'] = 'free';
+    if (pricingType != null && !freeOnly) params['pricing_type'] = pricingType;
+    if (latitude != null && longitude != null) {
+      params['lat'] = latitude.toString();
+      params['lng'] = longitude.toString();
+      params['radius'] = (radiusKm ?? 10).toString();
+    }
 
-    // Compute date range from DateFilter enum
+    // Date presets are interpreted by the backend in the user's timezone.
     if (dateFilter != null) {
-      final now = DateTime.now();
-      switch (dateFilter!) {
-        case DateFilter.today:
-          params['start_date'] =
-              DateTime(now.year, now.month, now.day).toIso8601String();
-          params['end_date'] =
-              DateTime(now.year, now.month, now.day, 23, 59, 59)
-                  .toIso8601String();
-          break;
-        case DateFilter.thisWeek:
-          // Start from now, not beginning of week, to exclude past days
-          final weekStart = now.subtract(Duration(days: now.weekday - 1));
-          final weekEnd = weekStart.add(const Duration(days: 6));
-          params['start_date'] = now.toIso8601String();
-          params['end_date'] =
-              DateTime(weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59)
-                  .toIso8601String();
-          break;
-        case DateFilter.thisWeekend:
-          final daysToSaturday = (6 - now.weekday) % 7;
-          final saturday = now.add(Duration(
-              days: daysToSaturday == 0 && now.weekday != 6
-                  ? 7
-                  : daysToSaturday));
-          params['start_date'] =
-              DateTime(saturday.year, saturday.month, saturday.day)
-                  .toIso8601String();
-          params['end_date'] = DateTime(
-                  saturday.year, saturday.month, saturday.day + 1, 23, 59, 59)
-              .toIso8601String();
-          break;
-        case DateFilter.thisMonth:
-          // Start from now, not beginning of month, to exclude past days
-          params['start_date'] = now.toIso8601String();
-          params['end_date'] = DateTime(now.year, now.month + 1, 0, 23, 59, 59)
-              .toIso8601String();
-          break;
+      params['date'] = switch (dateFilter!) {
+        DateFilter.today => 'today',
+        DateFilter.thisWeek => 'this_week',
+        DateFilter.thisWeekend => 'this_weekend',
+        DateFilter.thisMonth => 'this_month',
+      };
+      if (timezone != null && timezone!.isNotEmpty) {
+        params['timezone'] = timezone;
       }
     } else {
       if (startDate != null) {
-        params['start_date'] = startDate!.toIso8601String();
+        params['start_date'] = startDate!.toUtc().toIso8601String();
       }
       if (endDate != null) {
-        params['end_date'] = endDate!.toIso8601String();
+        params['end_date'] = endDate!.toUtc().toIso8601String();
       }
     }
 
@@ -327,11 +341,17 @@ class EventFilter extends Equatable {
         country,
         city,
         eventType,
+        category,
         language,
         startDate,
         endDate,
         searchQuery,
         dateFilter,
+        pricingType,
+        latitude,
+        longitude,
+        radiusKm,
+        timezone,
         onlineOnly,
         freeOnly,
         trending,

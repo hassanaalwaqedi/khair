@@ -21,6 +21,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
+    on<DeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthSessionExpired>(_onSessionExpired);
     on<GoogleLoginRequested>(_onGoogleLoginRequested);
     on<OrganizerSessionChanged>(_onOrganizerSessionChanged);
@@ -110,6 +111,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     PushNotificationService.instance.clearSession();
     await _authRepository.logout();
     emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    DeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    await PushNotificationService.instance.removeToken();
+    PushNotificationService.instance.clearSession();
+    final result = await _authRepository.deleteAccount();
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => emit(const AuthState(status: AuthStatus.unauthenticated)),
+    );
   }
 
   void _onSessionExpired(

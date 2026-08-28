@@ -80,16 +80,6 @@ func RunMigrations(db *sql.DB, migrationsPath string) error {
 			// A dirty migration must be repaired deliberately. Marking it clean
 			// without inspecting the schema can leave production on a partial migration.
 			return fmt.Errorf("database is dirty at migration %d; repair it before restarting", version)
-			log.Printf("Dirty migration state detected at version %d — forcing clean state and retrying", version)
-			if forceErr := m.Force(int(version)); forceErr != nil {
-				return fmt.Errorf("failed to force migration version: %w", forceErr)
-			}
-			// Retry after forcing clean
-			if retryErr := m.Up(); retryErr != nil && retryErr != migrate.ErrNoChange {
-				return fmt.Errorf("failed to run migrations after dirty-state recovery: %w", retryErr)
-			}
-			log.Println("Database migrations completed (recovered from dirty state)")
-			return nil
 		}
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}

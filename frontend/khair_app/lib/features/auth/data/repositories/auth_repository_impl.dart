@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user.dart';
@@ -75,6 +76,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      await _remoteDataSource.deleteAccount();
+      await _clearAuthData();
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(AuthFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, User?>> getCurrentUser() async {
     try {
       final userData = await _secureStorage.read(key: 'user_data');
@@ -140,11 +154,15 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  Future<void> _clearAuthData() => Future.wait([
-        _secureStorage.delete(key: 'auth_token'),
-        _secureStorage.delete(key: 'user_data'),
-        _secureStorage.delete(key: 'organizer_data'),
-      ]);
+  Future<void> _clearAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('create_event_draft_cache');
+    await Future.wait([
+      _secureStorage.delete(key: 'auth_token'),
+      _secureStorage.delete(key: 'user_data'),
+      _secureStorage.delete(key: 'organizer_data'),
+    ]);
+  }
 
   Future<void> _saveAuthData(AuthResponse response) async {
     await _secureStorage.write(key: 'auth_token', value: response.token);

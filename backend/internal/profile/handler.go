@@ -70,6 +70,7 @@ func (h *Handler) RegisterRoutes(v1 *gin.RouterGroup, engine *gin.Engine, authMi
 	{
 		profile.GET("", h.GetProfile)
 		profile.PUT("", h.UpdateProfile)
+		profile.DELETE("", h.DeleteAccount)
 		profile.POST("/moderate-text", h.ModerateText)
 		profile.POST("/moderate-image", h.ModerateImage)
 		profile.POST("/upload-avatar", h.UploadAvatar)
@@ -113,6 +114,50 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	}
 
 	response.Success(c, p)
+}
+
+// ─── DELETE /profile ──────────────────────────────
+// DeleteAccount permanently deletes the authenticated user's account and all
+// associated data. This action is irreversible. The client must clear its
+// local session after receiving 200 OK.
+func (h *Handler) DeleteAccount(c *gin.Context) {
+	uid := c.MustGet("user_id").(uuid.UUID)
+
+	tx, err := h.db.Begin()
+	if err != nil {
+		response.InternalServerError(c, "Failed to begin transaction")
+		return
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	// Cascade delete: profiles, event registrations, saved events, device tokens,
+	// notifications, and finally the user row itself (which foreign keys cascade).
+	steps := []struct {
+		query string
+		name  string
+	}{
+		{`DELETE FROM device_tokens WHERE user_id = $1`, "device_tokens"},
+		{`DELETE FROM notifications WHERE user_id = $1`, "notifications"},
+		{`DELETE FROM saved_events WHERE user_id = $1`, "saved_events"},
+		{`DELETE FROM event_registrations WHERE user_id = $1`, "event_registrations"},
+		{`DELETE FROM profiles WHERE user_id = $1`, "profiles"},
+		{`DELETE FROM users WHERE id = $1`, "users"},
+	}
+	for _, step := range steps {
+		if _, err := tx.Exec(step.query, uid); err != nil {
+			log.Printf("DeleteAccount: failed to delete %s for user %s: %v", step.name, uid, err)
+			response.InternalServerError(c, "Failed to delete account")
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		response.InternalServerError(c, "Failed to commit account deletion")
+		return
+	}
+
+	log.Printf("Account deleted: user_id=%s", uid)
+	response.Success(c, gin.H{"message": "Account deleted successfully"})
 }
 
 // GetOverview returns the authenticated member's profile in one inexpensive
@@ -287,6 +332,26 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	}
 	if req.DisplayName != nil && len([]rune(strings.TrimSpace(*req.DisplayName))) > 80 {
 		response.BadRequest(c, "Display name must be 80 characters or fewer")
+		return
+	}
+	if req.Bio != nil && len([]rune(strings.TrimSpace(*req.Bio))) > 500 {
+		response.BadRequest(c, "Bio must be 500 characters or fewer")
+		return
+	}
+	if req.City != nil && len([]rune(strings.TrimSpace(*req.City))) > 100 {
+		response.BadRequest(c, "City name must be 100 characters or fewer")
+		return
+	}
+	if req.Country != nil && len([]rune(strings.TrimSpace(*req.Country))) > 100 {
+		response.BadRequest(c, "Country name must be 100 characters or fewer")
+		return
+	}
+	if req.Location != nil && len([]rune(strings.TrimSpace(*req.Location))) > 100 {
+		response.BadRequest(c, "Location must be 100 characters or fewer")
+		return
+	}
+	if req.AvatarURL != nil && len([]rune(strings.TrimSpace(*req.AvatarURL))) > 1024 {
+		response.BadRequest(c, "Avatar URL must be 1024 characters or fewer")
 		return
 	}
 	if req.PreferredLanguage != nil && *req.PreferredLanguage != "en" && *req.PreferredLanguage != "ar" && *req.PreferredLanguage != "tr" {

@@ -8,7 +8,9 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../events/domain/entities/event.dart';
 import '../../../events/presentation/bloc/events_bloc.dart';
 import '../../../location/presentation/bloc/location_bloc.dart';
+import '../widgets/discover/active_filter_chips.dart';
 import '../widgets/discover/compact_event_card.dart';
+import '../widgets/discover/discover_filters_sheet.dart';
 import '../widgets/discover/discover_header.dart';
 import '../widgets/discover/discover_search_bar.dart';
 import '../widgets/discover/discover_section_header.dart';
@@ -27,6 +29,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   final _search = TextEditingController();
   bool _locationRequestInFlight = false;
+  bool _nearbyRequestInFlight = false;
 
   @override
   void initState() {
@@ -42,6 +45,20 @@ class _DiscoverPageState extends State<DiscoverPage> {
     super.dispose();
   }
 
+  /// Count filters that are NOT the search query (for the badge).
+  int _countActiveFilters(EventFilter filter) {
+    int count = 0;
+    if (filter.dateFilter != null) count++;
+    if (filter.onlineOnly) count++;
+    if (filter.freeOnly) count++;
+    if (filter.pricingType != null && !filter.freeOnly) count++;
+    if (filter.category?.isNotEmpty ?? false) count++;
+    if (filter.city?.isNotEmpty ?? false) count++;
+    if (filter.country?.isNotEmpty ?? false) count++;
+    if (filter.eventType?.isNotEmpty ?? false) count++;
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<LocationBloc, LocationState>(
@@ -51,10 +68,22 @@ class _DiscoverPageState extends State<DiscoverPage> {
       listener: (context, location) {
         setState(() => _locationRequestInFlight = false);
         if (location is LocationLoaded) {
-          final filter = context.read<EventsBloc>().state.filter;
-          context.read<EventsBloc>().add(
-                UpdateFilter(filter.copyWith(city: location.location.city)),
-              );
+          final bloc = context.read<EventsBloc>();
+          if (_nearbyRequestInFlight &&
+              location.location.latitude != null &&
+              location.location.longitude != null) {
+            bloc.add(UpdateFilter(bloc.state.filter.copyWith(
+              latitude: location.location.latitude,
+              longitude: location.location.longitude,
+              radiusKm: 10,
+              timezone: location.location.timezone,
+              clearCity: true,
+              clearCountry: true,
+            )));
+          } else {
+            bloc.add(UpdateLocation(location.location));
+          }
+          _nearbyRequestInFlight = false;
         } else if (location is LocationError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.locationUpdateError)),
@@ -82,7 +111,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       children: [
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, auth) {
-                            // Khair User currently doesn't have a firstName, so we use empty or parse from email.
                             final name = '';
                             final l10n = AppLocalizations.of(context)!;
                             final greeting = name.isNotEmpty
@@ -125,18 +153,30 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        DiscoverSearchBar(
-                          controller: _search,
-                          onSearch: _searchEvents,
-                          onOpenFilters: _openFilters,
+                        // Search bar with active-filter badge
+                        BlocBuilder<EventsBloc, EventsState>(
+                          buildWhen: (prev, curr) => prev.filter != curr.filter,
+                          builder: (context, state) => DiscoverSearchBar(
+                            controller: _search,
+                            onSearch: _searchEvents,
+                            onOpenFilters: _openFilters,
+                            activeFilterCount: _countActiveFilters(state.filter),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
+                // Active filter chips row (only shown when filters are set)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: ActiveFilterChips(),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+                    padding: const EdgeInsets.only(top: 10.0, bottom: 8.0),
                     child: QuickFiltersRow(onTap: _toggleQuickFilter),
                   ),
                 ),
@@ -159,14 +199,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
                     final searchQuery = state.filter.searchQuery?.trim();
                     final isSearching = searchQuery?.isNotEmpty ?? false;
-                    // The horizontal list is scrollable, so do not silently
-                    // discard approved events after the first five results.
-                    // Events arrive ordered by start date, and the old limit
-                    // could hide a newly approved event until several older
-                    // events had passed.
                     final featured = state.events;
-                    final weekend = state.events.where(_isThisWeekend).take(6).toList();
-                    
+                    // Weekend results are already constrained by the server.
+                    final weekend = state.filter.dateFilter == DateFilter.thisWeekend
+                        ? state.events.take(6).toList()
+                        : const <Event>[];
+
                     return SliverMainAxisGroup(
                       slivers: [
                         SliverToBoxAdapter(
@@ -188,13 +226,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 390,
+                            height: 420,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               itemCount: featured.length,
                               separatorBuilder: (_, __) => const SizedBox(width: 16),
-                              itemBuilder: (context, index) => FeaturedEventCard(event: featured[index]),
+                              itemBuilder: (context, index) =>
+                                  FeaturedEventCard(event: featured[index]),
                             ),
                           ),
                         ),
@@ -219,13 +258,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           ),
                           SliverToBoxAdapter(
                             child: SizedBox(
-                              height: 250,
+                              height: 280,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 itemCount: weekend.length,
                                 separatorBuilder: (_, __) => const SizedBox(width: 14),
-                                itemBuilder: (context, index) => CompactEventCard(event: weekend[index]),
+                                itemBuilder: (context, index) =>
+                                    CompactEventCard(event: weekend[index]),
                               ),
                             ),
                           ),
@@ -254,28 +294,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
     return l10n.greetingGoodEvening;
   }
 
-  bool _isThisWeekend(Event event) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = now.weekday == DateTime.sunday
-        ? today.subtract(const Duration(days: 1))
-        : today.add(Duration(days: (DateTime.saturday - now.weekday + 7) % 7));
-    final end = start.add(const Duration(days: 2));
-    return !event.startDate.isBefore(start) && event.startDate.isBefore(end);
-  }
-
   Future<void> _refresh() async {
     context.read<EventsBloc>().add(LoadEvents());
   }
 
   void _searchEvents(String value) {
-    context.read<EventsBloc>().add(UpdateSearchQuery(value.trim()));
+    context.read<EventsBloc>().add(UpdateSearchQuery(value));
   }
 
   void _openFilters() {
-    // Ideally this opens the same modal as before, we can leave a snackbar for now or replicate the existing logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.filtersComingSoon)),
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: context.read<EventsBloc>(),
+        child: const DiscoverFiltersSheet(),
+      ),
     );
   }
 
@@ -284,86 +319,121 @@ class _DiscoverPageState extends State<DiscoverPage> {
     final filter = bloc.state.filter;
     switch (quickFilter) {
       case QuickFilter.today:
-        bloc.add(UpdateDateFilter(filter.dateFilter == DateFilter.today ? null : DateFilter.today));
+        bloc.add(UpdateDateFilter(
+            filter.dateFilter == DateFilter.today ? null : DateFilter.today));
       case QuickFilter.weekend:
-        bloc.add(UpdateDateFilter(filter.dateFilter == DateFilter.thisWeekend ? null : DateFilter.thisWeekend));
+        bloc.add(UpdateDateFilter(filter.dateFilter == DateFilter.thisWeekend
+            ? null
+            : DateFilter.thisWeekend));
       case QuickFilter.nearby:
-        setState(() => _locationRequestInFlight = true);
+        setState(() {
+          _locationRequestInFlight = true;
+          _nearbyRequestInFlight = true;
+        });
         context.read<LocationBloc>().add(ResolveLocationEvent());
       case QuickFilter.free:
-        bloc.add(UpdateFilter(filter.copyWith(freeOnly: !filter.freeOnly)));
+        final selected = filter.freeOnly || filter.pricingType == 'free';
+        bloc.add(UpdateFilter(filter.copyWith(
+          freeOnly: !selected,
+          pricingType: selected ? null : 'free',
+          clearPricingType: selected,
+        )));
       case QuickFilter.online:
         bloc.add(UpdateFilter(filter.copyWith(onlineOnly: !filter.onlineOnly)));
     }
   }
 
   Future<void> _openLocationPicker() async {
-    final controller = TextEditingController(text: context.read<EventsBloc>().state.filter.city ?? '');
+    final controller =
+        TextEditingController(text: context.read<EventsBloc>().state.filter.city ?? '');
     final sheetL10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(sheetL10n.chooseYourArea,
-                    style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.my_location_rounded, color: AppColors.primary),
-                title: Text(sheetL10n.useCurrentLocationShort),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  setState(() => _locationRequestInFlight = true);
-                  context.read<LocationBloc>().add(ResolveLocationEvent());
-                },
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: controller,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (value) {
-                  context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
-                  Navigator.of(sheetContext).pop();
-                },
-                decoration: InputDecoration(
-                  labelText: sheetL10n.city,
-                  prefixIcon: const Icon(Icons.location_city_outlined),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    context.read<EventsBloc>().add(UpdateBaseCity(controller.text.trim()));
-                    Navigator.of(sheetContext).pop();
-                  },
-                  child: Text(sheetL10n.showEvents),
-                ),
-              ),
+      builder: (sheetContext) {
+        return Padding(
+          // Shift content up when keyboard is visible
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(sheetL10n.chooseYourArea,
+                        style:
+                            const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+                  ),
+                  const SizedBox(height: 16),
+                  // Use InkWell + Row instead of ListTile to avoid invisible ink warning
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      setState(() => _locationRequestInFlight = true);
+                      context.read<LocationBloc>().add(ResolveLocationEvent());
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.my_location_rounded, color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Text(sheetL10n.useCurrentLocationShort,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controller,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (value) {
+                      context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
+                      Navigator.of(sheetContext).pop();
+                    },
+                    decoration: InputDecoration(
+                      labelText: sheetL10n.city,
+                      prefixIcon: const Icon(Icons.location_city_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        context
+                            .read<EventsBloc>()
+                            .add(UpdateBaseCity(controller.text.trim()));
+                        Navigator.of(sheetContext).pop();
+                      },
+                      child: Text(sheetL10n.showEvents),
+                    ),
+                  ),
             ],
           ),
         ),
       ),
     );
+    },
+    );
     controller.dispose();
   }
 }
 
+
 class _EmptyDiscovery extends StatelessWidget {
-  const _EmptyDiscovery({required this.onClearFilters, this.hasActiveFilters = false});
+  const _EmptyDiscovery(
+      {required this.onClearFilters, this.hasActiveFilters = false});
   final VoidCallback onClearFilters;
   final bool hasActiveFilters;
-  
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -372,11 +442,15 @@ class _EmptyDiscovery extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.explore_off_outlined, color: AppColors.primary, size: 44),
+            const Icon(Icons.explore_off_outlined,
+                color: AppColors.primary, size: 44),
             const SizedBox(height: 14),
-            Text(l10n.noEventsFound, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+            Text(l10n.noEventsFound,
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Text(l10n.adjustFiltersHint, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(l10n.adjustFiltersHint,
+                style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 18),
             if (hasActiveFilters)
               OutlinedButton.icon(
@@ -394,7 +468,7 @@ class _EmptyDiscovery extends StatelessWidget {
 class _LoadError extends StatelessWidget {
   const _LoadError({required this.onRetry});
   final VoidCallback onRetry;
-  
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -403,7 +477,8 @@ class _LoadError extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 42, color: AppColors.primary),
+            const Icon(Icons.cloud_off_outlined,
+                size: 42, color: AppColors.primary),
             const SizedBox(height: 12),
             Text(l10n.loadEventsError),
             TextButton(onPressed: onRetry, child: Text(l10n.tryAgain)),
