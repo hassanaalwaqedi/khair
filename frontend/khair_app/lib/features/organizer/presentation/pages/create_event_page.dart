@@ -743,13 +743,17 @@ class _CreateEventViewState extends State<_CreateEventView> {
               child: MapLocationPicker(
                   initialLatitude: data.latitude,
                   initialLongitude: data.longitude,
+                  initialCity: data.city,
+                  initialCountry: data.countryName,
+                  language: data.language,
                   searchHint: 'Search location',
                   useCurrentLocationLabel: 'Use my location',
                   tapToSelectLabel: 'Tap to select',
                   selectedLocationLabel: 'Selected location',
                   searchingLabel: 'Searching…',
-                  onLocationSelected:
-                      (lat, lng, address, city, country, countryCode) {
+                  onLocationSelected: (lat, lng, venueName, address, city,
+                      country, countryCode) {
+                    _venue.text = venueName ?? _venue.text;
                     _city.text = city ?? _city.text;
                     _address.text = address ?? _address.text;
                     final match = _countries
@@ -761,6 +765,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     cubit.updateFormData(data.copyWith(
                         latitude: lat,
                         longitude: lng,
+                        venueName: venueName ?? data.venueName,
                         city: city ?? data.city,
                         address: address ?? data.address,
                         countryCode:

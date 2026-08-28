@@ -25,7 +25,52 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	location := r.Group("/location")
 	{
 		location.GET("/resolve", h.Resolve)
+		location.GET("/search", h.Search)
+		location.GET("/reverse", h.Reverse)
 	}
+}
+
+// Search returns provider-neutral POI/address suggestions. The backend proxy
+// keeps provider policy, rate limiting, and future provider changes out of the
+// Flutter client.
+func (h *Handler) Search(c *gin.Context) {
+	query := strings.TrimSpace(c.Query("q"))
+	if len([]rune(query)) < 2 {
+		response.BadRequest(c, "Search query must contain at least 2 characters")
+		return
+	}
+	var lat, lng *float64
+	if rawLat, rawLng := c.Query("lat"), c.Query("lng"); rawLat != "" || rawLng != "" {
+		parsedLat, errLat := strconv.ParseFloat(rawLat, 64)
+		parsedLng, errLng := strconv.ParseFloat(rawLng, 64)
+		if errLat != nil || errLng != nil || parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180 {
+			response.BadRequest(c, "Invalid search coordinates")
+			return
+		}
+		lat, lng = &parsedLat, &parsedLng
+	}
+	results, err := h.service.SearchPlaces(c.Request.Context(), query, c.Query("city"), c.Query("country"), c.Query("language"), lat, lng)
+	if err != nil {
+		response.InternalServerError(c, "Unable to search places")
+		return
+	}
+	response.Success(c, results)
+}
+
+// Reverse returns normalized public location fields for a manually adjusted pin.
+func (h *Handler) Reverse(c *gin.Context) {
+	lat, errLat := strconv.ParseFloat(c.Query("lat"), 64)
+	lng, errLng := strconv.ParseFloat(c.Query("lng"), 64)
+	if errLat != nil || errLng != nil || lat < -90 || lat > 90 || lng < -180 || lng > 180 {
+		response.BadRequest(c, "Invalid coordinates")
+		return
+	}
+	result, err := h.service.ReversePlace(c.Request.Context(), lat, lng, c.Query("language"))
+	if err != nil {
+		response.InternalServerError(c, "Unable to reverse geocode location")
+		return
+	}
+	response.Success(c, result)
 }
 
 // Resolve resolves a location from coordinates or IP

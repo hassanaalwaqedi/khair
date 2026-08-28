@@ -264,7 +264,7 @@ func main() {
 	scoreService := score.NewService(sqlxDB, auditService)
 
 	// Initialize location service
-	locationService := location.NewService()
+	locationService := location.NewService(redisClient)
 
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService)
