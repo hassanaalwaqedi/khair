@@ -126,7 +126,7 @@ func main() {
 		appLogger.Info("Database migrations completed")
 	}
 
-	// Connect to Redis (TLS required for Azure Cache for Redis)
+	// Connect to Redis. Production Render deployments use TLS.
 	redisOpts := &redis.Options{
 		Addr:     cfg.Redis.Addr,
 		Password: cfg.Redis.Password,

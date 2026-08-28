@@ -5,13 +5,13 @@ Khair uses four production services:
 - **Supabase Postgres** for relational application data.
 - **Cloudflare R2** for media, with separate public and private buckets.
 - **Render** for the Go API.
-- **Vercel** for the Flutter web build.
+- **Firebase Hosting or Cloudflare Workers/Pages** for the Flutter web build.
 
 ## 1. Supabase
 
 Create one production Supabase project in the region closest to the first launch market. In **Connect**, copy the Session Pooler host, username, password, and database name into Render as `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`. Set `DB_PORT=5432` and `DB_SSLMODE=require`.
 
-Do not place the database password in Flutter, Vercel, Git, or Cloudflare. The Render API is the only service that connects to Postgres.
+Do not place the database password in Flutter, Git, or Cloudflare. The Render API is the only service that connects to Postgres.
 
 ## 2. Cloudflare R2
 
@@ -34,19 +34,35 @@ Create the service from the repository's `render.yaml`. During Blueprint setup, 
 
 Render injects `PORT`; the API now honors it. It runs database migrations before accepting traffic and refuses to start in production if a migration fails. Set the health-check route to `/readyz`.
 
-## 5. Vercel Flutter web
+## 5. Flutter web hosting
 
-Import this repository in Vercel. Set the production environment variable:
+Build the Flutter web app with the Render API URL:
 
 ```
-API_URL=https://api.example.com/api/v1
+flutter pub get
+flutter build web --release --dart-define=API_URL=https://your-khair-api.onrender.com/api/v1
 ```
 
-The Vercel build intentionally fails without `API_URL` so a release cannot silently point at a development or retired API. After Vercel gives you a domain, update the Render values `FRONTEND_URL`, `CORS_ALLOWED_ORIGINS`, and `CORS_ORIGINS` to that exact HTTPS origin, then redeploy Render.
+The Firebase project is configured in `frontend/khair_app/.firebaserc` and its
+hosting rules are in `frontend/khair_app/firebase.json`:
+
+```bash
+firebase deploy --only hosting
+```
+
+Cloudflare Workers/Pages uses `wrangler.jsonc` and the same `build/web` output:
+
+```bash
+wrangler deploy
+```
+
+After choosing the public web hostname, update the Render values `FRONTEND_URL`,
+`CORS_ALLOWED_ORIGINS`, and `CORS_ORIGINS` to that exact HTTPS origin, then
+redeploy Render.
 
 ## 6. Google OAuth and sharing
 
-In Google Cloud Console, add the exact Vercel HTTPS domain to **Authorized JavaScript origins**. Set the same web OAuth client ID as `GOOGLE_OAUTH_CLIENT_ID` in Render. Add the API custom domain to `PUBLIC_BASE_URL`; Khair's server-rendered event links then supply Open Graph metadata and event cover images to WhatsApp and other sharing clients.
+In Google Cloud Console, add the exact public HTTPS web domain to **Authorized JavaScript origins**. Set the same web OAuth client ID as `GOOGLE_OAUTH_CLIENT_ID` in Render. Add the API custom domain to `PUBLIC_BASE_URL`; Khair's server-rendered event links then supply Open Graph metadata and event cover images to WhatsApp and other sharing clients.
 
 ## Release checks
 
@@ -54,4 +70,4 @@ In Google Cloud Console, add the exact Vercel HTTPS domain to **Authorized JavaS
 2. Create an event and confirm its cover is stored under `https://media.example.com/`.
 3. Submit an organizer application and confirm documents cannot be opened without an API-issued signed URL.
 4. Open a shared `https://api.example.com/events/<id>` link in a social preview inspector and confirm title, description, and cover image appear.
-5. Sign in on the Vercel domain using Google and confirm no `origin_mismatch` error.
+5. Sign in on the public web domain using Google and confirm no `origin_mismatch` error.

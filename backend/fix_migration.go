@@ -12,10 +12,10 @@ import (
 )
 
 func main() {
-	host := getenv("DB_HOST", "khair.postgres.database.azure.com")
+	host := getenv("DB_HOST", "")
 	port := getenv("DB_PORT", "5432")
-	user := getenv("DB_USER", "khair")
-	pass := getenv("DB_PASSWORD", "Net2026*")
+	user := getenv("DB_USER", "")
+	pass := getenv("DB_PASSWORD", "")
 
 	// First connect to postgres to list all databases
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=postgres sslmode=require",
