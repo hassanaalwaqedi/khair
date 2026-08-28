@@ -301,6 +301,10 @@ class _OrganizerEventsPageState extends State<OrganizerEventsPage> {
   }
 
   void _openEvent(BuildContext context, Event event) {
+    if (event.status == 'draft') {
+      context.push('/organizer/events/${event.id}/edit', extra: event);
+      return;
+    }
     final publicEvent =
         event.status == 'approved' || event.status == 'published';
     context.push(
