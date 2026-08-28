@@ -301,6 +301,15 @@ func (p *nominatimProvider) searchPhoton(ctx context.Context, query, city, count
 		if err := p.photonRequest(ctx, "api/", values, &raw); err != nil {
 			return nil, err
 		}
+		if lat != nil && lng != nil {
+			nearby := raw.Features[:0]
+			for _, feature := range raw.Features {
+				if photonFeatureDistanceKm(feature, *lat, *lng) <= 50 {
+					nearby = append(nearby, feature)
+				}
+			}
+			raw.Features = nearby
+		}
 		if len(raw.Features) > 0 {
 			break
 		}
@@ -317,6 +326,13 @@ func (p *nominatimProvider) searchPhoton(ctx context.Context, query, city, count
 		return placeRank(results[i], city, country) > placeRank(results[j], city, country)
 	})
 	return results, nil
+}
+
+func photonFeatureDistanceKm(feature photonFeature, lat, lng float64) float64 {
+	if len(feature.Geometry.Coordinates) < 2 {
+		return math.Inf(1)
+	}
+	return distanceKm(lat, lng, feature.Geometry.Coordinates[1], feature.Geometry.Coordinates[0])
 }
 
 // searchQueryVariants handles common place-name spelling mistakes while
