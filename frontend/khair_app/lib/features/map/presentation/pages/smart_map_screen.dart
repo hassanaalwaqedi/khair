@@ -157,9 +157,9 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
                 alignment: AlignmentDirectional.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
-                  child: const _StatusPill(
+                  child: _StatusPill(
                     icon: Icons.search_rounded,
-                    text: 'Searching places…',
+                    text: context.l10n.mapSearchingPlaces,
                   ),
                 ),
               ),
@@ -515,7 +515,7 @@ class _PlacesFoundMapState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
         child: Text(
-          'Places found above. Select one to center the map.',
+          context.l10n.mapPlacesFoundHint,
           style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           textAlign: TextAlign.center,
         ),

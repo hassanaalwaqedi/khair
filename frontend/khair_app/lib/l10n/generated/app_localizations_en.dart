@@ -2073,6 +2073,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapSearchThisArea => 'Search this area';
 
   @override
+  String get mapSearchingPlaces => 'Searching places…';
+
+  @override
+  String get mapPlacesFoundHint =>
+      'Places found above. Select one to center the map.';
+
+  @override
   String mapEventsNearby(int count) {
     return '$count events nearby';
   }

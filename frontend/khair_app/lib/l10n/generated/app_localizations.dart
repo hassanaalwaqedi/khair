@@ -3994,6 +3994,18 @@ abstract class AppLocalizations {
   /// **'Search this area'**
   String get mapSearchThisArea;
 
+  /// No description provided for @mapSearchingPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching places…'**
+  String get mapSearchingPlaces;
+
+  /// No description provided for @mapPlacesFoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Places found above. Select one to center the map.'**
+  String get mapPlacesFoundHint;
+
   /// No description provided for @mapEventsNearby.
   ///
   /// In en, this message translates to:
