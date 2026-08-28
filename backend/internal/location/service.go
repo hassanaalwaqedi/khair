@@ -79,7 +79,7 @@ func NewService(redisClients ...*redis.Client) *Service {
 }
 
 func (s *Service) SearchPlaces(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
-	key := "location:search:v2:" + normalizeCachePart(language) + ":" + normalizeCachePart(country) + ":" + normalizeCachePart(city) + ":" + normalizeCachePart(query)
+	key := "location:search:v3:" + normalizeCachePart(language) + ":" + normalizeCachePart(country) + ":" + normalizeCachePart(city) + ":" + normalizeCachePart(query)
 	if s.redis != nil {
 		if data, err := s.redis.Get(ctx, key).Bytes(); err == nil {
 			var cached []PlaceResult
@@ -187,21 +187,26 @@ func (p *nominatimProvider) request(ctx context.Context, endpoint string, values
 }
 
 func (p *nominatimProvider) Search(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
-	contextParts := []string{query}
-	if city != "" {
-		contextParts = append(contextParts, city)
-	}
-	if country != "" {
-		contextParts = append(contextParts, country)
-	}
-	values := url.Values{"q": {strings.Join(contextParts, ", ")}, "format": {"jsonv2"}, "addressdetails": {"1"}, "namedetails": {"1"}, "limit": {"8"}, "dedupe": {"1"}, "accept-language": {language}}
-	if lat != nil && lng != nil {
-		const delta = 0.35
-		values.Set("viewbox", fmt.Sprintf("%f,%f,%f,%f", *lng-delta, *lat+delta, *lng+delta, *lat-delta))
-	}
 	var raw []nominatimPlace
-	if err := p.request(ctx, "search", values, &raw); err != nil {
-		return nil, err
+	for _, searchQuery := range searchQueryVariants(query) {
+		contextParts := []string{searchQuery}
+		if city != "" {
+			contextParts = append(contextParts, city)
+		}
+		if country != "" {
+			contextParts = append(contextParts, country)
+		}
+		values := url.Values{"q": {strings.Join(contextParts, ", ")}, "format": {"jsonv2"}, "addressdetails": {"1"}, "namedetails": {"1"}, "limit": {"8"}, "dedupe": {"1"}, "accept-language": {language}}
+		if lat != nil && lng != nil {
+			const delta = 0.35
+			values.Set("viewbox", fmt.Sprintf("%f,%f,%f,%f", *lng-delta, *lat+delta, *lng+delta, *lat-delta))
+		}
+		if err := p.request(ctx, "search", values, &raw); err != nil {
+			return nil, err
+		}
+		if len(raw) > 0 {
+			break
+		}
 	}
 	results := make([]PlaceResult, 0, len(raw))
 	for _, item := range raw {
@@ -215,6 +220,33 @@ func (p *nominatimProvider) Search(ctx context.Context, query, city, country, la
 		return placeRank(results[i], city, country) > placeRank(results[j], city, country)
 	})
 	return results, nil
+}
+
+// searchQueryVariants handles common place-name spelling mistakes while
+// keeping the provider request exact for normal queries. Nominatim does not
+// perform fuzzy matching, so a harmless typo can otherwise produce no result.
+func searchQueryVariants(query string) []string {
+	query = strings.TrimSpace(query)
+	variants := []string{query}
+	lower := strings.ToLower(query)
+	if strings.Contains(lower, "emmar") {
+		variants = append(variants, strings.ReplaceAll(query, "emmar", "emaar"))
+		variants = append(variants, strings.ReplaceAll(query, "Emmar", "Emaar"))
+	}
+	result := make([]string, 0, len(variants))
+	seen := make(map[string]struct{}, len(variants))
+	for _, variant := range variants {
+		key := strings.ToLower(strings.TrimSpace(variant))
+		if key == "" {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, variant)
+	}
+	return result
 }
 
 func placeRank(place PlaceResult, city, country string) float64 {
