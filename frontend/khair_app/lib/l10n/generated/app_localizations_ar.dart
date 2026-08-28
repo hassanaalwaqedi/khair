@@ -446,6 +446,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toggleTheme => 'تبديل المظهر';
 
   @override
+  String get darkMode => 'الوضع الداكن';
+
+  @override
+  String get lightMode => 'الوضع الفاتح';
+
+  @override
   String get locating => 'جارٍ تحديد الموقع...';
 
   @override

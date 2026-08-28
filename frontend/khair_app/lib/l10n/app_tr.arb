@@ -150,6 +150,8 @@
   "pageNotFound": "Sayfa bulunamadı",
   "goHome": "Ana Sayfaya Git",
   "toggleTheme": "Temayı değiştir",
+  "darkMode": "Karanlık mod",
+  "lightMode": "Aydınlık mod",
   "locating": "Konum belirleniyor...",
   "trending": "Popüler",
   "clear": "Temizle",

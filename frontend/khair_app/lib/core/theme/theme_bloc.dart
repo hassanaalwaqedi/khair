@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ──────── Events ────────
 
@@ -21,6 +22,10 @@ class SetThemeMode extends ThemeEvent {
 
   @override
   List<Object?> get props => [mode];
+}
+
+class LoadSavedTheme extends ThemeEvent {
+  const LoadSavedTheme();
 }
 
 // ──────── State ────────
@@ -45,21 +50,42 @@ class ThemeState extends Equatable {
 // ──────── Bloc ────────
 
 class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
+  static const _themeKey = 'app_theme_mode_v1';
+
   ThemeBloc() : super(const ThemeState()) {
     on<ToggleTheme>(_onToggle);
     on<SetThemeMode>(_onSetMode);
+    on<LoadSavedTheme>(_onLoadSavedTheme);
+    add(const LoadSavedTheme());
   }
 
-  void _onToggle(ToggleTheme event, Emitter<ThemeState> emit) {
-    final nextMode = switch (state.themeMode) {
-      ThemeMode.system => ThemeMode.light,
-      ThemeMode.light => ThemeMode.dark,
-      ThemeMode.dark => ThemeMode.system,
-    };
+  Future<void> _onToggle(ToggleTheme event, Emitter<ThemeState> emit) async {
+    final nextMode =
+        state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    await _save(nextMode);
     emit(state.copyWith(themeMode: nextMode));
   }
 
-  void _onSetMode(SetThemeMode event, Emitter<ThemeState> emit) {
+  Future<void> _onSetMode(SetThemeMode event, Emitter<ThemeState> emit) async {
+    await _save(event.mode);
     emit(state.copyWith(themeMode: event.mode));
+  }
+
+  Future<void> _onLoadSavedTheme(
+      LoadSavedTheme event, Emitter<ThemeState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_themeKey);
+    final mode = switch (saved) {
+      'dark' => ThemeMode.dark,
+      'light' => ThemeMode.light,
+      'system' => ThemeMode.system,
+      _ => state.themeMode,
+    };
+    emit(state.copyWith(themeMode: mode));
+  }
+
+  Future<void> _save(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themeKey, mode.name);
   }
 }
