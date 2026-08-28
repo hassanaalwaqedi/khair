@@ -54,6 +54,8 @@ const (
 	inviteListKey   = "launch:invites"
 )
 
+var errRedisUnavailable = errors.New("launch control unavailable: redis is not configured")
+
 // DefaultConfig returns default launch configuration
 func DefaultConfig() *Config {
 	return &Config{
@@ -74,14 +76,20 @@ func NewService(redisClient *redis.Client) *Service {
 		config: DefaultConfig(),
 	}
 
-	// Load config from Redis
-	s.loadConfig(context.Background())
+	// Redis is optional in the API deployment. Keep launch controls on their
+	// defaults when Redis is unavailable instead of crashing during startup.
+	if redisClient != nil {
+		s.loadConfig(context.Background())
+	}
 
 	return s
 }
 
 // loadConfig loads configuration from Redis
 func (s *Service) loadConfig(ctx context.Context) error {
+	if s.redis == nil {
+		return errRedisUnavailable
+	}
 	data, err := s.redis.Get(ctx, configKey).Bytes()
 	if err != nil {
 		if err == redis.Nil {
@@ -96,6 +104,9 @@ func (s *Service) loadConfig(ctx context.Context) error {
 
 // saveConfig saves configuration to Redis
 func (s *Service) saveConfig(ctx context.Context) error {
+	if s.redis == nil {
+		return errRedisUnavailable
+	}
 	s.config.UpdatedAt = time.Now()
 	data, err := json.Marshal(s.config)
 	if err != nil {
@@ -107,6 +118,9 @@ func (s *Service) saveConfig(ctx context.Context) error {
 
 // GetConfig returns current launch configuration
 func (s *Service) GetConfig(ctx context.Context) *Config {
+	if s.redis == nil {
+		return s.config
+	}
 	s.loadConfig(ctx)
 	return s.config
 }
@@ -177,6 +191,9 @@ func (s *Service) DecrementOrganizerCount(ctx context.Context) error {
 
 // GenerateInviteCode creates a new invitation code
 func (s *Service) GenerateInviteCode(ctx context.Context, email string, createdBy uuid.UUID, validDays int) (*InvitationCode, error) {
+	if s.redis == nil {
+		return nil, errRedisUnavailable
+	}
 	// Generate random code
 	bytes := make([]byte, 8)
 	if _, err := rand.Read(bytes); err != nil {
@@ -212,6 +229,9 @@ func (s *Service) GenerateInviteCode(ctx context.Context, email string, createdB
 
 // ValidateInviteCode checks if an invitation code is valid
 func (s *Service) ValidateInviteCode(ctx context.Context, code string) (bool, error) {
+	if s.redis == nil {
+		return false, errRedisUnavailable
+	}
 	key := inviteKeyPrefix + code
 	data, err := s.redis.Get(ctx, key).Bytes()
 	if err != nil {
@@ -241,6 +261,9 @@ func (s *Service) ValidateInviteCode(ctx context.Context, code string) (bool, er
 
 // UseInviteCode marks an invitation code as used
 func (s *Service) UseInviteCode(ctx context.Context, code string, usedBy uuid.UUID) error {
+	if s.redis == nil {
+		return errRedisUnavailable
+	}
 	key := inviteKeyPrefix + code
 	data, err := s.redis.Get(ctx, key).Bytes()
 	if err != nil {
@@ -267,6 +290,9 @@ func (s *Service) UseInviteCode(ctx context.Context, code string, usedBy uuid.UU
 
 // ListInviteCodes returns all invitation codes
 func (s *Service) ListInviteCodes(ctx context.Context) ([]InvitationCode, error) {
+	if s.redis == nil {
+		return nil, errRedisUnavailable
+	}
 	codes, err := s.redis.SMembers(ctx, inviteListKey).Result()
 	if err != nil {
 		return nil, err
@@ -293,6 +319,9 @@ func (s *Service) ListInviteCodes(ctx context.Context) ([]InvitationCode, error)
 
 // RevokeInviteCode revokes an invitation code
 func (s *Service) RevokeInviteCode(ctx context.Context, code string) error {
+	if s.redis == nil {
+		return errRedisUnavailable
+	}
 	key := inviteKeyPrefix + code
 	s.redis.Del(ctx, key)
 	s.redis.SRem(ctx, inviteListKey, code)
