@@ -23,8 +23,12 @@ typedef OnLocationSelected = void Function(
 class MapLocationPicker extends StatefulWidget {
   final double? initialLatitude;
   final double? initialLongitude;
+  final double? contextLatitude;
+  final double? contextLongitude;
   final String? initialCity;
   final String? initialCountry;
+  final String? contextCity;
+  final String? contextCountry;
   final String? language;
   final OnLocationSelected onLocationSelected;
   final String searchHint;
@@ -37,8 +41,12 @@ class MapLocationPicker extends StatefulWidget {
     super.key,
     this.initialLatitude,
     this.initialLongitude,
+    this.contextLatitude,
+    this.contextLongitude,
     this.initialCity,
     this.initialCountry,
+    this.contextCity,
+    this.contextCountry,
     this.language,
     required this.onLocationSelected,
     this.searchHint = 'Search for a place...',
@@ -147,10 +155,10 @@ class _MapLocationPickerState extends State<MapLocationPicker>
       setState(() => _isSearching = true);
       final results = await NominatimService.search(
         query,
-        city: widget.initialCity,
-        country: widget.initialCountry,
-        latitude: _selectedPoint?.latitude,
-        longitude: _selectedPoint?.longitude,
+        city: widget.initialCity ?? widget.contextCity,
+        country: widget.initialCountry ?? widget.contextCountry,
+        latitude: _selectedPoint?.latitude ?? widget.contextLatitude,
+        longitude: _selectedPoint?.longitude ?? widget.contextLongitude,
         language: widget.language,
       );
       if (!mounted || generation != _searchGeneration) return;
@@ -232,6 +240,9 @@ class _MapLocationPickerState extends State<MapLocationPicker>
   Widget build(BuildContext context) {
     // Default center: Mecca if no initial point
     final center = _selectedPoint ??
+        (widget.contextLatitude != null && widget.contextLongitude != null
+            ? LatLng(widget.contextLatitude!, widget.contextLongitude!)
+            : null) ??
         (widget.initialLatitude != null && widget.initialLongitude != null
             ? LatLng(widget.initialLatitude!, widget.initialLongitude!)
             : const LatLng(24.7136, 46.6753)); // Riyadh

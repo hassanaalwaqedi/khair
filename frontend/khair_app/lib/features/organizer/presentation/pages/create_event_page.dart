@@ -15,6 +15,7 @@ import '../../../auth/data/models/country_model.dart';
 import '../../../auth/presentation/widgets/country_search_field.dart';
 import '../../../events/domain/entities/event.dart';
 import '../../../events/domain/entities/attendance_policy.dart';
+import '../../../location/presentation/bloc/location_bloc.dart';
 import '../cubit/create_event_cubit.dart';
 import '../cubit/create_event_state.dart';
 
@@ -92,6 +93,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
   @override
   void initState() {
     super.initState();
+    // Use GPS context immediately when permission is already granted; this
+    // does not prompt the organizer. The explicit picker action can still ask.
+    context.read<LocationBloc>().add(RefreshAuthorizedLocationEvent());
     _cubit = context.read<CreateEventCubit>();
     final data = _cubit.state.formData;
     _title = TextEditingController(text: data.title);
@@ -628,6 +632,9 @@ class _CreateEventViewState extends State<_CreateEventView> {
       BuildContext context, CreateEventState state, bool dark) {
     final cubit = context.read<CreateEventCubit>();
     final data = state.formData;
+    final locationState = context.watch<LocationBloc>().state;
+    final deviceLocation =
+        locationState is LocationLoaded ? locationState.location : null;
     return _stepFrame(
       title: context.l10n.whenAndWhereIsItHappening,
       subtitle: context.l10n.giveAttendeesTheDetailsTheyNee,
@@ -743,8 +750,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
               child: MapLocationPicker(
                   initialLatitude: data.latitude,
                   initialLongitude: data.longitude,
+                  contextLatitude: deviceLocation?.latitude,
+                  contextLongitude: deviceLocation?.longitude,
                   initialCity: data.city,
                   initialCountry: data.countryName,
+                  contextCity: deviceLocation?.city,
+                  contextCountry: deviceLocation?.country,
                   language: data.language,
                   searchHint: 'Search location',
                   useCurrentLocationLabel: 'Use my location',

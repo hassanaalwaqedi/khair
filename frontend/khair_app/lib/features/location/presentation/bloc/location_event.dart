@@ -12,3 +12,6 @@ class ResolveLocationEvent extends LocationEvent {}
 
 /// Dispatched to load cached location without API call
 class LoadCachedLocationEvent extends LocationEvent {}
+
+/// Refreshes GPS only when permission was already granted. Never prompts.
+class RefreshAuthorizedLocationEvent extends LocationEvent {}
