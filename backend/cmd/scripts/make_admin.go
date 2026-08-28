@@ -27,10 +27,10 @@ func main() {
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
-		getenv("DB_HOST", "khair.postgres.database.azure.com"),
+		getenv("DB_HOST", ""),
 		getenv("DB_PORT", "5432"),
-		getenv("DB_USER", "khair"),
-		getenv("DB_PASSWORD", "Net2026*"),
+		getenv("DB_USER", ""),
+		getenv("DB_PASSWORD", ""),
 		getenv("DB_NAME", "khair"),
 	)
 

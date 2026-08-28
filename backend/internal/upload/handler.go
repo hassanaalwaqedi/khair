@@ -46,7 +46,7 @@ type Handler struct {
 
 // NewHandler creates a new upload handler
 func NewHandler(config Config) *Handler {
-	// Use storage.NewProvider which auto-selects Azure Blob or local
+	// Use storage.NewProvider to select Cloudflare R2 in production or local storage in development.
 	provider := storage.NewProvider(config.UploadDir, config.BaseURL)
 
 	privateDocument, _ := storage.NewPrivateR2StoreFromEnv()
