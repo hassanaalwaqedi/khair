@@ -141,6 +141,35 @@ type nominatimPlace struct {
 	} `json:"address"`
 }
 
+type photonFeatureCollection struct {
+	Features []photonFeature `json:"features"`
+}
+
+type photonFeature struct {
+	Properties photonProperties `json:"properties"`
+	Geometry   struct {
+		Coordinates []float64 `json:"coordinates"`
+	} `json:"geometry"`
+}
+
+type photonProperties struct {
+	OSMType     string `json:"osm_type"`
+	OSMID       int64  `json:"osm_id"`
+	OSMKey      string `json:"osm_key"`
+	OSMValue    string `json:"osm_value"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Street      string `json:"street"`
+	District    string `json:"district"`
+	Locality    string `json:"locality"`
+	City        string `json:"city"`
+	County      string `json:"county"`
+	State       string `json:"state"`
+	Country     string `json:"country"`
+	CountryCode string `json:"countrycode"`
+	Postcode    string `json:"postcode"`
+}
+
 func (p *nominatimProvider) waitForPolicy(ctx context.Context) error {
 	p.mu.Lock()
 	delay := time.Second - time.Since(p.lastCall)
@@ -186,6 +215,32 @@ func (p *nominatimProvider) request(ctx context.Context, endpoint string, values
 	return nil
 }
 
+// photonRequest is the OpenStreetMap-compatible fallback used when the
+// public Nominatim endpoint is temporarily unavailable or rate-limits us.
+func (p *nominatimProvider) photonRequest(ctx context.Context, endpoint string, values url.Values, target interface{}) error {
+	if err := p.waitForPolicy(ctx); err != nil {
+		return err
+	}
+	u := "https://photon.komoot.io/" + endpoint + "?" + values.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", "KhairApp/1.0 (location search; contact: support@khairapp.org)")
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("photon request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("photon returned status %d", resp.StatusCode)
+	}
+	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
+		return fmt.Errorf("decoding photon response: %w", err)
+	}
+	return nil
+}
+
 func (p *nominatimProvider) Search(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
 	var raw []nominatimPlace
 	for _, searchQuery := range searchQueryVariants(query) {
@@ -202,7 +257,7 @@ func (p *nominatimProvider) Search(ctx context.Context, query, city, country, la
 			values.Set("viewbox", fmt.Sprintf("%f,%f,%f,%f", *lng-delta, *lat+delta, *lng+delta, *lat-delta))
 		}
 		if err := p.request(ctx, "search", values, &raw); err != nil {
-			return nil, err
+			return p.searchPhoton(ctx, query, city, country, language, lat, lng)
 		}
 		if len(raw) > 0 {
 			break
@@ -211,6 +266,37 @@ func (p *nominatimProvider) Search(ctx context.Context, query, city, country, la
 	results := make([]PlaceResult, 0, len(raw))
 	for _, item := range raw {
 		result := placeFromNominatim(item)
+		if lat != nil && lng != nil {
+			result.DistanceKm = distanceKm(*lat, *lng, result.Latitude, result.Longitude)
+		}
+		results = append(results, result)
+	}
+	sort.SliceStable(results, func(i, j int) bool {
+		return placeRank(results[i], city, country) > placeRank(results[j], city, country)
+	})
+	return results, nil
+}
+
+func (p *nominatimProvider) searchPhoton(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
+	var raw photonFeatureCollection
+	searchQuery := query
+	if city != "" {
+		searchQuery += ", " + city
+	}
+	if country != "" {
+		searchQuery += ", " + country
+	}
+	values := url.Values{
+		"q":     {searchQuery},
+		"limit": {"8"},
+		"lang":  {language},
+	}
+	if err := p.photonRequest(ctx, "api/", values, &raw); err != nil {
+		return nil, err
+	}
+	results := make([]PlaceResult, 0, len(raw.Features))
+	for _, item := range raw.Features {
+		result := placeFromPhoton(item)
 		if lat != nil && lng != nil {
 			result.DistanceKm = distanceKm(*lat, *lng, result.Latitude, result.Longitude)
 		}
@@ -291,10 +377,64 @@ func (p *nominatimProvider) Reverse(ctx context.Context, lat, lng float64, langu
 	values := url.Values{"lat": {strconv.FormatFloat(lat, 'f', 6, 64)}, "lon": {strconv.FormatFloat(lng, 'f', 6, 64)}, "format": {"jsonv2"}, "addressdetails": {"1"}, "namedetails": {"1"}, "accept-language": {language}}
 	var raw nominatimPlace
 	if err := p.request(ctx, "reverse", values, &raw); err != nil {
-		return nil, err
+		return p.reversePhoton(ctx, lat, lng, language)
 	}
 	result := placeFromNominatim(raw)
 	return &result, nil
+}
+
+func (p *nominatimProvider) reversePhoton(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error) {
+	values := url.Values{
+		"lat":  {strconv.FormatFloat(lat, 'f', 6, 64)},
+		"lon":  {strconv.FormatFloat(lng, 'f', 6, 64)},
+		"lang": {language},
+	}
+	var raw photonFeatureCollection
+	if err := p.photonRequest(ctx, "reverse", values, &raw); err != nil {
+		return nil, err
+	}
+	if len(raw.Features) == 0 {
+		return nil, fmt.Errorf("photon returned no reverse-geocode result")
+	}
+	result := placeFromPhoton(raw.Features[0])
+	return &result, nil
+}
+
+func placeFromPhoton(item photonFeature) PlaceResult {
+	props := item.Properties
+	var lat, lng float64
+	if len(item.Geometry.Coordinates) >= 2 {
+		lng = item.Geometry.Coordinates[0]
+		lat = item.Geometry.Coordinates[1]
+	}
+	city := props.City
+	if city == "" {
+		city = props.Locality
+	}
+	street := props.Street
+	district := props.District
+	address := strings.Join(nonEmpty(street, district, city), ", ")
+	name := props.Name
+	if name == "" {
+		name = address
+	}
+	return PlaceResult{
+		Name:        name,
+		Category:    props.OSMKey + ":" + props.OSMValue,
+		DisplayName: strings.Join(nonEmpty(name, address, props.State, props.Country), ", "),
+		Address:     address,
+		Street:      street,
+		District:    district,
+		City:        city,
+		State:       props.State,
+		Country:     props.Country,
+		CountryCode: strings.ToUpper(props.CountryCode),
+		PostalCode:  props.Postcode,
+		Latitude:    lat,
+		Longitude:   lng,
+		Provider:    "photon",
+		ProviderID:  props.OSMType + ":" + strconv.FormatInt(props.OSMID, 10),
+	}
 }
 
 func placeFromNominatim(item nominatimPlace) PlaceResult {
