@@ -295,6 +295,8 @@ func (p *nominatimProvider) searchPhoton(ctx context.Context, query, city, count
 		if lat != nil && lng != nil {
 			values.Set("lat", strconv.FormatFloat(*lat, 'f', 6, 64))
 			values.Set("lon", strconv.FormatFloat(*lng, 'f', 6, 64))
+			const delta = 0.35
+			values.Set("bbox", fmt.Sprintf("%f,%f,%f,%f", *lng-delta, *lat-delta, *lng+delta, *lat+delta))
 		}
 		if err := p.photonRequest(ctx, "api/", values, &raw); err != nil {
 			return nil, err
@@ -345,6 +347,22 @@ func searchQueryVariants(query string) []string {
 	).Replace(query)
 	if arabicVariant != query {
 		variants = append(variants, arabicVariant)
+	}
+	arabicName := strings.NewReplacer(
+		"مقهى", " ",
+		"كافيه", " ",
+		"مطعم", " ",
+		"مسجد", " ",
+		"جامع", " ",
+		"مول", " ",
+		"مركز تسوق", " ",
+		"فندق", " ",
+		"إعمار", "Emaar",
+		"اعمار", "Emaar",
+	).Replace(query)
+	arabicName = strings.Join(strings.Fields(arabicName), " ")
+	if arabicName != "" && arabicName != query {
+		variants = append(variants, arabicName)
 	}
 	result := make([]string, 0, len(variants))
 	seen := make(map[string]struct{}, len(variants))
