@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -207,7 +208,30 @@ func (p *nominatimProvider) Search(ctx context.Context, query, city, country, la
 		}
 		results = append(results, result)
 	}
+	sort.SliceStable(results, func(i, j int) bool {
+		return placeRank(results[i], city, country) > placeRank(results[j], city, country)
+	})
 	return results, nil
+}
+
+func placeRank(place PlaceResult, city, country string) float64 {
+	rank := 0.0
+	city = strings.TrimSpace(city)
+	country = strings.TrimSpace(country)
+	if city != "" {
+		if strings.EqualFold(place.City, city) {
+			rank += 100
+		} else if strings.Contains(strings.ToLower(place.DisplayName), strings.ToLower(city)) {
+			rank += 35
+		}
+	}
+	if country != "" && strings.Contains(strings.ToLower(place.DisplayName), strings.ToLower(country)) {
+		rank += 20
+	}
+	if place.DistanceKm > 0 {
+		rank += 10 / (1 + place.DistanceKm)
+	}
+	return rank
 }
 
 func (p *nominatimProvider) Reverse(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error) {
