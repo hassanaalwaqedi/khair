@@ -1,10 +1,18 @@
 package location
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // LocationResult holds the resolved location data
@@ -17,18 +25,246 @@ type LocationResult struct {
 	Longitude   float64 `json:"longitude,omitempty"`
 }
 
+// PlaceResult is the provider-neutral public location returned to the app.
+// Coordinates and normalized address fields remain canonical; provider IDs are
+// optional hints and are never required by event storage.
+type PlaceResult struct {
+	Name        string  `json:"name"`
+	Category    string  `json:"category,omitempty"`
+	DisplayName string  `json:"display_name"`
+	Address     string  `json:"address,omitempty"`
+	Street      string  `json:"street,omitempty"`
+	District    string  `json:"district,omitempty"`
+	City        string  `json:"city,omitempty"`
+	State       string  `json:"state,omitempty"`
+	Country     string  `json:"country,omitempty"`
+	CountryCode string  `json:"country_code,omitempty"`
+	PostalCode  string  `json:"postal_code,omitempty"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	DistanceKm  float64 `json:"distance_km,omitempty"`
+	Provider    string  `json:"provider"`
+	ProviderID  string  `json:"provider_id,omitempty"`
+}
+
+// LocationSearchProvider keeps the UI independent from Nominatim and allows a
+// later move to self-hosted Photon/Pelias or another provider.
+type LocationSearchProvider interface {
+	Search(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error)
+	Reverse(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error)
+}
+
 // Service handles location resolution
 type Service struct {
 	httpClient *http.Client
+	redis      *redis.Client
+	provider   LocationSearchProvider
 }
 
 // NewService creates a new location service
-func NewService() *Service {
-	return &Service{
+func NewService(redisClients ...*redis.Client) *Service {
+	var redisClient *redis.Client
+	if len(redisClients) > 0 {
+		redisClient = redisClients[0]
+	}
+	s := &Service{
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
 	}
+	s.redis = redisClient
+	s.provider = &nominatimProvider{httpClient: s.httpClient}
+	return s
+}
+
+func (s *Service) SearchPlaces(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
+	key := "location:search:" + normalizeCachePart(language) + ":" + normalizeCachePart(country) + ":" + normalizeCachePart(city) + ":" + normalizeCachePart(query)
+	if s.redis != nil {
+		if data, err := s.redis.Get(ctx, key).Bytes(); err == nil {
+			var cached []PlaceResult
+			if json.Unmarshal(data, &cached) == nil {
+				return cached, nil
+			}
+		}
+	}
+	results, err := s.provider.Search(ctx, query, city, country, language, lat, lng)
+	if err != nil {
+		return nil, err
+	}
+	if s.redis != nil {
+		if data, marshalErr := json.Marshal(results); marshalErr == nil {
+			_ = s.redis.Set(ctx, key, data, 10*time.Minute).Err()
+		}
+	}
+	return results, nil
+}
+
+func (s *Service) ReversePlace(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error) {
+	return s.provider.Reverse(ctx, lat, lng, language)
+}
+
+func normalizeCachePart(value string) string {
+	return strings.ToLower(strings.Join(strings.Fields(strings.TrimSpace(value)), "-"))
+}
+
+type nominatimProvider struct {
+	httpClient *http.Client
+	mu         sync.Mutex
+	lastCall   time.Time
+}
+
+type nominatimPlace struct {
+	PlaceID     int64  `json:"place_id"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Category    string `json:"category"`
+	DisplayName string `json:"display_name"`
+	Lat         string `json:"lat"`
+	Lon         string `json:"lon"`
+	Address     struct {
+		Road        string `json:"road"`
+		Pedestrian  string `json:"pedestrian"`
+		Suburb      string `json:"suburb"`
+		Neighbour   string `json:"neighbourhood"`
+		City        string `json:"city"`
+		Town        string `json:"town"`
+		Village     string `json:"village"`
+		County      string `json:"county"`
+		State       string `json:"state"`
+		Country     string `json:"country"`
+		CountryCode string `json:"country_code"`
+		Postcode    string `json:"postcode"`
+	} `json:"address"`
+}
+
+func (p *nominatimProvider) waitForPolicy(ctx context.Context) error {
+	p.mu.Lock()
+	delay := time.Second - time.Since(p.lastCall)
+	if delay < 0 {
+		delay = 0
+	}
+	p.lastCall = time.Now().Add(delay)
+	p.mu.Unlock()
+	if delay == 0 {
+		return nil
+	}
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+func (p *nominatimProvider) request(ctx context.Context, endpoint string, values url.Values, target interface{}) error {
+	if err := p.waitForPolicy(ctx); err != nil {
+		return err
+	}
+	u := "https://nominatim.openstreetmap.org/" + endpoint + "?" + values.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", "KhairApp/1.0 (location search; contact: support@khairapp.org)")
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("nominatim request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("nominatim returned status %d", resp.StatusCode)
+	}
+	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
+		return fmt.Errorf("decoding nominatim response: %w", err)
+	}
+	return nil
+}
+
+func (p *nominatimProvider) Search(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
+	contextParts := []string{query}
+	if city != "" {
+		contextParts = append(contextParts, city)
+	}
+	if country != "" {
+		contextParts = append(contextParts, country)
+	}
+	values := url.Values{"q": {strings.Join(contextParts, ", ")}, "format": {"jsonv2"}, "addressdetails": {"1"}, "namedetails": {"1"}, "limit": {"8"}, "dedupe": {"1"}, "accept-language": {language}}
+	if lat != nil && lng != nil {
+		const delta = 0.35
+		values.Set("viewbox", fmt.Sprintf("%f,%f,%f,%f", *lng-delta, *lat+delta, *lng+delta, *lat-delta))
+	}
+	var raw []nominatimPlace
+	if err := p.request(ctx, "search", values, &raw); err != nil {
+		return nil, err
+	}
+	results := make([]PlaceResult, 0, len(raw))
+	for _, item := range raw {
+		result := placeFromNominatim(item)
+		if lat != nil && lng != nil {
+			result.DistanceKm = distanceKm(*lat, *lng, result.Latitude, result.Longitude)
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
+func (p *nominatimProvider) Reverse(ctx context.Context, lat, lng float64, language string) (*PlaceResult, error) {
+	values := url.Values{"lat": {strconv.FormatFloat(lat, 'f', 6, 64)}, "lon": {strconv.FormatFloat(lng, 'f', 6, 64)}, "format": {"jsonv2"}, "addressdetails": {"1"}, "namedetails": {"1"}, "accept-language": {language}}
+	var raw nominatimPlace
+	if err := p.request(ctx, "reverse", values, &raw); err != nil {
+		return nil, err
+	}
+	result := placeFromNominatim(raw)
+	return &result, nil
+}
+
+func placeFromNominatim(item nominatimPlace) PlaceResult {
+	lat, _ := strconv.ParseFloat(item.Lat, 64)
+	lng, _ := strconv.ParseFloat(item.Lon, 64)
+	street := item.Address.Road
+	if street == "" {
+		street = item.Address.Pedestrian
+	}
+	district := item.Address.Suburb
+	if district == "" {
+		district = item.Address.Neighbour
+	}
+	city := item.Address.City
+	if city == "" {
+		city = item.Address.Town
+	}
+	if city == "" {
+		city = item.Address.Village
+	}
+	if city == "" {
+		city = item.Address.County
+	}
+	name := item.Name
+	if name == "" {
+		name = strings.Split(item.DisplayName, ",")[0]
+	}
+	return PlaceResult{Name: name, Category: item.Category + ":" + item.Type, DisplayName: item.DisplayName, Address: strings.Join(nonEmpty(street, district, city), ", "), Street: street, District: district, City: city, State: item.Address.State, Country: item.Address.Country, CountryCode: strings.ToUpper(item.Address.CountryCode), PostalCode: item.Address.Postcode, Latitude: lat, Longitude: lng, Provider: "nominatim", ProviderID: strconv.FormatInt(item.PlaceID, 10)}
+}
+
+func nonEmpty(values ...string) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
+func distanceKm(lat1, lng1, lat2, lng2 float64) float64 {
+	// Equirectangular approximation is sufficient for ranking nearby results.
+	const earthKm = 6371.0
+	latScale := 0.017453292519943295
+	x := (lng2 - lng1) * latScale * math.Cos((lat1+lat2)*latScale/2)
+	y := (lat2 - lat1) * latScale
+	return earthKm * math.Sqrt(x*x+y*y)
 }
 
 // nominatimResponse represents the Nominatim reverse geocode response
