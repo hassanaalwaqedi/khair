@@ -450,6 +450,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toggleTheme => 'Toggle theme';
 
   @override
+  String get darkMode => 'Dark mode';
+
+  @override
+  String get lightMode => 'Light mode';
+
+  @override
   String get locating => 'Locating...';
 
   @override

@@ -958,6 +958,18 @@ abstract class AppLocalizations {
   /// **'Toggle theme'**
   String get toggleTheme;
 
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get darkMode;
+
+  /// No description provided for @lightMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Light mode'**
+  String get lightMode;
+
   /// No description provided for @locating.
   ///
   /// In en, this message translates to:
