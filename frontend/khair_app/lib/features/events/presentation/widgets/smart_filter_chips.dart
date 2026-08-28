@@ -107,11 +107,11 @@ class SmartFilterChips extends StatelessWidget {
             child: IslamicCategoryChip(
               label: category.label,
               emoji: category.emoji,
-              isSelected: filter.eventType == category.key,
+              isSelected: filter.category == category.key,
               onTap: () {
                 context.read<EventsBloc>().add(
                       UpdateCategoryFilter(
-                        filter.eventType == category.key ? null : category.key,
+                        filter.category == category.key ? null : category.key,
                       ),
                     );
               },

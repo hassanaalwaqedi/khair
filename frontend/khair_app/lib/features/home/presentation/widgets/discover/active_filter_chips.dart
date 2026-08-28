@@ -75,12 +75,12 @@ class ActiveFilterChips extends StatelessWidget {
     }
 
     // Free only
-    if (filter.freeOnly) {
+    if (filter.freeOnly || filter.pricingType == 'free') {
       chips.add(_Chip(
         label: 'Free',
         icon: Icons.sell_outlined,
         onRemove: () => bloc.add(UpdateFilter(
-          filter.copyWith(freeOnly: false, page: 1),
+          filter.copyWith(freeOnly: false, clearPricingType: true, page: 1),
         )),
       ));
     }
@@ -107,7 +107,27 @@ class ActiveFilterChips extends StatelessWidget {
       ));
     }
 
-    // Event type (in-person or category)
+    if (filter.pricingType == 'paid') {
+      chips.add(_Chip(
+        label: 'Paid',
+        icon: Icons.credit_card_outlined,
+        onRemove: () => bloc.add(UpdateFilter(
+          filter.copyWith(clearPricingType: true, page: 1),
+        )),
+      ));
+    }
+
+    if (filter.category?.isNotEmpty ?? false) {
+      chips.add(_Chip(
+        label: filter.category!,
+        icon: Icons.category_outlined,
+        onRemove: () => bloc.add(UpdateFilter(
+          filter.copyWith(clearCategory: true, page: 1),
+        )),
+      ));
+    }
+
+    // Event type (in-person or mode)
     if (filter.eventType?.isNotEmpty ?? false) {
       final label = switch (filter.eventType!.toLowerCase()) {
         'offline' => 'In-Person',

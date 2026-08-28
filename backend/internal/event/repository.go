@@ -101,6 +101,7 @@ type EventFilter struct {
 	Country     *string
 	City        *string
 	EventType   *string
+	Category    *string
 	Language    *string
 	StartDate   *time.Time
 	EndDate     *time.Time
@@ -109,6 +110,10 @@ type EventFilter struct {
 	Search      *string
 	IsOnline    *bool
 	FreeOnly    bool
+	PricingType *string
+	Latitude    *float64
+	Longitude   *float64
+	RadiusKm    *float64
 	Trending    bool
 	Page        int
 	PageSize    int
@@ -352,7 +357,7 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		FROM events e
 		JOIN organizers o ON e.organizer_id = o.id
 		WHERE 1=1`
-	countQuery := `SELECT COUNT(*) FROM events e WHERE 1=1`
+	countQuery := `SELECT COUNT(*) FROM events e JOIN organizers o ON e.organizer_id = o.id WHERE 1=1`
 
 	var args []interface{}
 	var countArgs []interface{}
@@ -399,6 +404,14 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		argIndex++
 	}
 
+	if filter.Category != nil {
+		query += ` AND e.category = $` + strconv.Itoa(argIndex)
+		countQuery += ` AND e.category = $` + strconv.Itoa(argIndex)
+		args = append(args, *filter.Category)
+		countArgs = append(countArgs, *filter.Category)
+		argIndex++
+	}
+
 	if filter.Language != nil {
 		query += ` AND e.language = $` + strconv.Itoa(argIndex)
 		countQuery += ` AND e.language = $` + strconv.Itoa(argIndex)
@@ -421,7 +434,26 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		countQuery += freeClause
 	}
 
+	if filter.PricingType != nil {
+		clause := ` AND e.pricing_type = $` + strconv.Itoa(argIndex)
+		query += clause
+		countQuery += clause
+		args = append(args, *filter.PricingType)
+		countArgs = append(countArgs, *filter.PricingType)
+		argIndex++
+	}
+
+	if filter.Latitude != nil && filter.Longitude != nil && filter.RadiusKm != nil {
+		clause := ` AND e.location IS NOT NULL AND ST_DWithin(e.location, ST_SetSRID(ST_MakePoint($` + strconv.Itoa(argIndex+1) + `, $` + strconv.Itoa(argIndex) + `), 4326)::geography, $` + strconv.Itoa(argIndex+2) + ` * 1000)`
+		query += clause
+		countQuery += clause
+		args = append(args, *filter.Latitude, *filter.Longitude, *filter.RadiusKm)
+		countArgs = append(countArgs, *filter.Latitude, *filter.Longitude, *filter.RadiusKm)
+		argIndex += 3
+	}
+
 	if filter.StartDate != nil {
+		// The event must still be active at the beginning of the requested window.
 		clause := ` AND COALESCE(e.end_date, e.start_date) >= $` + strconv.Itoa(argIndex)
 		query += clause
 		countQuery += clause
@@ -431,8 +463,11 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 	}
 
 	if filter.EndDate != nil {
-		query += ` AND e.start_date <= $` + strconv.Itoa(argIndex)
-		countQuery += ` AND e.start_date <= $` + strconv.Itoa(argIndex)
+		// The event must begin before the requested window closes. A strict
+		// comparison prevents an event beginning exactly at midnight tomorrow
+		// from appearing in today's results.
+		query += ` AND e.start_date < $` + strconv.Itoa(argIndex)
+		countQuery += ` AND e.start_date < $` + strconv.Itoa(argIndex)
 		args = append(args, *filter.EndDate)
 		countArgs = append(countArgs, *filter.EndDate)
 		argIndex++
@@ -446,18 +481,23 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		termIndex := strconv.Itoa(argIndex)
 		patternIndex := strconv.Itoa(argIndex + 1)
 		searchClause := ` AND (
-			search_vector @@ websearch_to_tsquery('simple', $` + termIndex + `)
+			COALESCE(e.search_vector, ''::tsvector) @@ websearch_to_tsquery('simple', $` + termIndex + `)
 			OR e.title ILIKE $` + patternIndex + `
 			OR e.description ILIKE $` + patternIndex + `
+			OR e.category ILIKE $` + patternIndex + `
 			OR e.city ILIKE $` + patternIndex + `
 			OR e.country ILIKE $` + patternIndex + `
+			OR e.address ILIKE $` + patternIndex + `
+			OR e.venue_name ILIKE $` + patternIndex + `
 			OR e.event_type ILIKE $` + patternIndex + `
+			OR o.name ILIKE $` + patternIndex + `
+			OR EXISTS (SELECT 1 FROM event_tags et WHERE et.event_id = e.id AND et.tag ILIKE $` + patternIndex + `)
 			OR similarity(LOWER(COALESCE(e.title, '')), LOWER($` + termIndex + `)) >= 0.32
 			OR (
 				CHAR_LENGTH($` + termIndex + `) >= 3
 				AND word_similarity(
 					LOWER($` + termIndex + `),
-					LOWER(CONCAT_WS(' ', e.title, e.description, e.event_type, e.city, e.country))
+					LOWER(CONCAT_WS(' ', e.title, e.description, e.category, e.event_type, e.city, e.country, e.address, e.venue_name, o.name))
 				) >= 0.38
 			)
 		)`
@@ -477,9 +517,18 @@ func (r *Repository) List(filter *EventFilter) ([]models.EventWithOrganizer, int
 		return nil, 0, err
 	}
 
-	// Add sorting
+	// Add sorting. Search results prioritize exact/title matches, then
+	// PostgreSQL full-text relevance, then the next upcoming event.
 	if filter.Trending {
 		query += ` ORDER BY e.created_at DESC`
+	} else if filter.Search != nil && *filter.Search != "" {
+		termIndex := strconv.Itoa(argIndex - 2)
+		patternIndex := strconv.Itoa(argIndex - 1)
+		query += ` ORDER BY
+			CASE WHEN LOWER(e.title) = LOWER($` + termIndex + `) THEN 100 ELSE 0 END DESC,
+			CASE WHEN e.title ILIKE $` + patternIndex + ` THEN 50 ELSE 0 END DESC,
+			ts_rank(COALESCE(e.search_vector, ''::tsvector), websearch_to_tsquery('simple', $` + termIndex + `)) DESC,
+			e.start_date ASC`
 	} else {
 		query += ` ORDER BY e.start_date ASC`
 	}

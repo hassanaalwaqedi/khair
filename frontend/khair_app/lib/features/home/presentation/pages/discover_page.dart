@@ -29,6 +29,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   final _search = TextEditingController();
   bool _locationRequestInFlight = false;
+  bool _nearbyRequestInFlight = false;
 
   @override
   void initState() {
@@ -50,6 +51,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
     if (filter.dateFilter != null) count++;
     if (filter.onlineOnly) count++;
     if (filter.freeOnly) count++;
+    if (filter.pricingType != null && !filter.freeOnly) count++;
+    if (filter.category?.isNotEmpty ?? false) count++;
     if (filter.city?.isNotEmpty ?? false) count++;
     if (filter.country?.isNotEmpty ?? false) count++;
     if (filter.eventType?.isNotEmpty ?? false) count++;
@@ -65,10 +68,22 @@ class _DiscoverPageState extends State<DiscoverPage> {
       listener: (context, location) {
         setState(() => _locationRequestInFlight = false);
         if (location is LocationLoaded) {
-          final filter = context.read<EventsBloc>().state.filter;
-          context.read<EventsBloc>().add(
-                UpdateFilter(filter.copyWith(city: location.location.city)),
-              );
+          final bloc = context.read<EventsBloc>();
+          if (_nearbyRequestInFlight &&
+              location.location.latitude != null &&
+              location.location.longitude != null) {
+            bloc.add(UpdateFilter(bloc.state.filter.copyWith(
+              latitude: location.location.latitude,
+              longitude: location.location.longitude,
+              radiusKm: 10,
+              timezone: location.location.timezone,
+              clearCity: true,
+              clearCountry: true,
+            )));
+          } else {
+            bloc.add(UpdateLocation(location.location));
+          }
+          _nearbyRequestInFlight = false;
         } else if (location is LocationError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.locationUpdateError)),
@@ -185,7 +200,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     final searchQuery = state.filter.searchQuery?.trim();
                     final isSearching = searchQuery?.isNotEmpty ?? false;
                     final featured = state.events;
-                    final weekend = state.events.where(_isThisWeekend).take(6).toList();
+                    // Weekend results are already constrained by the server.
+                    final weekend = state.filter.dateFilter == DateFilter.thisWeekend
+                        ? state.events.take(6).toList()
+                        : const <Event>[];
 
                     return SliverMainAxisGroup(
                       slivers: [
@@ -276,65 +294,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
     return l10n.greetingGoodEvening;
   }
 
-  bool _isThisWeekend(Event event) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = now.weekday == DateTime.sunday
-        ? today.subtract(const Duration(days: 1))
-        : today.add(Duration(days: (DateTime.saturday - now.weekday + 7) % 7));
-    final end = start.add(const Duration(days: 2));
-    return !event.startDate.isBefore(start) && event.startDate.isBefore(end);
-  }
-
   Future<void> _refresh() async {
     context.read<EventsBloc>().add(LoadEvents());
   }
 
-  /// Smart search: parses "city:X" and "country:X" prefixes so users can
-  /// filter by location directly from the search bar.
   void _searchEvents(String value) {
-    final trimmed = value.trim();
-    final bloc = context.read<EventsBloc>();
-    final currentFilter = bloc.state.filter;
-
-    // Parse city: and country: prefixes
-    String? cityOverride;
-    String? countryOverride;
-    final remaining = <String>[];
-
-    for (final token in trimmed.split(' ')) {
-      final lower = token.toLowerCase();
-      if (lower.startsWith('city:') && token.length > 5) {
-        cityOverride = token.substring(5);
-      } else if (lower.startsWith('country:') && token.length > 8) {
-        countryOverride = token.substring(8);
-      } else {
-        remaining.add(token);
-      }
-    }
-
-    final keyword = remaining.join(' ').trim();
-
-    // Sync the text controller to show only keyword part when prefixes found
-    if ((cityOverride != null || countryOverride != null) && keyword != trimmed) {
-      _search.text = keyword;
-      _search.selection = TextSelection.collapsed(offset: keyword.length);
-    }
-
-    bloc.add(UpdateSearchQuery(keyword));
-
-    if (cityOverride != null) {
-      bloc.add(UpdateFilter(currentFilter.copyWith(
-        city: cityOverride,
-        page: 1,
-      )));
-    }
-    if (countryOverride != null) {
-      bloc.add(UpdateFilter(currentFilter.copyWith(
-        country: countryOverride,
-        page: 1,
-      )));
-    }
+    context.read<EventsBloc>().add(UpdateSearchQuery(value));
   }
 
   void _openFilters() {
@@ -361,10 +326,18 @@ class _DiscoverPageState extends State<DiscoverPage> {
             ? null
             : DateFilter.thisWeekend));
       case QuickFilter.nearby:
-        setState(() => _locationRequestInFlight = true);
+        setState(() {
+          _locationRequestInFlight = true;
+          _nearbyRequestInFlight = true;
+        });
         context.read<LocationBloc>().add(ResolveLocationEvent());
       case QuickFilter.free:
-        bloc.add(UpdateFilter(filter.copyWith(freeOnly: !filter.freeOnly)));
+        final selected = filter.freeOnly || filter.pricingType == 'free';
+        bloc.add(UpdateFilter(filter.copyWith(
+          freeOnly: !selected,
+          pricingType: selected ? null : 'free',
+          clearPricingType: selected,
+        )));
       case QuickFilter.online:
         bloc.add(UpdateFilter(filter.copyWith(onlineOnly: !filter.onlineOnly)));
     }

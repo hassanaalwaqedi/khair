@@ -19,6 +19,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
   LocationEntity? _currentLocation;
   Timer? _searchDebounce;
   Timer? _pollTimer;
+  int _queryGeneration = 0;
 
   EventsBloc(this._eventsRepository) : super(const EventsState()) {
     on<LoadEvents>(_onLoadEvents);
@@ -80,8 +81,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     Emitter<EventsState> emit,
   ) {
     _currentLocation = event.location;
-    // Reload events with location filter
-    add(LoadEvents());
+    add(UpdateFilter(state.filter));
   }
 
   void _onUpdateBaseCity(
@@ -106,69 +106,39 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
       );
     }
     // Clear the temporary filter city so that base city takes effect
-    emit(state.copyWith(
-      filter: state.filter.copyWith(city: null, clearCity: true),
-    ));
-    add(LoadEvents());
+    add(UpdateFilter(state.filter.copyWith(
+      city: null,
+      clearCity: true,
+      country: null,
+      clearCountry: true,
+    )));
   }
 
   void _onUpdateCategoryFilter(
     UpdateCategoryFilter event,
     Emitter<EventsState> emit,
   ) {
-    final newFilter = state.filter.copyWith(
-      eventType: event.category,
-      clearEventType: event.category == null,
-      page: 1,
-    );
-    emit(state.copyWith(
-      filter: newFilter,
-      events: [],
-      hasReachedMax: false,
-    ));
-    add(LoadEvents());
+    add(UpdateFilter(state.filter.copyWith(
+      category: event.category,
+      clearCategory: event.category == null,
+    )));
   }
 
   void _onUpdateDateFilter(
     UpdateDateFilter event,
     Emitter<EventsState> emit,
   ) {
-    // Create a fresh filter with the new date filter
-    final newFilter = EventFilter(
-      country: state.filter.country,
-      city: state.filter.city,
-      eventType: state.filter.eventType,
-      language: state.filter.language,
-      searchQuery: state.filter.searchQuery,
+    add(UpdateFilter(state.filter.copyWith(
       dateFilter: event.dateFilter,
-      onlineOnly: state.filter.onlineOnly,
-      freeOnly: state.filter.freeOnly,
-      trending: state.filter.trending,
-      page: 1,
-      pageSize: state.filter.pageSize,
-    );
-    emit(state.copyWith(
-      filter: newFilter,
-      events: [],
-      hasReachedMax: false,
-    ));
-    add(LoadEvents());
+      clearDateFilter: event.dateFilter == null,
+    )));
   }
 
   void _onToggleTrending(
     ToggleTrending event,
     Emitter<EventsState> emit,
   ) {
-    final newFilter = state.filter.copyWith(
-      trending: !state.filter.trending,
-      page: 1,
-    );
-    emit(state.copyWith(
-      filter: newFilter,
-      events: [],
-      hasReachedMax: false,
-    ));
-    add(LoadEvents());
+    add(UpdateFilter(state.filter.copyWith(trending: !state.filter.trending)));
   }
 
   void _onUpdateSearchQuery(
@@ -176,12 +146,15 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     Emitter<EventsState> emit,
   ) {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
-      add(UpdateFilter(state.filter.copyWith(
-        searchQuery: event.query.isEmpty ? null : event.query,
-        clearSearchQuery: event.query.isEmpty,
-        page: 1,
-      )));
+    final query = event.query.trim();
+    if (query.isEmpty) {
+      add(UpdateFilter(state.filter.copyWith(clearSearchQuery: true)));
+      return;
+    }
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!isClosed) {
+        add(UpdateFilter(state.filter.copyWith(searchQuery: query)));
+      }
     });
   }
 
@@ -189,32 +162,30 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     ClearAllFilters event,
     Emitter<EventsState> emit,
   ) {
-    final newFilter = state.filter.clearFilters();
-    emit(state.copyWith(
-      status: EventsStatus.loading,
-      filter: newFilter,
-      events: [],
-      hasReachedMax: false,
-    ));
-    add(LoadEvents());
+    add(UpdateFilter(state.filter.clearFilters()));
   }
 
   Future<void> _onLoadEvents(
     LoadEvents event,
     Emitter<EventsState> emit,
   ) async {
+    final generation = event.generation ?? _queryGeneration;
+    final requestedFilter = event.filter ?? state.filter;
     emit(state.copyWith(status: EventsStatus.loading));
 
     // Inject location into filter if available and not already set
-    var filter = state.filter;
+    var filter = requestedFilter;
     if (_currentLocation != null) {
       filter = filter.copyWith(
         country: filter.country ?? _currentLocation!.countryCode,
         city: filter.city ?? _currentLocation!.city,
+        timezone: filter.timezone ?? _currentLocation!.timezone,
       );
     }
 
     final result = await _eventsRepository.getEvents(filter);
+
+    if (generation != _queryGeneration || isClosed) return;
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -224,7 +195,8 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
       (events) => emit(state.copyWith(
         status: EventsStatus.success,
         events: events,
-        hasReachedMax: events.length < state.filter.pageSize,
+        filter: filter,
+        hasReachedMax: events.length < filter.pageSize,
       )),
     );
   }
@@ -240,6 +212,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
       return;
     }
 
+    final refreshGeneration = _queryGeneration;
     var filter = state.filter.copyWith(page: 1);
     if (_currentLocation != null) {
       filter = filter.copyWith(
@@ -249,6 +222,8 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     }
 
     final result = await _eventsRepository.getEvents(filter);
+
+    if (refreshGeneration != _queryGeneration || isClosed) return;
 
     result.fold(
       (_) {}, // silently ignore errors during poll
@@ -275,7 +250,9 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
 
     emit(state.copyWith(status: EventsStatus.loadingMore));
 
-    var newFilter = state.filter.copyWith(page: state.filter.page + 1);
+    final loadGeneration = _queryGeneration;
+    final baseFilter = state.filter;
+    var newFilter = baseFilter.copyWith(page: baseFilter.page + 1);
 
     // Inject location into pagination too
     if (_currentLocation != null) {
@@ -287,17 +264,23 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
 
     final result = await _eventsRepository.getEvents(newFilter);
 
+    if (loadGeneration != _queryGeneration || isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: EventsStatus.failure,
         errorMessage: failure.message,
       )),
-      (events) => emit(state.copyWith(
+      (events) {
+        final knownIds = state.events.map((item) => item.id).toSet();
+        final uniqueEvents = events.where((item) => knownIds.add(item.id)).toList();
+        emit(state.copyWith(
         status: EventsStatus.success,
-        events: [...state.events, ...events],
+        events: [...state.events, ...uniqueEvents],
         filter: newFilter,
-        hasReachedMax: events.length < state.filter.pageSize,
-      )),
+        hasReachedMax: events.length < newFilter.pageSize,
+        ));
+      },
     );
   }
 
@@ -306,13 +289,14 @@ class EventsBloc extends Bloc<EventsEvent, EventsState>
     Emitter<EventsState> emit,
   ) async {
     final newFilter = event.filter.copyWith(page: 1);
+    final generation = ++_queryGeneration;
     emit(state.copyWith(
       status: EventsStatus.loading,
       filter: newFilter,
       events: [],
       hasReachedMax: false,
     ));
-    add(LoadEvents());
+    add(LoadEvents(filter: newFilter, generation: generation));
   }
 
   Future<void> _onLoadEventDetails(

@@ -217,20 +217,25 @@ class _DiscoverFiltersSheetState extends State<DiscoverFiltersSheet> {
                       _FilterChip(
                         label: 'Free',
                         icon: Icons.sell_outlined,
-                        selected: _draft.freeOnly,
+                        selected: _draft.freeOnly || _draft.pricingType == 'free',
                         onTap: () => setState(() {
-                          _draft = _draft.copyWith(freeOnly: !_draft.freeOnly);
+                          final selected = _draft.freeOnly || _draft.pricingType == 'free';
+                          _draft = _draft.copyWith(
+                            freeOnly: !selected,
+                            pricingType: selected ? null : 'free',
+                            clearPricingType: selected,
+                          );
                         }),
                       ),
                       _FilterChip(
                         label: 'Paid',
                         icon: Icons.credit_card_outlined,
-                        selected: !_draft.freeOnly && _draft.eventType == 'paid',
+                        selected: _draft.pricingType == 'paid',
                         onTap: () => setState(() {
-                          final alreadyPaid = _draft.eventType == 'paid';
+                          final alreadyPaid = _draft.pricingType == 'paid';
                           _draft = _draft.copyWith(
-                            eventType: alreadyPaid ? null : 'paid',
-                            clearEventType: alreadyPaid,
+                            pricingType: alreadyPaid ? null : 'paid',
+                            clearPricingType: alreadyPaid,
                             freeOnly: false,
                           );
                         }),

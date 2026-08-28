@@ -7,7 +7,15 @@ abstract class EventsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadEvents extends EventsEvent {}
+class LoadEvents extends EventsEvent {
+  final EventFilter? filter;
+  final int? generation;
+
+  const LoadEvents({this.filter, this.generation});
+
+  @override
+  List<Object?> get props => [filter, generation];
+}
 
 class RefreshEvents extends EventsEvent {}
 

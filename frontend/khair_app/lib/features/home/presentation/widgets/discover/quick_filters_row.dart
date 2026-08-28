@@ -30,8 +30,8 @@ class QuickFiltersRow extends StatelessWidget {
                   state.filter.dateFilter == DateFilter.today,
                 QuickFilter.weekend =>
                   state.filter.dateFilter == DateFilter.thisWeekend,
-                QuickFilter.nearby => false,
-                QuickFilter.free => state.filter.freeOnly,
+                QuickFilter.nearby => state.filter.latitude != null && state.filter.longitude != null,
+                QuickFilter.free => state.filter.freeOnly || state.filter.pricingType == 'free',
                 QuickFilter.online => state.filter.onlineOnly,
               };
               return _QuickFilterChip(

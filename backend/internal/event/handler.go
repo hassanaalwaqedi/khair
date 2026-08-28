@@ -2,6 +2,7 @@ package event
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -167,7 +168,11 @@ func (h *Handler) GetSavedEvents(c *gin.Context) {
 
 // ListPublic lists approved events
 func (h *Handler) ListPublic(c *gin.Context) {
-	filter := h.buildFilter(c)
+	filter, err := h.buildFilter(c)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
 
 	events, total, err := h.service.ListPublic(filter)
 	if err != nil {
@@ -564,7 +569,7 @@ func (h *Handler) GetMyEvents(c *gin.Context) {
 }
 
 // buildFilter creates an EventFilter from query parameters
-func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
+func (h *Handler) buildFilter(c *gin.Context) (*EventFilter, error) {
 	filter := &EventFilter{
 		Page:     1,
 		PageSize: 20,
@@ -594,6 +599,10 @@ func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
 		filter.EventType = &eventType
 	}
 
+	if category := c.Query("category"); category != "" {
+		filter.Category = &category
+	}
+
 	if language := c.Query("language"); language != "" {
 		filter.Language = &language
 	}
@@ -601,6 +610,8 @@ func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
 	if online := c.Query("is_online"); online != "" {
 		if value, err := strconv.ParseBool(online); err == nil {
 			filter.IsOnline = &value
+		} else {
+			return nil, fmt.Errorf("invalid is_online filter")
 		}
 	}
 
@@ -608,16 +619,57 @@ func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
 		filter.FreeOnly = true
 	}
 
-	if startDate := c.Query("start_date"); startDate != "" {
-		if t, err := time.Parse(time.RFC3339, startDate); err == nil {
-			filter.StartDate = &t
+	timezone := c.Query("timezone")
+	if date := c.Query("date"); date != "" {
+		if err := applyDatePreset(filter, date, timezone, time.Now()); err != nil {
+			return nil, err
 		}
 	}
 
-	if endDate := c.Query("end_date"); endDate != "" {
-		if t, err := time.Parse(time.RFC3339, endDate); err == nil {
+	if c.Query("date") == "" {
+		if startDate := c.Query("start_date"); startDate != "" {
+			t, err := parseQueryTime(startDate, timezone)
+			if err != nil {
+				return nil, err
+			}
+			filter.StartDate = &t
+		}
+
+		if endDate := c.Query("end_date"); endDate != "" {
+			t, err := parseQueryTime(endDate, timezone)
+			if err != nil {
+				return nil, err
+			}
 			filter.EndDate = &t
 		}
+	}
+
+	if pricingType := c.Query("pricing_type"); pricingType != "" {
+		if pricingType != "free" && pricingType != "paid" {
+			return nil, fmt.Errorf("invalid pricing_type filter")
+		}
+		filter.PricingType = &pricingType
+	}
+
+	if lat, lng := c.Query("lat"), c.Query("lng"); lat != "" || lng != "" {
+		parsedLat, errLat := strconv.ParseFloat(lat, 64)
+		parsedLng, errLng := strconv.ParseFloat(lng, 64)
+		if errLat != nil || errLng != nil || parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180 {
+			return nil, fmt.Errorf("invalid location filter")
+		}
+		filter.Latitude = &parsedLat
+		filter.Longitude = &parsedLng
+		radius := 10.0
+		if rawRadius := c.Query("radius"); rawRadius != "" {
+			parsedRadius, err := strconv.ParseFloat(rawRadius, 64)
+			if err != nil || parsedRadius <= 0 || parsedRadius > 200 {
+				return nil, fmt.Errorf("invalid radius filter")
+			}
+			radius = parsedRadius
+		}
+		filter.RadiusKm = &radius
+	} else if c.Query("radius") != "" {
+		return nil, fmt.Errorf("lat and lng are required for radius filtering")
 	}
 
 	if search := c.Query("search"); search != "" {
@@ -628,5 +680,5 @@ func (h *Handler) buildFilter(c *gin.Context) *EventFilter {
 		filter.Trending = true
 	}
 
-	return filter
+	return filter, nil
 }
