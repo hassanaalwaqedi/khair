@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/config/api_config.dart';
+import '../../../../core/services/nominatim_service.dart';
 import '../../../../tokens/tokens.dart';
 import '../../domain/models/map_models.dart';
 import '../managers/map_state_manager.dart';
@@ -114,21 +117,69 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
                             ),
                           ))
                       .toList()),
+              if (state.places.isNotEmpty)
+                MarkerLayer(
+                  markers: state.places
+                      .map((place) => Marker(
+                            point: LatLng(place.lat, place.lng),
+                            width: 44,
+                            height: 44,
+                            child: Semantics(
+                              button: true,
+                              label: place.name ?? place.displayName,
+                              child: GestureDetector(
+                                onTap: () => _selectPlace(place),
+                                child: const _KhairPlaceMarker(),
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
             ],
           ),
           _MapSearchControls(
             controller: _search,
             filters: state.filters,
             locating: state.isLocating,
-            onSearch: (query) => context
-                .read<MapStateManager>()
-                .updateFilters(state.filters.copyWith(search: query.trim())),
+            onSearch: (query) => _searchEverywhere(query, state),
             onFilters: () => _showFilters(state),
             onLocation: () =>
                 context.read<MapStateManager>().refreshUserLocation(),
             onQuickFilter: (filters) =>
                 context.read<MapStateManager>().updateFilters(filters),
           ),
+          if (state.isSearchingPlaces)
+            PositionedDirectional(
+              top: MediaQuery.paddingOf(context).top + 68,
+              start: 16,
+              end: 16,
+              child: Align(
+                alignment: AlignmentDirectional.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: const _StatusPill(
+                    icon: Icons.search_rounded,
+                    text: 'Searching places…',
+                  ),
+                ),
+              ),
+            ),
+          if (!state.isSearchingPlaces && state.places.isNotEmpty)
+            PositionedDirectional(
+              top: MediaQuery.paddingOf(context).top + 68,
+              start: 16,
+              end: 16,
+              child: Align(
+                alignment: AlignmentDirectional.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _PlaceResults(
+                    places: state.places,
+                    onSelected: _selectPlace,
+                  ),
+                ),
+              ),
+            ),
           if (state.showSearchAreaButton)
             PositionedDirectional(
               top: 136,
@@ -233,6 +284,23 @@ class _SmartMapScreenState extends State<SmartMapScreen> {
   void _select(MapEvent event) =>
       context.read<MapStateManager>().onMarkerTapped(event);
   void _open(MapEvent event) => context.push('/events/${event.id}');
+
+  void _searchEverywhere(String query, MapState state) {
+    final manager = context.read<MapStateManager>();
+    final trimmed = query.trim();
+    unawaited(manager.updateFilters(state.filters.copyWith(search: trimmed)));
+    unawaited(manager.searchPlaces(
+      trimmed,
+      language: Localizations.localeOf(context).languageCode,
+    ));
+  }
+
+  void _selectPlace(NominatimPlace place) {
+    context.read<MapStateManager>().onPlaceTapped(place);
+    if (_mapReady) {
+      _mapController.move(LatLng(place.lat, place.lng), 15);
+    }
+  }
 
   void _showFilters(MapState state) => showModalBottomSheet<void>(
         context: context,
@@ -369,6 +437,91 @@ class _QuickChip extends StatelessWidget {
       ));
 }
 
+class _PlaceResults extends StatelessWidget {
+  const _PlaceResults({required this.places, required this.onSelected});
+
+  final List<NominatimPlace> places;
+  final ValueChanged<NominatimPlace> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface,
+      elevation: 8,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 250),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          itemCount: places.length,
+          separatorBuilder: (_, __) => Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant,
+          ),
+          itemBuilder: (_, index) {
+            final place = places[index];
+            final name = place.name?.trim().isNotEmpty == true
+                ? place.name!
+                : place.displayName.split(',').first.trim();
+            return ListTile(
+              dense: true,
+              leading:
+                  const Icon(Icons.place_outlined, color: AppColors.primary),
+              title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                [
+                  if (place.category?.isNotEmpty == true) place.category!,
+                  place.shortAddress,
+                  if (place.distanceKm != null)
+                    '${place.distanceKm!.toStringAsFixed(1)} km',
+                ].join(' • '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () => onSelected(place),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _KhairPlaceMarker extends StatelessWidget {
+  const _KhairPlaceMarker();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.primary, width: 2),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x33000000), blurRadius: 6, offset: Offset(0, 2))
+          ],
+        ),
+        child:
+            const Icon(Icons.place_rounded, color: AppColors.primary, size: 22),
+      );
+}
+
+class _PlacesFoundMapState extends StatelessWidget {
+  const _PlacesFoundMapState();
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Text(
+          'Places found above. Select one to center the map.',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          textAlign: TextAlign.center,
+        ),
+      );
+}
+
 class _DesktopResults extends StatelessWidget {
   const _DesktopResults(
       {required this.state,
@@ -498,7 +651,9 @@ class _ResultsPanel extends StatelessWidget {
             ])),
         Expanded(
             child: state.status == MapLoadStatus.success && state.events.isEmpty
-                ? _EmptyMapState(onExploreOnline: onExploreOnline)
+                ? state.places.isNotEmpty
+                    ? const _PlacesFoundMapState()
+                    : _EmptyMapState(onExploreOnline: onExploreOnline)
                 : PageView.builder(
                     controller: cards,
                     padEnds: false,
