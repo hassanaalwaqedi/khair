@@ -791,6 +791,8 @@
   "mapSearchHint": "Şehir veya etkinlik ara",
   "mapFindKhairNearYou": "Yakınında hayır bul",
   "mapSearchThisArea": "Bu alanı ara",
+  "mapSearchingPlaces": "Yerler aranıyor…",
+  "mapPlacesFoundHint": "Yerler yukarıda bulundu. Haritayı ortalamak için bir yer seçin.",
   "mapEventsNearby": "{count} yakın etkinlik",
   "@mapEventsNearby": {
     "placeholders": {
