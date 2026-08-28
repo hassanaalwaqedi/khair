@@ -65,24 +65,9 @@ type GeminiConfig struct {
 }
 
 // DefaultGeminiModel is the stable model used when no explicit model is set.
-const DefaultGeminiModel = "gemini-3.6-flash"
-
-// LoadGeminiConfig loads the AI configuration from the environment.
-func LoadGeminiConfig() GeminiConfig {
-	return GeminiConfig{
-		APIKey:    strings.TrimSpace(getEnv("GEMINI_API_KEY", "")),
-		Model:     resolveModelName(strings.TrimSpace(getEnv("GEMINI_MODEL", DefaultGeminiModel))),
-		MaxTokens: getEnvAsInt("GEMINI_MAX_TOKENS", 1024),
-		Enabled:   strings.TrimSpace(getEnv("GEMINI_API_KEY", "")) != "",
-	}
-}
-
-func resolveModelName(model string) string {
-	if model == "" || strings.HasPrefix(model, "gemini-1.5") || strings.HasPrefix(model, "gemini-2.5") {
-		return DefaultGeminiModel
-	}
-	return model
-}
+// Keep this value in one place so local, production, and runtime defaults do
+// not drift apart.
+const DefaultGeminiModel = "gemini-2.5-flash"
 
 // EmailConfig holds email provider configuration.
 // Supports Resend (preferred) and SendGrid (fallback).
@@ -156,7 +141,7 @@ func Load() *Config {
 
 func geminiModelFromEnv() string {
 	model := strings.TrimSpace(getEnv("GEMINI_MODEL", DefaultGeminiModel))
-	if model == "" || strings.HasPrefix(model, "gemini-1.5") || strings.HasPrefix(model, "gemini-2.5") {
+	if model == "" {
 		return DefaultGeminiModel
 	}
 	return model

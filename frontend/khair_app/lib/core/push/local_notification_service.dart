@@ -6,7 +6,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 /// Android users control channel settings after the first install.
 class KhairNotificationChannels {
   static const important = 'khair_important';
-  static const messages = 'khair_messages';
   static const reminders = 'khair_reminders';
   static const updates = 'khair_updates';
   static const general = 'khair_general';
@@ -25,16 +24,12 @@ class KhairNotificationChannels {
       case 'verification_review':
       case 'account_suspended':
         return important;
-      // Support replies must arrive as heads-up notifications — use the HIGH
-      // importance messages channel so Android shows the banner with sound.
-      case 'support_reply':
-      case 'support_attachment':
-      case 'support_message':
-        return messages;
       case 'event_join_confirmed':
       case 'event_participant_joined':
       case 'event_updated':
       case 'organizer_announcement':
+      case 'support_reply':
+      case 'support_attachment':
         return updates;
       default:
         return general;
@@ -97,16 +92,6 @@ class LocalNotificationService {
             'Approvals, cancellations, and actions that need attention.',
         importance: Importance.high,
       ),
-      // HIGH importance so support replies show as heads-up notifications
-      // with sound and vibration per the user's device settings.
-      AndroidNotificationChannel(
-        KhairNotificationChannels.messages,
-        'Messages',
-        description: 'Support messages and replies from Khair.',
-        importance: Importance.high,
-        playSound: true,
-        enableVibration: true,
-      ),
       AndroidNotificationChannel(
         KhairNotificationChannels.reminders,
         'Event reminders',
@@ -168,14 +153,6 @@ class LocalNotificationService {
           name: 'Important Khair updates',
           description:
               'Approvals, cancellations, and actions that need attention.',
-          importance: Importance.high,
-          priority: Priority.high,
-        );
-      case KhairNotificationChannels.messages:
-        return const _ChannelDetails(
-          id: KhairNotificationChannels.messages,
-          name: 'Messages',
-          description: 'Support messages and replies from Khair.',
           importance: Importance.high,
           priority: Priority.high,
         );

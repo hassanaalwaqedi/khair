@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -103,55 +102,45 @@ func (s *Service) GetUserTokens(userID uuid.UUID) ([]string, error) {
 // Notification content is persisted before this method is invoked; this method
 // only transports it and safely records its delivery outcome.
 func (s *Service) SendToUser(userID uuid.UUID, title, body string, data map[string]string) {
-	start := time.Now()
 	payload := publicFCMData(data)
 	notificationID := strings.TrimSpace(payload["notification_id"])
 	notificationType := strings.TrimSpace(payload["type"])
 
 	if s == nil || s.fcm == nil || !s.fcm.IsEnabled() {
-		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q user_id=%s reason=%q",
-			notificationID, notificationType, userID, "fcm_not_configured")
+		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "fcm_not_configured")
 		return
 	}
 
 	tokens, err := s.GetUserTokens(userID)
 	if err != nil {
-		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q user_id=%s reason=%q",
-			notificationID, notificationType, userID, "token_lookup_failed")
+		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q reason=%q", notificationID, notificationType, "token_lookup_failed")
 		return
 	}
 	if len(tokens) == 0 {
-		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q user_id=%s reason=%q",
-			notificationID, notificationType, userID, "no_active_devices")
+		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "no_active_devices")
 		return
 	}
 
 	for _, result := range s.fcm.SendToMultiple(tokens, title, body, payload) {
-		latencyMs := time.Since(start).Milliseconds()
 		if result.Err == nil {
-			log.Printf("[PUSH] delivery_sent notification_id=%q type=%q user_id=%s device_count=%d attempts=%d latency_ms=%d",
-				notificationID, notificationType, userID, len(tokens), result.Attempts, latencyMs)
+			log.Printf("[PUSH] delivery_sent notification_id=%q type=%q attempts=%d", notificationID, notificationType, result.Attempts)
 			continue
 		}
 		if fcm.IsInvalidToken(result.Err) {
 			if err := s.DeactivateToken(result.Token); err != nil {
-				log.Printf("[PUSH] invalid_token_cleanup_failed notification_id=%q type=%q user_id=%s",
-					notificationID, notificationType, userID)
+				log.Printf("[PUSH] invalid_token_cleanup_failed notification_id=%q type=%q", notificationID, notificationType)
 				continue
 			}
-			log.Printf("[PUSH] token_deactivated notification_id=%q type=%q user_id=%s attempts=%d latency_ms=%d",
-				notificationID, notificationType, userID, result.Attempts, latencyMs)
+			log.Printf("[PUSH] token_deactivated notification_id=%q type=%q attempts=%d", notificationID, notificationType, result.Attempts)
 			continue
 		}
-		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q user_id=%s category=%q attempts=%d latency_ms=%d",
-			notificationID, notificationType, userID, deliveryFailureCategory(result.Err), result.Attempts, latencyMs)
+		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q category=%q attempts=%d", notificationID, notificationType, deliveryFailureCategory(result.Err), result.Attempts)
 	}
 }
 
 // publicFCMData is a final server-side privacy boundary. Business services may
 // retain richer metadata in the authenticated notification center, but only
 // navigation identifiers and non-sensitive status enter Firebase payloads.
-// NEVER add: JWT tokens, FCM tokens, email, phone, message body, or OTP codes.
 func publicFCMData(data map[string]string) map[string]string {
 	allowed := map[string]struct{}{
 		"notification_id": {},
@@ -163,10 +152,6 @@ func publicFCMData(data map[string]string) map[string]string {
 		"application_id":  {},
 		"ticket_id":       {},
 		"announcement_id": {},
-		// Messaging routing metadata (no content, no PII)
-		"conversation_id": {},
-		"message_id":      {},
-		"sender_id":       {},
 	}
 	payload := make(map[string]string, len(allowed))
 	for key, value := range data {

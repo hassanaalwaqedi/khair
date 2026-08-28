@@ -22,9 +22,8 @@ class ApiConfig {
   static final serverOrigin = _extractOrigin(apiBaseUrl);
 
   static final String publicAppUrl = () {
-    String url = _envPublicAppUrl.isNotEmpty
-        ? _envPublicAppUrl
-        : 'https://khair.it.com';
+    String url =
+        _envPublicAppUrl.isNotEmpty ? _envPublicAppUrl : 'https://khair.app';
     return url.replaceFirst(RegExp(r'/$'), '');
   }();
 
