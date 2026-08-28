@@ -14,6 +14,7 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
   LocationBloc(this._resolveLocationUseCase) : super(const LocationInitial()) {
     on<ResolveLocationEvent>(_onResolveLocation);
     on<LoadCachedLocationEvent>(_onLoadCachedLocation);
+    on<RefreshAuthorizedLocationEvent>(_onRefreshAuthorizedLocation);
   }
 
   Future<void> _onLoadCachedLocation(
@@ -88,5 +89,35 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
         _resolveLocationUseCase.cacheLocation(location);
       },
     );
+  }
+
+  Future<void> _onRefreshAuthorizedLocation(
+    RefreshAuthorizedLocationEvent event,
+    Emitter<LocationState> emit,
+  ) async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 8),
+        ),
+      );
+      final result = await _resolveLocationUseCase(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+      result.fold((_) {}, (location) {
+        emit(LocationLoaded(location));
+        _resolveLocationUseCase.cacheLocation(location);
+      });
+    } catch (_) {
+      // Cached location remains usable when GPS is unavailable.
+    }
   }
 }
