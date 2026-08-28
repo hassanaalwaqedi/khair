@@ -233,6 +233,24 @@ func searchQueryVariants(query string) []string {
 		variants = append(variants, strings.ReplaceAll(query, "emmar", "emaar"))
 		variants = append(variants, strings.ReplaceAll(query, "Emmar", "Emaar"))
 	}
+	// Nominatim searches names and tags as written in OpenStreetMap. These
+	// common Arabic place terms are translated into a second provider query so
+	// Arabic users can find POIs whose OSM name is stored in Latin script.
+	arabicVariant := strings.NewReplacer(
+		"مقهى", "cafe",
+		"كافيه", "cafe",
+		"مطعم", "restaurant",
+		"مسجد", "mosque",
+		"جامع", "mosque",
+		"مول", "mall",
+		"مركز تسوق", "shopping mall",
+		"فندق", "hotel",
+		"إعمار", "Emaar",
+		"اعمار", "Emaar",
+	).Replace(query)
+	if arabicVariant != query {
+		variants = append(variants, arabicVariant)
+	}
 	result := make([]string, 0, len(variants))
 	seen := make(map[string]struct{}, len(variants))
 	for _, variant := range variants {
