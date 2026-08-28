@@ -28,6 +28,9 @@ abstract class AdminRepository {
   /// Get pending events for review
   Future<Either<Failure, List<Event>>> getPendingEvents();
 
+  /// Get all events for administrator management
+  Future<Either<Failure, List<Event>>> getAllEvents();
+
   /// Get event by ID for admin review
   Future<Either<Failure, Event>> getEventById(String id);
 
@@ -53,7 +56,8 @@ abstract class AdminRepository {
   Future<Either<Failure, void>> updateUserRole(String userId, String role);
 
   /// Update user status (suspend/ban/activate)
-  Future<Either<Failure, void>> updateUserStatus(String userId, String status, {String? reason});
+  Future<Either<Failure, void>> updateUserStatus(String userId, String status,
+      {String? reason});
 
   /// Delete user
   Future<Either<Failure, void>> deleteUser(String userId);
@@ -70,13 +74,15 @@ abstract class AdminRepository {
   });
 
   /// Search users for notification user picker
-  Future<Either<Failure, List<Map<String, dynamic>>>> searchUsersForNotification(String query);
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      searchUsersForNotification(String query);
 
   /// Get pending verification requests
   Future<Either<Failure, List<VerificationRequest>>> getPendingVerifications();
 
   /// Review a verification request (approve/reject/more_info_needed)
-  Future<Either<Failure, void>> reviewVerification(String id, String status, {String? reviewNotes});
+  Future<Either<Failure, void>> reviewVerification(String id, String status,
+      {String? reviewNotes});
 }
 
 /// Parameters for status update

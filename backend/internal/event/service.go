@@ -746,12 +746,14 @@ func (s *Service) Delete(userID uuid.UUID, eventID uuid.UUID) error {
 	// more than 24 hours before the start; later cancellations need admin action.
 	if existingEvent.Status == "approved" || existingEvent.Status == "published" {
 		if time.Until(existingEvent.StartDate) <= 24*time.Hour {
+			s.notifyAdminsOfCancellationRequest(existingEvent)
 			return errors.New("cancellation within 24 hours of the event requires admin approval")
 		}
 		if err := s.repo.Cancel(eventID); err != nil {
 			return fmt.Errorf("cancel event: %w", err)
 		}
 		s.notifyAttendeesOfCancellation(eventID, existingEvent.Title)
+		s.notifyAdminsOfCancellation(existingEvent)
 		return nil
 	}
 
@@ -763,7 +765,61 @@ func (s *Service) Delete(userID uuid.UUID, eventID uuid.UUID) error {
 		return errors.New("this event has active registrations and must be cancelled instead of deleted")
 	}
 
-	return s.repo.Delete(eventID)
+	if err := s.repo.Delete(eventID); err != nil {
+		return err
+	}
+	s.notifyAdminsOfCancellation(existingEvent)
+	return nil
+}
+
+func (s *Service) notifyAdminsOfCancellation(event *models.EventWithOrganizer) {
+	s.notifyAdminsOfEvent(event, "event_cancelled")
+}
+
+func (s *Service) notifyAdminsOfCancellationRequest(event *models.EventWithOrganizer) {
+	s.notifyAdminsOfEvent(event, "event_cancellation_requested")
+}
+
+func (s *Service) notifyAdminsOfEvent(event *models.EventWithOrganizer, notificationType string) {
+	if s.notifications == nil || event == nil {
+		return
+	}
+	rows, err := s.db.Query(`
+		SELECT DISTINCT u.id
+		FROM users u
+		LEFT JOIN user_roles ur ON ur.user_id = u.id
+		LEFT JOIN roles r ON r.id = ur.role_id
+		WHERE u.status = 'active'
+		  AND (u.role = 'admin' OR r.name IN ('admin', 'super_admin'))`)
+	if err != nil {
+		log.Printf("[EVENT] admin notification recipients lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	data := map[string]string{
+		"type": notificationType, "entity_type": "event",
+		"entity_id": event.ID.String(), "event_id": event.ID.String(),
+		"event_title": event.Title,
+		"start_at":    event.StartDate.UTC().Format(time.RFC3339),
+	}
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		copy, notificationID, created, err := s.notifications.CreateLocalizedOnce(
+			userID, notificationType, data,
+			notificationType+":"+event.ID.String())
+		if err != nil {
+			log.Printf("[EVENT] admin notification failed: %v", err)
+			continue
+		}
+		if s.pushService != nil && created {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
+	}
 }
 
 func (s *Service) notifyAttendeesOfCancellation(eventID uuid.UUID, title string) {

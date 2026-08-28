@@ -15,6 +15,7 @@ class AdminState extends Equatable {
   final AdminStatus verificationsStatus;
   final List<Organizer> pendingOrganizers;
   final List<Event> pendingEvents;
+  final List<Event> allEvents;
   final List<Report> pendingReports;
   final List<AdminUser> users;
   final List<Map<String, dynamic>> searchedUsers;
@@ -34,6 +35,7 @@ class AdminState extends Equatable {
     this.verificationsStatus = AdminStatus.initial,
     this.pendingOrganizers = const [],
     this.pendingEvents = const [],
+    this.allEvents = const [],
     this.pendingReports = const [],
     this.users = const [],
     this.searchedUsers = const [],
@@ -54,6 +56,7 @@ class AdminState extends Equatable {
     AdminStatus? verificationsStatus,
     List<Organizer>? pendingOrganizers,
     List<Event>? pendingEvents,
+    List<Event>? allEvents,
     List<Report>? pendingReports,
     List<AdminUser>? users,
     List<Map<String, dynamic>>? searchedUsers,
@@ -69,31 +72,38 @@ class AdminState extends Equatable {
       reportsStatus: reportsStatus ?? this.reportsStatus,
       usersStatus: usersStatus ?? this.usersStatus,
       actionStatus: actionStatus ?? this.actionStatus,
-      notificationSendStatus: notificationSendStatus ?? this.notificationSendStatus,
+      notificationSendStatus:
+          notificationSendStatus ?? this.notificationSendStatus,
       verificationsStatus: verificationsStatus ?? this.verificationsStatus,
       pendingOrganizers: pendingOrganizers ?? this.pendingOrganizers,
       pendingEvents: pendingEvents ?? this.pendingEvents,
+      allEvents: allEvents ?? this.allEvents,
       pendingReports: pendingReports ?? this.pendingReports,
       users: users ?? this.users,
       searchedUsers: searchedUsers ?? this.searchedUsers,
       verificationRequests: verificationRequests ?? this.verificationRequests,
       stats: stats ?? this.stats,
       errorMessage: errorMessage ?? this.errorMessage,
-      notificationSentCount: notificationSentCount ?? this.notificationSentCount,
+      notificationSentCount:
+          notificationSentCount ?? this.notificationSentCount,
     );
   }
 
   /// Convenience getters
   bool get isLoading => status == AdminStatus.loading;
   bool get isActionLoading => actionStatus == AdminStatus.loading;
-  bool get isNotificationSending => notificationSendStatus == AdminStatus.loading;
+  bool get isNotificationSending =>
+      notificationSendStatus == AdminStatus.loading;
 
   int get pendingOrganizerCount => pendingOrganizers.length;
   int get pendingEventCount => pendingEvents.length;
   int get pendingReportCount => pendingReports.length;
   int get pendingVerificationCount => verificationRequests.length;
   int get totalPendingCount =>
-      pendingOrganizerCount + pendingEventCount + pendingReportCount + pendingVerificationCount;
+      pendingOrganizerCount +
+      pendingEventCount +
+      pendingReportCount +
+      pendingVerificationCount;
 
   @override
   List<Object?> get props => [
@@ -107,6 +117,7 @@ class AdminState extends Equatable {
         verificationsStatus,
         pendingOrganizers,
         pendingEvents,
+        allEvents,
         pendingReports,
         users,
         searchedUsers,

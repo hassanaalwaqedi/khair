@@ -109,6 +109,17 @@ func Render(notificationType string, data map[string]string, language string) Lo
 		default:
 			return LocalizedNotification{Title: "Event cancelled", Message: fmt.Sprintf("%s has been cancelled. Review the event details.", eventTitle)}
 		}
+	case "event_cancellation_requested":
+		eventTitle := data["event_title"]
+		startAt := data["start_at"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "طلب إلغاء فعالية", Message: fmt.Sprintf("طلب المنظم إلغاء الفعالية %s التي تبدأ في %s. يرجى مراجعة القرار.", eventTitle, startAt)}
+		case "tr":
+			return LocalizedNotification{Title: "Etkinlik iptal talebi", Message: fmt.Sprintf("Organizatör %s etkinliğinin iptal edilmesini istedi. Başlangıç: %s. Lütfen inceleyin.", eventTitle, startAt)}
+		default:
+			return LocalizedNotification{Title: "Event cancellation request", Message: fmt.Sprintf("The organizer requested cancellation of %s, starting %s. Please review it.", eventTitle, startAt)}
+		}
 	case "organizer_announcement":
 		eventTitle := data["event_title"]
 		switch language {

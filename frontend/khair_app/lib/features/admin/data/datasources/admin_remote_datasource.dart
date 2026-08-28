@@ -12,6 +12,7 @@ abstract class AdminRemoteDataSource {
   Future<Organizer> getOrganizerById(String id);
   Future<Organizer> updateOrganizerStatus(String id, Map<String, dynamic> data);
   Future<List<Event>> getPendingEvents();
+  Future<List<Event>> getAllEvents();
   Future<Event> getEventById(String id);
   Future<Event> updateEventStatus(String id, Map<String, dynamic> data);
   Future<List<Report>> getPendingReports();
@@ -21,10 +22,15 @@ abstract class AdminRemoteDataSource {
   Future<void> updateUserStatus(String userId, String status, {String? reason});
   Future<void> deleteUser(String userId);
   Future<void> verifyUser(String userId);
-  Future<int> sendNotification({required String title, required String message, required String target, String? userId});
+  Future<int> sendNotification(
+      {required String title,
+      required String message,
+      required String target,
+      String? userId});
   Future<List<Map<String, dynamic>>> searchUsersForNotification(String query);
   Future<List<VerificationRequest>> getPendingVerifications();
-  Future<void> reviewVerification(String id, String status, {String? reviewNotes});
+  Future<void> reviewVerification(String id, String status,
+      {String? reviewNotes});
 }
 
 /// Implementation of admin remote data source
@@ -60,14 +66,23 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<Organizer> updateOrganizerStatus(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.put('/admin/organizers/$id/status', data: data);
+  Future<Organizer> updateOrganizerStatus(
+      String id, Map<String, dynamic> data) async {
+    final response =
+        await _apiClient.put('/admin/organizers/$id/status', data: data);
     return Organizer.fromJson(response.data['data']);
   }
 
   @override
   Future<List<Event>> getPendingEvents() async {
     final response = await _apiClient.get('/admin/events/pending');
+    final List<dynamic> list = response.data['data'] ?? [];
+    return list.map((json) => EventModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<Event>> getAllEvents() async {
+    final response = await _apiClient.get('/admin/events');
     final List<dynamic> list = response.data['data'] ?? [];
     return list.map((json) => EventModel.fromJson(json)).toList();
   }
@@ -81,7 +96,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
 
   @override
   Future<Event> updateEventStatus(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.put('/admin/events/$id/status', data: data);
+    final response =
+        await _apiClient.put('/admin/events/$id/status', data: data);
     final json = response.data['data'];
     return EventModel.fromJson(json);
   }
@@ -95,7 +111,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
 
   @override
   Future<Report> resolveReport(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.put('/admin/reports/$id/resolve', data: data);
+    final response =
+        await _apiClient.put('/admin/reports/$id/resolve', data: data);
     return Report.fromJson(response.data['data']);
   }
 
@@ -112,7 +129,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<void> updateUserStatus(String userId, String status, {String? reason}) async {
+  Future<void> updateUserStatus(String userId, String status,
+      {String? reason}) async {
     await _apiClient.put('/admin/users/$userId/status', data: {
       'status': status,
       if (reason != null) 'reason': reason,
@@ -130,7 +148,11 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<int> sendNotification({required String title, required String message, required String target, String? userId}) async {
+  Future<int> sendNotification(
+      {required String title,
+      required String message,
+      required String target,
+      String? userId}) async {
     final response = await _apiClient.post('/admin/notifications/send', data: {
       'title': title,
       'message': message,
@@ -141,8 +163,10 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> searchUsersForNotification(String query) async {
-    final response = await _apiClient.get('/admin/users/search', queryParameters: {'q': query});
+  Future<List<Map<String, dynamic>>> searchUsersForNotification(
+      String query) async {
+    final response = await _apiClient
+        .get('/admin/users/search', queryParameters: {'q': query});
     final List<dynamic> list = response.data['data'] ?? [];
     return list.map((e) => Map<String, dynamic>.from(e)).toList();
   }
@@ -155,7 +179,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<void> reviewVerification(String id, String status, {String? reviewNotes}) async {
+  Future<void> reviewVerification(String id, String status,
+      {String? reviewNotes}) async {
     await _apiClient.post('/admin/verification/$id/review', data: {
       'status': status,
       if (reviewNotes != null) 'review_notes': reviewNotes,

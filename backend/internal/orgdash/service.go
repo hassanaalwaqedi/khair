@@ -355,13 +355,61 @@ func (s *Service) CancelEvent(orgID, eventID uuid.UUID) error {
 		return errors.New("event not found")
 	}
 	if time.Until(ev.StartDate) <= 24*time.Hour {
+		s.notifyAdminsOfCancellationRequest(ev)
 		return errors.New("cancellation within 24 hours of the event requires admin approval")
 	}
 	if err := s.repo.CancelEvent(eventID); err != nil {
 		return err
 	}
 	go s.notifyAttendees(ev, "event_cancelled", "cancelled")
+	go s.notifyAdminsOfEvent(ev, "event_cancelled")
 	return nil
+}
+
+func (s *Service) notifyAdminsOfCancellationRequest(event *models.Event) {
+	s.notifyAdminsOfEvent(event, "event_cancellation_requested")
+}
+
+func (s *Service) notifyAdminsOfEvent(event *models.Event, notificationType string) {
+	if s.notifications == nil || event == nil {
+		return
+	}
+	rows, err := s.repo.db.Query(`
+		SELECT DISTINCT u.id
+		FROM users u
+		LEFT JOIN user_roles ur ON ur.user_id = u.id
+		LEFT JOIN roles r ON r.id = ur.role_id
+		WHERE u.status = 'active'
+		  AND (u.role = 'admin' OR r.name IN ('admin', 'super_admin'))`)
+	if err != nil {
+		log.Printf("[ORGDASH] admin notification recipients lookup failed: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	data := map[string]string{
+		"type": notificationType, "entity_type": "event",
+		"entity_id": event.ID.String(), "event_id": event.ID.String(),
+		"event_title": event.Title,
+		"start_at":    event.StartDate.UTC().Format(time.RFC3339),
+	}
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+		copy, notificationID, created, err := s.notifications.CreateLocalizedOnce(
+			userID, notificationType, data,
+			notificationType+":"+event.ID.String())
+		if err != nil {
+			log.Printf("[ORGDASH] admin notification failed: %v", err)
+			continue
+		}
+		if s.pushService != nil && created {
+			data["notification_id"] = notificationID.String()
+			s.pushService.SendToUser(userID, copy.Title, copy.Message, data)
+		}
+	}
 }
 
 // notifyAttendees creates one localised in-app notification per confirmed or
