@@ -79,11 +79,14 @@ func NewService(redisClients ...*redis.Client) *Service {
 }
 
 func (s *Service) SearchPlaces(ctx context.Context, query, city, country, language string, lat, lng *float64) ([]PlaceResult, error) {
-	key := "location:search:" + normalizeCachePart(language) + ":" + normalizeCachePart(country) + ":" + normalizeCachePart(city) + ":" + normalizeCachePart(query)
+	key := "location:search:v2:" + normalizeCachePart(language) + ":" + normalizeCachePart(country) + ":" + normalizeCachePart(city) + ":" + normalizeCachePart(query)
 	if s.redis != nil {
 		if data, err := s.redis.Get(ctx, key).Bytes(); err == nil {
 			var cached []PlaceResult
 			if json.Unmarshal(data, &cached) == nil {
+				sort.SliceStable(cached, func(i, j int) bool {
+					return placeRank(cached[i], city, country) > placeRank(cached[j], city, country)
+				})
 				return cached, nil
 			}
 		}
