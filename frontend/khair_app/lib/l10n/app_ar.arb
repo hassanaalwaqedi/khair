@@ -708,6 +708,8 @@
   "mapSearchHint": "ابحث عن مدينة أو فعالية",
   "mapFindKhairNearYou": "اعثر على الخير بالقرب منك",
   "mapSearchThisArea": "ابحث في هذه المنطقة",
+  "mapSearchingPlaces": "جارٍ البحث عن الأماكن…",
+  "mapPlacesFoundHint": "تم العثور على أماكن أعلاه. اختر مكانًا لتوسيط الخريطة.",
   "mapEventsNearby": "{count} فعاليات قريبة",
   "@mapEventsNearby": {
     "placeholders": {

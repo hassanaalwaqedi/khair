@@ -2087,6 +2087,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mapSearchThisArea => 'Bu alanı ara';
 
   @override
+  String get mapSearchingPlaces => 'Yerler aranıyor…';
+
+  @override
+  String get mapPlacesFoundHint =>
+      'Yerler yukarıda bulundu. Haritayı ortalamak için bir yer seçin.';
+
+  @override
   String mapEventsNearby(int count) {
     return '$count yakın etkinlik';
   }

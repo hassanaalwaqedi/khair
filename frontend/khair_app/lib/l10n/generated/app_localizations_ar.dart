@@ -2040,6 +2040,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mapSearchThisArea => 'ابحث في هذه المنطقة';
 
   @override
+  String get mapSearchingPlaces => 'جارٍ البحث عن الأماكن…';
+
+  @override
+  String get mapPlacesFoundHint =>
+      'تم العثور على أماكن أعلاه. اختر مكانًا لتوسيط الخريطة.';
+
+  @override
   String mapEventsNearby(int count) {
     return '$count فعاليات قريبة';
   }

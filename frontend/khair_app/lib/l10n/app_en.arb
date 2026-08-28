@@ -791,6 +791,8 @@
   "mapSearchHint": "Search city or event",
   "mapFindKhairNearYou": "Find Khair near you",
   "mapSearchThisArea": "Search this area",
+  "mapSearchingPlaces": "Searching places…",
+  "mapPlacesFoundHint": "Places found above. Select one to center the map.",
   "mapEventsNearby": "{count} events nearby",
   "@mapEventsNearby": {
     "placeholders": {
