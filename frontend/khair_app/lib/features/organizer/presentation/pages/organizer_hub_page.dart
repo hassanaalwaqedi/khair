@@ -173,6 +173,7 @@ class _OrganizerHubPageState extends State<OrganizerHubPage> {
         backgroundColor: Colors.transparent,
         builder: (_) => _AttendeeSheet(
           eventTitle: _asString(event['title'], fallback: 'Event'),
+          eventId: _asString(event['id']),
           attendees: attendees,
         ),
       );
@@ -1673,8 +1674,12 @@ class _ErrorState extends StatelessWidget {
 }
 
 class _AttendeeSheet extends StatelessWidget {
-  const _AttendeeSheet({required this.eventTitle, required this.attendees});
+  const _AttendeeSheet(
+      {required this.eventTitle,
+      required this.eventId,
+      required this.attendees});
   final String eventTitle;
+  final String eventId;
   final List<Map<String, dynamic>> attendees;
 
   @override
@@ -1742,10 +1747,17 @@ class _AttendeeSheet extends StatelessWidget {
                           style: TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text(_relativeDate(
                           attendee['joined_at'] ?? attendee['registered_at'])),
-                      trailing: attendee['attended'] == true
-                          ? Icon(Icons.check_circle,
-                              color: _HubColors.success, size: 19)
-                          : null,
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        IconButton(
+                          tooltip: 'Message attendee',
+                          icon: const Icon(Icons.chat_bubble_outline_rounded),
+                          onPressed: () => context.push(
+                              '/event-messages?event_id=$eventId&attendee_id=${attendee['user_id']}'),
+                        ),
+                        if (attendee['attended'] == true)
+                          Icon(Icons.check_circle,
+                              color: _HubColors.success, size: 19),
+                      ]),
                     );
                   },
                 ),

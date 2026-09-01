@@ -133,7 +133,10 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
-        path: '/event-messages', builder: (_, __) => const EventMessagesPage()),
+        path: '/event-messages',
+        builder: (_, state) => EventMessagesPage(
+            eventId: state.uri.queryParameters['event_id'],
+            attendeeId: state.uri.queryParameters['attendee_id'])),
     GoRoute(
         path: '/event-messages/:id',
         builder: (_, state) =>

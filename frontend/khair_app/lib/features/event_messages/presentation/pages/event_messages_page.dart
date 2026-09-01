@@ -5,9 +5,11 @@ import 'package:khair_app/core/network/api_client.dart';
 /// API-backed event conversations. This page deliberately has no local/mock
 /// conversation store: the server is the authority for membership and safety.
 class EventMessagesPage extends StatefulWidget {
-  const EventMessagesPage({super.key, this.conversationId, this.eventId});
+  const EventMessagesPage(
+      {super.key, this.conversationId, this.eventId, this.attendeeId});
   final String? conversationId;
   final String? eventId;
+  final String? attendeeId;
   @override
   State<EventMessagesPage> createState() => _EventMessagesPageState();
 }
@@ -37,8 +39,10 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
     setState(() => _loading = true);
     try {
       if (_id == null && widget.eventId != null) {
-        final r = await _api.post('/event-messages/conversations',
-            data: {'event_id': widget.eventId});
+        final r = await _api.post('/event-messages/conversations', data: {
+          'event_id': widget.eventId,
+          if (widget.attendeeId != null) 'attendee_id': widget.attendeeId
+        });
         _id = r.data['data']['id'].toString();
       }
       if (_id == null) {
