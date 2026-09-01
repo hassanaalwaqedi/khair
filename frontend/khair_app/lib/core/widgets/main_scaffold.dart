@@ -119,6 +119,13 @@ class _DesktopNavigation extends StatelessWidget
             icon: Icon(Icons.forum_outlined,
                 color: _matches(path, '/messages') ? AppColors.primary : null),
           ),
+        if (auth.isApprovedOrganizer)
+          IconButton(
+            tooltip: context.l10n.organizerDashboard,
+            onPressed: () => context.go('/organizer'),
+            icon: Icon(Icons.dashboard_outlined,
+                color: _matches(path, '/organizer') ? AppColors.primary : null),
+          ),
         SizedBox(width: 8),
         if (auth.isAuthenticated) const _DesktopNotificationBell(),
         SizedBox(width: 8),
