@@ -326,7 +326,11 @@ class EventFilter extends Equatable {
     }
     if (trending) params['trending'] = 'true';
     if (onlineOnly) params['is_online'] = 'true';
-    if (freeOnly) params['pricing_type'] = 'free';
+    if (freeOnly) {
+      params['pricing_type'] = 'free';
+      params['free'] =
+          'true'; // compatibility with existing discovery API clients
+    }
     if (pricingType != null && !freeOnly) params['pricing_type'] = pricingType;
     if (latitude != null && longitude != null) {
       params['lat'] = latitude.toString();

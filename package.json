@@ -1,0 +1,10 @@
+{
+  "name": "khair-worker-deploy",
+  "private": true,
+  "scripts": {
+    "deploy:worker": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.34.0"
+  }
+}
