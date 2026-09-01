@@ -591,6 +591,18 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           ],
         ),
         SizedBox(height: 12),
+        if (_registrationStatus != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: _outlineAction(
+              icon: Icons.chat_bubble_outline_rounded,
+              label: 'Message organizer',
+              colors: colors,
+              onPressed: () => context.push('/events/${event.id}/messages'),
+            ),
+          ),
+          SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           child: _outlineAction(

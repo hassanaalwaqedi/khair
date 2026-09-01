@@ -17,6 +17,7 @@ class _SupportRepository extends SupportRepository {
     required String language,
     String? contextType,
     String? contextId,
+    bool forceNew = false,
   }) async =>
       conversation;
 

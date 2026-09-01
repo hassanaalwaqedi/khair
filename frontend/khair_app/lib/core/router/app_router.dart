@@ -24,6 +24,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/events/presentation/pages/event_details_page.dart';
+import '../../features/event_messages/presentation/pages/event_messages_page.dart';
 import '../../features/events/domain/entities/event.dart';
 import '../../features/events/presentation/pages/my_events_page.dart';
 import '../../features/events/presentation/pages/saved_events_page.dart';
@@ -131,6 +132,16 @@ final GoRouter appRouter = GoRouter(
         ),
       ),
     ),
+    GoRoute(
+        path: '/event-messages', builder: (_, __) => const EventMessagesPage()),
+    GoRoute(
+        path: '/event-messages/:id',
+        builder: (_, state) =>
+            EventMessagesPage(conversationId: state.pathParameters['id'])),
+    GoRoute(
+        path: '/events/:id/messages',
+        builder: (_, state) =>
+            EventMessagesPage(eventId: state.pathParameters['id'])),
     GoRoute(
       path: '/organizers/:id',
       builder: (_, state) => RouteBackFallback(

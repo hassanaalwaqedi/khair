@@ -134,7 +134,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSessionExpired event,
     Emitter<AuthState> emit,
   ) {
-    PushNotificationService.instance.clearSession();
+    // Do not instantiate Firebase solely to handle an HTTP session boundary;
+    // this also keeps web/test environments without Firebase initialized safe.
     emit(const AuthState(status: AuthStatus.unauthenticated));
   }
 
