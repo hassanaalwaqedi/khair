@@ -120,6 +120,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
             path: '/saved',
             pageBuilder: (_, __) => NoTransitionPage(child: SavedEventsPage())),
+        GoRoute(
+            path: '/messages',
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: EventMessagesPage())),
       ],
     ),
     GoRoute(
@@ -137,7 +141,6 @@ final GoRouter appRouter = GoRouter(
         builder: (_, state) => EventMessagesPage(
             eventId: state.uri.queryParameters['event_id'],
             attendeeId: state.uri.queryParameters['attendee_id'])),
-    GoRoute(path: '/messages', builder: (_, __) => const EventMessagesPage()),
     GoRoute(
         path: '/event-messages/:id',
         builder: (_, state) =>
