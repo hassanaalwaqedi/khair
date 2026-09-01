@@ -8567,6 +8567,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploaded'**
   String get imageUploaded;
+
+  /// No description provided for @registrationRequirementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration & Requirements'**
+  String get registrationRequirementsTitle;
+
+  /// No description provided for @noRegistrationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'No registration required'**
+  String get noRegistrationRequired;
+
+  /// No description provided for @khairRegistrationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration required on Khair'**
+  String get khairRegistrationRequired;
+
+  /// No description provided for @externalRegistrationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration required on an external platform'**
+  String get externalRegistrationRequired;
+
+  /// No description provided for @bothRegistrationsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration required both on Khair and an external platform'**
+  String get bothRegistrationsRequired;
+
+  /// No description provided for @externalPlatformName.
+  ///
+  /// In en, this message translates to:
+  /// **'External platform name'**
+  String get externalPlatformName;
+
+  /// No description provided for @externalRegistrationUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'External registration URL'**
+  String get externalRegistrationUrl;
+
+  /// No description provided for @externalRegistrationInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration instructions (optional)'**
+  String get externalRegistrationInstructions;
+
+  /// No description provided for @testLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Test link'**
+  String get testLink;
+
+  /// No description provided for @completeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistration;
+
+  /// No description provided for @externalRegistrationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration must be completed on an external platform.'**
+  String get externalRegistrationWarning;
+
+  /// No description provided for @leaveKhairRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'You are leaving Khair to complete registration on an external platform.'**
+  String get leaveKhairRegistration;
+
+  /// No description provided for @continueToRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to registration'**
+  String get continueToRegistration;
+
+  /// No description provided for @khairDoesNotManageExternalRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Khair does not verify or manage this external registration process.'**
+  String get khairDoesNotManageExternalRegistration;
 }
 
 class _AppLocalizationsDelegate

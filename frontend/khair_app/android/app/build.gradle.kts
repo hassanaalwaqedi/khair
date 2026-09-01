@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.khair.khair_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     // Use the highest NDK revision required by the Android plugins.
     ndkVersion = "28.2.13676358"
 
@@ -34,7 +34,7 @@ android {
     defaultConfig {
         applicationId = "com.khair.khair_app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true

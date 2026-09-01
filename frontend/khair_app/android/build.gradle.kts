@@ -19,6 +19,19 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
+// flutter_app_badger 1.5.0 declares Android SDK 29, but its merged AndroidX
+// resources reference android:lStar (introduced in API 31). Keep the plugin
+// enabled while compiling its library resources with the application's SDK.
+subprojects {
+    afterEvaluate {
+        if (name == "flutter_app_badger") {
+            extensions.findByType<com.android.build.api.dsl.LibraryExtension>()
+                ?.compileSdk = 36
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

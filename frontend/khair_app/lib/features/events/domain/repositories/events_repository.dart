@@ -52,6 +52,13 @@ class CreateEventParams {
   final int? ageMin;
   final DateTime? registrationDeadline;
   final String? registrationMode;
+  final bool registrationRequired;
+  final String registrationType;
+  final String? externalPlatformName;
+  final String? externalRegistrationUrl;
+  final String? externalRegistrationInstructions;
+  final String? registrationRequirements;
+  final bool applicationApprovalRequired;
   final String? timezone;
   final String? guidelines;
 
@@ -82,6 +89,13 @@ class CreateEventParams {
     this.ageMin,
     this.registrationDeadline,
     this.registrationMode,
+    this.registrationRequired = false,
+    this.registrationType = 'none',
+    this.externalPlatformName,
+    this.externalRegistrationUrl,
+    this.externalRegistrationInstructions,
+    this.registrationRequirements,
+    this.applicationApprovalRequired = false,
     this.timezone,
     this.guidelines,
   });
@@ -126,6 +140,13 @@ class CreateEventParams {
       'age_min': ageMin,
       'registration_deadline': registrationDeadline?.toUtc().toIso8601String(),
       'registration_mode': registrationMode,
+      'registration_required': registrationRequired,
+      'registration_type': registrationType,
+      'external_platform_name': externalPlatformName,
+      'external_registration_url': externalRegistrationUrl,
+      'external_registration_instructions': externalRegistrationInstructions,
+      'registration_requirements': registrationRequirements,
+      'application_approval_required': applicationApprovalRequired,
       'timezone': timezone,
       'guidelines': guidelines,
     };
@@ -156,6 +177,13 @@ class CreateEventParams {
         ageMin: ageMin,
         registrationDeadline: registrationDeadline,
         registrationMode: registrationMode,
+        registrationRequired: registrationRequired,
+        registrationType: registrationType,
+        externalPlatformName: externalPlatformName,
+        externalRegistrationUrl: externalRegistrationUrl,
+        externalRegistrationInstructions: externalRegistrationInstructions,
+        registrationRequirements: registrationRequirements,
+        applicationApprovalRequired: applicationApprovalRequired,
         timezone: timezone,
         guidelines: guidelines,
       );
@@ -187,6 +215,13 @@ class UpdateEventParams {
   final int? ageMin;
   final DateTime? registrationDeadline;
   final String? registrationMode;
+  final bool? registrationRequired;
+  final String? registrationType;
+  final String? externalPlatformName;
+  final String? externalRegistrationUrl;
+  final String? externalRegistrationInstructions;
+  final String? registrationRequirements;
+  final bool? applicationApprovalRequired;
   final String? timezone;
   final String? guidelines;
 
@@ -216,6 +251,13 @@ class UpdateEventParams {
     this.ageMin,
     this.registrationDeadline,
     this.registrationMode,
+    this.registrationRequired,
+    this.registrationType,
+    this.externalPlatformName,
+    this.externalRegistrationUrl,
+    this.externalRegistrationInstructions,
+    this.registrationRequirements,
+    this.applicationApprovalRequired,
     this.timezone,
     this.guidelines,
   });
@@ -264,6 +306,20 @@ class UpdateEventParams {
           registrationDeadline!.toUtc().toIso8601String();
     }
     if (registrationMode != null) json['registration_mode'] = registrationMode;
+    if (registrationRequired != null)
+      json['registration_required'] = registrationRequired;
+    if (registrationType != null) json['registration_type'] = registrationType;
+    if (externalPlatformName != null)
+      json['external_platform_name'] = externalPlatformName;
+    if (externalRegistrationUrl != null)
+      json['external_registration_url'] = externalRegistrationUrl;
+    if (externalRegistrationInstructions != null)
+      json['external_registration_instructions'] =
+          externalRegistrationInstructions;
+    if (registrationRequirements != null)
+      json['registration_requirements'] = registrationRequirements;
+    if (applicationApprovalRequired != null)
+      json['application_approval_required'] = applicationApprovalRequired;
     if (timezone != null) json['timezone'] = timezone;
     if (guidelines != null) json['guidelines'] = guidelines;
     return json;

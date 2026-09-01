@@ -47,6 +47,8 @@ import '../../features/owner_posts/presentation/pages/owner_dashboard_page.dart'
     as owner;
 import '../../features/profile/presentation/pages/profile_edit_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/privacy/presentation/pages/privacy_policy_page.dart';
+import '../../features/account_deletion/presentation/pages/account_deletion_page.dart';
 import '../../features/static/presentation/pages/static_page.dart';
 import '../../features/support/presentation/bloc/support_cubit.dart';
 import '../../features/support/presentation/pages/support_chat_page.dart';
@@ -73,7 +75,10 @@ class _AuthRefresh extends ChangeNotifier {
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/',
+  // Some Firebase/Flutter web hosting paths report the platform default route
+  // as `/` even when the browser opened a deep link. Read the browser URL
+  // directly so a refresh of a public document cannot silently land on Home.
+  initialLocation: _initialLocation(),
   debugLogDiagnostics: kDebugMode,
   refreshListenable: _AuthRefresh(_authBloc.stream),
   redirect: _guardRoute,
@@ -311,7 +316,14 @@ final GoRouter appRouter = GoRouter(
       path: '/privacy',
       builder: (_, __) => RouteBackFallback(
         fallbackLocation: '/',
-        child: StaticPage(pageType: 'privacy'),
+        child: PrivacyPolicyPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/account-deletion',
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/',
+        child: AccountDeletionPage(),
       ),
     ),
     GoRoute(
@@ -349,9 +361,19 @@ final GoRouter appRouter = GoRouter(
       _NotFoundPage(message: state.error?.toString()),
 );
 
+String _initialLocation() {
+  if (!kIsWeb) return '/';
+  final uri = Uri.base;
+  final path = uri.path.isEmpty ? '/' : uri.path;
+  return uri.hasQuery ? '$path?${uri.query}' : path;
+}
+
 String? _guardRoute(BuildContext context, GoRouterState routerState) {
   final path = routerState.uri.path;
   final state = _authBloc.state;
+  // The privacy policy is a public legal document and must render without
+  // waiting for authentication/session initialization.
+  if (path == '/privacy' || path == '/account-deletion') return null;
   final isLoadingPage = path == '/auth-loading';
   if (state.status == AuthStatus.initial) {
     return isLoadingPage
@@ -373,6 +395,7 @@ String? _guardRoute(BuildContext context, GoRouterState routerState) {
       path == '/verification' ||
       path == '/about' ||
       path == '/privacy' ||
+      path == '/account-deletion' ||
       path == '/terms' ||
       path == '/content-policy' ||
       path == '/verification-policy';

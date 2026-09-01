@@ -1526,6 +1526,20 @@
   "imagePreparing": "جارٍ تجهيز الصورة…",
   "imageUploading": "جارٍ رفع الصورة بأمان…",
   "imageUploaded": "تم الرفع",
+  "registrationRequirementsTitle": "التسجيل والمتطلبات",
+  "noRegistrationRequired": "لا يلزم التسجيل",
+  "khairRegistrationRequired": "التسجيل مطلوب على خير",
+  "externalRegistrationRequired": "التسجيل مطلوب على منصة خارجية",
+  "bothRegistrationsRequired": "التسجيل مطلوب على خير وعلى منصة خارجية",
+  "externalPlatformName": "اسم المنصة الخارجية",
+  "externalRegistrationUrl": "رابط التسجيل الخارجي",
+  "externalRegistrationInstructions": "تعليمات التسجيل (اختياري)",
+  "testLink": "اختبار الرابط",
+  "completeRegistration": "إكمال التسجيل",
+  "externalRegistrationWarning": "يجب إكمال التسجيل على منصة خارجية.",
+  "leaveKhairRegistration": "ستغادر خير لإكمال التسجيل على منصة خارجية.",
+  "continueToRegistration": "متابعة التسجيل",
+  "khairDoesNotManageExternalRegistration": "لا تتحقق خير من عملية التسجيل الخارجية ولا تديرها.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

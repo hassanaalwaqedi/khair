@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "1061209811578-g061f4dbkb6k0pdtotvmm77grqdqjg33.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.khair.khair_app",
+            "certificate_hash": "a783d1a8b0f9acbfb2ba492c2a1ea1e7734f60c0"
+          }
+        },
+        {
+          "client_id": "1061209811578-j3mdngfttq3nf0h5epdbk3d5dbsreo7u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.khair.khair_app",
+            "certificate_hash": "86b3a42dd99ec77565319020998847239e6f5026"
+          }
+        },
+        {
           "client_id": "1061209811578-nqgg6gmad0vvru94rnnfku51bdq9b0uk.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -50,6 +66,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1061209811578-69dnv804j13jct2le06hijsfr9cv20iv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.khair_app",
+            "certificate_hash": "86b3a42dd99ec77565319020998847239e6f5026"
+          }
+        },
         {
           "client_id": "1061209811578-nqgg6gmad0vvru94rnnfku51bdq9b0uk.apps.googleusercontent.com",
           "client_type": 3

@@ -55,6 +55,13 @@ class Event extends Equatable {
   final String? onlinePlatform;
   final DateTime? registrationDeadline;
   final String? registrationMode;
+  final bool registrationRequired;
+  final String registrationType; // none | khair | external | both
+  final String? externalPlatformName;
+  final String? externalRegistrationUrl;
+  final String? externalRegistrationInstructions;
+  final String? registrationRequirements;
+  final bool applicationApprovalRequired;
   final String? timezone;
   final String? genderRestriction;
   final String attendancePolicy;
@@ -97,6 +104,13 @@ class Event extends Equatable {
     this.onlinePlatform,
     this.registrationDeadline,
     this.registrationMode,
+    this.registrationRequired = false,
+    this.registrationType = 'none',
+    this.externalPlatformName,
+    this.externalRegistrationUrl,
+    this.externalRegistrationInstructions,
+    this.registrationRequirements,
+    this.applicationApprovalRequired = false,
     this.timezone,
     this.genderRestriction,
     this.attendancePolicy = AttendancePolicy.everyone,
@@ -141,6 +155,13 @@ class Event extends Equatable {
         onlinePlatform,
         registrationDeadline,
         registrationMode,
+        registrationRequired,
+        registrationType,
+        externalPlatformName,
+        externalRegistrationUrl,
+        externalRegistrationInstructions,
+        registrationRequirements,
+        applicationApprovalRequired,
         timezone,
         genderRestriction,
         attendancePolicy,
@@ -280,11 +301,11 @@ class EventFilter extends Equatable {
       category != null ||
       language != null ||
       dateFilter != null ||
-       searchQuery != null ||
-       pricingType != null ||
-       latitude != null ||
-       longitude != null ||
-       radiusKm != null ||
+      searchQuery != null ||
+      pricingType != null ||
+      latitude != null ||
+      longitude != null ||
+      radiusKm != null ||
       onlineOnly ||
       freeOnly ||
       trending;

@@ -48,6 +48,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		events.GET("", h.ListPublic)
 		events.GET("/:id", h.GetByID)
 		events.POST("/:id/view", h.RecordView)
+		events.POST("/:id/external-registration-click", h.RecordExternalRegistrationClick)
 	}
 
 	// Protected routes — auth-aware event details (shows join status + online link)
@@ -108,6 +109,23 @@ func (h *Handler) RecordView(c *gin.Context) {
 			return
 		}
 		response.InternalServerError(c, "Failed to record event view")
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) RecordExternalRegistrationClick(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	if err := h.service.RecordExternalRegistrationClick(id); err != nil {
+		if strings.Contains(err.Error(), "not configured") {
+			response.BadRequest(c, err.Error())
+		} else {
+			response.NotFound(c, "Event not found")
+		}
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -228,45 +246,52 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 // EventDetailResponse extends EventWithOrganizer with user-specific fields
 type EventDetailResponse struct {
-	ID                           uuid.UUID           `json:"id"`
-	OrganizerID                  uuid.UUID           `json:"organizer_id"`
-	Title                        string              `json:"title"`
-	Description                  *string             `json:"description,omitempty"`
-	EventType                    string              `json:"event_type"`
-	Category                     string              `json:"category"`
-	Tags                         []string            `json:"tags,omitempty"`
-	Language                     *string             `json:"language,omitempty"`
-	Country                      *string             `json:"country,omitempty"`
-	City                         *string             `json:"city,omitempty"`
-	Address                      *string             `json:"address,omitempty"`
-	Latitude                     *float64            `json:"latitude,omitempty"`
-	Longitude                    *float64            `json:"longitude,omitempty"`
-	StartDate                    time.Time           `json:"start_date"`
-	EndDate                      *time.Time          `json:"end_date,omitempty"`
-	ImageURL                     *string             `json:"image_url,omitempty"`
-	Capacity                     *int                `json:"capacity,omitempty"`
-	ReservedCount                int                 `json:"reserved_count"`
-	GenderRestriction            *string             `json:"gender_restriction,omitempty"`
-	AttendancePolicy             string              `json:"attendance_policy"`
-	AgeMin                       *int                `json:"age_min,omitempty"`
-	AgeMax                       *int                `json:"age_max,omitempty"`
-	Pricing                      *models.PricingInfo `json:"pricing,omitempty"`
-	Status                       string              `json:"status"`
-	IsPublished                  bool                `json:"is_published"`
-	IsOnline                     bool                `json:"is_online"`
-	OnlineLink                   *string             `json:"online_link,omitempty"`
-	JoinInstructions             *string             `json:"join_instructions,omitempty"`
-	JoinLinkVisibleBeforeMinutes int                 `json:"join_link_visible_before_minutes"`
-	VenueName                    *string             `json:"venue_name,omitempty"`
-	OnlinePlatform               *string             `json:"online_platform,omitempty"`
-	RegistrationDeadline         *time.Time          `json:"registration_deadline,omitempty"`
-	RegistrationMode             string              `json:"registration_mode"`
-	Timezone                     string              `json:"timezone"`
-	RejectionReason              *string             `json:"rejection_reason,omitempty"`
-	ApprovedAt                   *time.Time          `json:"approved_at,omitempty"`
-	CreatedAt                    time.Time           `json:"created_at"`
-	UpdatedAt                    time.Time           `json:"updated_at"`
-	OrganizerName                string              `json:"organizer_name"`
+	ID                               uuid.UUID           `json:"id"`
+	OrganizerID                      uuid.UUID           `json:"organizer_id"`
+	Title                            string              `json:"title"`
+	Description                      *string             `json:"description,omitempty"`
+	EventType                        string              `json:"event_type"`
+	Category                         string              `json:"category"`
+	Tags                             []string            `json:"tags,omitempty"`
+	Language                         *string             `json:"language,omitempty"`
+	Country                          *string             `json:"country,omitempty"`
+	City                             *string             `json:"city,omitempty"`
+	Address                          *string             `json:"address,omitempty"`
+	Latitude                         *float64            `json:"latitude,omitempty"`
+	Longitude                        *float64            `json:"longitude,omitempty"`
+	StartDate                        time.Time           `json:"start_date"`
+	EndDate                          *time.Time          `json:"end_date,omitempty"`
+	ImageURL                         *string             `json:"image_url,omitempty"`
+	Capacity                         *int                `json:"capacity,omitempty"`
+	ReservedCount                    int                 `json:"reserved_count"`
+	GenderRestriction                *string             `json:"gender_restriction,omitempty"`
+	AttendancePolicy                 string              `json:"attendance_policy"`
+	AgeMin                           *int                `json:"age_min,omitempty"`
+	AgeMax                           *int                `json:"age_max,omitempty"`
+	Pricing                          *models.PricingInfo `json:"pricing,omitempty"`
+	Status                           string              `json:"status"`
+	IsPublished                      bool                `json:"is_published"`
+	IsOnline                         bool                `json:"is_online"`
+	OnlineLink                       *string             `json:"online_link,omitempty"`
+	JoinInstructions                 *string             `json:"join_instructions,omitempty"`
+	JoinLinkVisibleBeforeMinutes     int                 `json:"join_link_visible_before_minutes"`
+	VenueName                        *string             `json:"venue_name,omitempty"`
+	OnlinePlatform                   *string             `json:"online_platform,omitempty"`
+	RegistrationDeadline             *time.Time          `json:"registration_deadline,omitempty"`
+	RegistrationMode                 string              `json:"registration_mode"`
+	RegistrationRequired             bool                `json:"registration_required"`
+	RegistrationType                 string              `json:"registration_type"`
+	ExternalPlatformName             *string             `json:"external_platform_name,omitempty"`
+	ExternalRegistrationURL          *string             `json:"external_registration_url,omitempty"`
+	ExternalRegistrationInstructions *string             `json:"external_registration_instructions,omitempty"`
+	RegistrationRequirements         *string             `json:"registration_requirements,omitempty"`
+	ApplicationApprovalRequired      bool                `json:"application_approval_required"`
+	Timezone                         string              `json:"timezone"`
+	RejectionReason                  *string             `json:"rejection_reason,omitempty"`
+	ApprovedAt                       *time.Time          `json:"approved_at,omitempty"`
+	CreatedAt                        time.Time           `json:"created_at"`
+	UpdatedAt                        time.Time           `json:"updated_at"`
+	OrganizerName                    string              `json:"organizer_name"`
 	// User-specific fields
 	IsUserJoined   bool `json:"is_user_joined"`
 	IsLinkUnlocked bool `json:"is_link_unlocked"`
@@ -327,47 +352,54 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 	}
 
 	resp := EventDetailResponse{
-		ID:                           event.ID,
-		OrganizerID:                  event.OrganizerID,
-		Title:                        event.Title,
-		Description:                  event.Description,
-		EventType:                    event.EventType,
-		Category:                     event.Category,
-		Tags:                         event.Tags,
-		Language:                     event.Language,
-		Country:                      event.Country,
-		City:                         event.City,
-		Address:                      event.Address,
-		Latitude:                     event.Latitude,
-		Longitude:                    event.Longitude,
-		StartDate:                    event.StartDate,
-		EndDate:                      event.EndDate,
-		ImageURL:                     event.ImageURL,
-		Capacity:                     event.Capacity,
-		ReservedCount:                event.ReservedCount,
-		GenderRestriction:            event.GenderRestriction,
-		AttendancePolicy:             event.AttendancePolicy,
-		AgeMin:                       event.AgeMin,
-		AgeMax:                       event.AgeMax,
-		Pricing:                      event.Pricing,
-		Status:                       event.Status,
-		IsPublished:                  event.IsPublished,
-		IsOnline:                     event.IsOnline,
-		OnlineLink:                   onlineLink,
-		JoinInstructions:             event.JoinInstructions,
-		JoinLinkVisibleBeforeMinutes: event.JoinLinkVisibleBeforeMinutes,
-		VenueName:                    event.VenueName,
-		OnlinePlatform:               event.OnlinePlatform,
-		RegistrationDeadline:         event.RegistrationDeadline,
-		RegistrationMode:             event.RegistrationMode,
-		Timezone:                     event.Timezone,
-		RejectionReason:              event.RejectionReason,
-		ApprovedAt:                   event.ApprovedAt,
-		CreatedAt:                    event.CreatedAt,
-		UpdatedAt:                    event.UpdatedAt,
-		OrganizerName:                event.OrganizerName,
-		IsUserJoined:                 isJoined,
-		IsLinkUnlocked:               isLinkUnlocked,
+		ID:                               event.ID,
+		OrganizerID:                      event.OrganizerID,
+		Title:                            event.Title,
+		Description:                      event.Description,
+		EventType:                        event.EventType,
+		Category:                         event.Category,
+		Tags:                             event.Tags,
+		Language:                         event.Language,
+		Country:                          event.Country,
+		City:                             event.City,
+		Address:                          event.Address,
+		Latitude:                         event.Latitude,
+		Longitude:                        event.Longitude,
+		StartDate:                        event.StartDate,
+		EndDate:                          event.EndDate,
+		ImageURL:                         event.ImageURL,
+		Capacity:                         event.Capacity,
+		ReservedCount:                    event.ReservedCount,
+		GenderRestriction:                event.GenderRestriction,
+		AttendancePolicy:                 event.AttendancePolicy,
+		AgeMin:                           event.AgeMin,
+		AgeMax:                           event.AgeMax,
+		Pricing:                          event.Pricing,
+		Status:                           event.Status,
+		IsPublished:                      event.IsPublished,
+		IsOnline:                         event.IsOnline,
+		OnlineLink:                       onlineLink,
+		JoinInstructions:                 event.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes:     event.JoinLinkVisibleBeforeMinutes,
+		VenueName:                        event.VenueName,
+		OnlinePlatform:                   event.OnlinePlatform,
+		RegistrationDeadline:             event.RegistrationDeadline,
+		RegistrationMode:                 event.RegistrationMode,
+		RegistrationRequired:             event.RegistrationRequired,
+		RegistrationType:                 event.RegistrationType,
+		ExternalPlatformName:             event.ExternalPlatformName,
+		ExternalRegistrationURL:          event.ExternalRegistrationURL,
+		ExternalRegistrationInstructions: event.ExternalRegistrationInstructions,
+		RegistrationRequirements:         event.RegistrationRequirements,
+		ApplicationApprovalRequired:      event.ApplicationApprovalRequired,
+		Timezone:                         event.Timezone,
+		RejectionReason:                  event.RejectionReason,
+		ApprovedAt:                       event.ApprovedAt,
+		CreatedAt:                        event.CreatedAt,
+		UpdatedAt:                        event.UpdatedAt,
+		OrganizerName:                    event.OrganizerName,
+		IsUserJoined:                     isJoined,
+		IsLinkUnlocked:                   isLinkUnlocked,
 	}
 
 	response.Success(c, resp)

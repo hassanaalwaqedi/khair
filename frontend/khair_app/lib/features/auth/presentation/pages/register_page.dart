@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
             if (state.status == AuthStatus.authenticated) {
               _continueAfterAuth(context);
             } else if (state.status == AuthStatus.failure) {
-              _showMessage(
+              _showMessage(state.errorMessage ??
                   'Google sign-up could not be completed. Please try email instead.');
               setState(() => _googleLoading = false);
             }
