@@ -4504,4 +4504,50 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get imageUploaded => 'تم الرفع';
+
+  @override
+  String get registrationRequirementsTitle => 'التسجيل والمتطلبات';
+
+  @override
+  String get noRegistrationRequired => 'لا يلزم التسجيل';
+
+  @override
+  String get khairRegistrationRequired => 'التسجيل مطلوب على خير';
+
+  @override
+  String get externalRegistrationRequired => 'التسجيل مطلوب على منصة خارجية';
+
+  @override
+  String get bothRegistrationsRequired =>
+      'التسجيل مطلوب على خير وعلى منصة خارجية';
+
+  @override
+  String get externalPlatformName => 'اسم المنصة الخارجية';
+
+  @override
+  String get externalRegistrationUrl => 'رابط التسجيل الخارجي';
+
+  @override
+  String get externalRegistrationInstructions => 'تعليمات التسجيل (اختياري)';
+
+  @override
+  String get testLink => 'اختبار الرابط';
+
+  @override
+  String get completeRegistration => 'إكمال التسجيل';
+
+  @override
+  String get externalRegistrationWarning =>
+      'يجب إكمال التسجيل على منصة خارجية.';
+
+  @override
+  String get leaveKhairRegistration =>
+      'ستغادر خير لإكمال التسجيل على منصة خارجية.';
+
+  @override
+  String get continueToRegistration => 'متابعة التسجيل';
+
+  @override
+  String get khairDoesNotManageExternalRegistration =>
+      'لا تتحقق خير من عملية التسجيل الخارجية ولا تديرها.';
 }

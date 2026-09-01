@@ -1,5 +1,6 @@
 import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service for managing legal document acceptances
@@ -7,13 +8,13 @@ class LegalService {
   static const String _termsVersionKey = 'terms_version_accepted';
   static const String _privacyVersionKey = 'privacy_version_accepted';
   static const String _organizerAgreementKey = 'organizer_agreement_accepted';
-  
+
   /// Current version of Terms of Service
   static const String currentTermsVersion = '1.0.0';
-  
+
   /// Current version of Privacy Policy
-  static const String currentPrivacyVersion = '1.0.0';
-  
+  static const String currentPrivacyVersion = '1.1.0';
+
   /// Current version of Organizer Agreement
   static const String currentOrganizerAgreementVersion = '1.0.0';
 
@@ -56,7 +57,8 @@ class LegalService {
 
   /// Record Organizer Agreement acceptance
   Future<void> acceptOrganizerAgreement() async {
-    await _prefs.setString(_organizerAgreementKey, currentOrganizerAgreementVersion);
+    await _prefs.setString(
+        _organizerAgreementKey, currentOrganizerAgreementVersion);
   }
 
   /// Accept all required policies
@@ -120,7 +122,7 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Terms checkbox
             _buildCheckbox(
               value: _termsAccepted,
@@ -129,9 +131,9 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
               linkText: 'Terms of Service',
               onLinkTap: () => _openTerms(context),
             ),
-            
+
             SizedBox(height: 12),
-            
+
             // Privacy checkbox
             _buildCheckbox(
               value: _privacyAccepted,
@@ -140,9 +142,9 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
               linkText: 'Privacy Policy',
               onLinkTap: () => _openPrivacy(context),
             ),
-            
+
             SizedBox(height: 24),
-            
+
             // Buttons
             Row(
               children: [
@@ -230,13 +232,8 @@ class _TermsAcceptanceDialogState extends State<TermsAcceptanceDialog> {
   }
 
   void _openPrivacy(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => _PolicyViewDialog(
-        title: context.l10n.footerPrivacy,
-        version: LegalService.currentPrivacyVersion,
-      ),
-    );
+    Navigator.of(context).pop();
+    context.go('/privacy');
   }
 }
 
@@ -282,7 +279,7 @@ class _PolicyViewDialog extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  _getPlaceholderText(title),
+                  _getTermsText(),
                   style: TextStyle(fontSize: 14, height: 1.6),
                 ),
               ),
@@ -293,43 +290,7 @@ class _PolicyViewDialog extends StatelessWidget {
     );
   }
 
-  String _getPlaceholderText(String type) {
-    if (type == 'Privacy Policy') {
-      return '''Privacy Policy for Khair Platform
-
-Last updated: March 2026
-Version: $version
-
-1. Introduction
-Khair ("we", "our", or "us") operates the Khair mobile application and website. This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information.
-
-2. Information We Collect
-• Account info: Name, email, password (hashed)
-• Location data: Precise and approximate (with your permission)
-• Device info: Device type, OS version, FCM token for notifications
-• Usage data: Events viewed, searches, pages visited
-• Chat messages: Stored to facilitate communication
-• Crash data: Via Sentry (no PII collected)
-
-3. How We Use Your Information
-We use your data to provide the Service, send notifications, facilitate bookings and chat, improve user experience, and comply with legal obligations.
-
-4. Information Sharing
-We do NOT sell your personal information. We share data only with service providers (Firebase, Sentry), event organizers (when you register), sheikhs (when you book), and law enforcement (when legally required).
-
-5. Data Security
-Passwords are hashed with bcrypt. Auth tokens use encrypted secure storage. All data is transmitted over HTTPS. JWT tokens expire after 24 hours.
-
-6. Your Rights
-You can access, correct, or delete your data. You can revoke permissions via device settings. Contact privacy@khair.app for requests.
-
-7. Children's Privacy
-Khair is not intended for children under 13.
-
-8. Contact
-Email: privacy@khair.app
-''';
-    }
+  String _getTermsText() {
     return '''Terms of Use for Khair Platform
 
 Last updated: March 2026
@@ -382,7 +343,8 @@ class OrganizerAgreementDialog extends StatefulWidget {
   });
 
   @override
-  State<OrganizerAgreementDialog> createState() => _OrganizerAgreementDialogState();
+  State<OrganizerAgreementDialog> createState() =>
+      _OrganizerAgreementDialogState();
 }
 
 class _OrganizerAgreementDialogState extends State<OrganizerAgreementDialog> {
@@ -412,7 +374,6 @@ class _OrganizerAgreementDialogState extends State<OrganizerAgreementDialog> {
               style: TextStyle(color: Colors.grey[600]),
             ),
             SizedBox(height: 16),
-            
             Container(
               height: 200,
               padding: const EdgeInsets.all(12),
@@ -445,9 +406,7 @@ Violation of these terms may result in suspension or termination.
                 ),
               ),
             ),
-            
             SizedBox(height: 16),
-            
             Row(
               children: [
                 Checkbox(
@@ -462,9 +421,7 @@ Violation of these terms may result in suspension or termination.
                 ),
               ],
             ),
-            
             SizedBox(height: 16),
-            
             Row(
               children: [
                 Expanded(

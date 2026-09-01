@@ -1609,6 +1609,20 @@
   "imagePreparing": "Görsel hazırlanıyor…",
   "imageUploading": "Görsel güvenle yükleniyor…",
   "imageUploaded": "Yüklendi",
+  "registrationRequirementsTitle": "Kayıt ve Gereksinimler",
+  "noRegistrationRequired": "Kayıt gerekmiyor",
+  "khairRegistrationRequired": "Khair üzerinden kayıt gerekli",
+  "externalRegistrationRequired": "Harici bir platformda kayıt gerekli",
+  "bothRegistrationsRequired": "Khair ve harici platformda kayıt gerekli",
+  "externalPlatformName": "Harici platform adı",
+  "externalRegistrationUrl": "Harici kayıt URL'si",
+  "externalRegistrationInstructions": "Kayıt talimatları (isteğe bağlı)",
+  "testLink": "Bağlantıyı test et",
+  "completeRegistration": "Kaydı Tamamla",
+  "externalRegistrationWarning": "Kayıt harici bir platformda tamamlanmalıdır.",
+  "leaveKhairRegistration": "Harici bir platformda kaydı tamamlamak için Khair'den ayrılıyorsunuz.",
+  "continueToRegistration": "Kayda devam et",
+  "khairDoesNotManageExternalRegistration": "Khair harici kayıt sürecini doğrulamaz veya yönetmez.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

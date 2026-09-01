@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"time"
 
@@ -86,71 +87,100 @@ func (s *Service) RecordView(eventID uuid.UUID, sessionID string) error {
 	return s.repo.RecordView(eventID, sessionID)
 }
 
+func (s *Service) RecordExternalRegistrationClick(eventID uuid.UUID) error {
+	event, err := s.repo.GetByID(eventID)
+	if err != nil {
+		return err
+	}
+	if event.RegistrationType != "external" && event.RegistrationType != "both" || event.ExternalRegistrationURL == nil {
+		return errors.New("external registration is not configured")
+	}
+	u, err := url.Parse(*event.ExternalRegistrationURL)
+	if err != nil || u.Host == "" {
+		return errors.New("invalid external registration URL")
+	}
+	return s.repo.RecordExternalRegistrationClick(eventID, u.Host)
+}
+
 // CreateEventRequest represents a request to create an event
 type CreateEventRequest struct {
-	Title                        string              `json:"title" binding:"required"`
-	Description                  *string             `json:"description"`
-	Category                     string              `json:"category"`
-	Tags                         []string            `json:"tags"`
-	EventType                    string              `json:"event_type" binding:"required"`
-	Language                     *string             `json:"language"`
-	Country                      *string             `json:"country"`
-	City                         *string             `json:"city"`
-	Address                      *string             `json:"address"`
-	Latitude                     *float64            `json:"latitude"`
-	Longitude                    *float64            `json:"longitude"`
-	StartDate                    string              `json:"start_date" binding:"required"`
-	EndDate                      *string             `json:"end_date"`
-	ImageURL                     *string             `json:"image_url"`
-	IsOnline                     bool                `json:"is_online"`
-	OnlineLink                   *string             `json:"online_link"`
-	OnlinePlatform               *string             `json:"online_platform"`
-	JoinInstructions             *string             `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
-	Pricing                      *models.PricingInfo `json:"pricing"`
-	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int                `json:"capacity"`
-	GenderRestriction            *string             `json:"gender_restriction"`
-	AttendancePolicy             *string             `json:"attendance_policy"`
-	AgeMin                       *int                `json:"age_min"`
-	RegistrationDeadline         *string             `json:"registration_deadline"`
-	RegistrationMode             string              `json:"registration_mode"`
-	Timezone                     string              `json:"timezone"`
-	Guidelines                   *string             `json:"guidelines"`
+	Title                            string              `json:"title" binding:"required"`
+	Description                      *string             `json:"description"`
+	Category                         string              `json:"category"`
+	Tags                             []string            `json:"tags"`
+	EventType                        string              `json:"event_type" binding:"required"`
+	Language                         *string             `json:"language"`
+	Country                          *string             `json:"country"`
+	City                             *string             `json:"city"`
+	Address                          *string             `json:"address"`
+	Latitude                         *float64            `json:"latitude"`
+	Longitude                        *float64            `json:"longitude"`
+	StartDate                        string              `json:"start_date" binding:"required"`
+	EndDate                          *string             `json:"end_date"`
+	ImageURL                         *string             `json:"image_url"`
+	IsOnline                         bool                `json:"is_online"`
+	OnlineLink                       *string             `json:"online_link"`
+	OnlinePlatform                   *string             `json:"online_platform"`
+	JoinInstructions                 *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes     *int                `json:"join_link_visible_before_minutes"`
+	Pricing                          *models.PricingInfo `json:"pricing"`
+	VenueName                        *string             `json:"venue_name"`
+	Capacity                         *int                `json:"capacity"`
+	GenderRestriction                *string             `json:"gender_restriction"`
+	AttendancePolicy                 *string             `json:"attendance_policy"`
+	AgeMin                           *int                `json:"age_min"`
+	RegistrationDeadline             *string             `json:"registration_deadline"`
+	RegistrationMode                 string              `json:"registration_mode"`
+	RegistrationRequired             bool                `json:"registration_required"`
+	RegistrationType                 string              `json:"registration_type"`
+	ExternalPlatformName             *string             `json:"external_platform_name"`
+	ExternalRegistrationURL          *string             `json:"external_registration_url"`
+	ExternalRegistrationInstructions *string             `json:"external_registration_instructions"`
+	RegistrationRequirements         *string             `json:"registration_requirements"`
+	ApplicationApprovalRequired      bool                `json:"application_approval_required"`
+	Timezone                         string              `json:"timezone"`
+	Guidelines                       *string             `json:"guidelines"`
 }
 
 // DraftEventRequest is a relaxed version of CreateEventRequest used for
 // auto-saving partially-filled forms. Only Title is required.
 type DraftEventRequest struct {
-	Title                        string              `json:"title" binding:"required"`
-	Description                  *string             `json:"description"`
-	Category                     string              `json:"category"`
-	Tags                         []string            `json:"tags"`
-	EventType                    string              `json:"event_type"`
-	Language                     *string             `json:"language"`
-	Country                      *string             `json:"country"`
-	City                         *string             `json:"city"`
-	Address                      *string             `json:"address"`
-	Latitude                     *float64            `json:"latitude"`
-	Longitude                    *float64            `json:"longitude"`
-	StartDate                    string              `json:"start_date"`
-	EndDate                      *string             `json:"end_date"`
-	ImageURL                     *string             `json:"image_url"`
-	IsOnline                     bool                `json:"is_online"`
-	OnlineLink                   *string             `json:"online_link"`
-	OnlinePlatform               *string             `json:"online_platform"`
-	JoinInstructions             *string             `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes *int                `json:"join_link_visible_before_minutes"`
-	Pricing                      *models.PricingInfo `json:"pricing"`
-	VenueName                    *string             `json:"venue_name"`
-	Capacity                     *int                `json:"capacity"`
-	GenderRestriction            *string             `json:"gender_restriction"`
-	AttendancePolicy             *string             `json:"attendance_policy"`
-	AgeMin                       *int                `json:"age_min"`
-	RegistrationDeadline         *string             `json:"registration_deadline"`
-	RegistrationMode             string              `json:"registration_mode"`
-	Timezone                     string              `json:"timezone"`
-	Guidelines                   *string             `json:"guidelines"`
+	Title                            string              `json:"title" binding:"required"`
+	Description                      *string             `json:"description"`
+	Category                         string              `json:"category"`
+	Tags                             []string            `json:"tags"`
+	EventType                        string              `json:"event_type"`
+	Language                         *string             `json:"language"`
+	Country                          *string             `json:"country"`
+	City                             *string             `json:"city"`
+	Address                          *string             `json:"address"`
+	Latitude                         *float64            `json:"latitude"`
+	Longitude                        *float64            `json:"longitude"`
+	StartDate                        string              `json:"start_date"`
+	EndDate                          *string             `json:"end_date"`
+	ImageURL                         *string             `json:"image_url"`
+	IsOnline                         bool                `json:"is_online"`
+	OnlineLink                       *string             `json:"online_link"`
+	OnlinePlatform                   *string             `json:"online_platform"`
+	JoinInstructions                 *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes     *int                `json:"join_link_visible_before_minutes"`
+	Pricing                          *models.PricingInfo `json:"pricing"`
+	VenueName                        *string             `json:"venue_name"`
+	Capacity                         *int                `json:"capacity"`
+	GenderRestriction                *string             `json:"gender_restriction"`
+	AttendancePolicy                 *string             `json:"attendance_policy"`
+	AgeMin                           *int                `json:"age_min"`
+	RegistrationDeadline             *string             `json:"registration_deadline"`
+	RegistrationMode                 string              `json:"registration_mode"`
+	RegistrationRequired             bool                `json:"registration_required"`
+	RegistrationType                 string              `json:"registration_type"`
+	ExternalPlatformName             *string             `json:"external_platform_name"`
+	ExternalRegistrationURL          *string             `json:"external_registration_url"`
+	ExternalRegistrationInstructions *string             `json:"external_registration_instructions"`
+	RegistrationRequirements         *string             `json:"registration_requirements"`
+	ApplicationApprovalRequired      bool                `json:"application_approval_required"`
+	Timezone                         string              `json:"timezone"`
+	Guidelines                       *string             `json:"guidelines"`
 }
 
 // toCreateRequest converts a DraftEventRequest into a CreateEventRequest,
@@ -165,70 +195,84 @@ func (d *DraftEventRequest) toCreateRequest() CreateEventRequest {
 		startDate = time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339)
 	}
 	return CreateEventRequest{
-		Title:                        d.Title,
-		Description:                  d.Description,
-		Category:                     d.Category,
-		Tags:                         d.Tags,
-		EventType:                    eventType,
-		Language:                     d.Language,
-		Country:                      d.Country,
-		City:                         d.City,
-		Address:                      d.Address,
-		Latitude:                     d.Latitude,
-		Longitude:                    d.Longitude,
-		StartDate:                    startDate,
-		EndDate:                      d.EndDate,
-		ImageURL:                     d.ImageURL,
-		IsOnline:                     d.IsOnline,
-		OnlineLink:                   d.OnlineLink,
-		OnlinePlatform:               d.OnlinePlatform,
-		JoinInstructions:             d.JoinInstructions,
-		JoinLinkVisibleBeforeMinutes: d.JoinLinkVisibleBeforeMinutes,
-		Pricing:                      d.Pricing,
-		VenueName:                    d.VenueName,
-		Capacity:                     d.Capacity,
-		GenderRestriction:            d.GenderRestriction,
-		AttendancePolicy:             d.AttendancePolicy,
-		AgeMin:                       d.AgeMin,
-		RegistrationDeadline:         d.RegistrationDeadline,
-		RegistrationMode:             d.RegistrationMode,
-		Timezone:                     d.Timezone,
-		Guidelines:                   d.Guidelines,
+		Title:                            d.Title,
+		Description:                      d.Description,
+		Category:                         d.Category,
+		Tags:                             d.Tags,
+		EventType:                        eventType,
+		Language:                         d.Language,
+		Country:                          d.Country,
+		City:                             d.City,
+		Address:                          d.Address,
+		Latitude:                         d.Latitude,
+		Longitude:                        d.Longitude,
+		StartDate:                        startDate,
+		EndDate:                          d.EndDate,
+		ImageURL:                         d.ImageURL,
+		IsOnline:                         d.IsOnline,
+		OnlineLink:                       d.OnlineLink,
+		OnlinePlatform:                   d.OnlinePlatform,
+		JoinInstructions:                 d.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes:     d.JoinLinkVisibleBeforeMinutes,
+		Pricing:                          d.Pricing,
+		VenueName:                        d.VenueName,
+		Capacity:                         d.Capacity,
+		GenderRestriction:                d.GenderRestriction,
+		AttendancePolicy:                 d.AttendancePolicy,
+		AgeMin:                           d.AgeMin,
+		RegistrationDeadline:             d.RegistrationDeadline,
+		RegistrationMode:                 d.RegistrationMode,
+		RegistrationRequired:             d.RegistrationRequired,
+		RegistrationType:                 d.RegistrationType,
+		ExternalPlatformName:             d.ExternalPlatformName,
+		ExternalRegistrationURL:          d.ExternalRegistrationURL,
+		ExternalRegistrationInstructions: d.ExternalRegistrationInstructions,
+		RegistrationRequirements:         d.RegistrationRequirements,
+		ApplicationApprovalRequired:      d.ApplicationApprovalRequired,
+		Timezone:                         d.Timezone,
+		Guidelines:                       d.Guidelines,
 	}
 }
 
 // UpdateEventRequest represents a request to update an event
 type UpdateEventRequest struct {
-	Title                         *string             `json:"title"`
-	Description                   *string             `json:"description"`
-	Category                      *string             `json:"category"`
-	Tags                          *[]string           `json:"tags"`
-	EventType                     *string             `json:"event_type"`
-	Language                      *string             `json:"language"`
-	Country                       *string             `json:"country"`
-	City                          *string             `json:"city"`
-	Address                       *string             `json:"address"`
-	Latitude                      *float64            `json:"latitude"`
-	Longitude                     *float64            `json:"longitude"`
-	StartDate                     *string             `json:"start_date"`
-	EndDate                       *string             `json:"end_date"`
-	ImageURL                      *string             `json:"image_url"`
-	IsOnline                      *bool               `json:"is_online"`
-	OnlineLink                    *string             `json:"online_link"`
-	OnlinePlatform                *string             `json:"online_platform"`
-	JoinInstructions              *string             `json:"join_instructions"`
-	JoinLinkVisibleBeforeMinutes  *int                `json:"join_link_visible_before_minutes"`
-	Pricing                       *models.PricingInfo `json:"pricing"`
-	VenueName                     *string             `json:"venue_name"`
-	Capacity                      *int                `json:"capacity"`
-	GenderRestriction             *string             `json:"gender_restriction"`
-	AttendancePolicy              *string             `json:"attendance_policy"`
-	ConfirmAttendancePolicyChange bool                `json:"confirm_attendance_policy_change"`
-	AgeMin                        *int                `json:"age_min"`
-	RegistrationDeadline          *string             `json:"registration_deadline"`
-	RegistrationMode              *string             `json:"registration_mode"`
-	Timezone                      *string             `json:"timezone"`
-	Guidelines                    *string             `json:"guidelines"`
+	Title                            *string             `json:"title"`
+	Description                      *string             `json:"description"`
+	Category                         *string             `json:"category"`
+	Tags                             *[]string           `json:"tags"`
+	EventType                        *string             `json:"event_type"`
+	Language                         *string             `json:"language"`
+	Country                          *string             `json:"country"`
+	City                             *string             `json:"city"`
+	Address                          *string             `json:"address"`
+	Latitude                         *float64            `json:"latitude"`
+	Longitude                        *float64            `json:"longitude"`
+	StartDate                        *string             `json:"start_date"`
+	EndDate                          *string             `json:"end_date"`
+	ImageURL                         *string             `json:"image_url"`
+	IsOnline                         *bool               `json:"is_online"`
+	OnlineLink                       *string             `json:"online_link"`
+	OnlinePlatform                   *string             `json:"online_platform"`
+	JoinInstructions                 *string             `json:"join_instructions"`
+	JoinLinkVisibleBeforeMinutes     *int                `json:"join_link_visible_before_minutes"`
+	Pricing                          *models.PricingInfo `json:"pricing"`
+	VenueName                        *string             `json:"venue_name"`
+	Capacity                         *int                `json:"capacity"`
+	GenderRestriction                *string             `json:"gender_restriction"`
+	AttendancePolicy                 *string             `json:"attendance_policy"`
+	ConfirmAttendancePolicyChange    bool                `json:"confirm_attendance_policy_change"`
+	AgeMin                           *int                `json:"age_min"`
+	RegistrationDeadline             *string             `json:"registration_deadline"`
+	RegistrationMode                 *string             `json:"registration_mode"`
+	RegistrationRequired             *bool               `json:"registration_required"`
+	RegistrationType                 *string             `json:"registration_type"`
+	ExternalPlatformName             *string             `json:"external_platform_name"`
+	ExternalRegistrationURL          *string             `json:"external_registration_url"`
+	ExternalRegistrationInstructions *string             `json:"external_registration_instructions"`
+	RegistrationRequirements         *string             `json:"registration_requirements"`
+	ApplicationApprovalRequired      *bool               `json:"application_approval_required"`
+	Timezone                         *string             `json:"timezone"`
+	Guidelines                       *string             `json:"guidelines"`
 }
 
 // normalizeEventMode keeps the legacy event_type column and the is_online
@@ -279,6 +323,9 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	}
 	if req.Timezone == "" {
 		req.Timezone = "UTC"
+	}
+	if err := normalizeRegistrationSettings(req); err != nil {
+		return nil, err
 	}
 	if req.RegistrationMode != "instant" && req.RegistrationMode != "approval_required" {
 		return nil, errors.New("invalid registration mode")
@@ -364,32 +411,39 @@ func (s *Service) Create(userID uuid.UUID, req *CreateEventRequest) (*models.Eve
 	legacyGenderRestriction := eligibility.LegacyGenderRestriction(attendancePolicy)
 
 	event := &models.Event{
-		ID:                           uuid.New(),
-		OrganizerID:                  organizer.ID,
-		Title:                        req.Title,
-		Description:                  req.Description,
-		EventType:                    req.EventType,
-		Language:                     req.Language,
-		Country:                      req.Country,
-		City:                         req.City,
-		Address:                      req.Address,
-		Latitude:                     req.Latitude,
-		Longitude:                    req.Longitude,
-		StartDate:                    startDate,
-		EndDate:                      endDate,
-		ImageURL:                     req.ImageURL,
-		IsOnline:                     req.IsOnline,
-		OnlineLink:                   req.OnlineLink,
-		JoinInstructions:             req.JoinInstructions,
-		JoinLinkVisibleBeforeMinutes: joinLinkMinutes,
-		Pricing:                      req.Pricing,
-		Capacity:                     req.Capacity,
-		GenderRestriction:            &legacyGenderRestriction,
-		AttendancePolicy:             attendancePolicy,
-		AgeMin:                       req.AgeMin,
-		Status:                       "pending",
-		CreatedAt:                    time.Now(),
-		UpdatedAt:                    time.Now(),
+		ID:                               uuid.New(),
+		OrganizerID:                      organizer.ID,
+		Title:                            req.Title,
+		Description:                      req.Description,
+		EventType:                        req.EventType,
+		Language:                         req.Language,
+		Country:                          req.Country,
+		City:                             req.City,
+		Address:                          req.Address,
+		Latitude:                         req.Latitude,
+		Longitude:                        req.Longitude,
+		StartDate:                        startDate,
+		EndDate:                          endDate,
+		ImageURL:                         req.ImageURL,
+		IsOnline:                         req.IsOnline,
+		OnlineLink:                       req.OnlineLink,
+		JoinInstructions:                 req.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes:     joinLinkMinutes,
+		Pricing:                          req.Pricing,
+		Capacity:                         req.Capacity,
+		GenderRestriction:                &legacyGenderRestriction,
+		AttendancePolicy:                 attendancePolicy,
+		AgeMin:                           req.AgeMin,
+		RegistrationRequired:             req.RegistrationRequired,
+		RegistrationType:                 req.RegistrationType,
+		ExternalPlatformName:             req.ExternalPlatformName,
+		ExternalRegistrationURL:          req.ExternalRegistrationURL,
+		ExternalRegistrationInstructions: req.ExternalRegistrationInstructions,
+		RegistrationRequirements:         req.RegistrationRequirements,
+		ApplicationApprovalRequired:      req.ApplicationApprovalRequired,
+		Status:                           "pending",
+		CreatedAt:                        time.Now(),
+		UpdatedAt:                        time.Now(),
 	}
 
 	if err := s.repo.Create(event); err != nil {
@@ -616,6 +670,43 @@ func (s *Service) Update(userID uuid.UUID, eventID uuid.UUID, req *UpdateEventRe
 	}
 	if req.RegistrationMode != nil {
 		event.RegistrationMode = *req.RegistrationMode
+	}
+	if req.RegistrationRequired != nil {
+		event.RegistrationRequired = *req.RegistrationRequired
+		if req.RegistrationType == nil {
+			if *req.RegistrationRequired && event.RegistrationType == "none" {
+				event.RegistrationType = "khair"
+			} else if !*req.RegistrationRequired {
+				event.RegistrationType = "none"
+			}
+		}
+	}
+	if req.RegistrationType != nil {
+		event.RegistrationType = *req.RegistrationType
+	}
+	if req.ExternalPlatformName != nil {
+		event.ExternalPlatformName = req.ExternalPlatformName
+	}
+	if req.ExternalRegistrationURL != nil {
+		event.ExternalRegistrationURL = req.ExternalRegistrationURL
+	}
+	if req.ExternalRegistrationInstructions != nil {
+		event.ExternalRegistrationInstructions = req.ExternalRegistrationInstructions
+	}
+	if req.RegistrationRequirements != nil {
+		event.RegistrationRequirements = req.RegistrationRequirements
+	}
+	if req.ApplicationApprovalRequired != nil {
+		event.ApplicationApprovalRequired = *req.ApplicationApprovalRequired
+	}
+	event.RegistrationRequired = event.RegistrationType != "none"
+	if event.RegistrationType == "none" || event.RegistrationType == "khair" {
+		event.ExternalPlatformName = nil
+		event.ExternalRegistrationURL = nil
+		event.ExternalRegistrationInstructions = nil
+	}
+	if err := validateStoredRegistrationSettings(event); err != nil {
+		return nil, err
 	}
 	if req.Timezone != nil {
 		event.Timezone = *req.Timezone
@@ -905,6 +996,9 @@ func validateCompleteEvent(event *models.Event) error {
 	if event.StartDate.Before(time.Now()) {
 		return errors.New("event start date must be in the future")
 	}
+	if err := validateStoredRegistrationSettings(event); err != nil {
+		return err
+	}
 	if event.IsOnline {
 		if event.OnlineLink == nil || strings.TrimSpace(*event.OnlineLink) == "" {
 			return errors.New("online meeting link is required")
@@ -915,6 +1009,52 @@ func validateCompleteEvent(event *models.Event) error {
 		event.Address == nil || strings.TrimSpace(*event.Address) == "" ||
 		event.Latitude == nil || event.Longitude == nil {
 		return errors.New("location is required")
+	}
+	return nil
+}
+
+func normalizeRegistrationSettings(req *CreateEventRequest) error {
+	if strings.TrimSpace(req.RegistrationType) == "" {
+		if req.RegistrationRequired {
+			req.RegistrationType = "khair"
+		} else {
+			req.RegistrationType = "none"
+		}
+	}
+	req.RegistrationType = strings.ToLower(strings.TrimSpace(req.RegistrationType))
+	if req.RegistrationType == "none" {
+		req.RegistrationRequired = false
+		req.ExternalPlatformName, req.ExternalRegistrationURL, req.ExternalRegistrationInstructions = nil, nil, nil
+	} else {
+		req.RegistrationRequired = true
+	}
+	return validateRegistration(req.RegistrationType, req.ExternalPlatformName, req.ExternalRegistrationURL)
+}
+
+func validateStoredRegistrationSettings(event *models.Event) error {
+	registrationType := strings.ToLower(strings.TrimSpace(event.RegistrationType))
+	if registrationType == "" {
+		registrationType = "none"
+	}
+	return validateRegistration(registrationType, event.ExternalPlatformName, event.ExternalRegistrationURL)
+}
+
+func validateRegistration(registrationType string, platformName, externalURL *string) error {
+	if registrationType != "none" && registrationType != "khair" && registrationType != "external" && registrationType != "both" {
+		return errors.New("invalid registration type")
+	}
+	if registrationType != "external" && registrationType != "both" {
+		return nil
+	}
+	if platformName == nil || strings.TrimSpace(*platformName) == "" {
+		return errors.New("external platform name is required")
+	}
+	if externalURL == nil || strings.TrimSpace(*externalURL) == "" {
+		return errors.New("external registration URL is required")
+	}
+	u, err := url.ParseRequestURI(strings.TrimSpace(*externalURL))
+	if err != nil || !strings.EqualFold(u.Scheme, "https") || u.Host == "" {
+		return errors.New("external registration URL must be a valid HTTPS URL")
 	}
 	return nil
 }
@@ -970,6 +1110,9 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 	if req.Timezone == "" {
 		req.Timezone = "UTC"
 	}
+	if err := normalizeRegistrationSettings(req); err != nil {
+		return nil, err
+	}
 
 	policyInput := ""
 	if req.AttendancePolicy != nil {
@@ -1007,14 +1150,21 @@ func (s *Service) CreateDraft(userID uuid.UUID, req *CreateEventRequest) (*model
 			}
 			return 15
 		}(),
-		Pricing:           req.Pricing,
-		Capacity:          req.Capacity,
-		GenderRestriction: &legacyGenderRestriction,
-		AttendancePolicy:  attendancePolicy,
-		AgeMin:            req.AgeMin,
-		Status:            "draft",
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+		Pricing:                          req.Pricing,
+		Capacity:                         req.Capacity,
+		GenderRestriction:                &legacyGenderRestriction,
+		AttendancePolicy:                 attendancePolicy,
+		AgeMin:                           req.AgeMin,
+		RegistrationRequired:             req.RegistrationRequired,
+		RegistrationType:                 req.RegistrationType,
+		ExternalPlatformName:             req.ExternalPlatformName,
+		ExternalRegistrationURL:          req.ExternalRegistrationURL,
+		ExternalRegistrationInstructions: req.ExternalRegistrationInstructions,
+		RegistrationRequirements:         req.RegistrationRequirements,
+		ApplicationApprovalRequired:      req.ApplicationApprovalRequired,
+		Status:                           "draft",
+		CreatedAt:                        time.Now(),
+		UpdatedAt:                        time.Now(),
 	}
 
 	if err := s.repo.Create(event); err != nil {

@@ -64,6 +64,21 @@ func (r *Repository) RecordView(eventID uuid.UUID, sessionID string) error {
 	return nil
 }
 
+// RecordExternalRegistrationClick keeps a privacy-minimal aggregate audit of
+// outbound registration handoffs. The destination URL is never stored here.
+func (r *Repository) RecordExternalRegistrationClick(eventID uuid.UUID, domain string) error {
+	result, err := r.db.Exec(`INSERT INTO event_external_registration_clicks (event_id, domain)
+		SELECT id, $2 FROM events WHERE id=$1 AND status IN ('approved', 'published')`, eventID, domain)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+
 type SavedEventSummary struct {
 	ID        uuid.UUID `json:"id"`
 	Title     string    `json:"title"`
@@ -128,8 +143,11 @@ const eventCols = `e.id, e.organizer_id, e.title, e.description, e.event_type, e
        e.status, e.is_published, e.is_online, e.online_link, e.join_instructions,
        e.join_link_visible_before_minutes, e.rejection_reason, e.approved_at,
        e.created_at, e.updated_at, e.venue_name, e.online_platform,
-       e.registration_deadline, e.registration_mode, e.timezone,
-       e.organizer_guidelines,
+	   e.registration_deadline, e.registration_mode, e.timezone,
+	   e.registration_required, e.registration_type, e.external_platform_name,
+	   e.external_registration_url, e.external_registration_instructions,
+	   e.registration_requirements, e.application_approval_required,
+	   e.organizer_guidelines,
        COALESCE((SELECT array_agg(et.tag ORDER BY et.created_at)
                  FROM event_tags et WHERE et.event_id = e.id), ARRAY[]::text[])`
 
@@ -142,8 +160,11 @@ const bareEventCols = `id, organizer_id, title, description, event_type, categor
        status, is_published, is_online, online_link, join_instructions,
        join_link_visible_before_minutes, rejection_reason, approved_at,
        created_at, updated_at, venue_name, online_platform,
-       registration_deadline, registration_mode, timezone,
-       organizer_guidelines,
+	   registration_deadline, registration_mode, timezone,
+	   registration_required, registration_type, external_platform_name,
+	   external_registration_url, external_registration_instructions,
+	   registration_requirements, application_approval_required,
+	   organizer_guidelines,
        COALESCE((SELECT array_agg(et.tag ORDER BY et.created_at)
                  FROM event_tags et WHERE et.event_id = events.id), ARRAY[]::text[])`
 
@@ -165,6 +186,9 @@ func scanEvent(scanner interface {
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
 		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
 		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
+		&event.RegistrationRequired, &event.RegistrationType, &event.ExternalPlatformName,
+		&event.ExternalRegistrationURL, &event.ExternalRegistrationInstructions,
+		&event.RegistrationRequirements, &event.ApplicationApprovalRequired,
 		&event.OrganizerGuidelines, pq.Array(&event.Tags),
 	)
 	if err != nil {
@@ -201,6 +225,9 @@ func scanEventWithOrg(scanner interface {
 		&event.JoinLinkVisibleBeforeMinutes, &event.RejectionReason, &event.ApprovedAt,
 		&event.CreatedAt, &event.UpdatedAt, &event.VenueName, &event.OnlinePlatform,
 		&event.RegistrationDeadline, &event.RegistrationMode, &event.Timezone,
+		&event.RegistrationRequired, &event.RegistrationType, &event.ExternalPlatformName,
+		&event.ExternalRegistrationURL, &event.ExternalRegistrationInstructions,
+		&event.RegistrationRequirements, &event.ApplicationApprovalRequired,
 		&event.OrganizerGuidelines, pq.Array(&event.Tags), &event.OrganizerName,
 	)
 	if err != nil {
@@ -232,8 +259,10 @@ func (r *Repository) Create(event *models.Event) error {
 		INSERT INTO events (id, organizer_id, title, description, event_type, language, 
 		                    country, city, address, latitude, longitude, start_date, end_date, 
 		                    image_url, pricing_type, price_cents, currency, payment_method, is_online, online_link, join_instructions,
-		                    join_link_visible_before_minutes, status, created_at, updated_at, gender_restriction, attendance_policy)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+			                    join_link_visible_before_minutes, status, created_at, updated_at, gender_restriction, attendance_policy,
+			                    registration_required, registration_type, external_platform_name, external_registration_url,
+			                    external_registration_instructions, registration_requirements, application_approval_required)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)
 	`
 
 	pricingType := "free"
@@ -257,6 +286,9 @@ func (r *Repository) Create(event *models.Event) error {
 		event.JoinLinkVisibleBeforeMinutes, event.Status,
 		event.CreatedAt, event.UpdatedAt,
 		event.GenderRestriction, event.AttendancePolicy,
+		event.RegistrationRequired, event.RegistrationType, event.ExternalPlatformName,
+		event.ExternalRegistrationURL, event.ExternalRegistrationInstructions,
+		event.RegistrationRequirements, event.ApplicationApprovalRequired,
 	)
 	return err
 }
@@ -573,7 +605,11 @@ func (r *Repository) Update(event *models.Event) error {
 			is_online = $19, online_link = $20, join_instructions = $21,
 			join_link_visible_before_minutes = $22,
 			gender_restriction = $23, attendance_policy = $24,
-			age_min = $25, age_max = $26
+			age_min = $25, age_max = $26,
+			registration_required = $27, registration_type = $28,
+			external_platform_name = $29, external_registration_url = $30,
+			external_registration_instructions = $31, registration_requirements = $32,
+			application_approval_required = $33
 		WHERE id = $1
 	`
 
@@ -597,6 +633,9 @@ func (r *Repository) Update(event *models.Event) error {
 		event.IsOnline, event.OnlineLink, event.JoinInstructions,
 		event.JoinLinkVisibleBeforeMinutes,
 		event.GenderRestriction, event.AttendancePolicy, event.AgeMin, event.AgeMax,
+		event.RegistrationRequired, event.RegistrationType, event.ExternalPlatformName,
+		event.ExternalRegistrationURL, event.ExternalRegistrationInstructions,
+		event.RegistrationRequirements, event.ApplicationApprovalRequired,
 	)
 	return err
 }

@@ -47,6 +47,14 @@ class CreateEventFormData extends Equatable {
   final int? capacity;
   final DateTime? registrationDeadline;
   final String registrationMode; // instant | approval_required
+  final String registrationType; // none | khair | external | both
+  final String? externalPlatformName;
+  final String? externalRegistrationUrl;
+  final String? externalRegistrationInstructions;
+  final String registrationRequirements;
+  final String whoCanApply;
+  final bool applicationApprovalRequired;
+  final bool applicationAgreementRequired;
   final String guidelines;
   final String pricingType; // free | paid
   final String? priceAmount;
@@ -88,6 +96,14 @@ class CreateEventFormData extends Equatable {
     this.capacity,
     this.registrationDeadline,
     this.registrationMode = 'instant',
+    this.registrationType = 'none',
+    this.externalPlatformName,
+    this.externalRegistrationUrl,
+    this.externalRegistrationInstructions,
+    this.registrationRequirements = '',
+    this.whoCanApply = '',
+    this.applicationApprovalRequired = false,
+    this.applicationAgreementRequired = false,
     this.guidelines = '',
     this.pricingType = 'free',
     this.priceAmount,
@@ -127,6 +143,14 @@ class CreateEventFormData extends Equatable {
     int? capacity,
     DateTime? registrationDeadline,
     String? registrationMode,
+    String? registrationType,
+    String? externalPlatformName,
+    String? externalRegistrationUrl,
+    String? externalRegistrationInstructions,
+    String? registrationRequirements,
+    String? whoCanApply,
+    bool? applicationApprovalRequired,
+    bool? applicationAgreementRequired,
     String? guidelines,
     String? pricingType,
     String? priceAmount,
@@ -166,6 +190,19 @@ class CreateEventFormData extends Equatable {
       capacity: capacity ?? this.capacity,
       registrationDeadline: registrationDeadline ?? this.registrationDeadline,
       registrationMode: registrationMode ?? this.registrationMode,
+      registrationType: registrationType ?? this.registrationType,
+      externalPlatformName: externalPlatformName ?? this.externalPlatformName,
+      externalRegistrationUrl:
+          externalRegistrationUrl ?? this.externalRegistrationUrl,
+      externalRegistrationInstructions: externalRegistrationInstructions ??
+          this.externalRegistrationInstructions,
+      registrationRequirements:
+          registrationRequirements ?? this.registrationRequirements,
+      whoCanApply: whoCanApply ?? this.whoCanApply,
+      applicationApprovalRequired:
+          applicationApprovalRequired ?? this.applicationApprovalRequired,
+      applicationAgreementRequired:
+          applicationAgreementRequired ?? this.applicationAgreementRequired,
       guidelines: guidelines ?? this.guidelines,
       pricingType: pricingType ?? this.pricingType,
       priceAmount: priceAmount ?? this.priceAmount,
@@ -237,6 +274,14 @@ class CreateEventFormData extends Equatable {
       'capacity': capacity,
       'registrationDeadline': registrationDeadline?.toIso8601String(),
       'registrationMode': registrationMode,
+      'registrationType': registrationType,
+      'externalPlatformName': externalPlatformName,
+      'externalRegistrationUrl': externalRegistrationUrl,
+      'externalRegistrationInstructions': externalRegistrationInstructions,
+      'registrationRequirements': registrationRequirements,
+      'whoCanApply': whoCanApply,
+      'applicationApprovalRequired': applicationApprovalRequired,
+      'applicationAgreementRequired': applicationAgreementRequired,
       'guidelines': guidelines,
       'pricing_type': pricingType,
       'price_amount': priceAmount,
@@ -288,6 +333,16 @@ class CreateEventFormData extends Equatable {
           ? DateTime.tryParse(json['registrationDeadline'])
           : null,
       registrationMode: json['registrationMode'] ?? 'instant',
+      registrationType: json['registrationType'] ?? 'none',
+      externalPlatformName: json['externalPlatformName'],
+      externalRegistrationUrl: json['externalRegistrationUrl'],
+      externalRegistrationInstructions:
+          json['externalRegistrationInstructions'],
+      registrationRequirements: json['registrationRequirements'] ?? '',
+      whoCanApply: json['whoCanApply'] ?? '',
+      applicationApprovalRequired: json['applicationApprovalRequired'] ?? false,
+      applicationAgreementRequired:
+          json['applicationAgreementRequired'] ?? false,
       guidelines: json['guidelines'] as String? ?? '',
       pricingType: json['pricing_type'] as String? ?? 'free',
       priceAmount: json['price_amount'] as String?,
@@ -328,6 +383,14 @@ class CreateEventFormData extends Equatable {
         capacity,
         registrationDeadline,
         registrationMode,
+        registrationType,
+        externalPlatformName,
+        externalRegistrationUrl,
+        externalRegistrationInstructions,
+        registrationRequirements,
+        whoCanApply,
+        applicationApprovalRequired,
+        applicationAgreementRequired,
         guidelines,
         pricingType,
         priceAmount,
@@ -413,7 +476,7 @@ class CreateEventState extends Equatable {
   }
 
   bool get isFirstStep => currentStep == 0;
-  bool get isLastStep => currentStep == 4;
+  bool get isLastStep => currentStep == 5;
 
   @override
   List<Object?> get props => [

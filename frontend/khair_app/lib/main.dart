@@ -17,6 +17,7 @@ import 'core/push/local_notification_service_web.dart'
     if (dart.library.io) 'core/push/local_notification_service.dart';
 import 'core/push/push_notification_service_platform.dart';
 import 'core/router/app_router.dart';
+import 'core/router/web_url_strategy.dart';
 import 'core/services/websocket_service.dart';
 import 'core/theme/app_theme_builder.dart';
 import 'core/theme/theme_bloc.dart';
@@ -28,6 +29,8 @@ import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() {
+  configureWebUrlStrategy();
+
   // Platform channels used by Firebase Messaging require Flutter bindings.
   // Register the background handler before the app starts, but only after the
   // binding exists; otherwise Android release builds remain on the splash

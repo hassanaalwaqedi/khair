@@ -230,6 +230,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     _buildSummary(event, colors),
                     SizedBox(height: 25),
                     _buildKeyInformation(event, colors),
+                    if (_hasExternalRegistration(event)) ...[
+                      SizedBox(height: 18),
+                      _buildExternalRegistrationCard(event, colors),
+                    ],
                     if (event.isRestrictedEvent) ...[
                       SizedBox(height: 18),
                       _buildEligibilityBanner(event, colors),
@@ -1127,6 +1131,30 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           fontWeight: FontWeight.w800));
 
   Widget _buildStickyActions(Event event, _PageColors colors) {
+    // A normal published event does not acquire a Khair registration form just
+    // because it has a detail page. Saving remains available in the inline UI.
+    if (event.registrationType == 'none') return const SizedBox.shrink();
+    if (event.registrationType == 'external') {
+      return Material(
+        color: colors.surface,
+        elevation: 12,
+        child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              child: SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: () => _confirmExternalRegistration(event),
+                    icon: Icon(Icons.open_in_new_rounded),
+                    label: Text(context.l10n.completeRegistration),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white),
+                  )),
+            )),
+      );
+    }
     final ended = _isEnded(event);
     final joined = _isJoined(event);
     final closed = _isRegistrationClosed(event);
@@ -1293,6 +1321,95 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       if (mounted) await _showJoinError(error, event);
     } finally {
       if (mounted) setState(() => _joinLoading = false);
+    }
+  }
+
+  bool _hasExternalRegistration(Event event) =>
+      (event.registrationType == 'external' ||
+          event.registrationType == 'both') &&
+      (event.externalRegistrationUrl?.isNotEmpty ?? false);
+
+  Widget _buildExternalRegistrationCard(Event event, _PageColors colors) {
+    final uri = Uri.tryParse(event.externalRegistrationUrl ?? '');
+    final domain = uri?.host ?? '';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.softRose,
+        border: Border.all(color: AppColors.primary.withValues(alpha: .35)),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.open_in_new_rounded, color: AppColors.primary),
+          SizedBox(width: 10),
+          Expanded(
+              child: Text(context.l10n.externalRegistrationWarning,
+                  style: TextStyle(
+                      color: colors.primaryText, fontWeight: FontWeight.w800)))
+        ]),
+        if (event.registrationType == 'both') ...[
+          SizedBox(height: 10),
+          Text(
+              'You may need to complete both Khair registration and the external step.',
+              style: TextStyle(color: colors.secondaryText))
+        ],
+        if (event.externalPlatformName?.isNotEmpty == true) ...[
+          SizedBox(height: 12),
+          Text(event.externalPlatformName!,
+              style: TextStyle(
+                  color: colors.primaryText, fontWeight: FontWeight.w700))
+        ],
+        if (event.externalRegistrationInstructions?.isNotEmpty == true) ...[
+          SizedBox(height: 6),
+          Text(event.externalRegistrationInstructions!,
+              style: TextStyle(color: colors.secondaryText))
+        ],
+        SizedBox(height: 14),
+        FilledButton.icon(
+            onPressed: () => _confirmExternalRegistration(event),
+            icon: Icon(Icons.open_in_new_rounded),
+            label: Text(context.l10n.completeRegistration)),
+        SizedBox(height: 9),
+        Text(domain.isEmpty ? 'External registration link' : domain,
+            style: TextStyle(color: colors.secondaryText, fontSize: 12)),
+        SizedBox(height: 5),
+        Text(context.l10n.khairDoesNotManageExternalRegistration,
+            style: TextStyle(color: colors.secondaryText, fontSize: 12)),
+      ]),
+    );
+  }
+
+  Future<void> _confirmExternalRegistration(Event event) async {
+    final uri = Uri.tryParse(event.externalRegistrationUrl ?? '');
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      _showSnack('This external registration link is unavailable.');
+      return;
+    }
+    final proceed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text('Leave Khair?'),
+              content:
+                  Text('${context.l10n.leaveKhairRegistration}\n\n${uri.host}'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text('Cancel')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text(context.l10n.continueToRegistration))
+              ],
+            ));
+    if (proceed != true) return;
+    try {
+      await getIt<ApiClient>()
+          .post('/events/${event.id}/external-registration-click');
+    } catch (_) {/* tracking must not block registration */}
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      _showSnack('We couldn’t open the external registration link.');
     }
   }
 

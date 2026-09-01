@@ -1,0 +1,3 @@
+void setAccountDeletionMetadata() {}
+
+void resetAccountDeletionMetadata() {}

@@ -1742,6 +1742,20 @@
   "imagePreparing": "Preparing image…",
   "imageUploading": "Uploading securely…",
   "imageUploaded": "Uploaded",
+  "registrationRequirementsTitle": "Registration & Requirements",
+  "noRegistrationRequired": "No registration required",
+  "khairRegistrationRequired": "Registration required on Khair",
+  "externalRegistrationRequired": "Registration required on an external platform",
+  "bothRegistrationsRequired": "Registration required both on Khair and an external platform",
+  "externalPlatformName": "External platform name",
+  "externalRegistrationUrl": "External registration URL",
+  "externalRegistrationInstructions": "Registration instructions (optional)",
+  "testLink": "Test link",
+  "completeRegistration": "Complete Registration",
+  "externalRegistrationWarning": "Registration must be completed on an external platform.",
+  "leaveKhairRegistration": "You are leaving Khair to complete registration on an external platform.",
+  "continueToRegistration": "Continue to registration",
+  "khairDoesNotManageExternalRegistration": "Khair does not verify or manage this external registration process.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

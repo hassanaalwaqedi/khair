@@ -4565,4 +4565,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageUploaded => 'Uploaded';
+
+  @override
+  String get registrationRequirementsTitle => 'Registration & Requirements';
+
+  @override
+  String get noRegistrationRequired => 'No registration required';
+
+  @override
+  String get khairRegistrationRequired => 'Registration required on Khair';
+
+  @override
+  String get externalRegistrationRequired =>
+      'Registration required on an external platform';
+
+  @override
+  String get bothRegistrationsRequired =>
+      'Registration required both on Khair and an external platform';
+
+  @override
+  String get externalPlatformName => 'External platform name';
+
+  @override
+  String get externalRegistrationUrl => 'External registration URL';
+
+  @override
+  String get externalRegistrationInstructions =>
+      'Registration instructions (optional)';
+
+  @override
+  String get testLink => 'Test link';
+
+  @override
+  String get completeRegistration => 'Complete Registration';
+
+  @override
+  String get externalRegistrationWarning =>
+      'Registration must be completed on an external platform.';
+
+  @override
+  String get leaveKhairRegistration =>
+      'You are leaving Khair to complete registration on an external platform.';
+
+  @override
+  String get continueToRegistration => 'Continue to registration';
+
+  @override
+  String get khairDoesNotManageExternalRegistration =>
+      'Khair does not verify or manage this external registration process.';
 }

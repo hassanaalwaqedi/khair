@@ -65,6 +65,13 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         capacity: event.capacity,
         registrationDeadline: event.registrationDeadline,
         registrationMode: event.registrationMode ?? 'instant',
+        registrationType: event.registrationType,
+        externalPlatformName: event.externalPlatformName,
+        externalRegistrationUrl: event.externalRegistrationUrl,
+        externalRegistrationInstructions:
+            event.externalRegistrationInstructions,
+        registrationRequirements: event.registrationRequirements ?? '',
+        applicationApprovalRequired: event.applicationApprovalRequired,
         pricingType: pricing.type,
         priceAmount: pricing.amountCents == null
             ? null
@@ -131,7 +138,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   void goToStep(int step) {
-    if (step < 0 || step > 4) return;
+    if (step < 0 || step > 5) return;
     emit(state.copyWith(currentStep: step, status: CreateEventStatus.initial));
   }
 
@@ -190,6 +197,22 @@ class CreateEventCubit extends Cubit<CreateEventState> {
       );
   void updateRegistrationMode(String mode) =>
       _update(state.formData.copyWith(registrationMode: mode));
+  void updateRegistrationType(String type) =>
+      _update(state.formData.copyWith(registrationType: type));
+  void updateExternalPlatformName(String value) =>
+      _update(state.formData.copyWith(externalPlatformName: value));
+  void updateExternalRegistrationUrl(String value) =>
+      _update(state.formData.copyWith(externalRegistrationUrl: value));
+  void updateExternalRegistrationInstructions(String value) =>
+      _update(state.formData.copyWith(externalRegistrationInstructions: value));
+  void updateRegistrationRequirements(String value) =>
+      _update(state.formData.copyWith(registrationRequirements: value));
+  void updateWhoCanApply(String value) =>
+      _update(state.formData.copyWith(whoCanApply: value));
+  void updateApplicationApprovalRequired(bool value) =>
+      _update(state.formData.copyWith(applicationApprovalRequired: value));
+  void updateApplicationAgreementRequired(bool value) =>
+      _update(state.formData.copyWith(applicationAgreementRequired: value));
 
   void updatePricingType(String type) =>
       _update(state.formData.copyWith(pricingType: type));
@@ -281,9 +304,15 @@ class CreateEventCubit extends Cubit<CreateEventState> {
             (fd.registrationDeadline == null ||
                 fd.registrationDeadline!.isBefore(fd.startDateTime));
       case 3:
-        return fd.coverImageUrl?.isNotEmpty == true;
+        final external =
+            fd.registrationType == 'external' || fd.registrationType == 'both';
+        return !external ||
+            (fd.externalPlatformName?.trim().isNotEmpty == true &&
+                _isHttpsUrl(fd.externalRegistrationUrl));
       case 4:
-        return fd.finalConfirmed && [0, 1, 2, 3].every(validateStep);
+        return fd.coverImageUrl?.isNotEmpty == true;
+      case 5:
+        return fd.finalConfirmed && [0, 1, 2, 3, 4].every(validateStep);
       default:
         return false;
     }
@@ -321,8 +350,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
             ? 'Choose who the event is for.'
             : 'Add a positive attendee capacity.';
       case 3:
-        return 'Add a cover image before continuing.';
+        return 'Enter a platform name and a valid HTTPS registration URL.';
       case 4:
+        return 'Add a cover image before continuing.';
+      case 5:
         return 'Confirm that the event details are ready to submit.';
       default:
         return 'Complete the required fields.';
@@ -451,7 +482,7 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   }
 
   Future<void> submitEvent() async {
-    if (!validateStep(4)) {
+    if (!validateStep(5)) {
       emit(state.copyWith(
         status: CreateEventStatus.failure,
         errorMessage: validationMessage(state.currentStep),
@@ -566,7 +597,29 @@ class CreateEventCubit extends Cubit<CreateEventState> {
             AttendancePolicy.legacyGenderRestriction(fd.genderPolicy),
         ageMin: fd.effectiveMinAge,
         registrationDeadline: fd.registrationDeadline,
-        registrationMode: fd.registrationMode,
+        registrationMode: fd.applicationApprovalRequired
+            ? 'approval_required'
+            : fd.registrationMode,
+        registrationRequired: fd.registrationType != 'none',
+        registrationType: fd.registrationType,
+        externalPlatformName:
+            fd.registrationType == 'external' || fd.registrationType == 'both'
+                ? fd.externalPlatformName?.trim()
+                : null,
+        externalRegistrationUrl:
+            fd.registrationType == 'external' || fd.registrationType == 'both'
+                ? fd.externalRegistrationUrl?.trim()
+                : null,
+        externalRegistrationInstructions:
+            fd.registrationType == 'external' || fd.registrationType == 'both'
+                ? fd.externalRegistrationInstructions?.trim()
+                : null,
+        registrationRequirements: [
+          fd.registrationRequirements.trim(),
+          fd.whoCanApply.trim(),
+          if (fd.applicationAgreementRequired) 'Agreement required.'
+        ].where((part) => part.isNotEmpty).join('\n\n'),
+        applicationApprovalRequired: fd.applicationApprovalRequired,
         timezone: fd.timezone,
         guidelines: fd.guidelines.trim().isEmpty ? null : fd.guidelines.trim(),
       );
@@ -597,6 +650,11 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     return uri != null &&
         (uri.scheme == 'https' || uri.scheme == 'http') &&
         uri.host.isNotEmpty;
+  }
+
+  bool _isHttpsUrl(String? value) {
+    final uri = Uri.tryParse((value ?? '').trim());
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
   }
 
   String _friendlyError(DioException error, String fallback) {

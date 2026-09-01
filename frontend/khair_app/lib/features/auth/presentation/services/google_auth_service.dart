@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart';
 
 /// Obtains an ID token only; Khair's API verifies the token and owns account
@@ -21,7 +22,10 @@ class GoogleAuthService {
   GoogleAuthService()
       : _signIn = GoogleSignIn(
           scopes: const ['email', 'profile'],
-          clientId: _webClientId.isEmpty ? null : _webClientId,
+          // Android gets its application OAuth client from google-services.json.
+          // clientId is a web/iOS setting; passing it on Android can override
+          // the platform configuration and produce DEVELOPER_ERROR.
+          clientId: kIsWeb && _webClientId.isNotEmpty ? _webClientId : null,
           // serverClientId is NOT supported on Web — only pass it on mobile.
           serverClientId: kIsWeb
               ? null
@@ -35,10 +39,31 @@ class GoogleAuthService {
     GoogleSignInAccount? account;
     try {
       account = await _signIn.signIn();
-    } catch (_) {
-      final origin = kIsWeb ? Uri.base.origin : 'this app';
+    } on PlatformException catch (error) {
+      if (error.code == GoogleSignIn.kSignInCanceledError) return null;
+
+      final diagnostic =
+          '${error.message ?? ''} ${error.details ?? ''}'.toLowerCase();
+      final isAndroidCredentialError = !kIsWeb &&
+          (diagnostic.contains('developer_error') ||
+              diagnostic.contains('developer error') ||
+              RegExp(r'\b10\b').hasMatch(diagnostic));
+      if (isAndroidCredentialError) {
+        throw const GoogleAuthException(
+          'Google sign-in is not configured for this Android build. Please install the latest Khair app update after its Google Play release is refreshed.',
+        );
+      }
+
       throw GoogleAuthException(
-        'Google rejected sign-in from $origin. In Google Cloud Console, add this exact value under Authorized JavaScript origins, then try again.',
+        kIsWeb
+            ? 'Google sign-in could not start in this browser. Check the configured web OAuth origin and try again.'
+            : 'Google sign-in could not start on this device. Check your internet connection and try again.',
+      );
+    } catch (_) {
+      throw GoogleAuthException(
+        kIsWeb
+            ? 'Google sign-in could not start in this browser. Check the configured web OAuth origin and try again.'
+            : 'Google sign-in could not start on this device. Check your internet connection and try again.',
       );
     }
     if (account == null) return null;

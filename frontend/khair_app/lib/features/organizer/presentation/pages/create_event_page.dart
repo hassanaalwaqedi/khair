@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/config/api_config.dart';
@@ -35,6 +36,7 @@ const _stepLabels = [
   'Basics',
   'Date & Location',
   'Audience',
+  'Registration',
   'Media',
   'Review'
 ];
@@ -80,6 +82,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
   late final TextEditingController _onlineInstructions;
   late final TextEditingController _capacity;
   late final TextEditingController _guidelines;
+  late final TextEditingController _externalPlatform;
+  late final TextEditingController _externalRegistrationUrl;
+  late final TextEditingController _externalRegistrationInstructions;
+  late final TextEditingController _registrationRequirementsController;
+  late final TextEditingController _whoCanApply;
   late final TextEditingController _priceAmount;
   late final TextEditingController _currency;
   final _countriesSource = CountriesDataSource(getIt<ApiClient>());
@@ -110,6 +117,15 @@ class _CreateEventViewState extends State<_CreateEventView> {
         TextEditingController(text: data.onlineInstructions ?? '');
     _capacity = TextEditingController(text: data.capacity?.toString() ?? '');
     _guidelines = TextEditingController(text: data.guidelines);
+    _externalPlatform =
+        TextEditingController(text: data.externalPlatformName ?? '');
+    _externalRegistrationUrl =
+        TextEditingController(text: data.externalRegistrationUrl ?? '');
+    _externalRegistrationInstructions = TextEditingController(
+        text: data.externalRegistrationInstructions ?? '');
+    _registrationRequirementsController =
+        TextEditingController(text: data.registrationRequirements);
+    _whoCanApply = TextEditingController(text: data.whoCanApply);
     _priceAmount = TextEditingController(text: data.priceAmount ?? '');
     _currency = TextEditingController(text: data.currency ?? 'USD');
     _loadCountries();
@@ -153,6 +169,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
       _onlineInstructions,
       _capacity,
       _guidelines,
+      _externalPlatform,
+      _externalRegistrationUrl,
+      _externalRegistrationInstructions,
+      _registrationRequirementsController,
+      _whoCanApply,
       _priceAmount,
       _currency,
     ]) {
@@ -326,7 +347,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                 Spacer(),
                 Text(
                     context.l10n.progressPercent(
-                        ((state.currentStep + 1) / 5 * 100).round()),
+                        ((state.currentStep + 1) / 6 * 100).round()),
                     style: TextStyle(
                         color: _CreateColors.rose,
                         fontWeight: FontWeight.w700)),
@@ -469,7 +490,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
             0 => _basics(context, state, dark),
             1 => _dateLocation(context, state, dark),
             2 => _audience(context, state, dark),
-            3 => _media(context, state, dark),
+            3 => _registrationRequirements(context, state, dark),
+            4 => _media(context, state, dark),
             _ => _review(context, state, dark),
           }),
     );
@@ -1007,6 +1029,202 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   cubit.updateFormData(data.copyWith(guidelines: value)),
               dark: dark),
         ]));
+  }
+
+  Widget _registrationRequirements(
+      BuildContext context, CreateEventState state, bool dark) {
+    final cubit = context.read<CreateEventCubit>();
+    final data = state.formData;
+    final external =
+        data.registrationType == 'external' || data.registrationType == 'both';
+    final khair =
+        data.registrationType == 'khair' || data.registrationType == 'both';
+    final onlineAddressWarning = data.eventType == 'online' &&
+        '${data.registrationRequirements} ${data.whoCanApply}'
+            .toLowerCase()
+            .contains('address');
+    return _stepFrame(
+      title: context.l10n.registrationRequirementsTitle,
+      subtitle:
+          'Choose how attendees complete registration. This never changes how your event is published.',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _registrationOption(
+            Icons.event_available_outlined,
+            context.l10n.noRegistrationRequired,
+            'Publish normally without a form or registration link.',
+            'none',
+            data.registrationType,
+            cubit,
+            dark),
+        _registrationOption(
+            Icons.app_registration_rounded,
+            context.l10n.khairRegistrationRequired,
+            'Attendees apply through Khair and applications appear in your dashboard.',
+            'khair',
+            data.registrationType,
+            cubit,
+            dark),
+        _registrationOption(
+            Icons.open_in_new_rounded,
+            context.l10n.externalRegistrationRequired,
+            'Send attendees to your HTTPS registration page. Khair does not manage it.',
+            'external',
+            data.registrationType,
+            cubit,
+            dark),
+        _registrationOption(
+            Icons.sync_alt_rounded,
+            context.l10n.bothRegistrationsRequired,
+            'Attendees may need to complete both steps.',
+            'both',
+            data.registrationType,
+            cubit,
+            dark),
+        if (external) ...[
+          SizedBox(height: 20),
+          _field(
+              label: context.l10n.externalPlatformName,
+              hint: 'Google Forms, Eventbrite, university website…',
+              controller: _externalPlatform,
+              prefix: Icons.public_outlined,
+              onChanged: cubit.updateExternalPlatformName,
+              dark: dark),
+          SizedBox(height: 14),
+          _field(
+              label: context.l10n.externalRegistrationUrl,
+              hint: 'https://…',
+              controller: _externalRegistrationUrl,
+              prefix: Icons.link_rounded,
+              onChanged: cubit.updateExternalRegistrationUrl,
+              dark: dark),
+          Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final uri =
+                        Uri.tryParse(_externalRegistrationUrl.text.trim());
+                    if (uri == null ||
+                        uri.scheme != 'https' ||
+                        uri.host.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(_snack(
+                          'Enter a valid HTTPS registration URL first.',
+                          error: true));
+                      return;
+                    }
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                  icon: Icon(Icons.open_in_new_rounded),
+                  label: Text(context.l10n.testLink))),
+          SizedBox(height: 14),
+          _field(
+              label: context.l10n.externalRegistrationInstructions,
+              hint: data.registrationType == 'both'
+                  ? 'Explain the required order for both steps.'
+                  : 'Explain what attendees need to do.',
+              controller: _externalRegistrationInstructions,
+              maxLines: 3,
+              prefix: Icons.format_align_left_rounded,
+              onChanged: cubit.updateExternalRegistrationInstructions,
+              dark: dark),
+        ],
+        if (khair) ...[
+          SizedBox(height: 16),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: data.applicationApprovalRequired,
+            onChanged: cubit.updateApplicationApprovalRequired,
+            title: Text('Approval required'),
+            subtitle:
+                Text('Review Khair applications before confirming attendees.'),
+          ),
+        ],
+        SizedBox(height: 18),
+        _sectionLabel('Organizer requirements', dark),
+        SizedBox(height: 10),
+        _field(
+            label: 'Requirements (optional)',
+            hint: 'What should applicants prepare or meet?',
+            controller: _registrationRequirementsController,
+            maxLines: 3,
+            prefix: Icons.checklist_rounded,
+            onChanged: cubit.updateRegistrationRequirements,
+            dark: dark),
+        SizedBox(height: 14),
+        _field(
+            label: 'Who can apply? (optional)',
+            hint: 'Describe the intended audience.',
+            controller: _whoCanApply,
+            maxLines: 2,
+            prefix: Icons.groups_outlined,
+            onChanged: cubit.updateWhoCanApply,
+            dark: dark),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: data.applicationAgreementRequired,
+          onChanged: cubit.updateApplicationAgreementRequired,
+          title: Text('Require an agreement'),
+          subtitle:
+              Text('Applicants must agree to the organizer requirements.'),
+        ),
+        if (onlineAddressWarning)
+          _hintBox(
+              'This is an online event. Avoid asking for a physical address unless it is genuinely necessary.',
+              Icons.warning_amber_rounded,
+              dark),
+        SizedBox(height: 8),
+        OutlinedButton.icon(
+          icon: Icon(Icons.auto_awesome_rounded),
+          label: Text('Generate with Khair AI'),
+          onPressed: () => _showRegistrationAiSuggestion(context, data),
+        ),
+        SizedBox(height: 8),
+        Text(
+            'AI suggestions are optional. Review, edit, or reject every suggestion before saving.',
+            style: TextStyle(
+                color: dark ? Colors.white60 : _CreateColors.muted,
+                fontSize: 12)),
+      ]),
+    );
+  }
+
+  Widget _registrationOption(IconData icon, String title, String subtitle,
+          String value, String selected, CreateEventCubit cubit, bool dark) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: _selectCard(icon, title, subtitle, selected == value,
+            () => cubit.updateRegistrationType(value), dark),
+      );
+
+  Future<void> _showRegistrationAiSuggestion(
+      BuildContext context, CreateEventFormData data) async {
+    final recommended = data.unlimitedCapacity ? 'none' : 'khair';
+    final label = recommended == 'khair'
+        ? 'Registration required on Khair'
+        : 'No registration required';
+    final requirements = data.eventType == 'online'
+        ? 'Use only information needed to participate. Do not request a physical address for this online event.'
+        : 'Ask only for information necessary to run the event; avoid sensitive personal information.';
+    final accepted = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text('Khair AI suggestions'),
+              content: Text(
+                  'Suggested registration: $label\n\nSuggested requirements:\n$requirements'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text('Reject')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text('Accept'))
+              ],
+            ));
+    if (accepted == true && mounted) {
+      final cubit = context.read<CreateEventCubit>();
+      cubit.updateRegistrationType(recommended);
+      cubit.updateRegistrationRequirements(requirements);
+      _registrationRequirementsController.text = requirements;
+    }
   }
 
   Widget _media(BuildContext context, CreateEventState state, bool dark) {

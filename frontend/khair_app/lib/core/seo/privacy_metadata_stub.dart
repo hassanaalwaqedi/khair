@@ -1,0 +1,3 @@
+void setPrivacyPolicyMetadata() {}
+
+void resetPrivacyPolicyMetadata() {}

@@ -531,8 +531,8 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	if req.Gender != nil {
 		if _, err := h.db.Exec(`
 			UPDATE users
-			SET gender = $1, gender_updated_at = CASE WHEN $1::varchar = COALESCE(gender, 'NOT_SET') THEN gender_updated_at ELSE $2 END, updated_at = $2
-			WHERE id = $3`, requestedGender, now, uid); err != nil {
+			SET gender = $1::varchar, gender_updated_at = CASE WHEN $1::varchar = COALESCE(gender, 'NOT_SET') THEN gender_updated_at ELSE $2::timestamptz END, updated_at = $2::timestamptz
+			WHERE id = $3::uuid`, requestedGender, now, uid); err != nil {
 			log.Printf("[WARN] Failed to update gender for %s: %v", uid, err)
 			response.InternalServerError(c, "Failed to update profile eligibility")
 			return
@@ -543,7 +543,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 				SET eligibility_review_required = true, updated_at = NOW()
 				FROM events e
 				WHERE er.event_id = e.id
-				  AND er.user_id = $1
+				  AND er.user_id = $1::uuid
 				  AND er.status IN ('pending', 'confirmed', 'reserved')
 				  AND COALESCE(e.end_date, e.start_date) > NOW()
 				  AND COALESCE(e.attendance_policy, 'EVERYONE') <> 'EVERYONE'
@@ -558,7 +558,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 			if _, err := h.db.Exec(`
 				INSERT INTO audit_logs
 					(id, actor_type, actor_id, action, target_type, target_id, old_value, new_value, reason, ip_address, user_agent)
-				VALUES (gen_random_uuid(), 'system', $1, 'profile_gender_changed', 'user', $1, $2::jsonb, $3::jsonb, $4, $5, $6)`,
+				VALUES (gen_random_uuid(), 'system', $1::uuid, 'profile_gender_changed', 'user', $1::uuid, $2::jsonb, $3::jsonb, $4::varchar, $5::varchar, $6::varchar)`,
 				uid,
 				fmt.Sprintf(`{"gender":"%s"}`, previousGender),
 				fmt.Sprintf(`{"gender":"%s"}`, requestedGender),

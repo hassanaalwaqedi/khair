@@ -4586,4 +4586,52 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get imageUploaded => 'Yüklendi';
+
+  @override
+  String get registrationRequirementsTitle => 'Kayıt ve Gereksinimler';
+
+  @override
+  String get noRegistrationRequired => 'Kayıt gerekmiyor';
+
+  @override
+  String get khairRegistrationRequired => 'Khair üzerinden kayıt gerekli';
+
+  @override
+  String get externalRegistrationRequired =>
+      'Harici bir platformda kayıt gerekli';
+
+  @override
+  String get bothRegistrationsRequired =>
+      'Khair ve harici platformda kayıt gerekli';
+
+  @override
+  String get externalPlatformName => 'Harici platform adı';
+
+  @override
+  String get externalRegistrationUrl => 'Harici kayıt URL\'si';
+
+  @override
+  String get externalRegistrationInstructions =>
+      'Kayıt talimatları (isteğe bağlı)';
+
+  @override
+  String get testLink => 'Bağlantıyı test et';
+
+  @override
+  String get completeRegistration => 'Kaydı Tamamla';
+
+  @override
+  String get externalRegistrationWarning =>
+      'Kayıt harici bir platformda tamamlanmalıdır.';
+
+  @override
+  String get leaveKhairRegistration =>
+      'Harici bir platformda kaydı tamamlamak için Khair\'den ayrılıyorsunuz.';
+
+  @override
+  String get continueToRegistration => 'Kayda devam et';
+
+  @override
+  String get khairDoesNotManageExternalRegistration =>
+      'Khair harici kayıt sürecini doğrulamaz veya yönetmez.';
 }

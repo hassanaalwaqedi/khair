@@ -8,6 +8,18 @@
     ],
     "rewrites": [
       {
+        "source": "/.well-known/assetlinks.json",
+        "destination": "/.well-known/assetlinks.json"
+      },
+      {
+        "source": "/privacy",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/account-deletion",
+        "destination": "/index.html"
+      },
+       {
         "source": "**",
         "destination": "/index.html"
       }
