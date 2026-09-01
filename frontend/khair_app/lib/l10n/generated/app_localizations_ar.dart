@@ -1923,6 +1923,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navProfile => 'الملف الشخصي';
 
   @override
+  String get messages => 'الرسائل';
+
+  @override
   String get catTrending => 'الأكثر رواجاً';
 
   @override

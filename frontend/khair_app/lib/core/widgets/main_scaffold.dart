@@ -49,6 +49,8 @@ class MainScaffold extends StatelessWidget {
         _NavDestination(Icons.map_outlined, Icons.map, l10n.navMap, '/map');
     final myEvents = _NavDestination(Icons.event_note_outlined,
         Icons.event_note, l10n.myEvents, '/my-events');
+    final messages = _NavDestination(
+        Icons.forum_outlined, Icons.forum, l10n.messages, '/messages');
     final profile = _NavDestination(Icons.person_outline_rounded, Icons.person,
         l10n.navProfile, '/profile');
     final dashboard = _NavDestination(Icons.dashboard_outlined,
@@ -58,9 +60,9 @@ class MainScaffold extends StatelessWidget {
     if (!auth.isAuthenticated) return [discover, map];
     if (auth.isAdmin) return [discover, admin, profile];
     if (auth.isApprovedOrganizer) {
-      return [discover, map, myEvents, dashboard, profile];
+      return [discover, myEvents, messages, dashboard, profile];
     }
-    return [discover, map, myEvents, profile];
+    return [discover, map, myEvents, messages, profile];
   }
 }
 
@@ -109,6 +111,13 @@ class _DesktopNavigation extends StatelessWidget
             onPressed: () => context.go('/my-events'),
             icon: Icon(Icons.bookmark_border_rounded,
                 color: _matches(path, '/my-events') ? AppColors.primary : null),
+          ),
+        if (auth.isAuthenticated)
+          IconButton(
+            tooltip: context.l10n.messages,
+            onPressed: () => context.go('/messages'),
+            icon: Icon(Icons.forum_outlined,
+                color: _matches(path, '/messages') ? AppColors.primary : null),
           ),
         SizedBox(width: 8),
         if (auth.isAuthenticated) const _DesktopNotificationBell(),

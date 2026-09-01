@@ -1970,6 +1970,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navProfile => 'Profil';
 
   @override
+  String get messages => 'Mesajlar';
+
+  @override
   String get catTrending => 'Popüler';
 
   @override

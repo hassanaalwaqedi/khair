@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:khair_app/core/di/injection.dart';
+import 'package:khair_app/core/locale/l10n_extension.dart';
 import 'package:khair_app/core/network/api_client.dart';
 
 /// API-backed event conversations. This page deliberately has no local/mock
@@ -65,21 +67,52 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
     try {
       final r = await _api.post('/event-messages/conversations/$_id/messages',
           data: {'body': b});
-      if (r.data['data']?['requires_risk_confirmation'] == true && !mounted)
+      if (r.data['data']?['requires_risk_confirmation'] == true) {
+        if (!mounted) return;
+        final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+                  title: const Text('Review message'),
+                  content: Text(r.data['data']?['warning']?.toString() ??
+                      'This message may contain sensitive content.'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel')),
+                    FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Send anyway')),
+                  ],
+                ));
+        if (confirmed != true) return;
+        await _api.post('/event-messages/conversations/$_id/messages',
+            data: {'body': b, 'confirm_risk': true});
+      }
+      if (!mounted) {
         return;
+      }
       _text.clear();
       await _load();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Message could not be sent.')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-          title: Text(_id == null ? 'Event messages' : 'Event conversation')),
+          title:
+              Text(_id == null ? context.l10n.messages : 'Event conversation'),
+          actions: [
+            if (_id == null)
+              IconButton(
+                  tooltip: 'Refresh',
+                  onPressed: _loading ? null : _load,
+                  icon: const Icon(Icons.refresh)),
+          ]),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -91,25 +124,49 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
               : _id == null
                   ? _list()
                   : _chat());
-  Widget _list() => _items.isEmpty
-      ? const Center(child: Text('No event conversations yet.'))
-      : ListView.builder(
-          itemCount: _items.length,
-          itemBuilder: (c, i) {
-            final x = _items[i] as Map;
-            return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.event)),
-                title: Text(x['event_title'] ?? 'Event'),
-                subtitle: Text((x['unread_count'] ?? 0) > 0
-                    ? 'New messages'
-                    : 'No unread messages'),
-                onTap: () {
-                  setState(() {
-                    _id = x['id'];
-                  });
-                  _load();
-                });
-          });
+  Widget _list() => RefreshIndicator(
+      onRefresh: _load,
+      child: _items.isEmpty
+          ? ListView(children: const [
+              SizedBox(height: 150),
+              Icon(Icons.forum_outlined, size: 48),
+              SizedBox(height: 16),
+              Center(child: Text('No event conversations yet.')),
+              SizedBox(height: 8),
+              Center(
+                  child: Text(
+                      'Messages will appear here after you contact an organizer or attendee.')),
+            ])
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              itemCount: _items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (c, i) {
+                final x = _items[i] as Map;
+                final unread = (x['unread_count'] as num?)?.toInt() ?? 0;
+                return Card(
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                        child: Icon(unread > 0
+                            ? Icons.mark_chat_unread_outlined
+                            : Icons.event_outlined)),
+                    title: Text(x['event_title']?.toString() ?? 'Event',
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(unread > 0
+                        ? '$unread unread ${unread == 1 ? 'message' : 'messages'}'
+                        : 'Open event conversation'),
+                    trailing: unread > 0
+                        ? CircleAvatar(
+                            radius: 12,
+                            child: Text('$unread',
+                                style: const TextStyle(fontSize: 12)))
+                        : const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/event-messages/${x['id']}'),
+                  ),
+                );
+              }));
   Widget _chat() => Column(children: [
         const Padding(
             padding: EdgeInsets.all(12),

@@ -3766,6 +3766,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
+  /// No description provided for @messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messages;
+
   /// No description provided for @catTrending.
   ///
   /// In en, this message translates to:

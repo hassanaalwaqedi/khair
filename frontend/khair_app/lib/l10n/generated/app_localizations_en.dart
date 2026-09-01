@@ -1956,6 +1956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get messages => 'Messages';
+
+  @override
   String get catTrending => 'Trending';
 
   @override
