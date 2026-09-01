@@ -118,22 +118,22 @@ class _ProfileContent extends StatelessWidget {
                             overview: overview,
                             onEdit: () => _openEdit(context, onUpdated)),
                         SizedBox(height: 28),
-                        _SectionTitle(context.l10n.quickActions),
+                        _SectionTitle(context.l10n.upcomingEvents),
                         SizedBox(height: 12),
-                        _QuickActions(overview: overview, onUpdated: onUpdated),
-                        SizedBox(height: 30),
                         if (wide)
                           Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
+                                    flex: 6,
+                                    child: _UpcomingEvents(
+                                        events: overview.upcomingEvents)),
+                                SizedBox(width: 20),
+                                Expanded(
+                                    flex: 5,
                                     child: _DetailsColumn(
                                         overview: overview,
                                         onUpdated: onUpdated)),
-                                SizedBox(width: 20),
-                                Expanded(
-                                    child: _UpcomingEvents(
-                                        events: overview.upcomingEvents)),
                               ])
                         else ...[
                           _UpcomingEvents(events: overview.upcomingEvents),
@@ -141,6 +141,10 @@ class _ProfileContent extends StatelessWidget {
                           _DetailsColumn(
                               overview: overview, onUpdated: onUpdated),
                         ],
+                        SizedBox(height: 30),
+                        _SectionTitle(context.l10n.quickActions),
+                        SizedBox(height: 12),
+                        _QuickActions(overview: overview, onUpdated: onUpdated),
                         SizedBox(height: 20),
                         _AccountSafety(),
                       ]),
@@ -220,8 +224,8 @@ class _ProfileHero extends StatelessWidget {
     final stats = _Stats(overview: overview, onEdit: onEdit);
     return _Surface(
       color: Theme.of(context).brightness == Brightness.dark
-          ? Color(0xFF21171E)
-          : _roseSoft,
+          ? const Color(0xFF19181E)
+          : Colors.white,
       child: compact
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +457,7 @@ class _QuickActions extends StatelessWidget {
               crossAxisCount: cols,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: cols == 2 ? 1.22 : 1.3),
+              childAspectRatio: cols == 2 ? 1.55 : 2.15),
           itemBuilder: (_, i) => _ActionCard(
               action: actions[i],
               onTap: () async {
@@ -484,25 +488,30 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) => _Surface(
       padding: const EdgeInsets.all(13),
       onTap: onTap,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: Row(children: [
         Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-                color: _roseSoft, borderRadius: BorderRadius.circular(10)),
+                color: _roseSoft, borderRadius: BorderRadius.circular(11)),
             child: Icon(action.icon, color: _rose, size: 19)),
-        Spacer(),
-        Text(action.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                color: _text(context),
-                fontSize: 13,
-                fontWeight: FontWeight.w700)),
-        SizedBox(height: 3),
-        Text(action.subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: _muted, fontSize: 11))
+        SizedBox(width: 11),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(action.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: _text(context),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700)),
+          SizedBox(height: 3),
+          Text(action.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: _muted, fontSize: 11))
+        ])),
+        Icon(Icons.chevron_right_rounded, color: _muted, size: 18)
       ]));
 }
 
