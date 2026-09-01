@@ -106,7 +106,7 @@ func (h *Handler) list(c *gin.Context) {
 	if !ok {
 		return
 	}
-	rows, e := h.db.Query(`SELECT c.id,c.event_id,e.title,c.attendee_id,o.user_id,c.last_message_at,COALESCE((SELECT count(*) FROM messages m WHERE m.conversation_id=c.id AND m.created_at>COALESCE(p.last_read_at,'epoch')),0) FROM conversations c JOIN events e ON e.id=c.event_id JOIN organizers o ON o.id=c.organizer_id LEFT JOIN conversation_participants p ON p.conversation_id=c.id AND p.user_id=$1 WHERE (c.attendee_id=$1 OR o.user_id=$1) AND ((c.attendee_id=$1 AND c.attendee_deleted_at IS NULL) OR (o.user_id=$1 AND c.organizer_deleted_at IS NULL)) ORDER BY c.last_message_at DESC NULLS LAST`, me)
+	rows, e := h.db.Query(`SELECT c.id,c.event_id,e.title,c.attendee_id,o.user_id,c.last_message_at,COALESCE((SELECT count(*) FROM messages m WHERE m.conversation_id=c.id AND m.created_at>COALESCE(p.last_read_at,'epoch')),0),CASE WHEN c.attendee_id=$1 THEN COALESCE(o.name,'Organizer') ELSE COALESCE(u.display_name,'Attendee') END,CASE WHEN c.attendee_id=$1 THEN COALESCE(o.logo_url,'') ELSE '' END FROM conversations c JOIN events e ON e.id=c.event_id JOIN organizers o ON o.id=c.organizer_id JOIN users u ON u.id=c.attendee_id LEFT JOIN conversation_participants p ON p.conversation_id=c.id AND p.user_id=$1 WHERE (c.attendee_id=$1 OR o.user_id=$1) AND ((c.attendee_id=$1 AND c.attendee_deleted_at IS NULL) OR (o.user_id=$1 AND c.organizer_deleted_at IS NULL)) ORDER BY c.last_message_at DESC NULLS LAST`, me)
 	if e != nil {
 		response.InternalServerError(c, "Unable to load conversations")
 		return
@@ -115,11 +115,11 @@ func (h *Handler) list(c *gin.Context) {
 	out := []gin.H{}
 	for rows.Next() {
 		var id, eid, att, org uuid.UUID
-		var title string
+		var title, otherName, otherAvatar string
 		var last *time.Time
 		var unread int
-		if rows.Scan(&id, &eid, &title, &att, &org, &last, &unread) == nil {
-			out = append(out, gin.H{"id": id, "event_id": eid, "event_title": title, "attendee_id": att, "organizer_user_id": org, "last_message_at": last, "unread_count": unread})
+		if rows.Scan(&id, &eid, &title, &att, &org, &last, &unread, &otherName, &otherAvatar) == nil {
+			out = append(out, gin.H{"id": id, "event_id": eid, "event_title": title, "attendee_id": att, "organizer_user_id": org, "participant_name": otherName, "participant_avatar": otherAvatar, "last_message_at": last, "unread_count": unread})
 		}
 	}
 	response.Success(c, out)
