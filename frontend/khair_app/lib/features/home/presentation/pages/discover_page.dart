@@ -265,11 +265,22 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
-                                  mainAxisExtent: columns == 1 ? 330 : 320,
+                                  // Accommodates the compact image and all
+                                  // event details without clipping content.
+                                  mainAxisExtent: 356,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
-                                  (context, index) =>
-                                      FeaturedEventCard(event: featured[index]),
+                                  (context, index) => Align(
+                                    alignment: AlignmentDirectional.topStart,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 380,
+                                      ),
+                                      child: FeaturedEventCard(
+                                        event: featured[index],
+                                      ),
+                                    ),
+                                  ),
                                   childCount: featured.length,
                                 ),
                               );
