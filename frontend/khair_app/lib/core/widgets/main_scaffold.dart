@@ -94,14 +94,6 @@ class _DesktopNavigation extends StatelessWidget
             selected: path == '/',
             onPressed: () => context.go('/')),
         _DesktopNavLink(
-            label: context.l10n.mapCategories,
-            selected: false,
-            onPressed: () => context.go('/')),
-        _DesktopNavLink(
-            label: context.l10n.online,
-            selected: false,
-            onPressed: () => context.go('/map')),
-        _DesktopNavLink(
             label: context.l10n.navMap,
             selected: _matches(path, '/map'),
             onPressed: () => context.go('/map')),
