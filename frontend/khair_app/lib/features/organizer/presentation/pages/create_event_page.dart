@@ -262,18 +262,20 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     _topBar(context, state, dark),
                     _progress(context, state, dark),
                     Expanded(child: _editor(context, state, dark)),
-                    // Keep the primary wizard action in the page layout
-                    // rather than an overlay. This makes it available after
-                    // every step and prevents the review controls from
-                    // covering or hiding it on web and desktop.
-                    Semantics(
-                      container: true,
-                      label: state.isLastStep
-                          ? context.l10n.createEventSubmit
-                          : context.l10n.createEventContinue,
-                      child: _bottomBar(context, state, dark),
-                    ),
                   ],
+                ),
+              ),
+              // Scaffold reserves space for a bottom navigation bar on every
+              // platform. Unlike an overlay or a body child it cannot be
+              // pushed out of view by a long form, including on desktop web.
+              bottomNavigationBar: SafeArea(
+                top: false,
+                child: Semantics(
+                  container: true,
+                  label: state.isLastStep
+                      ? context.l10n.createEventSubmit
+                      : context.l10n.createEventContinue,
+                  child: _bottomBar(context, state, dark),
                 ),
               ),
             ),
@@ -459,8 +461,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
         final availableWidth =
             (constraints.maxWidth - horizontalPadding * 2).clamp(0.0, 1180.0);
         final content = SingleChildScrollView(
-          padding:
-              EdgeInsets.fromLTRB(horizontalPadding, 10, horizontalPadding, 28),
+          padding: EdgeInsets.fromLTRB(
+              horizontalPadding, 10, horizontalPadding, 128),
           child: Center(
             child: SizedBox(
               width: availableWidth,
