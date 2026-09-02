@@ -2541,7 +2541,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get discoverHeroSupporting =>
-      'استكشف الفعاليات والمجتمعات الإسلامية بالقرب منك وعبر الإنترنت.';
+      'استكشف الفعاليات والمجتمعات بالقرب منك وعبر الإنترنت.';
 
   @override
   String resultsForQuery(String query) {

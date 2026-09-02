@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:khair_app/l10n/generated/app_localizations.dart';
 
-import '../../../../core/widgets/islamic_pattern_painter.dart';
 import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../events/domain/entities/event.dart';
@@ -110,88 +109,75 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16.0, vertical: 8.0),
-                    child: Stack(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (MediaQuery.sizeOf(context).width >= 1024)
-                          const IslamicPatternBackground(
-                            color: AppColors.primary,
-                            opacity: .07,
-                            cellSize: 56,
-                          ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            BlocBuilder<AuthBloc, AuthState>(
-                              builder: (context, auth) {
-                                final name = '';
-                                final l10n = AppLocalizations.of(context)!;
-                                final greeting = name.isNotEmpty
-                                    ? '${_timeGreeting(l10n)}, $name \uD83D\uDC4B'
-                                    : '${_timeGreeting(l10n)} \uD83D\uDC4B';
-                                return Text(
-                                  greeting,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 8),
-                            Builder(
-                              builder: (context) {
-                                final l10n = AppLocalizations.of(context)!;
-                                return RichText(
-                                  text: TextSpan(
-                                    style: const TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
-                                      fontFamily: 'Poppins',
-                                      height: 1.15,
-                                      letterSpacing: -0.5,
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                          text:
-                                              '${l10n.discoverHeadlinePre}\n'),
-                                      TextSpan(
-                                        text: l10n.discoverHeadlineHighlight,
-                                        style: const TextStyle(
-                                            color: AppColors.primary),
-                                      ),
-                                      TextSpan(text: l10n.discoverHeadlinePost),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              AppLocalizations.of(context)!
-                                  .discoverHeroSupporting,
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, auth) {
+                            final name = '';
+                            final l10n = AppLocalizations.of(context)!;
+                            final greeting = name.isNotEmpty
+                                ? '${_timeGreeting(l10n)}, $name \uD83D\uDC4B'
+                                : '${_timeGreeting(l10n)} \uD83D\uDC4B';
+                            return Text(
+                              greeting,
                               style: const TextStyle(
+                                fontSize: 16,
                                 color: AppColors.textSecondary,
-                                fontSize: 15,
-                                height: 1.45,
                                 fontWeight: FontWeight.w500,
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Search bar with active-filter badge
-                            BlocBuilder<EventsBloc, EventsState>(
-                              buildWhen: (prev, curr) =>
-                                  prev.filter != curr.filter,
-                              builder: (context, state) => DiscoverSearchBar(
-                                controller: _search,
-                                onSearch: _searchEvents,
-                                onOpenFilters: _openFilters,
-                                activeFilterCount:
-                                    _countActiveFilters(state.filter),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  fontFamily: 'Poppins',
+                                  height: 1.15,
+                                  letterSpacing: -0.5,
+                                ),
+                                children: [
+                                  TextSpan(
+                                      text: '${l10n.discoverHeadlinePre}\n'),
+                                  TextSpan(
+                                    text: l10n.discoverHeadlineHighlight,
+                                    style: const TextStyle(
+                                        color: AppColors.primary),
+                                  ),
+                                  TextSpan(text: l10n.discoverHeadlinePost),
+                                ],
                               ),
-                            ),
-                          ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          AppLocalizations.of(context)!.discoverHeroSupporting,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                            height: 1.45,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Search bar with active-filter badge
+                        BlocBuilder<EventsBloc, EventsState>(
+                          buildWhen: (prev, curr) => prev.filter != curr.filter,
+                          builder: (context, state) => DiscoverSearchBar(
+                            controller: _search,
+                            onSearch: _searchEvents,
+                            onOpenFilters: _openFilters,
+                            activeFilterCount:
+                                _countActiveFilters(state.filter),
+                          ),
                         ),
                       ],
                     ),
@@ -266,9 +252,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           sliver: SliverLayoutBuilder(
                             builder: (context, constraints) {
                               final width = constraints.crossAxisExtent;
-                              final columns = width >= 1040
+                              // Flutter web uses logical pixels. Three cards
+                              // fit a standard desktop window comfortably.
+                              final columns = width >= 820
                                   ? 3
-                                  : width >= 640
+                                  : width >= 520
                                       ? 2
                                       : 1;
                               return SliverGrid(
@@ -277,7 +265,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
-                                  mainAxisExtent: columns == 1 ? 425 : 450,
+                                  mainAxisExtent: columns == 1 ? 330 : 320,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) =>

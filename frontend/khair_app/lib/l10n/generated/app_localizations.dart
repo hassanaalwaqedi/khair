@@ -4951,7 +4951,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoverHeroSupporting.
   ///
   /// In en, this message translates to:
-  /// **'Explore Islamic events and communities near you and online.'**
+  /// **'Explore events and communities near you and online.'**
   String get discoverHeroSupporting;
 
   /// No description provided for @resultsForQuery.

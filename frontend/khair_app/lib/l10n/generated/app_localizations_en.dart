@@ -2580,7 +2580,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverHeroSupporting =>
-      'Explore Islamic events and communities near you and online.';
+      'Explore events and communities near you and online.';
 
   @override
   String resultsForQuery(String query) {

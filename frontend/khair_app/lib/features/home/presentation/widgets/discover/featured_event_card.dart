@@ -79,7 +79,9 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                     child: Stack(
                       children: [
                         AspectRatio(
-                          aspectRatio: 1.4,
+                          // Compact landscape thumbnail: recognisably Khair,
+                          // inspired by familiar event-browsing patterns.
+                          aspectRatio: 1.82,
                           child: _EventImage(event: event),
                         ),
                         // Top-left Pills
@@ -148,7 +150,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -169,7 +171,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: 6),
                         // Title
                         Text(
                           event.title,
@@ -178,11 +180,11 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w800,
-                            fontSize: 18,
+                            fontSize: 16,
                             height: 1.25,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: 8),
                         // Metadata
                         Row(
                           children: [
@@ -204,7 +206,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: 3),
                         Row(
                           children: [
                             Icon(Icons.groups_2_outlined,
