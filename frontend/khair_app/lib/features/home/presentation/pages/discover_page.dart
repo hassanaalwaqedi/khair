@@ -249,42 +249,25 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ),
                         SliverPadding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                          sliver: SliverLayoutBuilder(
-                            builder: (context, constraints) {
-                              final width = constraints.crossAxisExtent;
-                              // Flutter web uses logical pixels. Three cards
-                              // fit a standard desktop window comfortably.
-                              final columns = width >= 820
-                                  ? 3
-                                  : width >= 520
-                                      ? 2
-                                      : 1;
-                              return SliverGrid(
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: columns,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                  // Accommodates the compact image and all
-                                  // event details without clipping content.
-                                  mainAxisExtent: 356,
-                                ),
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) => Align(
-                                    alignment: AlignmentDirectional.topStart,
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 380,
+                          sliver: SliverToBoxAdapter(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final cardWidth = constraints.maxWidth < 520
+                                    ? constraints.maxWidth
+                                    : 380.0;
+                                return Wrap(
+                                  spacing: 16,
+                                  runSpacing: 16,
+                                  children: [
+                                    for (final event in featured)
+                                      SizedBox(
+                                        width: cardWidth,
+                                        child: FeaturedEventCard(event: event),
                                       ),
-                                      child: FeaturedEventCard(
-                                        event: featured[index],
-                                      ),
-                                    ),
-                                  ),
-                                  childCount: featured.length,
-                                ),
-                              );
-                            },
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
                         if (!isSearching)
