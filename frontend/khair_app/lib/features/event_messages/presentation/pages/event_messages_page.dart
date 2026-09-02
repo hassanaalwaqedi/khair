@@ -43,6 +43,7 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
   }
 
   Future<void> _load() async {
+    final loadError = context.l10n.messagesLoadError;
     setState(() => _loading = true);
     try {
       if (_id == null && widget.eventId != null) {
@@ -61,7 +62,7 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
       }
       _error = null;
     } catch (_) {
-      _error = 'Unable to load messages. Check your connection and try again.';
+      _error = loadError;
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -77,16 +78,16 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
         final confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-                  title: const Text('Review message'),
+                  title: Text(context.l10n.reviewMessage),
                   content: Text(r.data['data']?['warning']?.toString() ??
-                      'This message may contain sensitive content.'),
+                      context.l10n.sensitiveMessageWarning),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel')),
+                        child: Text(context.l10n.cancel)),
                     FilledButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Send anyway')),
+                        child: Text(context.l10n.sendAnyway)),
                   ],
                 ));
         if (confirmed != true) return;
@@ -101,7 +102,7 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Message could not be sent.')));
+            SnackBar(content: Text(context.l10n.messageCouldNotBeSent)));
       }
     }
   }
@@ -124,18 +125,19 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
   PreferredSizeWidget _chatAppBar(BuildContext context) => AppBar(
         titleSpacing: 0,
         title: Row(children: [
-          _InitialAvatar(name: _participantName ?? 'Event'),
+          _InitialAvatar(
+              name: _participantName ?? context.l10n.eventConversation),
           const SizedBox(width: 10),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                Text(_participantName ?? 'Event conversation',
+                Text(_participantName ?? context.l10n.eventConversation,
                     style: const TextStyle(fontWeight: FontWeight.w800),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
-                Text(_eventTitle ?? 'Event conversation',
+                Text(_eventTitle ?? context.l10n.eventConversation,
                     style: Theme.of(context).textTheme.labelSmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
@@ -143,11 +145,11 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
         ]),
         actions: [
           IconButton(
-              tooltip: 'Refresh conversation',
+              tooltip: context.l10n.refreshConversation,
               onPressed: _loading ? null : _load,
               icon: const Icon(Icons.refresh_rounded)),
           IconButton(
-              tooltip: 'Conversation options',
+              tooltip: context.l10n.conversationOptions,
               onPressed: () {},
               icon: const Icon(Icons.more_horiz_rounded)),
           const SizedBox(width: 6),
@@ -165,7 +167,7 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
             FilledButton.tonalIcon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Try again')),
+                label: Text(context.l10n.tryAgain)),
           ])));
 
   Widget _inbox(BuildContext context) {
@@ -192,12 +194,12 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
                                       .headlineMedium
                                       ?.copyWith(fontWeight: FontWeight.w800)),
                               const SizedBox(height: 5),
-                              Text('Private conversations from your events',
+                              Text(context.l10n.privateConversationsFromEvents,
                                   style:
                                       Theme.of(context).textTheme.bodyMedium),
                             ])),
                         IconButton.filledTonal(
-                            tooltip: 'Refresh',
+                            tooltip: context.l10n.refreshEvents,
                             onPressed: _load,
                             icon: const Icon(Icons.refresh_rounded)),
                       ]))),
@@ -242,7 +244,7 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             const Icon(Icons.lock_outline_rounded, size: 16),
             const SizedBox(width: 8),
-            Text('Private event conversation',
+            Text(context.l10n.privateEventConversation,
                 style: Theme.of(context).textTheme.labelMedium),
           ])),
       Expanded(
@@ -280,14 +282,13 @@ class _InboxEmptyState extends StatelessWidget {
                 child: const Icon(Icons.forum_outlined,
                     size: 38, color: AppColors.primary)),
             const SizedBox(height: 18),
-            Text('No messages yet',
+            Text(context.l10n.noMessagesYet,
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Text(
-                'When you contact an organizer or an attendee replies, the conversation will appear here.',
+            Text(context.l10n.messagesEmptyDescription,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium),
           ])));
@@ -301,8 +302,10 @@ class _ConversationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unread = (item['unread_count'] as num?)?.toInt() ?? 0;
-    final name = item['participant_name']?.toString() ?? 'Event contact';
-    final event = item['event_title']?.toString() ?? 'Event conversation';
+    final name =
+        item['participant_name']?.toString() ?? context.l10n.eventContact;
+    final event =
+        item['event_title']?.toString() ?? context.l10n.eventConversation;
     final stamp = _shortTime(item['last_message_at']?.toString());
     return Material(
         color: Colors.transparent,
@@ -395,13 +398,13 @@ class _ChatEmptyState extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             const Icon(Icons.chat_bubble_outline_rounded, size: 42),
             const SizedBox(height: 14),
-            Text('Start the conversation',
+            Text(context.l10n.startConversation,
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
-            Text('Keep your question related to this event.',
+            Text(context.l10n.eventQuestionHint,
                 style: Theme.of(context).textTheme.bodyMedium),
           ])));
 }
@@ -481,16 +484,16 @@ class _MessageComposer extends StatelessWidget {
                     maxLength: 4000,
                     textCapitalization: TextCapitalization.sentences,
                     onSubmitted: (_) => onSend(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                         counterText: '',
-                        hintText: 'Write a message…',
+                        hintText: context.l10n.writeMessage,
                         prefixIcon: Icon(Icons.add_circle_outline_rounded),
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(22)))))),
             const SizedBox(width: 10),
             IconButton.filled(
-                tooltip: 'Send message',
+                tooltip: context.l10n.sendMessageAction,
                 onPressed: onSend,
                 icon: const Icon(Icons.send_rounded))
           ])));

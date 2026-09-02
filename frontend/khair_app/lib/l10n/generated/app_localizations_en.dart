@@ -1959,6 +1959,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messages => 'Messages';
 
   @override
+  String get eventConversation => 'Event conversation';
+
+  @override
+  String get eventContact => 'Event contact';
+
+  @override
+  String get privateEventConversation => 'Private event conversation';
+
+  @override
+  String get privateConversationsFromEvents =>
+      'Private conversations from your events';
+
+  @override
+  String get refreshConversation => 'Refresh conversation';
+
+  @override
+  String get conversationOptions => 'Conversation options';
+
+  @override
+  String get noMessagesYet => 'No messages yet';
+
+  @override
+  String get messagesEmptyDescription =>
+      'When you contact an organizer or an attendee replies, the conversation will appear here.';
+
+  @override
+  String get startConversation => 'Start the conversation';
+
+  @override
+  String get eventQuestionHint => 'Keep your question related to this event.';
+
+  @override
+  String get writeMessage => 'Write a message…';
+
+  @override
+  String get sendMessageAction => 'Send message';
+
+  @override
+  String get reviewMessage => 'Review message';
+
+  @override
+  String get sensitiveMessageWarning =>
+      'This message may contain sensitive content.';
+
+  @override
+  String get sendAnyway => 'Send anyway';
+
+  @override
+  String get messageCouldNotBeSent => 'Message could not be sent.';
+
+  @override
+  String get messagesLoadError =>
+      'Unable to load messages. Check your connection and try again.';
+
+  @override
   String get catTrending => 'Trending';
 
   @override

@@ -1926,6 +1926,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messages => 'الرسائل';
 
   @override
+  String get eventConversation => 'محادثة الفعالية';
+
+  @override
+  String get eventContact => 'جهة اتصال الفعالية';
+
+  @override
+  String get privateEventConversation => 'محادثة خاصة بالفعالية';
+
+  @override
+  String get privateConversationsFromEvents => 'المحادثات الخاصة من فعالياتك';
+
+  @override
+  String get refreshConversation => 'تحديث المحادثة';
+
+  @override
+  String get conversationOptions => 'خيارات المحادثة';
+
+  @override
+  String get noMessagesYet => 'لا توجد رسائل بعد';
+
+  @override
+  String get messagesEmptyDescription =>
+      'عند تواصلك مع المنظم أو رد أحد الحاضرين، ستظهر المحادثة هنا.';
+
+  @override
+  String get startConversation => 'ابدأ المحادثة';
+
+  @override
+  String get eventQuestionHint =>
+      'احرص على أن يكون سؤالك متعلقًا بهذه الفعالية.';
+
+  @override
+  String get writeMessage => 'اكتب رسالة…';
+
+  @override
+  String get sendMessageAction => 'إرسال الرسالة';
+
+  @override
+  String get reviewMessage => 'مراجعة الرسالة';
+
+  @override
+  String get sensitiveMessageWarning => 'قد تحتوي هذه الرسالة على محتوى حساس.';
+
+  @override
+  String get sendAnyway => 'إرسال على أي حال';
+
+  @override
+  String get messageCouldNotBeSent => 'تعذر إرسال الرسالة.';
+
+  @override
+  String get messagesLoadError =>
+      'تعذر تحميل الرسائل. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
   String get catTrending => 'الأكثر رواجاً';
 
   @override

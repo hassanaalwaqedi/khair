@@ -3772,6 +3772,108 @@ abstract class AppLocalizations {
   /// **'Messages'**
   String get messages;
 
+  /// No description provided for @eventConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Event conversation'**
+  String get eventConversation;
+
+  /// No description provided for @eventContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Event contact'**
+  String get eventContact;
+
+  /// No description provided for @privateEventConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Private event conversation'**
+  String get privateEventConversation;
+
+  /// No description provided for @privateConversationsFromEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Private conversations from your events'**
+  String get privateConversationsFromEvents;
+
+  /// No description provided for @refreshConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh conversation'**
+  String get refreshConversation;
+
+  /// No description provided for @conversationOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation options'**
+  String get conversationOptions;
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessagesYet;
+
+  /// No description provided for @messagesEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When you contact an organizer or an attendee replies, the conversation will appear here.'**
+  String get messagesEmptyDescription;
+
+  /// No description provided for @startConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the conversation'**
+  String get startConversation;
+
+  /// No description provided for @eventQuestionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your question related to this event.'**
+  String get eventQuestionHint;
+
+  /// No description provided for @writeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message…'**
+  String get writeMessage;
+
+  /// No description provided for @sendMessageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get sendMessageAction;
+
+  /// No description provided for @reviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Review message'**
+  String get reviewMessage;
+
+  /// No description provided for @sensitiveMessageWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This message may contain sensitive content.'**
+  String get sensitiveMessageWarning;
+
+  /// No description provided for @sendAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Send anyway'**
+  String get sendAnyway;
+
+  /// No description provided for @messageCouldNotBeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message could not be sent.'**
+  String get messageCouldNotBeSent;
+
+  /// No description provided for @messagesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load messages. Check your connection and try again.'**
+  String get messagesLoadError;
+
   /// No description provided for @catTrending.
   ///
   /// In en, this message translates to:

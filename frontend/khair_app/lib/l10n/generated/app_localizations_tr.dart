@@ -1973,6 +1973,61 @@ class AppLocalizationsTr extends AppLocalizations {
   String get messages => 'Mesajlar';
 
   @override
+  String get eventConversation => 'Etkinlik sohbeti';
+
+  @override
+  String get eventContact => 'Etkinlik kişisi';
+
+  @override
+  String get privateEventConversation => 'Özel etkinlik sohbeti';
+
+  @override
+  String get privateConversationsFromEvents =>
+      'Etkinliklerinizden özel sohbetler';
+
+  @override
+  String get refreshConversation => 'Sohbeti yenile';
+
+  @override
+  String get conversationOptions => 'Sohbet seçenekleri';
+
+  @override
+  String get noMessagesYet => 'Henüz mesaj yok';
+
+  @override
+  String get messagesEmptyDescription =>
+      'Bir organizatöre ulaştığınızda veya bir katılımcı yanıt verdiğinde sohbet burada görünür.';
+
+  @override
+  String get startConversation => 'Sohbeti başlat';
+
+  @override
+  String get eventQuestionHint => 'Sorunuz bu etkinlikle ilgili olsun.';
+
+  @override
+  String get writeMessage => 'Mesaj yazın…';
+
+  @override
+  String get sendMessageAction => 'Mesaj gönder';
+
+  @override
+  String get reviewMessage => 'Mesajı incele';
+
+  @override
+  String get sensitiveMessageWarning =>
+      'Bu mesaj hassas içerik barındırabilir.';
+
+  @override
+  String get sendAnyway => 'Yine de gönder';
+
+  @override
+  String get messageCouldNotBeSent => 'Mesaj gönderilemedi.';
+
+  @override
+  String get messagesLoadError =>
+      'Mesajlar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.';
+
+  @override
   String get catTrending => 'Popüler';
 
   @override
