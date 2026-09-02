@@ -199,7 +199,11 @@ class _CreateEventViewState extends State<_CreateEventView> {
               .showSnackBar(_snack(state.errorMessage!, error: true));
         }
         if (state.status == CreateEventStatus.success) {
-          _showSubmittedDialog();
+          // A draft is never submitted for approval. This state is emitted
+          // only after the explicit submit-for-review operation succeeds.
+          ScaffoldMessenger.of(context).showSnackBar(
+              _snack(context.l10n.yourEventIsUnderReview, error: false));
+          context.go('/organizer');
         }
 
         // When the local draft finishes loading for the first time, populate controllers
@@ -258,20 +262,18 @@ class _CreateEventViewState extends State<_CreateEventView> {
                     _topBar(context, state, dark),
                     _progress(context, state, dark),
                     Expanded(child: _editor(context, state, dark)),
+                    // Keep the primary wizard action in the page layout
+                    // rather than an overlay. This makes it available after
+                    // every step and prevents the review controls from
+                    // covering or hiding it on web and desktop.
+                    Semantics(
+                      container: true,
+                      label: state.isLastStep
+                          ? context.l10n.createEventSubmit
+                          : context.l10n.createEventContinue,
+                      child: _bottomBar(context, state, dark),
+                    ),
                   ],
-                ),
-              ),
-              // A persistent bottom sheet keeps the primary action in the
-              // viewport after every wizard transition. The editor reserves
-              // enough space for it, so its final fields are never obscured.
-              bottomSheet: SafeArea(
-                top: false,
-                child: Semantics(
-                  container: true,
-                  label: state.isLastStep
-                      ? context.l10n.createEventSubmit
-                      : context.l10n.createEventContinue,
-                  child: _bottomBar(context, state, dark),
                 ),
               ),
             ),
@@ -457,10 +459,8 @@ class _CreateEventViewState extends State<_CreateEventView> {
         final availableWidth =
             (constraints.maxWidth - horizontalPadding * 2).clamp(0.0, 1180.0);
         final content = SingleChildScrollView(
-          // This bottom padding keeps the final controls reachable above the
-          // persistent wizard footer on phones, tablets, and desktop web.
-          padding: EdgeInsets.fromLTRB(
-              horizontalPadding, 10, horizontalPadding, 128),
+          padding:
+              EdgeInsets.fromLTRB(horizontalPadding, 10, horizontalPadding, 28),
           child: Center(
             child: SizedBox(
               width: availableWidth,
@@ -1795,77 +1795,98 @@ class _CreateEventViewState extends State<_CreateEventView> {
         heightFactor: 1.0,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 1180),
-          child: Row(
-            children: [
-              if (!state.isFirstStep)
-                OutlinedButton.icon(
-                  onPressed: busy ? null : cubit.previousStep,
-                  icon: Icon(Icons.arrow_back_rounded, size: 18),
-                  label: Text(context.l10n.createEventBack),
-                  style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          dark ? Colors.white70 : _CreateColors.text,
-                      side: BorderSide(
-                          color: dark
-                              ? _CreateColors.darkBorder
-                              : _CreateColors.border)),
-                ),
-              Spacer(),
-              if (state.isLastStep) ...[
-                OutlinedButton.icon(
-                  onPressed: busy ? null : cubit.saveDraft,
-                  icon: Icon(Icons.bookmark_border_rounded, size: 17),
-                  label: Text(context.l10n.createEventSaveDraft),
-                  style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          dark ? Colors.white70 : _CreateColors.text,
-                      side: BorderSide(
-                          color: dark
-                              ? _CreateColors.darkBorder
-                              : _CreateColors.border),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14)),
-                ),
-                SizedBox(width: 10),
-                FilledButton.icon(
-                  onPressed: busy ? null : cubit.submitEvent,
-                  icon: busy
-                      ? SizedBox(
-                          width: 17,
-                          height: 17,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : Icon(Icons.send_rounded, size: 17),
-                  label: Text(busy
-                      ? context.l10n.createEventSubmitting
-                      : context.l10n.createEventSubmit),
-                  style: FilledButton.styleFrom(
-                      backgroundColor: _CreateColors.rose,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14)),
-                ),
-              ] else
-                FilledButton.icon(
-                  onPressed: busy
-                      ? null
-                      : () {
-                          if (!cubit.nextStep()) {
-                            ScaffoldMessenger.of(context).showSnackBar(_snack(
-                                cubit.validationMessage(state.currentStep),
-                                error: true));
-                          }
-                        },
-                  icon: Icon(Icons.arrow_forward_rounded, size: 18),
-                  label: Text(context.l10n.createEventContinue),
-                  style: FilledButton.styleFrom(
-                      backgroundColor: _CreateColors.rose,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 22, vertical: 14)),
-                ),
-            ],
-          ),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final compact = constraints.maxWidth < 600;
+            final back = compact
+                ? IconButton(
+                    onPressed: busy ? null : cubit.previousStep,
+                    tooltip: context.l10n.createEventBack,
+                    icon: Icon(Icons.arrow_back_rounded, size: 20),
+                    style: IconButton.styleFrom(
+                        foregroundColor:
+                            dark ? Colors.white70 : _CreateColors.text,
+                        side: BorderSide(
+                            color: dark
+                                ? _CreateColors.darkBorder
+                                : _CreateColors.border)),
+                  )
+                : OutlinedButton.icon(
+                    onPressed: busy ? null : cubit.previousStep,
+                    icon: Icon(Icons.arrow_back_rounded, size: 18),
+                    label: Text(context.l10n.createEventBack),
+                    style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            dark ? Colors.white70 : _CreateColors.text,
+                        side: BorderSide(
+                            color: dark
+                                ? _CreateColors.darkBorder
+                                : _CreateColors.border)),
+                  );
+            final submit = FilledButton.icon(
+              onPressed: busy ? null : cubit.submitEvent,
+              icon: busy
+                  ? SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : Icon(Icons.send_rounded, size: 17),
+              label: Text(busy
+                  ? context.l10n.createEventSubmitting
+                  : context.l10n.createEventSubmit),
+              style: FilledButton.styleFrom(
+                  backgroundColor: _CreateColors.rose,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14)),
+            );
+            final continueButton = FilledButton.icon(
+              onPressed: busy
+                  ? null
+                  : () {
+                      if (!cubit.nextStep()) {
+                        ScaffoldMessenger.of(context).showSnackBar(_snack(
+                            cubit.validationMessage(state.currentStep),
+                            error: true));
+                      }
+                    },
+              icon: Icon(Icons.arrow_forward_rounded, size: 18),
+              label: Text(context.l10n.createEventContinue),
+              style: FilledButton.styleFrom(
+                  backgroundColor: _CreateColors.rose,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 14)),
+            );
+
+            return Row(
+              children: [
+                if (!state.isFirstStep) back,
+                Spacer(),
+                if (state.isLastStep) ...[
+                  OutlinedButton.icon(
+                    onPressed: busy ? null : cubit.saveDraft,
+                    icon: Icon(Icons.bookmark_border_rounded, size: 17),
+                    label: Text(compact
+                        ? context.l10n.saveDraft
+                        : context.l10n.createEventSaveDraft),
+                    style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            dark ? Colors.white70 : _CreateColors.text,
+                        side: BorderSide(
+                            color: dark
+                                ? _CreateColors.darkBorder
+                                : _CreateColors.border),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 10 : 16, vertical: 14)),
+                  ),
+                  SizedBox(width: compact ? 6 : 10),
+                  submit,
+                ] else
+                  continueButton,
+              ],
+            );
+          }),
         ),
       ),
     );
@@ -1886,27 +1907,6 @@ class _CreateEventViewState extends State<_CreateEventView> {
       content: Text(message),
       backgroundColor: error ? Color(0xFFB4234B) : _CreateColors.rose,
       behavior: SnackBarBehavior.fixed);
-
-  Future<void> _showSubmittedDialog() async {
-    await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-                title: Text(context.l10n.yourEventIsUnderReview),
-                content: Text(
-                    'Your event has been submitted for review. We will notify you when moderation is complete.'),
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(context.l10n.backToOrganizerHub))
-                ]));
-
-    if (mounted) {
-      context.go('/organizer');
-    }
-  }
 }
 
 class _UploadEmpty extends StatelessWidget {
