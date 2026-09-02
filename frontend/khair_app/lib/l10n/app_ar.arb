@@ -683,6 +683,7 @@
   "mapPickerTapToSelect": "انقر على الخريطة لتحديد الموقع",
   "mapPickerSelectedLocation": "الموقع المحدد",
   "mapPickerSearching": "جارٍ تحديد العنوان...",
+  "mapPickerNoResults": "لم يتم العثور على أماكن مطابقة. جرّب اسم مدينة أو شارع أو مكان.",
   "mapPickerRefineAddress": "يمكنك تعديل تفاصيل العنوان أدناه إذا لزم الأمر",
   "eventDetailsGetDirections": "الحصول على الاتجاهات",
   "eventDetailsOpenInMaps": "فتح في الخرائط",

@@ -766,6 +766,7 @@
   "mapPickerTapToSelect": "Haritaya dokunarak pin bırakın",
   "mapPickerSelectedLocation": "Seçilen Konum",
   "mapPickerSearching": "Adres çözümleniyor...",
+  "mapPickerNoResults": "Eşleşen yer bulunamadı. Şehir, sokak veya mekân adı deneyin.",
   "mapPickerRefineAddress": "Gerekirse aşağıdaki adres detaylarını düzenleyin",
   "eventDetailsGetDirections": "Yol Tarifi Al",
   "eventDetailsOpenInMaps": "Haritada Aç",

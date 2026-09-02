@@ -1963,6 +1963,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mapPickerSearching => 'جارٍ تحديد العنوان...';
 
   @override
+  String get mapPickerNoResults =>
+      'لم يتم العثور على أماكن مطابقة. جرّب اسم مدينة أو شارع أو مكان.';
+
+  @override
   String get mapPickerRefineAddress =>
       'يمكنك تعديل تفاصيل العنوان أدناه إذا لزم الأمر';
 

@@ -3844,6 +3844,12 @@ abstract class AppLocalizations {
   /// **'Resolving address...'**
   String get mapPickerSearching;
 
+  /// No description provided for @mapPickerNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching places. Try a city, street, or venue name.'**
+  String get mapPickerNoResults;
+
   /// No description provided for @mapPickerRefineAddress.
   ///
   /// In en, this message translates to:

@@ -2010,6 +2010,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mapPickerSearching => 'Adres çözümleniyor...';
 
   @override
+  String get mapPickerNoResults =>
+      'Eşleşen yer bulunamadı. Şehir, sokak veya mekân adı deneyin.';
+
+  @override
   String get mapPickerRefineAddress =>
       'Gerekirse aşağıdaki adres detaylarını düzenleyin';
 

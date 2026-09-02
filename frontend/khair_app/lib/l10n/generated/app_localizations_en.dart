@@ -1996,6 +1996,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapPickerSearching => 'Resolving address...';
 
   @override
+  String get mapPickerNoResults =>
+      'No matching places. Try a city, street, or venue name.';
+
+  @override
   String get mapPickerRefineAddress =>
       'Fine-tune the address details below if needed';
 

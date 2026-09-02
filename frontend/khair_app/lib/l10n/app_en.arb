@@ -766,6 +766,7 @@
   "mapPickerTapToSelect": "Tap on the map to drop a pin",
   "mapPickerSelectedLocation": "Selected Location",
   "mapPickerSearching": "Resolving address...",
+  "mapPickerNoResults": "No matching places. Try a city, street, or venue name.",
   "mapPickerRefineAddress": "Fine-tune the address details below if needed",
   "eventDetailsGetDirections": "Get Directions",
   "eventDetailsOpenInMaps": "Open in Maps",

@@ -787,6 +787,7 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   tapToSelectLabel: context.l10n.mapPickerTapToSelect,
                   selectedLocationLabel: context.l10n.mapPickerSelectedLocation,
                   searchingLabel: context.l10n.mapPickerSearching,
+                  noResultsLabel: context.l10n.mapPickerNoResults,
                   onLocationSelected: (lat, lng, venueName, address, city,
                       country, countryCode) {
                     _venue.text = venueName ?? _venue.text;

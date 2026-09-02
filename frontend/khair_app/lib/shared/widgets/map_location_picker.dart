@@ -36,6 +36,7 @@ class MapLocationPicker extends StatefulWidget {
   final String tapToSelectLabel;
   final String selectedLocationLabel;
   final String searchingLabel;
+  final String noResultsLabel;
 
   const MapLocationPicker({
     super.key,
@@ -54,6 +55,8 @@ class MapLocationPicker extends StatefulWidget {
     this.tapToSelectLabel = 'Tap on the map to select location',
     this.selectedLocationLabel = 'Selected location',
     this.searchingLabel = 'Searching...',
+    this.noResultsLabel =
+        'No matching places. Try a city, street, or venue name.',
   });
 
   @override
@@ -536,8 +539,6 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                         const SizedBox(height: 2),
                         Text(
                           [
-                            if (place.category?.isNotEmpty == true)
-                              place.category!,
                             place.shortAddress,
                             if (place.distanceKm != null)
                               '${place.distanceKm!.toStringAsFixed(1)} km',
@@ -571,7 +572,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'No matching places. Try a city, street, or venue name.',
+              widget.noResultsLabel,
               style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.55), fontSize: 12),
             ),
