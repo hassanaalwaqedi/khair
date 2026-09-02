@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -6,7 +5,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:khair_app/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../features/events/domain/entities/event.dart';
-import 'media_url_helper.dart';
 
 /// Cross-platform share helper.
 /// Uses native share on mobile, falls back to clipboard + snackbar on web/desktop.
@@ -78,85 +76,12 @@ class ShareHelper {
     lines.add(publicUrl);
 
     final text = lines.join('\n');
-    // A URL preview depends on the receiving app crawling Open Graph tags.
-    // WhatsApp can omit that preview (especially for cached links), so attach
-    // the event image directly when the platform supports file shares. On web,
-    // disable the package's download fallback so unsupported browsers simply
-    // continue with the normal text-link share below.
-    final image = await _downloadEventImage(event);
-    if (image != null) {
-      try {
-        final result = await SharePlus.instance.share(
-          ShareParams(
-            files: [image],
-            text: text,
-            downloadFallbackEnabled: false,
-            mailToFallbackEnabled: false,
-          ),
-        );
-        if (result.status != ShareResultStatus.unavailable) return;
-      } catch (_) {
-        // Fall back to the normal text share below.
-      }
-    }
-
+    // Share text only. Attaching an image makes Windows and mobile targets
+    // treat the event as a file share, which loses the link preview. The
+    // backend's canonical event URL serves per-event Open Graph metadata, so
+    // WhatsApp and other clients can render the title, description, and image.
     if (!context.mounted) return;
     await share(context, text);
-  }
-
-  static Future<XFile?> _downloadEventImage(Event event) async {
-    final imageUrl = resolveMediaUrl(event.imageUrl);
-    if (imageUrl.isEmpty) return null;
-
-    try {
-      final response = await Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 6),
-        receiveTimeout: const Duration(seconds: 12),
-      )).get<List<int>>(
-        imageUrl,
-        options: Options(responseType: ResponseType.bytes),
-      );
-      final bytes = response.data;
-      if (bytes == null || bytes.isEmpty) return null;
-
-      final contentType = response.headers
-          .value(Headers.contentTypeHeader)
-          ?.split(';')
-          .first
-          .trim()
-          .toLowerCase();
-      final mimeType =
-          _supportedImageMime(contentType) ?? _mimeTypeFromUrl(imageUrl);
-      if (mimeType == null) return null;
-      final extension = mimeType.substring(mimeType.indexOf('/') + 1);
-
-      return XFile.fromData(
-        Uint8List.fromList(bytes),
-        mimeType: mimeType,
-        name: 'khair-event.$extension',
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
-  static String? _supportedImageMime(String? value) {
-    switch (value) {
-      case 'image/jpeg':
-      case 'image/png':
-      case 'image/webp':
-        return value;
-      default:
-        return null;
-    }
-  }
-
-  static String? _mimeTypeFromUrl(String url) {
-    final path = Uri.tryParse(url)?.path.toLowerCase() ?? url.toLowerCase();
-    if (path.endsWith('.png')) return 'image/png';
-    if (path.endsWith('.webp')) return 'image/webp';
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
-    return null;
   }
 
   static void _copyToClipboard(BuildContext context, String text) {
