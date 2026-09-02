@@ -4933,20 +4933,26 @@ abstract class AppLocalizations {
   /// No description provided for @discoverHeadlinePre.
   ///
   /// In en, this message translates to:
-  /// **'Find events that'**
+  /// **'Find something'**
   String get discoverHeadlinePre;
 
   /// No description provided for @discoverHeadlineHighlight.
   ///
   /// In en, this message translates to:
-  /// **'inspire'**
+  /// **'meaningful'**
   String get discoverHeadlineHighlight;
 
   /// No description provided for @discoverHeadlinePost.
   ///
   /// In en, this message translates to:
-  /// **' you'**
+  /// **'.'**
   String get discoverHeadlinePost;
+
+  /// No description provided for @discoverHeroSupporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Islamic events and communities near you and online.'**
+  String get discoverHeroSupporting;
 
   /// No description provided for @resultsForQuery.
   ///

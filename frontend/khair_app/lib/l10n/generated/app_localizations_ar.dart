@@ -2531,13 +2531,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get greetingGoodEvening => 'مساء الخير';
 
   @override
-  String get discoverHeadlinePre => 'اكتشف فعاليات';
+  String get discoverHeadlinePre => 'اكتشف شيئًا';
 
   @override
-  String get discoverHeadlineHighlight => 'تلهمك';
+  String get discoverHeadlineHighlight => 'ذا معنى';
 
   @override
-  String get discoverHeadlinePost => '';
+  String get discoverHeadlinePost => '.';
+
+  @override
+  String get discoverHeroSupporting =>
+      'استكشف الفعاليات والمجتمعات الإسلامية بالقرب منك وعبر الإنترنت.';
 
   @override
   String resultsForQuery(String query) {

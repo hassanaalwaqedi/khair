@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../layout/app_breakpoints.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/notifications/presentation/widgets/notification_bell_button.dart';
 import '../../tokens/tokens.dart';
 import 'khair_brand.dart';
@@ -75,61 +76,101 @@ class _DesktopNavigation extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final path = GoRouterState.of(context).uri.path;
+    final compact = MediaQuery.sizeOf(context).width < 1280;
     return AppBar(
       toolbarHeight: 72,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.darkSurface
-          : AppColors.surface,
+      backgroundColor: const Color(0xFF19181E),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       titleSpacing: 32,
       title: KhairBrand(
         size: 28,
-        nameStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
+        nameStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 22,
+          color: Colors.white,
+        ),
       ),
       actions: [
-        _DesktopNavLink(
+        _DesktopNavItem(
+            icon: Icons.explore_outlined,
             label: context.l10n.navDiscover,
+            color: AppColors.primary,
             selected: path == '/',
+            compact: compact,
             onPressed: () => context.go('/')),
-        _DesktopNavLink(
+        _DesktopNavItem(
+            icon: Icons.grid_view_rounded,
+            label: context.l10n.categories,
+            color: const Color(0xFF8B5CF6),
+            selected: false,
+            compact: compact,
+            onPressed: () => context.go('/')),
+        _DesktopNavItem(
+            icon: Icons.videocam_outlined,
+            label: context.l10n.online,
+            color: const Color(0xFF3B82F6),
+            selected: false,
+            compact: compact,
+            onPressed: () {
+              final events = context.read<EventsBloc>();
+              events.add(
+                  UpdateFilter(events.state.filter.copyWith(onlineOnly: true)));
+              context.go('/');
+            }),
+        _DesktopNavItem(
+            icon: Icons.map_outlined,
             label: context.l10n.navMap,
+            color: const Color(0xFF14B8A6),
             selected: _matches(path, '/map'),
+            compact: compact,
             onPressed: () => context.go('/map')),
         if (auth.isAuthenticated)
-          IconButton(
-            tooltip: context.l10n.myEvents,
-            onPressed: () => context.go('/my-events'),
-            icon: Icon(Icons.bookmark_border_rounded,
-                color: _matches(path, '/my-events') ? AppColors.primary : null),
+          _DesktopNavItem(
+            icon: Icons.bookmark_border_rounded,
+            label: context.l10n.savedEvents,
+            color: const Color(0xFFF5B942),
+            selected: _matches(path, '/saved'),
+            compact: compact,
+            onPressed: () => context.go('/saved'),
           ),
         if (auth.isAuthenticated)
-          IconButton(
-            tooltip: context.l10n.messages,
+          _DesktopNavItem(
+            icon: Icons.forum_outlined,
+            label: context.l10n.messages,
+            color: const Color(0xFF8B5CF6),
+            selected: _matches(path, '/messages'),
+            compact: compact,
             onPressed: () => context.go('/messages'),
-            icon: Icon(Icons.forum_outlined,
-                color: _matches(path, '/messages') ? AppColors.primary : null),
           ),
         if (auth.isApprovedOrganizer)
-          IconButton(
-            tooltip: context.l10n.organizerDashboard,
+          _DesktopNavItem(
+            icon: Icons.dashboard_outlined,
+            label: context.l10n.organizerDashboard,
+            color: const Color(0xFFB49AF9),
+            selected: _matches(path, '/organizer'),
+            compact: compact,
             onPressed: () => context.go('/organizer'),
-            icon: Icon(Icons.dashboard_outlined,
-                color: _matches(path, '/organizer') ? AppColors.primary : null),
           ),
-        SizedBox(width: 8),
-        if (auth.isAuthenticated) const _DesktopNotificationBell(),
-        SizedBox(width: 8),
+        const SizedBox(width: 4),
+        if (auth.isAuthenticated)
+          const IconTheme(
+            data: IconThemeData(color: Color(0xFFFF7AA2)),
+            child: _DesktopNotificationBell(),
+          ),
+        const SizedBox(width: 4),
         if (!auth.isAuthenticated)
           TextButton(
               onPressed: () => context.go('/login'),
-              child: Text(context.l10n.signIn1))
+              child: Text(context.l10n.signIn1,
+                  style: const TextStyle(color: Colors.white)))
         else
           IconButton(
             tooltip: context.l10n.profileTooltip,
             onPressed: () => context.go('/profile'),
-            icon: Icon(Icons.account_circle_outlined),
+            icon: const Icon(Icons.account_circle_outlined,
+                color: Color(0xFFCFBEFF)),
           ),
         SizedBox(width: 8),
         FilledButton(
@@ -151,41 +192,50 @@ class _DesktopNavigation extends StatelessWidget
           ),
           child: Text(context.l10n.createEvent1),
         ),
-        SizedBox(width: 28),
+        const SizedBox(width: 24),
       ],
     );
   }
 }
 
-class _DesktopNavLink extends StatelessWidget {
-  const _DesktopNavLink(
-      {required this.label, required this.selected, required this.onPressed});
+class _DesktopNavItem extends StatelessWidget {
+  const _DesktopNavItem({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.compact,
+    required this.onPressed,
+  });
+  final IconData icon;
   final String label;
+  final Color color;
   final bool selected;
+  final bool compact;
   final VoidCallback onPressed;
+
   @override
-  Widget build(BuildContext context) => TextButton(
+  Widget build(BuildContext context) => Tooltip(
+      message: label,
+      child: TextButton.icon(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          foregroundColor: selected ? AppColors.primary : null,
-          minimumSize: Size(0, 52),
-          padding: const EdgeInsets.symmetric(horizontal: 13),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          foregroundColor: selected ? color : const Color(0xFFD9D3DE),
+          minimumSize: const Size(0, 44),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+          backgroundColor:
+              selected ? color.withValues(alpha: .18) : Colors.transparent,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(label,
-              style: TextStyle(
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600)),
-          SizedBox(height: 4),
-          AnimatedContainer(
-              duration: Duration(milliseconds: 180),
-              width: selected ? 18 : 0,
-              height: 2,
-              decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(9))),
-        ]),
-      );
+        icon: Icon(icon, size: 20),
+        label: compact
+            ? const SizedBox.shrink()
+            : Text(label,
+                style: TextStyle(
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    fontSize: 13)),
+      ));
 }
 
 class _MobileNavigation extends StatelessWidget {

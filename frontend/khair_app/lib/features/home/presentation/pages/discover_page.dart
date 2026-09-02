@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:khair_app/l10n/generated/app_localizations.dart';
 
+import '../../../../core/widgets/islamic_pattern_painter.dart';
 import '../../../../tokens/tokens.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../events/domain/entities/event.dart';
@@ -86,7 +87,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
           _nearbyRequestInFlight = false;
         } else if (location is LocationError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.locationUpdateError)),
+            SnackBar(
+                content:
+                    Text(AppLocalizations.of(context)!.locationUpdateError)),
           );
         }
       },
@@ -105,63 +108,90 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Stack(
                       children: [
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, auth) {
-                            final name = '';
-                            final l10n = AppLocalizations.of(context)!;
-                            final greeting = name.isNotEmpty
-                                ? '${_timeGreeting(l10n)}, $name \uD83D\uDC4B'
-                                : '${_timeGreeting(l10n)} \uD83D\uDC4B';
-                            return Text(
-                              greeting,
+                        if (MediaQuery.sizeOf(context).width >= 1024)
+                          const IslamicPatternBackground(
+                            color: AppColors.primary,
+                            opacity: .07,
+                            cellSize: 56,
+                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            BlocBuilder<AuthBloc, AuthState>(
+                              builder: (context, auth) {
+                                final name = '';
+                                final l10n = AppLocalizations.of(context)!;
+                                final greeting = name.isNotEmpty
+                                    ? '${_timeGreeting(l10n)}, $name \uD83D\uDC4B'
+                                    : '${_timeGreeting(l10n)} \uD83D\uDC4B';
+                                return Text(
+                                  greeting,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Builder(
+                              builder: (context) {
+                                final l10n = AppLocalizations.of(context)!;
+                                return RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                      fontFamily: 'Poppins',
+                                      height: 1.15,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                          text:
+                                              '${l10n.discoverHeadlinePre}\n'),
+                                      TextSpan(
+                                        text: l10n.discoverHeadlineHighlight,
+                                        style: const TextStyle(
+                                            color: AppColors.primary),
+                                      ),
+                                      TextSpan(text: l10n.discoverHeadlinePost),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              AppLocalizations.of(context)!
+                                  .discoverHeroSupporting,
                               style: const TextStyle(
-                                fontSize: 16,
                                 color: AppColors.textSecondary,
+                                fontSize: 15,
+                                height: 1.45,
                                 fontWeight: FontWeight.w500,
                               ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Builder(
-                          builder: (context) {
-                            final l10n = AppLocalizations.of(context)!;
-                            return RichText(
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                  fontFamily: 'Poppins',
-                                  height: 1.15,
-                                  letterSpacing: -0.5,
-                                ),
-                                children: [
-                                  TextSpan(text: '${l10n.discoverHeadlinePre}\n'),
-                                  TextSpan(
-                                    text: l10n.discoverHeadlineHighlight,
-                                    style: const TextStyle(color: AppColors.primary),
-                                  ),
-                                  TextSpan(text: l10n.discoverHeadlinePost),
-                                ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Search bar with active-filter badge
+                            BlocBuilder<EventsBloc, EventsState>(
+                              buildWhen: (prev, curr) =>
+                                  prev.filter != curr.filter,
+                              builder: (context, state) => DiscoverSearchBar(
+                                controller: _search,
+                                onSearch: _searchEvents,
+                                onOpenFilters: _openFilters,
+                                activeFilterCount:
+                                    _countActiveFilters(state.filter),
                               ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        // Search bar with active-filter badge
-                        BlocBuilder<EventsBloc, EventsState>(
-                          buildWhen: (prev, curr) => prev.filter != curr.filter,
-                          builder: (context, state) => DiscoverSearchBar(
-                            controller: _search,
-                            onSearch: _searchEvents,
-                            onOpenFilters: _openFilters,
-                            activeFilterCount: _countActiveFilters(state.filter),
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -182,16 +212,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 ),
                 BlocBuilder<EventsBloc, EventsState>(
                   builder: (context, state) {
-                    if (state.status == EventsStatus.loading && state.events.isEmpty) {
+                    if (state.status == EventsStatus.loading &&
+                        state.events.isEmpty) {
                       return const SliverToBoxAdapter(child: SkeletonLoaders());
                     }
                     if (state.status == EventsStatus.failure) {
-                      return SliverToBoxAdapter(child: _LoadError(onRetry: _refresh));
+                      return SliverToBoxAdapter(
+                          child: _LoadError(onRetry: _refresh));
                     }
                     if (state.events.isEmpty) {
                       return SliverToBoxAdapter(
                         child: _EmptyDiscovery(
-                          onClearFilters: () => context.read<EventsBloc>().add(ClearAllFilters()),
+                          onClearFilters: () =>
+                              context.read<EventsBloc>().add(ClearAllFilters()),
                           hasActiveFilters: state.filter.hasActiveFilters,
                         ),
                       );
@@ -201,9 +234,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     final isSearching = searchQuery?.isNotEmpty ?? false;
                     final featured = state.events;
                     // Weekend results are already constrained by the server.
-                    final weekend = state.filter.dateFilter == DateFilter.thisWeekend
-                        ? state.events.take(6).toList()
-                        : const <Event>[];
+                    final weekend =
+                        state.filter.dateFilter == DateFilter.thisWeekend
+                            ? state.events.take(6).toList()
+                            : const <Event>[];
 
                     return SliverMainAxisGroup(
                       slivers: [
@@ -212,11 +246,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: DiscoverSectionHeader(
                               title: isSearching
-                                  ? AppLocalizations.of(context)!.resultsForQuery(searchQuery!)
-                                  : AppLocalizations.of(context)!.featuredNearYou,
+                                  ? AppLocalizations.of(context)!
+                                      .resultsForQuery(searchQuery!)
+                                  : AppLocalizations.of(context)!
+                                      .featuredNearYou,
                               subtitle: isSearching
                                   ? AppLocalizations.of(context)!.matchingEvents
-                                  : AppLocalizations.of(context)!.eventsWorthTimeFor,
+                                  : AppLocalizations.of(context)!
+                                      .eventsWorthTimeFor,
                               action: isSearching
                                   ? AppLocalizations.of(context)!.exploreMap
                                   : AppLocalizations.of(context)!.seeAll,
@@ -224,17 +261,31 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             ),
                           ),
                         ),
-                        SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 420,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: featured.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 16),
-                              itemBuilder: (context, index) =>
-                                  FeaturedEventCard(event: featured[index]),
-                            ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                          sliver: SliverLayoutBuilder(
+                            builder: (context, constraints) {
+                              final width = constraints.crossAxisExtent;
+                              final columns = width >= 1040
+                                  ? 3
+                                  : width >= 640
+                                      ? 2
+                                      : 1;
+                              return SliverGrid(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  mainAxisExtent: columns == 1 ? 425 : 450,
+                                ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) =>
+                                      FeaturedEventCard(event: featured[index]),
+                                  childCount: featured.length,
+                                ),
+                              );
+                            },
                           ),
                         ),
                         if (!isSearching)
@@ -247,10 +298,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         if (!isSearching && weekend.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: DiscoverSectionHeader(
-                                title: AppLocalizations.of(context)!.happeningThisWeekend,
-                                subtitle: AppLocalizations.of(context)!.planSomethingMeaningful,
+                                title: AppLocalizations.of(context)!
+                                    .happeningThisWeekend,
+                                subtitle: AppLocalizations.of(context)!
+                                    .planSomethingMeaningful,
                                 action: AppLocalizations.of(context)!.seeAll,
                                 onAction: () => context.go('/map'),
                               ),
@@ -261,9 +315,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
                               height: 280,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 itemCount: weekend.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 14),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 14),
                                 itemBuilder: (context, index) =>
                                     CompactEventCard(event: weekend[index]),
                               ),
@@ -344,8 +400,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Future<void> _openLocationPicker() async {
-    final controller =
-        TextEditingController(text: context.read<EventsBloc>().state.filter.city ?? '');
+    final controller = TextEditingController(
+        text: context.read<EventsBloc>().state.filter.city ?? '');
     final sheetL10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
@@ -366,8 +422,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: Text(sheetL10n.chooseYourArea,
-                        style:
-                            const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+                        style: const TextStyle(
+                            fontSize: 23, fontWeight: FontWeight.w800)),
                   ),
                   const SizedBox(height: 16),
                   // Use InkWell + Row instead of ListTile to avoid invisible ink warning
@@ -382,10 +438,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Row(
                         children: [
-                          const Icon(Icons.my_location_rounded, color: AppColors.primary),
+                          const Icon(Icons.my_location_rounded,
+                              color: AppColors.primary),
                           const SizedBox(width: 12),
                           Text(sheetL10n.useCurrentLocationShort,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),
@@ -395,7 +453,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     controller: controller,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (value) {
-                      context.read<EventsBloc>().add(UpdateBaseCity(value.trim()));
+                      context
+                          .read<EventsBloc>()
+                          .add(UpdateBaseCity(value.trim()));
                       Navigator.of(sheetContext).pop();
                     },
                     decoration: InputDecoration(
@@ -416,17 +476,16 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       child: Text(sheetL10n.showEvents),
                     ),
                   ),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-    );
-    },
+        );
+      },
     );
     controller.dispose();
   }
 }
-
 
 class _EmptyDiscovery extends StatelessWidget {
   const _EmptyDiscovery(

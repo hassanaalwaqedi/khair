@@ -17,7 +17,7 @@ class QuickFiltersRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<EventsBloc, EventsState>(
         builder: (context, state) => SizedBox(
-          height: 44,
+          height: 50,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -30,8 +30,10 @@ class QuickFiltersRow extends StatelessWidget {
                   state.filter.dateFilter == DateFilter.today,
                 QuickFilter.weekend =>
                   state.filter.dateFilter == DateFilter.thisWeekend,
-                QuickFilter.nearby => state.filter.latitude != null && state.filter.longitude != null,
-                QuickFilter.free => state.filter.freeOnly || state.filter.pricingType == 'free',
+                QuickFilter.nearby => state.filter.latitude != null &&
+                    state.filter.longitude != null,
+                QuickFilter.free =>
+                  state.filter.freeOnly || state.filter.pricingType == 'free',
                 QuickFilter.online => state.filter.onlineOnly,
               };
               return _QuickFilterChip(
@@ -61,46 +63,97 @@ class _QuickFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final (label, icon) = switch (filter) {
-      QuickFilter.today => (l10n.today, Icons.calendar_today_outlined),
-      QuickFilter.weekend => (l10n.thisWeekend, Icons.weekend_outlined),
-      QuickFilter.nearby => (l10n.nearMe, Icons.near_me_outlined),
-      QuickFilter.free => (l10n.freeLabel, Icons.sell_outlined),
-      QuickFilter.online => (l10n.online, Icons.videocam_outlined),
+    final (label, icon, color, background) = switch (filter) {
+      QuickFilter.today => (
+          l10n.today,
+          Icons.calendar_month_rounded,
+          AppColors.primary,
+          const Color(0xFFFFE7EF)
+        ),
+      QuickFilter.weekend => (
+          l10n.thisWeekend,
+          Icons.wb_sunny_outlined,
+          const Color(0xFFE88224),
+          const Color(0xFFFFEEDB)
+        ),
+      QuickFilter.nearby => (
+          l10n.nearMe,
+          Icons.location_on_outlined,
+          const Color(0xFF0F8B8D),
+          const Color(0xFFDDF6F4)
+        ),
+      QuickFilter.free => (
+          l10n.freeLabel,
+          Icons.confirmation_number_outlined,
+          const Color(0xFF14804A),
+          const Color(0xFFE1F7EA)
+        ),
+      QuickFilter.online => (
+          l10n.online,
+          Icons.wifi_tethering_rounded,
+          const Color(0xFF3974D8),
+          const Color(0xFFE5EEFF)
+        ),
     };
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      child: Material(
-        color: selected ? AppColors.primarySoft : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 44),
-            padding: const EdgeInsetsDirectional.fromSTEB(13, 0, 14, 0),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: selected ? AppColors.primary : AppColors.border,
-              ),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.pill),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                          color: color.withValues(alpha: .24),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4))
+                    ]
+                  : const []),
+          child: Material(
+            color: selected ? color : background,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 46),
+                padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 15, 0),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: selected ? color : color.withValues(alpha: .18)),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Stack(clipBehavior: Clip.none, children: [
+                    Icon(icon,
+                        size: 18, color: selected ? Colors.white : color),
+                    if (filter == QuickFilter.today)
+                      PositionedDirectional(
+                          end: -2,
+                          top: -2,
+                          child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle))),
+                  ]),
+                  const SizedBox(width: 7),
+                  Text(label,
+                      style: TextStyle(
+                        color: selected ? Colors.white : color,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                      )),
+                ]),
+              ),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(icon,
-                  size: 17,
-                  color:
-                      selected ? AppColors.primary : AppColors.textSecondary),
-              const SizedBox(width: 7),
-              Text(label,
-                  style: TextStyle(
-                    color:
-                        selected ? AppColors.primaryDark : AppColors.textPrimary,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                  )),
-            ]),
           ),
         ),
       ),

@@ -2585,13 +2585,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get greetingGoodEvening => 'İyi akşamlar';
 
   @override
-  String get discoverHeadlinePre => 'İlham veren';
+  String get discoverHeadlinePre => 'Daha';
 
   @override
-  String get discoverHeadlineHighlight => 'etkinlikleri';
+  String get discoverHeadlineHighlight => 'anlamlı';
 
   @override
-  String get discoverHeadlinePost => ' keşfet';
+  String get discoverHeadlinePost => ' bir şey bulun.';
+
+  @override
+  String get discoverHeroSupporting =>
+      'Yakınınızdaki ve çevrim içi İslami etkinlikleri ve toplulukları keşfedin.';
 
   @override
   String resultsForQuery(String query) {

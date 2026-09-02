@@ -23,16 +23,16 @@ class DiscoverSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(26),
+        color: const Color(0xFF211F26),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color(0x260F0918),
+            blurRadius: 18,
+            offset: Offset(0, 8),
           ),
         ],
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: const Color(0xFF302D35), width: 1),
       ),
       child: TextField(
         controller: controller,
@@ -41,16 +41,16 @@ class DiscoverSearchBar extends StatelessWidget {
         textInputAction: TextInputAction.search,
         style: const TextStyle(
           fontSize: 16,
-          color: AppColors.textPrimary,
+          color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: AppLocalizations.of(context)!.searchEventsOrCities,
           hintStyle: const TextStyle(
-              color: AppColors.textSecondary, fontWeight: FontWeight.w400),
+              color: Color(0xFFB7AFBC), fontWeight: FontWeight.w400),
           prefixIcon: const Padding(
             padding: EdgeInsetsDirectional.only(start: 8.0),
-            child: Icon(Icons.search_rounded, color: AppColors.textSecondary),
+            child: Icon(Icons.search_rounded, color: Color(0xFFE7E1E9)),
           ),
           suffixIcon: _FilterIconButton(
             activeCount: activeFilterCount,
@@ -74,17 +74,26 @@ class _FilterIconButton extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        IconButton(
-          icon: Icon(
-            Icons.tune_rounded,
-            color: activeCount > 0 ? AppColors.primary : AppColors.primary,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: 7),
+          child: Material(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(14),
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(Icons.tune_rounded, color: Colors.white, size: 21),
+              ),
+            ),
           ),
-          onPressed: onTap,
         ),
         if (activeCount > 0)
           Positioned(
-            top: 8,
-            right: 8,
+            top: 2,
+            right: 2,
             child: Container(
               width: 16,
               height: 16,

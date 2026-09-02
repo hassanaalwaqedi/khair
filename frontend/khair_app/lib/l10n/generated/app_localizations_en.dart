@@ -2570,13 +2570,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get greetingGoodEvening => 'Good evening';
 
   @override
-  String get discoverHeadlinePre => 'Find events that';
+  String get discoverHeadlinePre => 'Find something';
 
   @override
-  String get discoverHeadlineHighlight => 'inspire';
+  String get discoverHeadlineHighlight => 'meaningful';
 
   @override
-  String get discoverHeadlinePost => ' you';
+  String get discoverHeadlinePost => '.';
+
+  @override
+  String get discoverHeroSupporting =>
+      'Explore Islamic events and communities near you and online.';
 
   @override
   String resultsForQuery(String query) {

@@ -45,8 +45,7 @@ class _FeaturedEventCardState extends State<FeaturedEventCard> {
         offset: Offset(0, _hovered ? -.012 : 0),
         child: AnimatedContainer(
           duration: Duration(milliseconds: 180),
-          width: MediaQuery.sizeOf(context).width * 0.82,
-          constraints: BoxConstraints(maxWidth: 360),
+          width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
