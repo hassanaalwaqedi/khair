@@ -265,19 +265,19 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   ],
                 ),
               ),
-              // Scaffold reserves space for a bottom navigation bar on every
-              // platform. Unlike an overlay or a body child it cannot be
-              // pushed out of view by a long form, including on desktop web.
-              bottomNavigationBar: SafeArea(
-                top: false,
-                child: Semantics(
-                  container: true,
-                  label: state.isLastStep
-                      ? context.l10n.createEventSubmit
-                      : context.l10n.createEventContinue,
-                  child: _bottomBar(context, state, dark),
-                ),
-              ),
+              // Keep the primary action separate from the secondary footer.
+              // This avoids the Back control changing the footer's layout and
+              // guarantees an always-visible Continue/Submit action on web,
+              // desktop, and mobile.
+              floatingActionButton: _primaryActionButton(context, state),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.endFloat,
+              bottomNavigationBar: state.isFirstStep
+                  ? null
+                  : SafeArea(
+                      top: false,
+                      child: _bottomBar(context, state, dark),
+                    ),
             ),
           );
         },
@@ -1797,99 +1797,81 @@ class _CreateEventViewState extends State<_CreateEventView> {
         heightFactor: 1.0,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 1180),
-          child: LayoutBuilder(builder: (context, constraints) {
-            final compact = constraints.maxWidth < 600;
-            final back = compact
-                ? IconButton(
-                    onPressed: busy ? null : cubit.previousStep,
-                    tooltip: context.l10n.createEventBack,
-                    icon: Icon(Icons.arrow_back_rounded, size: 20),
-                    style: IconButton.styleFrom(
-                        foregroundColor:
-                            dark ? Colors.white70 : _CreateColors.text,
-                        side: BorderSide(
-                            color: dark
-                                ? _CreateColors.darkBorder
-                                : _CreateColors.border)),
-                  )
-                : OutlinedButton.icon(
-                    onPressed: busy ? null : cubit.previousStep,
-                    icon: Icon(Icons.arrow_back_rounded, size: 18),
-                    label: Text(context.l10n.createEventBack),
-                    style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            dark ? Colors.white70 : _CreateColors.text,
-                        side: BorderSide(
-                            color: dark
-                                ? _CreateColors.darkBorder
-                                : _CreateColors.border)),
-                  );
-            final submit = FilledButton.icon(
-              onPressed: busy ? null : cubit.submitEvent,
-              icon: busy
-                  ? SizedBox(
-                      width: 17,
-                      height: 17,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : Icon(Icons.send_rounded, size: 17),
-              label: Text(busy
-                  ? context.l10n.createEventSubmitting
-                  : context.l10n.createEventSubmit),
-              style: FilledButton.styleFrom(
-                  backgroundColor: _CreateColors.rose,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14)),
-            );
-            final continueButton = FilledButton.icon(
-              onPressed: busy
-                  ? null
-                  : () {
-                      if (!cubit.nextStep()) {
-                        ScaffoldMessenger.of(context).showSnackBar(_snack(
-                            cubit.validationMessage(state.currentStep),
-                            error: true));
-                      }
-                    },
-              icon: Icon(Icons.arrow_forward_rounded, size: 18),
-              label: Text(context.l10n.createEventContinue),
-              style: FilledButton.styleFrom(
-                  backgroundColor: _CreateColors.rose,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 14)),
-            );
-
-            return Row(
-              children: [
-                if (!state.isFirstStep) back,
-                Spacer(),
-                if (state.isLastStep) ...[
-                  OutlinedButton.icon(
-                    onPressed: busy ? null : cubit.saveDraft,
-                    icon: Icon(Icons.bookmark_border_rounded, size: 17),
-                    label: Text(compact
-                        ? context.l10n.saveDraft
-                        : context.l10n.createEventSaveDraft),
-                    style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            dark ? Colors.white70 : _CreateColors.text,
-                        side: BorderSide(
-                            color: dark
-                                ? _CreateColors.darkBorder
-                                : _CreateColors.border),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: compact ? 10 : 16, vertical: 14)),
-                  ),
-                  SizedBox(width: compact ? 6 : 10),
-                  submit,
-                ] else
-                  continueButton,
+          child: Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: busy ? null : cubit.previousStep,
+                icon: Icon(Icons.arrow_back_rounded, size: 18),
+                label: Text(context.l10n.createEventBack),
+                style: OutlinedButton.styleFrom(
+                    foregroundColor: dark ? Colors.white70 : _CreateColors.text,
+                    side: BorderSide(
+                        color: dark
+                            ? _CreateColors.darkBorder
+                            : _CreateColors.border)),
+              ),
+              if (state.isLastStep) ...[
+                SizedBox(width: 10),
+                OutlinedButton.icon(
+                  onPressed: busy ? null : cubit.saveDraft,
+                  icon: Icon(Icons.bookmark_border_rounded, size: 17),
+                  label: Text(context.l10n.createEventSaveDraft),
+                  style: OutlinedButton.styleFrom(
+                      foregroundColor:
+                          dark ? Colors.white70 : _CreateColors.text,
+                      side: BorderSide(
+                          color: dark
+                              ? _CreateColors.darkBorder
+                              : _CreateColors.border),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14)),
+                ),
               ],
-            );
-          }),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _primaryActionButton(BuildContext context, CreateEventState state) {
+    final cubit = context.read<CreateEventCubit>();
+    final busy = state.status == CreateEventStatus.submitting ||
+        state.status == CreateEventStatus.saving;
+    final isSubmit = state.isLastStep;
+    return Semantics(
+      button: true,
+      label: isSubmit
+          ? context.l10n.createEventSubmit
+          : context.l10n.createEventContinue,
+      child: FloatingActionButton.extended(
+        heroTag: 'create-event-primary-action',
+        onPressed: busy
+            ? null
+            : () {
+                if (isSubmit) {
+                  cubit.submitEvent();
+                } else if (!cubit.nextStep()) {
+                  ScaffoldMessenger.of(context).showSnackBar(_snack(
+                      cubit.validationMessage(state.currentStep),
+                      error: true));
+                }
+              },
+        backgroundColor: _CreateColors.rose,
+        foregroundColor: Colors.white,
+        elevation: 8,
+        icon: busy
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white))
+            : Icon(isSubmit ? Icons.send_rounded : Icons.arrow_forward_rounded),
+        label: Text(busy && isSubmit
+            ? context.l10n.createEventSubmitting
+            : isSubmit
+                ? context.l10n.createEventSubmit
+                : context.l10n.createEventContinue),
       ),
     );
   }
