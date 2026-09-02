@@ -1793,5 +1793,21 @@
         "type": "int"
       }
     }
-  }
+  },
+  "notificationNewMessageTitle": "New message",
+  "notificationNewMessageBody": "You have a new message about {eventTitle}.",
+  "notificationOpenMessages": "Open messages",
+  "notificationSettings": "Notification settings",
+  "notificationTopics": "Notification topics",
+  "notificationMessagesTopic": "Messages",
+  "notificationEventRegistrationsTopic": "Event registrations",
+  "notificationEventUpdatesTopic": "Event updates",
+  "notificationEventRemindersTopic": "Event reminders",
+  "notificationOrganizerAnnouncementsTopic": "Organizer announcements",
+  "notificationSystemTopic": "System notifications",
+  "notificationBrowserPush": "Browser notifications",
+  "notificationEmailTopic": "Email notifications",
+  "notificationEnableBrowserPush": "Enable browser notifications",
+  "notificationSaved": "Notification preferences saved",
+  "notificationSaveFailed": "Could not save notification preferences"
 }

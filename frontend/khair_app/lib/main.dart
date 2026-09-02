@@ -22,6 +22,7 @@ import 'core/services/websocket_service.dart';
 import 'core/theme/app_theme_builder.dart';
 import 'core/theme/theme_bloc.dart';
 import 'core/widgets/offline_indicator.dart';
+import 'firebase_options.dart';
 import 'features/location/presentation/bloc/location_bloc.dart';
 import 'features/ai/presentation/bloc/ai_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -45,15 +46,15 @@ void main() {
     appRunner: () async {
       await initializeDateFormatting();
 
-      // Firebase & push notifications are only configured for mobile
-      if (!kIsWeb) {
-        await Firebase.initializeApp();
-      }
+      // Firebase is initialized on every supported platform. The web client
+      // settings are public identifiers; server credentials remain in Go.
+      await Firebase.initializeApp(
+        options: kIsWeb ? DefaultFirebaseOptions.currentPlatform : null,
+      );
 
       await configureDependencies();
       ConnectivityService.instance.initialize();
 
-      // Push notifications only on mobile (uses dart:io + Firebase which aren't configured for web)
       if (!kIsWeb) {
         // Init native channels and keep taps queued until auth + GoRouter are
         // ready. Permission/token registration happens only after sign-in.
@@ -61,6 +62,10 @@ void main() {
         LocalNotificationService.instance.setOnNotificationTap((data) {
           PushNotificationService.instance.handleLocalNotificationTap(data);
         });
+        await PushNotificationService.instance.initialize();
+      } else {
+        // Web FCM listeners are safe before authentication; permission is
+        // requested later from the user's notification settings action.
         await PushNotificationService.instance.initialize();
       }
 
@@ -108,12 +113,10 @@ class KhairApp extends StatelessWidget {
               const NotificationSessionChanged(false),
             );
           }
-          if (!kIsWeb) {
-            unawaited(
-              PushNotificationService.instance
-                  .onAuthenticationStateChanged(authState.isAuthenticated),
-            );
-          }
+          unawaited(
+            PushNotificationService.instance
+                .onAuthenticationStateChanged(authState.isAuthenticated),
+          );
         },
         child: BlocBuilder<ThemeBloc, ThemeState>(
           builder: (context, themeState) {

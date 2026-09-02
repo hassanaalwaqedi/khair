@@ -130,6 +130,16 @@ func Render(notificationType string, data map[string]string, language string) Lo
 		default:
 			return LocalizedNotification{Title: "Event update from the organizer", Message: fmt.Sprintf("There is a new update for %s. Open Khair to view the details.", eventTitle)}
 		}
+	case "message_received", "new_message", "message_reply":
+		eventTitle := data["event_title"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "رسالة جديدة", Message: fmt.Sprintf("لديك رسالة جديدة حول فعالية %s.", eventTitle)}
+		case "tr":
+			return LocalizedNotification{Title: "Yeni mesaj", Message: fmt.Sprintf("%s etkinliği hakkında yeni bir mesajınız var.", eventTitle)}
+		default:
+			return LocalizedNotification{Title: "New message", Message: fmt.Sprintf("You have a new message about %s.", eventTitle)}
+		}
 
 	case "verification_review":
 		return renderVerificationReview(data["status"], "", language)

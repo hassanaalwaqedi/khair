@@ -249,6 +249,7 @@ func main() {
 
 	// WebSocket hub (Redis Pub/Sub for horizontal scaling)
 	wsHub := ws.NewHub(redisClient, cfg.JWT.Secret)
+	notificationService.SetRealtimePublisher(wsHub)
 	go wsHub.Run()
 
 	// Analytics + Discovery
@@ -291,7 +292,7 @@ func main() {
 	supportService := support.NewService(supportRepo, geminiClient, wsHub, fcmClient, db, notificationService)
 	supportService.SetPushService(pushService)
 	supportHandler := support.NewHandler(supportService)
-	eventMessageHandler := eventmessage.NewHandler(db)
+	eventMessageHandler := eventmessage.NewHandler(db, notificationService, pushService)
 
 	if geminiClient.IsEnabled() {
 		appLogger.Info("AI Personalization enabled", logger.String("model", cfg.Gemini.Model))

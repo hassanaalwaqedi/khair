@@ -1653,5 +1653,21 @@
       "label": {},
       "date": {}
     }
-  }
+  },
+  "notificationNewMessageTitle": "Yeni mesaj",
+  "notificationNewMessageBody": "{eventTitle} etkinliği hakkında yeni bir mesajınız var.",
+  "notificationOpenMessages": "Mesajları aç",
+  "notificationSettings": "Bildirim ayarları",
+  "notificationTopics": "Bildirim konuları",
+  "notificationMessagesTopic": "Mesajlar",
+  "notificationEventRegistrationsTopic": "Etkinlik kayıtları",
+  "notificationEventUpdatesTopic": "Etkinlik güncellemeleri",
+  "notificationEventRemindersTopic": "Etkinlik hatırlatıcıları",
+  "notificationOrganizerAnnouncementsTopic": "Organizatör duyuruları",
+  "notificationSystemTopic": "Sistem bildirimleri",
+  "notificationBrowserPush": "Tarayıcı bildirimleri",
+  "notificationEmailTopic": "E-posta bildirimleri",
+  "notificationEnableBrowserPush": "Tarayıcı bildirimlerini etkinleştir",
+  "notificationSaved": "Bildirim tercihleri kaydedildi",
+  "notificationSaveFailed": "Bildirim tercihleri kaydedilemedi"
 }

@@ -40,6 +40,28 @@ class AppNotification extends Equatable {
     );
   }
 
+  AppNotification copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? message,
+    String? notificationType,
+    Map<String, dynamic>? data,
+    bool? isRead,
+    DateTime? createdAt,
+  }) {
+    return AppNotification(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      notificationType: notificationType ?? this.notificationType,
+      data: data ?? this.data,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   /// Human-readable time ago string
   String get timeAgo {
     final now = DateTime.now();

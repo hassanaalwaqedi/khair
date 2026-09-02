@@ -1570,5 +1570,21 @@
       "label": {},
       "date": {}
     }
-  }
+  },
+  "notificationNewMessageTitle": "رسالة جديدة",
+  "notificationNewMessageBody": "لديك رسالة جديدة حول فعالية {eventTitle}.",
+  "notificationOpenMessages": "فتح الرسائل",
+  "notificationSettings": "إعدادات الإشعارات",
+  "notificationTopics": "مواضيع الإشعارات",
+  "notificationMessagesTopic": "الرسائل",
+  "notificationEventRegistrationsTopic": "التسجيل في الفعاليات",
+  "notificationEventUpdatesTopic": "تحديثات الفعاليات",
+  "notificationEventRemindersTopic": "تذكيرات الفعاليات",
+  "notificationOrganizerAnnouncementsTopic": "إعلانات المنظمين",
+  "notificationSystemTopic": "إشعارات النظام",
+  "notificationBrowserPush": "إشعارات المتصفح",
+  "notificationEmailTopic": "إشعارات البريد الإلكتروني",
+  "notificationEnableBrowserPush": "تفعيل إشعارات المتصفح",
+  "notificationSaved": "تم حفظ إعدادات الإشعارات",
+  "notificationSaveFailed": "تعذر حفظ إعدادات الإشعارات"
 }

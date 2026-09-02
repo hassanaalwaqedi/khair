@@ -75,6 +75,14 @@ class PushNotificationService {
     _dispatchPendingTarget();
   }
 
+  /// Requests notification permission from an explicit settings action.
+  /// Authentication/session startup remains non-prompting.
+  Future<bool> requestPermission() async {
+    final granted = await _hasNotificationPermission();
+    if (granted && _isAuthenticated) await _activateForAuthenticatedUser();
+    return granted;
+  }
+
   /// Called before a manual logout clears the authenticated API session.
   void clearSession() {
     _isAuthenticated = false;

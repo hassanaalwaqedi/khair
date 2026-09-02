@@ -8771,6 +8771,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Khair does not verify or manage this external registration process.'**
   String get khairDoesNotManageExternalRegistration;
+
+  /// No description provided for @notificationNewMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get notificationNewMessageTitle;
+
+  /// No description provided for @notificationNewMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new message about {eventTitle}.'**
+  String notificationNewMessageBody(Object eventTitle);
+
+  /// No description provided for @notificationOpenMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open messages'**
+  String get notificationOpenMessages;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettings;
+
+  /// No description provided for @notificationTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification topics'**
+  String get notificationTopics;
+
+  /// No description provided for @notificationMessagesTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationMessagesTopic;
+
+  /// No description provided for @notificationEventRegistrationsTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Event registrations'**
+  String get notificationEventRegistrationsTopic;
+
+  /// No description provided for @notificationEventUpdatesTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Event updates'**
+  String get notificationEventUpdatesTopic;
+
+  /// No description provided for @notificationEventRemindersTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Event reminders'**
+  String get notificationEventRemindersTopic;
+
+  /// No description provided for @notificationOrganizerAnnouncementsTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer announcements'**
+  String get notificationOrganizerAnnouncementsTopic;
+
+  /// No description provided for @notificationSystemTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'System notifications'**
+  String get notificationSystemTopic;
+
+  /// No description provided for @notificationBrowserPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser notifications'**
+  String get notificationBrowserPush;
+
+  /// No description provided for @notificationEmailTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications'**
+  String get notificationEmailTopic;
+
+  /// No description provided for @notificationEnableBrowserPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable browser notifications'**
+  String get notificationEnableBrowserPush;
+
+  /// No description provided for @notificationSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences saved'**
+  String get notificationSaved;
+
+  /// No description provided for @notificationSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save notification preferences'**
+  String get notificationSaveFailed;
 }
 
 class _AppLocalizationsDelegate

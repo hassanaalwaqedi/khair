@@ -105,6 +105,10 @@ func (s *Service) SendToUser(userID uuid.UUID, title, body string, data map[stri
 	payload := publicFCMData(data)
 	notificationID := strings.TrimSpace(payload["notification_id"])
 	notificationType := strings.TrimSpace(payload["type"])
+	if !s.browserPushEnabled(userID, notificationType) {
+		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "browser_push_disabled")
+		return
+	}
 
 	if s == nil || s.fcm == nil || !s.fcm.IsEnabled() {
 		log.Printf("[PUSH] delivery_skipped notification_id=%q type=%q reason=%q", notificationID, notificationType, "fcm_not_configured")
@@ -136,6 +140,21 @@ func (s *Service) SendToUser(userID uuid.UUID, title, body string, data map[stri
 		}
 		log.Printf("[PUSH] delivery_failed notification_id=%q type=%q category=%q attempts=%d", notificationID, notificationType, deliveryFailureCategory(result.Err), result.Attempts)
 	}
+}
+
+func (s *Service) browserPushEnabled(userID uuid.UUID, notificationType string) bool {
+	if s == nil || s.db == nil {
+		return true
+	}
+	var enabled bool
+	err := s.db.QueryRow(`SELECT browser_push FROM notification_preferences WHERE user_id=$1`, userID).Scan(&enabled)
+	if err != nil { // Missing preference row or pre-migration database uses defaults.
+		return true
+	}
+	if !enabled {
+		return false
+	}
+	return true
 }
 
 // publicFCMData is a final server-side privacy boundary. Business services may

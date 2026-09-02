@@ -4615,4 +4615,54 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get khairDoesNotManageExternalRegistration =>
       'لا تتحقق خير من عملية التسجيل الخارجية ولا تديرها.';
+
+  @override
+  String get notificationNewMessageTitle => 'رسالة جديدة';
+
+  @override
+  String notificationNewMessageBody(Object eventTitle) {
+    return 'لديك رسالة جديدة حول فعالية $eventTitle.';
+  }
+
+  @override
+  String get notificationOpenMessages => 'فتح الرسائل';
+
+  @override
+  String get notificationSettings => 'إعدادات الإشعارات';
+
+  @override
+  String get notificationTopics => 'مواضيع الإشعارات';
+
+  @override
+  String get notificationMessagesTopic => 'الرسائل';
+
+  @override
+  String get notificationEventRegistrationsTopic => 'التسجيل في الفعاليات';
+
+  @override
+  String get notificationEventUpdatesTopic => 'تحديثات الفعاليات';
+
+  @override
+  String get notificationEventRemindersTopic => 'تذكيرات الفعاليات';
+
+  @override
+  String get notificationOrganizerAnnouncementsTopic => 'إعلانات المنظمين';
+
+  @override
+  String get notificationSystemTopic => 'إشعارات النظام';
+
+  @override
+  String get notificationBrowserPush => 'إشعارات المتصفح';
+
+  @override
+  String get notificationEmailTopic => 'إشعارات البريد الإلكتروني';
+
+  @override
+  String get notificationEnableBrowserPush => 'تفعيل إشعارات المتصفح';
+
+  @override
+  String get notificationSaved => 'تم حفظ إعدادات الإشعارات';
+
+  @override
+  String get notificationSaveFailed => 'تعذر حفظ إعدادات الإشعارات';
 }

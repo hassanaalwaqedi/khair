@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../../../core/push/badge_service.dart';
+import '../../../../core/services/websocket_service.dart';
+import '../notification_toast.dart';
 
 const _notifPollInterval = Duration(seconds: 10);
 
@@ -44,6 +46,22 @@ class MarkNotificationRead extends NotificationEvent {
 
 class MarkAllNotificationsRead extends NotificationEvent {
   const MarkAllNotificationsRead();
+}
+
+class DeleteNotification extends NotificationEvent {
+  final String notificationId;
+  const DeleteNotification(this.notificationId);
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+class NotificationReceived extends NotificationEvent {
+  final AppNotification notification;
+  const NotificationReceived(this.notification);
+
+  @override
+  List<Object?> get props => [notification];
 }
 
 // ── State ──
@@ -87,6 +105,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
     with WidgetsBindingObserver {
   final NotificationRepository _repository;
   Timer? _pollTimer;
+  StreamSubscription<Map<String, dynamic>>? _realtimeSubscription;
   int _lastUnreadCount = 0;
   bool _isAuthenticated = false;
 
@@ -97,7 +116,12 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
     on<NotificationSessionChanged>(_onSessionChanged);
     on<MarkNotificationRead>(_onMarkRead);
     on<MarkAllNotificationsRead>(_onMarkAllRead);
+    on<NotificationReceived>(_onNotificationReceived);
+    on<DeleteNotification>(_onDeleteNotification);
     WidgetsBinding.instance.addObserver(this);
+    _realtimeSubscription = WebSocketService.instance.messages.listen(
+      _onRealtimeMessage,
+    );
 
     if (enablePolling) {
       // Start periodic polling for new notifications.
@@ -110,8 +134,55 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
   @override
   Future<void> close() {
     _pollTimer?.cancel();
+    _realtimeSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     return super.close();
+  }
+
+  void _onRealtimeMessage(Map<String, dynamic> envelope) {
+    if (!_isAuthenticated || envelope['type'] != 'notification.created') {
+      return;
+    }
+    final raw = envelope['data'];
+    if (raw is! Map) return;
+    final data = Map<String, dynamic>.from(raw);
+    final notification = AppNotification.fromJson({
+      'id': data['notification_id'] ?? data['id'] ?? '',
+      'user_id': data['user_id'] ?? '',
+      'title': data['title'] ?? '',
+      'message': data['message'] ?? '',
+      'notification_type': data['type'] ?? 'general',
+      'data': data,
+      'is_read': false,
+      'created_at': data['created_at'] ?? DateTime.now().toIso8601String(),
+    });
+    if (notification.title.trim().isEmpty &&
+        notification.message.trim().isEmpty) {
+      return;
+    }
+    add(NotificationReceived(notification));
+  }
+
+  void _onNotificationReceived(
+    NotificationReceived event,
+    Emitter<NotificationState> emit,
+  ) {
+    final notification = event.notification;
+    if (state.notifications.any(
+        (item) => item.id == notification.id && notification.id.isNotEmpty)) {
+      return;
+    }
+    final updated = [notification, ...state.notifications];
+    if (updated.length > 50) updated.removeLast();
+    final unread = updated.where((item) => !item.isRead).length;
+    _lastUnreadCount = unread;
+    BadgeService.instance.updateBadge(unread);
+    emit(state.copyWith(
+      status: NotificationStatus.success,
+      notifications: updated,
+      unreadCount: unread,
+    ));
+    NotificationToast.show(notification);
   }
 
   @override
@@ -205,16 +276,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
       (_) {
         final updated = state.notifications.map((n) {
           if (n.id == event.notificationId) {
-            return AppNotification(
-              id: n.id,
-              userId: n.userId,
-              title: n.title,
-              message: n.message,
-              notificationType: n.notificationType,
-              data: n.data,
-              isRead: true,
-              createdAt: n.createdAt,
-            );
+            return n.copyWith(isRead: true);
           }
           return n;
         }).toList();
@@ -238,14 +300,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
       (_) {},
       (_) {
         final updated = state.notifications.map((n) {
-          return AppNotification(
-            id: n.id,
-            userId: n.userId,
-            title: n.title,
-            message: n.message,
-            isRead: true,
-            createdAt: n.createdAt,
-          );
+          return n.copyWith(isRead: true);
         }).toList();
         BadgeService.instance.clearBadge();
         emit(state.copyWith(
@@ -254,5 +309,22 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState>
         ));
       },
     );
+  }
+
+  Future<void> _onDeleteNotification(
+    DeleteNotification event,
+    Emitter<NotificationState> emit,
+  ) async {
+    if (!_isAuthenticated) return;
+    final result = await _repository.deleteNotification(event.notificationId);
+    result.fold((_) {}, (_) {
+      final updated = state.notifications
+          .where((notification) => notification.id != event.notificationId)
+          .toList();
+      final unread =
+          updated.where((notification) => !notification.isRead).length;
+      BadgeService.instance.updateBadge(unread);
+      emit(state.copyWith(notifications: updated, unreadCount: unread));
+    });
   }
 }

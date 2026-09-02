@@ -34,6 +34,7 @@ import '../../features/location/presentation/bloc/location_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../../features/notifications/presentation/pages/notification_center_page.dart';
+import '../../features/notifications/presentation/pages/notification_settings_page.dart';
 import '../../features/organizer/presentation/bloc/organizer_bloc.dart';
 import '../../features/organizer/presentation/pages/create_event_page.dart';
 import '../../features/organizer/presentation/pages/organizer_access_page.dart';
@@ -322,6 +323,13 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => RouteBackFallback(
         fallbackLocation: '/',
         child: NotificationCenterPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/notification-settings',
+      builder: (_, __) => RouteBackFallback(
+        fallbackLocation: '/notifications',
+        child: const NotificationSettingsPage(),
       ),
     ),
     GoRoute(path: '/profile/edit', builder: (_, __) => ProfileEditPage()),

@@ -4679,4 +4679,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get khairDoesNotManageExternalRegistration =>
       'Khair does not verify or manage this external registration process.';
+
+  @override
+  String get notificationNewMessageTitle => 'New message';
+
+  @override
+  String notificationNewMessageBody(Object eventTitle) {
+    return 'You have a new message about $eventTitle.';
+  }
+
+  @override
+  String get notificationOpenMessages => 'Open messages';
+
+  @override
+  String get notificationSettings => 'Notification settings';
+
+  @override
+  String get notificationTopics => 'Notification topics';
+
+  @override
+  String get notificationMessagesTopic => 'Messages';
+
+  @override
+  String get notificationEventRegistrationsTopic => 'Event registrations';
+
+  @override
+  String get notificationEventUpdatesTopic => 'Event updates';
+
+  @override
+  String get notificationEventRemindersTopic => 'Event reminders';
+
+  @override
+  String get notificationOrganizerAnnouncementsTopic =>
+      'Organizer announcements';
+
+  @override
+  String get notificationSystemTopic => 'System notifications';
+
+  @override
+  String get notificationBrowserPush => 'Browser notifications';
+
+  @override
+  String get notificationEmailTopic => 'Email notifications';
+
+  @override
+  String get notificationEnableBrowserPush => 'Enable browser notifications';
+
+  @override
+  String get notificationSaved => 'Notification preferences saved';
+
+  @override
+  String get notificationSaveFailed =>
+      'Could not save notification preferences';
 }

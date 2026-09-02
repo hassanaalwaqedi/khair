@@ -53,6 +53,17 @@ void main() {
       expect(target.route, '/support?conversation=conversation-123');
     });
 
+    test('routes new message notifications to the event conversation', () {
+      final target = NotificationTarget.fromData({
+        'type': 'message_received',
+        'conversation_id': 'conversation-123',
+        'notification_id': 'notification-123',
+      });
+
+      expect(target.route, '/event-messages/conversation-123');
+      expect(target.notificationId, 'notification-123');
+    });
+
     test('falls back to the notification center for unknown types', () {
       expect(
         NotificationTarget.fromData({'type': 'future_notification_type'}).route,

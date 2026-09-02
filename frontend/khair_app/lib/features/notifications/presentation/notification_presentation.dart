@@ -93,6 +93,20 @@ class NotificationPresentationResolver {
       );
     }
 
+    if ((type == 'message_received' ||
+            type == 'new_message' ||
+            type == 'message_reply') &&
+        _hasValue(data['event_title'])) {
+      final eventTitle = data['event_title']!.toString();
+      return NotificationPresentation(
+        title: l10n.notificationNewMessageTitle,
+        body: l10n.notificationNewMessageBody(eventTitle),
+        eventId: _eventId(data),
+        ctaLabel: l10n.notificationOpenMessages,
+        isStructured: true,
+      );
+    }
+
     return NotificationPresentation(
       title: notification.title,
       body: notification.message,

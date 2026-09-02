@@ -15,7 +15,7 @@ class NotificationRemoteDataSource {
     dev.log('[NotificationDS] GET /notifications → ${response.statusCode}');
     final responseData = response.data;
     dev.log('[NotificationDS] response type: ${responseData.runtimeType}');
-    
+
     // Handle both wrapped {success: true, data: [...]} and direct list responses
     List<dynamic> list;
     if (responseData is Map && responseData.containsKey('data')) {
@@ -32,10 +32,11 @@ class NotificationRemoteDataSource {
       dev.log('[NotificationDS] Unexpected format: $responseData');
       list = [];
     }
-    
+
     dev.log('[NotificationDS] Raw list count: ${list.length}');
     if (list.isNotEmpty) {
-      dev.log('[NotificationDS] First item keys: ${list.first is Map ? (list.first as Map).keys.toList() : "NOT A MAP"}');
+      dev.log(
+          '[NotificationDS] First item keys: ${list.first is Map ? (list.first as Map).keys.toList() : "NOT A MAP"}');
     }
 
     final notifications = <AppNotification>[];
@@ -48,7 +49,8 @@ class NotificationRemoteDataSource {
         dev.log('[NotificationDS] Parse error [$i]: $e\njson: ${list[i]}\n$st');
       }
     }
-    dev.log('[NotificationDS] Parsed ${notifications.length}/${list.length} notifications');
+    dev.log(
+        '[NotificationDS] Parsed ${notifications.length}/${list.length} notifications');
     return notifications;
   }
 
@@ -66,5 +68,9 @@ class NotificationRemoteDataSource {
   /// Mark all notifications as read
   Future<void> markAllRead() async {
     await _apiClient.put('/notifications/read-all');
+  }
+
+  Future<void> deleteNotification(String id) async {
+    await _apiClient.delete('/notifications/$id');
   }
 }

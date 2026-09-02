@@ -4700,4 +4700,56 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get khairDoesNotManageExternalRegistration =>
       'Khair harici kayıt sürecini doğrulamaz veya yönetmez.';
+
+  @override
+  String get notificationNewMessageTitle => 'Yeni mesaj';
+
+  @override
+  String notificationNewMessageBody(Object eventTitle) {
+    return '$eventTitle etkinliği hakkında yeni bir mesajınız var.';
+  }
+
+  @override
+  String get notificationOpenMessages => 'Mesajları aç';
+
+  @override
+  String get notificationSettings => 'Bildirim ayarları';
+
+  @override
+  String get notificationTopics => 'Bildirim konuları';
+
+  @override
+  String get notificationMessagesTopic => 'Mesajlar';
+
+  @override
+  String get notificationEventRegistrationsTopic => 'Etkinlik kayıtları';
+
+  @override
+  String get notificationEventUpdatesTopic => 'Etkinlik güncellemeleri';
+
+  @override
+  String get notificationEventRemindersTopic => 'Etkinlik hatırlatıcıları';
+
+  @override
+  String get notificationOrganizerAnnouncementsTopic =>
+      'Organizatör duyuruları';
+
+  @override
+  String get notificationSystemTopic => 'Sistem bildirimleri';
+
+  @override
+  String get notificationBrowserPush => 'Tarayıcı bildirimleri';
+
+  @override
+  String get notificationEmailTopic => 'E-posta bildirimleri';
+
+  @override
+  String get notificationEnableBrowserPush =>
+      'Tarayıcı bildirimlerini etkinleştir';
+
+  @override
+  String get notificationSaved => 'Bildirim tercihleri kaydedildi';
+
+  @override
+  String get notificationSaveFailed => 'Bildirim tercihleri kaydedilemedi';
 }

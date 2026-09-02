@@ -191,9 +191,11 @@ class NotificationDetailSheet extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           final eventId = presentation.eventId;
-                          if (eventId == null) return;
+                          if (eventId == null &&
+                              notification.routePath == '/notifications')
+                            return;
                           Navigator.pop(context);
-                          context.push('/events/$eventId');
+                          context.push(notification.routePath);
                         },
                         icon: const Icon(Icons.arrow_forward_rounded),
                         label: Text(presentation.ctaLabel!),

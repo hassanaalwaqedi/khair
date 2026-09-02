@@ -59,6 +59,16 @@ class NotificationTarget {
         return NotificationTarget(
             route: _supportRoute(_value(data, 'ticket_id')),
             notificationId: notificationId);
+      case 'message_received':
+      case 'new_message':
+      case 'message_reply':
+        final conversationId = _value(data, 'conversation_id');
+        return NotificationTarget(
+          route: conversationId == null
+              ? '/messages'
+              : '/event-messages/$conversationId',
+          notificationId: notificationId,
+        );
       default:
         return NotificationTarget(
             route: '/notifications', notificationId: notificationId);

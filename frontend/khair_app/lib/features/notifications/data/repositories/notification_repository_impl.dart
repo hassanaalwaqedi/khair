@@ -13,6 +13,17 @@ abstract class NotificationRepository {
   Future<Either<Failure, void>> markAllRead();
 }
 
+/// Keeps deletion available to the production repository without requiring
+/// every older test/dummy repository implementation to grow a new method.
+extension NotificationRepositoryDeletion on NotificationRepository {
+  Future<Either<Failure, void>> deleteNotification(String id) {
+    if (this is NotificationRepositoryImpl) {
+      return (this as NotificationRepositoryImpl).deleteNotification(id);
+    }
+    return Future.value(const Right(null));
+  }
+}
+
 /// Implementation of notification repository
 class NotificationRepositoryImpl implements NotificationRepository {
   final NotificationRemoteDataSource _remoteDataSource;
@@ -59,6 +70,18 @@ class NotificationRepositoryImpl implements NotificationRepository {
   Future<Either<Failure, void>> markAllRead() async {
     try {
       await _remoteDataSource.markAllRead();
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_getErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteNotification(String id) async {
+    try {
+      await _remoteDataSource.deleteNotification(id);
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(_getErrorMessage(e)));

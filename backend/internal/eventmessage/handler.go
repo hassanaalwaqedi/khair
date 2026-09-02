@@ -8,15 +8,32 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/khair/backend/internal/notification"
+	"github.com/khair/backend/internal/push"
 	"github.com/khair/backend/pkg/response"
 	"net/http"
 	"strings"
 	"time"
 )
 
-type Handler struct{ db *sql.DB }
+type Handler struct {
+	db            *sql.DB
+	notifications *notification.Service
+	push          *push.Service
+}
 
-func NewHandler(db *sql.DB) *Handler { return &Handler{db: db} }
+func NewHandler(db *sql.DB, services ...interface{}) *Handler {
+	h := &Handler{db: db}
+	for _, service := range services {
+		switch value := service.(type) {
+		case *notification.Service:
+			h.notifications = value
+		case *push.Service:
+			h.push = value
+		}
+	}
+	return h
+}
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup, auth, admin gin.HandlerFunc) {
 	g := r.Group("/event-messages", auth)
 	g.POST("/conversations", h.open)
@@ -233,7 +250,47 @@ func (h *Handler) send(c *gin.Context) {
 		_, _ = h.db.Exec(`UPDATE conversations SET organizer_opening_pending=false,last_message_at=NOW() WHERE id=$1`, id)
 	}
 	_, _ = h.db.Exec(`INSERT INTO moderation_events(actor_id,event_id,conversation_id,message_id,action,metadata) SELECT $2,event_id,$1,$3,'message_sent',jsonb_build_object('risk', $4) FROM conversations WHERE id=$1`, id, me, mid, risky(q.Body))
+	h.notifyRecipient(id, me, mid)
 	response.Created(c, gin.H{"id": mid, "risk_flags": flags})
+}
+
+// notifyRecipient creates one localized in-app notification and mirrors it to
+// the recipient's active web/mobile push devices. Message bodies are never
+// copied into the notification payload; the conversation remains protected by
+// the normal authenticated event relationship checks.
+func (h *Handler) notifyRecipient(conversationID, senderID, messageID uuid.UUID) {
+	if h.notifications == nil {
+		return
+	}
+	var attendee, organizerUser, eventID uuid.UUID
+	var eventTitle string
+	if err := h.db.QueryRow(`
+		SELECT c.attendee_id, o.user_id, c.event_id, e.title
+		FROM conversations c
+		JOIN organizers o ON o.id = c.organizer_id
+		JOIN events e ON e.id = c.event_id
+		WHERE c.id = $1`, conversationID).Scan(&attendee, &organizerUser, &eventID, &eventTitle); err != nil {
+		return
+	}
+	recipient := attendee
+	if senderID == attendee {
+		recipient = organizerUser
+	}
+	data := map[string]string{
+		"event_id":        eventID.String(),
+		"event_title":     eventTitle,
+		"conversation_id": conversationID.String(),
+		"message_id":      messageID.String(),
+	}
+	presentation, notificationID, created, err := h.notifications.CreateLocalizedOnce(recipient, "message_received", data, "message:"+messageID.String())
+	if err != nil || !created {
+		return
+	}
+	data["notification_id"] = notificationID.String()
+	data["type"] = "message_received"
+	if h.push != nil {
+		h.push.SendToUser(recipient, presentation.Title, presentation.Message, data)
+	}
 }
 func (h *Handler) read(c *gin.Context) {
 	me, ok := uid(c)
