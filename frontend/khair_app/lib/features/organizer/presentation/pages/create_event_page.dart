@@ -781,11 +781,12 @@ class _CreateEventViewState extends State<_CreateEventView> {
                   contextCity: deviceLocation?.city,
                   contextCountry: deviceLocation?.country,
                   language: data.language,
-                  searchHint: 'Search location',
-                  useCurrentLocationLabel: 'Use my location',
-                  tapToSelectLabel: 'Tap to select',
-                  selectedLocationLabel: 'Selected location',
-                  searchingLabel: 'Searching…',
+                  searchHint: context.l10n.mapPickerSearchHint,
+                  useCurrentLocationLabel:
+                      context.l10n.mapPickerUseCurrentLocation,
+                  tapToSelectLabel: context.l10n.mapPickerTapToSelect,
+                  selectedLocationLabel: context.l10n.mapPickerSelectedLocation,
+                  searchingLabel: context.l10n.mapPickerSearching,
                   onLocationSelected: (lat, lng, venueName, address, city,
                       country, countryCode) {
                     _venue.text = venueName ?? _venue.text;

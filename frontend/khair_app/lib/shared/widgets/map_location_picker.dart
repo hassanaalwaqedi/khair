@@ -155,10 +155,10 @@ class _MapLocationPickerState extends State<MapLocationPicker>
       setState(() => _isSearching = true);
       final results = await NominatimService.search(
         query,
-        city: widget.initialCity ?? widget.contextCity,
-        country: widget.initialCountry ?? widget.contextCountry,
-        latitude: _selectedPoint?.latitude ?? widget.contextLatitude,
-        longitude: _selectedPoint?.longitude ?? widget.contextLongitude,
+        // Typed searches should not be constrained by stale device/IP
+        // coordinates. A user may be creating an event in another city.
+        city: widget.initialCity,
+        country: widget.initialCountry,
         language: widget.language,
       );
       if (!mounted || generation != _searchGeneration) return;
@@ -181,7 +181,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
     _searchFocusNode.unfocus();
     _pinAnimController.reset();
     _pinAnimController.forward();
-    _mapController.move(point, 15);
+    _moveTo(point, 15);
 
     widget.onLocationSelected(
       place.lat,
@@ -192,6 +192,19 @@ class _MapLocationPickerState extends State<MapLocationPicker>
       place.country,
       place.countryCode,
     );
+  }
+
+  void _moveTo(LatLng point, double zoom) {
+    // Search results can arrive during the same frame as a map rebuild. Move
+    // after that frame so the camera updates reliably on Flutter Web too.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _mapController.move(point, zoom);
+      } catch (_) {
+        // The selected marker still renders if the controller is not attached.
+      }
+    });
   }
 
   Future<void> _useCurrentLocation() async {
@@ -229,7 +242,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
       });
       _pinAnimController.reset();
       _pinAnimController.forward();
-      _mapController.move(point, 15);
+      _moveTo(point, 15);
       await _reverseGeocode(point);
     } catch (_) {
       if (mounted) setState(() => _isLocating = false);
@@ -253,6 +266,10 @@ class _MapLocationPickerState extends State<MapLocationPicker>
         // 🔍 Search bar
         _buildSearchBar(),
         if (_searchResults.isNotEmpty) _buildSearchResults(),
+        if (!_isSearching &&
+            _searchController.text.trim().length >= 2 &&
+            _searchResults.isEmpty)
+          _buildNoSearchResults(),
         const SizedBox(height: 12),
 
         // 🗺️ Map
@@ -275,7 +292,8 @@ class _MapLocationPickerState extends State<MapLocationPicker>
                   children: [
                     TileLayer(
                       urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.khair.khair_app',
                     ),
                     if (_selectedPoint != null)
@@ -398,7 +416,7 @@ class _MapLocationPickerState extends State<MapLocationPicker>
         ],
         const SizedBox(height: 6),
         const Text(
-          'Map data © OpenStreetMap contributors',
+          '© OpenStreetMap contributors © CARTO',
           style: TextStyle(color: Colors.white38, fontSize: 10),
         ),
       ],
@@ -416,6 +434,11 @@ class _MapLocationPickerState extends State<MapLocationPicker>
         controller: _searchController,
         focusNode: _searchFocusNode,
         onChanged: _onSearchChanged,
+        onSubmitted: (_) {
+          if (_searchResults.isNotEmpty) {
+            _selectSearchResult(_searchResults.first);
+          }
+        },
         style: const TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           hintText: widget.searchHint,
@@ -534,6 +557,26 @@ class _MapLocationPickerState extends State<MapLocationPicker>
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNoSearchResults() {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(top: 8, start: 4, end: 4),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded,
+              size: 16, color: Colors.white.withValues(alpha: 0.45)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'No matching places. Try a city, street, or venue name.',
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.55), fontSize: 12),
+            ),
+          ),
+        ],
       ),
     );
   }
