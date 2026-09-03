@@ -3476,48 +3476,48 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationClose => 'Bildirimi kapat';
 
   @override
-  String get createAnEvent => 'Create an event';
+  String get createAnEvent => 'Etkinlik oluştur';
 
   @override
-  String get saveDraft => 'Save draft';
+  String get saveDraft => 'Taslağı kaydet';
 
   @override
-  String get letsStartWithTheBasics => 'Let’s start with the basics';
+  String get letsStartWithTheBasics => 'Temel bilgilerle başlayalım';
 
   @override
   String get tellPeopleWhatYourEventIsAbout =>
-      'Tell people what your event is about.';
+      'Etkinliğinizin konusunu anlatın.';
 
   @override
-  String get eventTitle1 => 'Event title';
+  String get eventTitle1 => 'Etkinlik başlığı';
 
   @override
-  String get suggestCategoryWithAi => 'Suggest category with AI';
+  String get suggestCategoryWithAi => 'Yapay zekâ ile kategori öner';
 
   @override
   String get whenAndWhereIsItHappening => 'Ne zaman ve nerede gerçekleşiyor?';
 
   @override
   String get giveAttendeesTheDetailsTheyNee =>
-      'Give attendees the details they need to plan ahead.';
+      'Katılımcıların plan yapması için gereken ayrıntıları paylaşın.';
 
   @override
-  String get timezone => 'Timezone';
+  String get timezone => 'Saat dilimi';
 
   @override
-  String get venueName => 'Venue name';
+  String get venueName => 'Mekân adı';
 
   @override
-  String get streetAddress => 'Street address';
+  String get streetAddress => 'Sokak adresi';
 
   @override
-  String get pinpointTheLocation => 'Pinpoint the location';
+  String get pinpointTheLocation => 'Konumu belirleyin';
 
   @override
-  String get meetingUrl => 'Meeting URL';
+  String get meetingUrl => 'Toplantı URL\'si';
 
   @override
-  String get instructionsOptional => 'Instructions (optional)';
+  String get instructionsOptional => 'Talimatlar (isteğe bağlı)';
 
   @override
   String get whoIsThisEventFor => 'Bu etkinlik kime yönelik?';
@@ -3577,59 +3577,59 @@ class AppLocalizationsTr extends AppLocalizations {
       'Etkinliğe şu anda katılamadık. Lütfen tekrar deneyin.';
 
   @override
-  String get unlimited => 'Unlimited';
+  String get unlimited => 'Sınırsız';
 
   @override
-  String get limited => 'Limited';
+  String get limited => 'Sınırlı';
 
   @override
   String get paidOnlineEventsAreNotSupporte =>
-      'Paid online events are not supported yet.';
+      'Ücretli çevrim içi etkinlikler henüz desteklenmiyor.';
 
   @override
-  String get price => 'Price';
+  String get price => 'Fiyat';
 
   @override
-  String get currency => 'Currency';
+  String get currency => 'Para birimi';
 
   @override
   String get anythingAttendeesShouldKnowOpt =>
       'Katılımcıların bilmesi gereken bir şey var mı? (isteğe bağlı)';
 
   @override
-  String get makeYourEventStandOut => 'Make your event stand out';
+  String get makeYourEventStandOut => 'Etkinliğinizi öne çıkarın';
 
   @override
   String get addAStrongCoverImageSoPeopleIn =>
-      'Add a strong cover image so people instantly understand your event.';
+      'İnsanların etkinliğinizi hemen anlaması için güçlü bir kapak görseli ekleyin.';
 
   @override
-  String get replaceCoverImage => 'Replace cover image';
+  String get replaceCoverImage => 'Kapak görselini değiştir';
 
   @override
   String get jpgPngOrWebpUpTo10Mb169Recomme =>
       'JPG, PNG veya WebP · en fazla 5 MB · 16:9 önerilir';
 
   @override
-  String get reviewYourEvent => 'Review your event';
+  String get reviewYourEvent => 'Etkinliğinizi inceleyin';
 
   @override
   String get makeSureEverythingLooksRightBe =>
-      'Make sure everything looks right before sending it to Khair moderation.';
+      'Khair moderasyonuna göndermeden önce her şeyin doğru göründüğünden emin olun.';
 
   @override
-  String get readyToSubmit => 'Ready to submit';
+  String get readyToSubmit => 'Göndermeye hazır';
 
   @override
-  String get submission => 'Submission';
+  String get submission => 'Gönderim';
 
   @override
   String get yourEventWillBeSavedAsPendingR =>
-      'Your event will be saved as pending review. It becomes discoverable only after admin approval.';
+      'Etkinliğiniz inceleme bekleyen olarak kaydedilir ve yönetici onayından sonra keşfedilebilir.';
 
   @override
   String get iConfirmTheseEventDetailsAreAc =>
-      'I confirm these event details are accurate.';
+      'Bu etkinlik bilgilerinin doğru olduğunu onaylıyorum.';
 
   @override
   String get aiSuggestion => 'AI suggestion';
@@ -3645,13 +3645,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backToOrganizerHub => 'Back to Organizer Hub';
 
   @override
-  String get chooseACoverImage => 'Choose a cover image';
+  String get chooseACoverImage => 'Kapak görseli seçin';
 
   @override
-  String get dragAndDropOrTapToBrowse => 'Drag and drop or tap to browse';
+  String get dragAndDropOrTapToBrowse =>
+      'Sürükleyip bırakın veya göz atmak için dokunun';
 
   @override
-  String get livePreview => 'Live preview';
+  String get livePreview => 'Canlı önizleme';
 
   @override
   String get whatDoesThisDocumentVerify => 'Bu belge neyi doğruluyor?';
