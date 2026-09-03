@@ -1487,7 +1487,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     await _updateExternalRegistrationStatus(event, 'external_link_opened');
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
-      _showSnack('We couldn’t open the external registration link.');
+      _showSnack(context.l10n.externalRegistrationOpenError);
     }
   }
 
