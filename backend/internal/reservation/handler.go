@@ -1,6 +1,7 @@
 package reservation
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 
@@ -39,6 +40,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup, authMiddleware gin.HandlerF
 		protected.POST("/events/:id/join", h.JoinEvent)
 		protected.DELETE("/events/:id/join", h.CancelJoin)
 		protected.GET("/events/:id/registration-status", h.CheckRegistrationStatus)
+		protected.POST("/events/:id/external-registration-status", h.UpdateExternalRegistrationStatus)
 		protected.GET("/my/reservations", h.GetMyReservations)
 		protected.POST("/events/:id/notify-attendees", h.NotifyAttendees)
 	}
@@ -87,10 +89,15 @@ func (h *Handler) JoinEvent(c *gin.Context) {
 	// Send notifications in background
 	go h.sendStructuredJoinNotifications(uid, eventID)
 
+	externalStatus := reg.ExternalRegistrationStatus
+	if externalStatus == "" {
+		externalStatus = "not_required"
+	}
 	response.SuccessWithMessage(c, "Seat reserved! Verify your email to confirm.", map[string]interface{}{
-		"registration_id": reg.ID,
-		"status":          reg.Status,
-		"reserved_until":  reg.ReservedUntil,
+		"registration_id":              reg.ID,
+		"status":                       reg.Status,
+		"external_registration_status": externalStatus,
+		"reserved_until":               reg.ReservedUntil,
 	})
 }
 
@@ -182,10 +189,53 @@ func (h *Handler) CheckRegistrationStatus(c *gin.Context) {
 		return
 	}
 
+	progress, progressErr := h.service.repo.GetExternalRegistrationProgress(uid, eventID)
+	if progressErr != nil && progressErr != sql.ErrNoRows {
+		response.InternalServerError(c, "Failed to load external registration status")
+		return
+	}
 	response.Success(c, map[string]interface{}{
-		"registered": status != "",
-		"status":     status,
+		"registered":                   status != "",
+		"status":                       status,
+		"external_registration_status": progress.Status,
+		"external_registration_reminder_dismissed_at":      progress.ReminderDismissedAt,
+		"external_registration_link_opened_at":             progress.LinkOpenedAt,
+		"external_registration_self_reported_completed_at": progress.SelfReportedCompletedAt,
 	})
+}
+
+// UpdateExternalRegistrationStatus records a user's explicit progress after
+// joining Khair. The external platform remains the source of truth.
+func (h *Handler) UpdateExternalRegistrationStatus(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	uid, ok := userID.(uuid.UUID)
+	if !exists || !ok {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid event ID")
+		return
+	}
+	var req struct {
+		Status    string `json:"status" binding:"required"`
+		Dismissed bool   `json:"dismissed"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Status is required")
+		return
+	}
+	progress, err := h.service.repo.UpdateExternalRegistrationProgress(uid, eventID, req.Status, req.Dismissed)
+	if err != nil {
+		if err.Error() == "registration not found" {
+			response.Error(c, 404, err.Error())
+			return
+		}
+		response.BadRequest(c, err.Error())
+		return
+	}
+	response.Success(c, progress)
 }
 
 // GetMyReservations gets all reservations for the current user

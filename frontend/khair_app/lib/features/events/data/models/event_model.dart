@@ -47,6 +47,10 @@ class EventModel extends Event {
     super.attendancePolicy,
     super.isUserJoined,
     super.isLinkUnlocked,
+    super.externalRegistrationStatus,
+    super.externalRegistrationReminderDismissedAt,
+    super.externalRegistrationLinkOpenedAt,
+    super.externalRegistrationSelfReportedCompletedAt,
     required super.createdAt,
     required super.updatedAt,
     required super.pricing,
@@ -107,6 +111,24 @@ class EventModel extends Event {
               json['gender_restriction'] as String?),
       isUserJoined: json['is_user_joined'] as bool? ?? false,
       isLinkUnlocked: json['is_link_unlocked'] as bool? ?? false,
+      externalRegistrationStatus:
+          json['external_registration_status'] as String? ?? 'not_required',
+      externalRegistrationReminderDismissedAt:
+          json['external_registration_reminder_dismissed_at'] != null
+              ? DateTime.tryParse(
+                  json['external_registration_reminder_dismissed_at'] as String)
+              : null,
+      externalRegistrationLinkOpenedAt:
+          json['external_registration_link_opened_at'] != null
+              ? DateTime.tryParse(
+                  json['external_registration_link_opened_at'] as String)
+              : null,
+      externalRegistrationSelfReportedCompletedAt:
+          json['external_registration_self_reported_completed_at'] != null
+              ? DateTime.tryParse(
+                  json['external_registration_self_reported_completed_at']
+                      as String)
+              : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       pricing: json['pricing'] != null
@@ -166,6 +188,13 @@ class EventModel extends Event {
       'attendance_policy': attendancePolicy,
       'is_user_joined': isUserJoined,
       'is_link_unlocked': isLinkUnlocked,
+      'external_registration_status': externalRegistrationStatus,
+      'external_registration_reminder_dismissed_at':
+          externalRegistrationReminderDismissedAt?.toIso8601String(),
+      'external_registration_link_opened_at':
+          externalRegistrationLinkOpenedAt?.toIso8601String(),
+      'external_registration_self_reported_completed_at':
+          externalRegistrationSelfReportedCompletedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'pricing': {

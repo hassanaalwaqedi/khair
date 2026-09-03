@@ -63,7 +63,22 @@ class JoinDataSource {
 
   /// Check user's registration status for an event
   Future<Map<String, dynamic>> getRegistrationStatus(String eventId) async {
-    final response = await _apiClient.get('/events/$eventId/registration-status');
+    final response =
+        await _apiClient.get('/events/$eventId/registration-status');
+    return response.data['data'] as Map<String, dynamic>;
+  }
+
+  /// Records explicit progress in the external registration handoff. The
+  /// external platform remains the source of truth for completion.
+  Future<Map<String, dynamic>> updateExternalRegistrationStatus({
+    required String eventId,
+    required String status,
+    bool dismissed = false,
+  }) async {
+    final response = await _apiClient.post(
+      '/events/$eventId/external-registration-status',
+      data: {'status': status, 'dismissed': dismissed},
+    );
     return response.data['data'] as Map<String, dynamic>;
   }
 

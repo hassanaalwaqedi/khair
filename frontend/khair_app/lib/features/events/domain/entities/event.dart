@@ -67,6 +67,10 @@ class Event extends Equatable {
   final String attendancePolicy;
   final bool isUserJoined;
   final bool isLinkUnlocked;
+  final String externalRegistrationStatus;
+  final DateTime? externalRegistrationReminderDismissedAt;
+  final DateTime? externalRegistrationLinkOpenedAt;
+  final DateTime? externalRegistrationSelfReportedCompletedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final EventPricing pricing;
@@ -116,6 +120,10 @@ class Event extends Equatable {
     this.attendancePolicy = AttendancePolicy.everyone,
     this.isUserJoined = false,
     this.isLinkUnlocked = false,
+    this.externalRegistrationStatus = 'not_required',
+    this.externalRegistrationReminderDismissedAt,
+    this.externalRegistrationLinkOpenedAt,
+    this.externalRegistrationSelfReportedCompletedAt,
     required this.createdAt,
     required this.updatedAt,
     required this.pricing,
@@ -167,6 +175,10 @@ class Event extends Equatable {
         attendancePolicy,
         isUserJoined,
         isLinkUnlocked,
+        externalRegistrationStatus,
+        externalRegistrationReminderDismissedAt,
+        externalRegistrationLinkOpenedAt,
+        externalRegistrationSelfReportedCompletedAt,
         createdAt,
         updatedAt,
         pricing,

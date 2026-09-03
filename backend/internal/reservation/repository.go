@@ -16,6 +16,13 @@ type Repository struct {
 	db *sql.DB
 }
 
+func externalRegistrationStatus(registrationType string) string {
+	if registrationType == "external" || registrationType == "both" {
+		return "pending_external_registration"
+	}
+	return "not_required"
+}
+
 // NewRepository creates a new reservation repository
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
@@ -50,11 +57,12 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 	var startDate time.Time
 	var endDate sql.NullTime
 	var registrationDeadline sql.NullTime
+	var registrationType sql.NullString
 	var attendancePolicy string
 	var userGender sql.NullString
 	err = tx.QueryRow(`
 		SELECT e.capacity, e.reserved_count, e.status, e.start_date, e.end_date,
-		       e.registration_deadline,
+		       e.registration_deadline, e.registration_type,
 		       COALESCE(NULLIF(e.attendance_policy, ''), NULLIF(e.gender_restriction, ''), 'EVERYONE'),
 		       u.gender
 		FROM events e
@@ -63,7 +71,7 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		FOR UPDATE OF e`,
 		eventID, userID,
 	).Scan(&capacity, &reservedCount, &status, &startDate, &endDate,
-		&registrationDeadline, &attendancePolicy, &userGender)
+		&registrationDeadline, &registrationType, &attendancePolicy, &userGender)
 	if err != nil {
 		return nil, errors.New("event not found")
 	}
@@ -119,16 +127,23 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 		case "expired", "cancelled":
 			// Allow re-registration: update existing record
 			reservedUntil := time.Now().Add(time.Duration(holdMinutes) * time.Minute)
+			externalStatus := externalRegistrationStatus(registrationType.String)
 			reg := &models.EventRegistration{
-				UserID:        userID,
-				EventID:       eventID,
-				Status:        "confirmed",
-				ReservedUntil: &reservedUntil,
+				UserID:                     userID,
+				EventID:                    eventID,
+				Status:                     "confirmed",
+				ReservedUntil:              &reservedUntil,
+				ExternalRegistrationStatus: externalStatus,
 			}
 			_, err = tx.Exec(`
-				UPDATE event_registrations SET status = 'confirmed', reserved_until = $1, updated_at = NOW()
+				UPDATE event_registrations SET status = 'confirmed', reserved_until = $1,
+					external_registration_status = $4,
+					external_registration_reminder_dismissed_at = NULL,
+				external_registration_link_opened_at = NULL,
+				external_registration_self_reported_completed_at = NULL,
+				updated_at = NOW()
 				WHERE user_id = $2 AND event_id = $3`,
-				reservedUntil, userID, eventID)
+				reservedUntil, userID, eventID, externalStatus)
 			if err != nil {
 				return nil, errors.New("failed to reserve seat")
 			}
@@ -145,19 +160,20 @@ func (r *Repository) ReserveSeat(userID, eventID uuid.UUID, holdMinutes int) (*m
 	// Create new reservation
 	reservedUntil := time.Now().Add(time.Duration(holdMinutes) * time.Minute)
 	reg := &models.EventRegistration{
-		ID:            uuid.New(),
-		UserID:        userID,
-		EventID:       eventID,
-		Status:        "confirmed",
-		ReservedUntil: &reservedUntil,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		ID:                         uuid.New(),
+		UserID:                     userID,
+		EventID:                    eventID,
+		Status:                     "confirmed",
+		ReservedUntil:              &reservedUntil,
+		ExternalRegistrationStatus: externalRegistrationStatus(registrationType.String),
+		CreatedAt:                  time.Now(),
+		UpdatedAt:                  time.Now(),
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO event_registrations (id, user_id, event_id, status, reserved_until, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		reg.ID, reg.UserID, reg.EventID, reg.Status, reg.ReservedUntil, reg.CreatedAt, reg.UpdatedAt,
+		INSERT INTO event_registrations (id, user_id, event_id, status, reserved_until, external_registration_status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		reg.ID, reg.UserID, reg.EventID, reg.Status, reg.ReservedUntil, reg.ExternalRegistrationStatus, reg.CreatedAt, reg.UpdatedAt,
 	)
 	if err != nil {
 		return nil, errors.New("failed to reserve seat")
@@ -223,6 +239,8 @@ func (r *Repository) CancelReservation(userID, eventID uuid.UUID) error {
 func (r *Repository) GetUserReservations(userID uuid.UUID) ([]EventReservationWithDetails, error) {
 	rows, err := r.db.Query(`
 		SELECT er.id, er.user_id, er.event_id, er.status, er.reserved_until, er.created_at,
+			er.external_registration_status, er.external_registration_reminder_dismissed_at,
+			er.external_registration_link_opened_at, er.external_registration_self_reported_completed_at,
 			e.title, e.start_date, e.city, e.image_url
 		FROM event_registrations er
 		JOIN events e ON e.id = er.event_id
@@ -238,6 +256,8 @@ func (r *Repository) GetUserReservations(userID uuid.UUID) ([]EventReservationWi
 	for rows.Next() {
 		var r EventReservationWithDetails
 		err := rows.Scan(&r.ID, &r.UserID, &r.EventID, &r.Status, &r.ReservedUntil, &r.CreatedAt,
+			&r.ExternalRegistrationStatus, &r.ExternalRegistrationReminderDismissedAt,
+			&r.ExternalRegistrationLinkOpenedAt, &r.ExternalRegistrationSelfReportedCompletedAt,
 			&r.EventTitle, &r.EventStartDate, &r.EventCity, &r.EventImageURL)
 		if err != nil {
 			continue
@@ -297,16 +317,78 @@ func (r *Repository) GetEventAvailability(eventID uuid.UUID) (*EventAvailability
 
 // EventReservationWithDetails includes event info alongside the reservation
 type EventReservationWithDetails struct {
-	ID             uuid.UUID  `json:"id"`
-	UserID         uuid.UUID  `json:"user_id"`
-	EventID        uuid.UUID  `json:"event_id"`
-	Status         string     `json:"status"`
-	ReservedUntil  *time.Time `json:"reserved_until,omitempty"`
-	CreatedAt      time.Time  `json:"created_at"`
-	EventTitle     string     `json:"event_title"`
-	EventStartDate time.Time  `json:"event_start_date"`
-	EventCity      *string    `json:"event_city,omitempty"`
-	EventImageURL  *string    `json:"event_image_url,omitempty"`
+	ID                                          uuid.UUID  `json:"id"`
+	UserID                                      uuid.UUID  `json:"user_id"`
+	EventID                                     uuid.UUID  `json:"event_id"`
+	Status                                      string     `json:"status"`
+	ReservedUntil                               *time.Time `json:"reserved_until,omitempty"`
+	CreatedAt                                   time.Time  `json:"created_at"`
+	ExternalRegistrationStatus                  string     `json:"external_registration_status"`
+	ExternalRegistrationReminderDismissedAt     *time.Time `json:"external_registration_reminder_dismissed_at,omitempty"`
+	ExternalRegistrationLinkOpenedAt            *time.Time `json:"external_registration_link_opened_at,omitempty"`
+	ExternalRegistrationSelfReportedCompletedAt *time.Time `json:"external_registration_self_reported_completed_at,omitempty"`
+	EventTitle                                  string     `json:"event_title"`
+	EventStartDate                              time.Time  `json:"event_start_date"`
+	EventCity                                   *string    `json:"event_city,omitempty"`
+	EventImageURL                               *string    `json:"event_image_url,omitempty"`
+}
+
+// ExternalRegistrationProgress is the server-authoritative handoff state for
+// an attendee's third-party registration. The external URL itself is never
+// stored in this record.
+type ExternalRegistrationProgress struct {
+	Status                  string     `json:"external_registration_status"`
+	ReminderDismissedAt     *time.Time `json:"external_registration_reminder_dismissed_at,omitempty"`
+	LinkOpenedAt            *time.Time `json:"external_registration_link_opened_at,omitempty"`
+	SelfReportedCompletedAt *time.Time `json:"external_registration_self_reported_completed_at,omitempty"`
+}
+
+func (r *Repository) GetExternalRegistrationProgress(userID, eventID uuid.UUID) (ExternalRegistrationProgress, error) {
+	var progress ExternalRegistrationProgress
+	err := r.db.QueryRow(`
+		SELECT COALESCE(er.external_registration_status,
+			CASE WHEN e.registration_type IN ('external', 'both')
+				THEN 'pending_external_registration' ELSE 'not_required' END),
+			er.external_registration_reminder_dismissed_at,
+			er.external_registration_link_opened_at,
+			er.external_registration_self_reported_completed_at
+		FROM event_registrations er JOIN events e ON e.id = er.event_id
+		WHERE er.user_id = $1 AND er.event_id = $2`, userID, eventID).Scan(
+		&progress.Status, &progress.ReminderDismissedAt, &progress.LinkOpenedAt,
+		&progress.SelfReportedCompletedAt)
+	return progress, err
+}
+
+func (r *Repository) UpdateExternalRegistrationProgress(userID, eventID uuid.UUID, status string, dismissed bool) (ExternalRegistrationProgress, error) {
+	if status != "pending_external_registration" && status != "external_link_opened" && status != "self_reported_completed" {
+		return ExternalRegistrationProgress{}, errors.New("invalid external registration status")
+	}
+	var progress ExternalRegistrationProgress
+	err := r.db.QueryRow(`
+		UPDATE event_registrations er
+		SET external_registration_status = $3,
+			external_registration_reminder_dismissed_at = CASE WHEN $4 THEN COALESCE(er.external_registration_reminder_dismissed_at, NOW()) ELSE er.external_registration_reminder_dismissed_at END,
+			external_registration_link_opened_at = CASE WHEN $3 = 'external_link_opened' AND er.external_registration_link_opened_at IS NULL THEN NOW() ELSE er.external_registration_link_opened_at END,
+			external_registration_self_reported_completed_at = CASE WHEN $3 = 'self_reported_completed' AND er.external_registration_self_reported_completed_at IS NULL THEN NOW() ELSE er.external_registration_self_reported_completed_at END,
+			updated_at = NOW()
+		FROM events e
+		WHERE er.event_id = e.id AND e.registration_type IN ('external', 'both')
+		  AND er.user_id = $1 AND er.event_id = $2
+		RETURNING er.external_registration_status, er.external_registration_reminder_dismissed_at,
+			er.external_registration_link_opened_at, er.external_registration_self_reported_completed_at`,
+		userID, eventID, status, dismissed).Scan(&progress.Status, &progress.ReminderDismissedAt,
+		&progress.LinkOpenedAt, &progress.SelfReportedCompletedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return progress, errors.New("registration not found")
+		}
+		return progress, err
+	}
+	_, _ = r.db.Exec(`
+		INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, reason)
+		VALUES ($1, 'user', $2, 'external_registration_status_changed', 'event', $3, $4)
+	`, uuid.New(), userID, eventID, status)
+	return progress, nil
 }
 
 // EventAvailability represents seat availability info

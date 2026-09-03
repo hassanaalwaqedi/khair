@@ -1643,6 +1643,16 @@
   "leaveKhairRegistration": "Harici bir platformda kaydı tamamlamak için Khair'den ayrılıyorsunuz.",
   "continueToRegistration": "Kayda devam et",
   "khairDoesNotManageExternalRegistration": "Khair harici kayıt sürecini doğrulamaz veya yönetmez.",
+  "externalRegistrationPending": "Harici kayıt bekliyor",
+  "externalRegistrationLinkOpened": "Harici kayıt bağlantısı açıldı",
+  "externalRegistrationSelfReportedCompleted": "Harici kayıt sizin tarafınızdan tamamlandı olarak işaretlendi",
+  "iCompletedExternalRegistration": "Harici kaydı tamamladım",
+  "externalRegistrationStatusError": "Harici kayıt durumu güncellenemedi.",
+  "externalRegistrationNextStepTitle": "Kaydı tamamlamak için son bir adım",
+  "externalRegistrationNextStepMessage": "Bu etkinliğe Khair üzerinden katıldınız; katılımınızı kesinleştirmek için harici platformdaki kaydı da tamamlamanız gerekiyor.",
+  "externalRegistrationCompleteExternal": "Harici kaydı tamamla",
+  "externalRegistrationDoLater": "Daha sonra",
+  "externalRegistrationLeaveKhairNote": "Khair dışına yönlendirileceksiniz.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

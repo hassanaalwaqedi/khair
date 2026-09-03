@@ -63,6 +63,19 @@ func TestRenderAdditionalTransactionalTypes(t *testing.T) {
 	}
 }
 
+func TestRenderExternalRegistrationReminderUsesRecipientLanguage(t *testing.T) {
+	data := map[string]string{"event_title": "Community workshop"}
+	for _, language := range []string{"en", "ar", "tr"} {
+		got := Render("external_registration_required", data, language)
+		if got.Title == "" || got.Message == "" || !strings.Contains(got.Message, data["event_title"]) {
+			t.Fatalf("%s reminder was incomplete: %+v", language, got)
+		}
+	}
+	if got := Render("external_registration_required", data, "ar"); strings.Contains(got.Message, "You joined") {
+		t.Fatalf("Arabic reminder leaked English copy: %+v", got)
+	}
+}
+
 func TestRenderNeverLeaksPrivateReviewNotes(t *testing.T) {
 	privateNote := "internal reviewer note: private document URL"
 	for _, notificationType := range []string{"verification_review", "organizer_application", "event_status"} {

@@ -1776,6 +1776,16 @@
   "leaveKhairRegistration": "You are leaving Khair to complete registration on an external platform.",
   "continueToRegistration": "Continue to registration",
   "khairDoesNotManageExternalRegistration": "Khair does not verify or manage this external registration process.",
+  "externalRegistrationPending": "External registration pending",
+  "externalRegistrationLinkOpened": "External registration link opened",
+  "externalRegistrationSelfReportedCompleted": "External registration marked complete by you",
+  "iCompletedExternalRegistration": "I completed external registration",
+  "externalRegistrationStatusError": "We couldn't update your external registration status.",
+  "externalRegistrationNextStepTitle": "One more step to complete registration",
+  "externalRegistrationNextStepMessage": "You joined this event on Khair, but you must also complete registration on the external platform to confirm your attendance.",
+  "externalRegistrationCompleteExternal": "Complete external registration",
+  "externalRegistrationDoLater": "Do it later",
+  "externalRegistrationLeaveKhairNote": "You will be redirected outside Khair.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

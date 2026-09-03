@@ -8772,6 +8772,66 @@ abstract class AppLocalizations {
   /// **'Khair does not verify or manage this external registration process.'**
   String get khairDoesNotManageExternalRegistration;
 
+  /// No description provided for @externalRegistrationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'External registration pending'**
+  String get externalRegistrationPending;
+
+  /// No description provided for @externalRegistrationLinkOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'External registration link opened'**
+  String get externalRegistrationLinkOpened;
+
+  /// No description provided for @externalRegistrationSelfReportedCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'External registration marked complete by you'**
+  String get externalRegistrationSelfReportedCompleted;
+
+  /// No description provided for @iCompletedExternalRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'I completed external registration'**
+  String get iCompletedExternalRegistration;
+
+  /// No description provided for @externalRegistrationStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t update your external registration status.'**
+  String get externalRegistrationStatusError;
+
+  /// No description provided for @externalRegistrationNextStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One more step to complete registration'**
+  String get externalRegistrationNextStepTitle;
+
+  /// No description provided for @externalRegistrationNextStepMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined this event on Khair, but you must also complete registration on the external platform to confirm your attendance.'**
+  String get externalRegistrationNextStepMessage;
+
+  /// No description provided for @externalRegistrationCompleteExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete external registration'**
+  String get externalRegistrationCompleteExternal;
+
+  /// No description provided for @externalRegistrationDoLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Do it later'**
+  String get externalRegistrationDoLater;
+
+  /// No description provided for @externalRegistrationLeaveKhairNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be redirected outside Khair.'**
+  String get externalRegistrationLeaveKhairNote;
+
   /// No description provided for @notificationNewMessageTitle.
   ///
   /// In en, this message translates to:

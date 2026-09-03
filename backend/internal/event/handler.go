@@ -293,8 +293,12 @@ type EventDetailResponse struct {
 	UpdatedAt                        time.Time           `json:"updated_at"`
 	OrganizerName                    string              `json:"organizer_name"`
 	// User-specific fields
-	IsUserJoined   bool `json:"is_user_joined"`
-	IsLinkUnlocked bool `json:"is_link_unlocked"`
+	IsUserJoined                                bool       `json:"is_user_joined"`
+	IsLinkUnlocked                              bool       `json:"is_link_unlocked"`
+	ExternalRegistrationStatus                  string     `json:"external_registration_status"`
+	ExternalRegistrationReminderDismissedAt     *time.Time `json:"external_registration_reminder_dismissed_at,omitempty"`
+	ExternalRegistrationLinkOpenedAt            *time.Time `json:"external_registration_link_opened_at,omitempty"`
+	ExternalRegistrationSelfReportedCompletedAt *time.Time `json:"external_registration_self_reported_completed_at,omitempty"`
 }
 
 // GetByIDAuth gets event details for authenticated users — includes join status and conditional online link
@@ -339,6 +343,21 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 	// Check user registration
 	regStatus, _ := h.service.repo.CheckUserRegistration(userID, id)
 	isJoined := regStatus == "confirmed"
+	externalRegistrationStatus := "not_required"
+	var externalRegistrationReminderDismissedAt, externalRegistrationLinkOpenedAt, externalRegistrationSelfReportedCompletedAt *time.Time
+	if isJoined {
+		_ = h.service.repo.db.QueryRow(`
+			SELECT COALESCE(er.external_registration_status,
+				CASE WHEN e.registration_type IN ('external', 'both')
+					THEN 'pending_external_registration' ELSE 'not_required' END),
+				er.external_registration_reminder_dismissed_at,
+				er.external_registration_link_opened_at,
+				er.external_registration_self_reported_completed_at
+			FROM event_registrations er JOIN events e ON e.id = er.event_id
+			WHERE er.user_id = $1 AND er.event_id = $2`, userID, id).Scan(
+			&externalRegistrationStatus, &externalRegistrationReminderDismissedAt,
+			&externalRegistrationLinkOpenedAt, &externalRegistrationSelfReportedCompletedAt)
+	}
 
 	// Determine if link should be visible
 	isLinkUnlocked := false
@@ -352,54 +371,58 @@ func (h *Handler) GetByIDAuth(c *gin.Context) {
 	}
 
 	resp := EventDetailResponse{
-		ID:                               event.ID,
-		OrganizerID:                      event.OrganizerID,
-		Title:                            event.Title,
-		Description:                      event.Description,
-		EventType:                        event.EventType,
-		Category:                         event.Category,
-		Tags:                             event.Tags,
-		Language:                         event.Language,
-		Country:                          event.Country,
-		City:                             event.City,
-		Address:                          event.Address,
-		Latitude:                         event.Latitude,
-		Longitude:                        event.Longitude,
-		StartDate:                        event.StartDate,
-		EndDate:                          event.EndDate,
-		ImageURL:                         event.ImageURL,
-		Capacity:                         event.Capacity,
-		ReservedCount:                    event.ReservedCount,
-		GenderRestriction:                event.GenderRestriction,
-		AttendancePolicy:                 event.AttendancePolicy,
-		AgeMin:                           event.AgeMin,
-		AgeMax:                           event.AgeMax,
-		Pricing:                          event.Pricing,
-		Status:                           event.Status,
-		IsPublished:                      event.IsPublished,
-		IsOnline:                         event.IsOnline,
-		OnlineLink:                       onlineLink,
-		JoinInstructions:                 event.JoinInstructions,
-		JoinLinkVisibleBeforeMinutes:     event.JoinLinkVisibleBeforeMinutes,
-		VenueName:                        event.VenueName,
-		OnlinePlatform:                   event.OnlinePlatform,
-		RegistrationDeadline:             event.RegistrationDeadline,
-		RegistrationMode:                 event.RegistrationMode,
-		RegistrationRequired:             event.RegistrationRequired,
-		RegistrationType:                 event.RegistrationType,
-		ExternalPlatformName:             event.ExternalPlatformName,
-		ExternalRegistrationURL:          event.ExternalRegistrationURL,
-		ExternalRegistrationInstructions: event.ExternalRegistrationInstructions,
-		RegistrationRequirements:         event.RegistrationRequirements,
-		ApplicationApprovalRequired:      event.ApplicationApprovalRequired,
-		Timezone:                         event.Timezone,
-		RejectionReason:                  event.RejectionReason,
-		ApprovedAt:                       event.ApprovedAt,
-		CreatedAt:                        event.CreatedAt,
-		UpdatedAt:                        event.UpdatedAt,
-		OrganizerName:                    event.OrganizerName,
-		IsUserJoined:                     isJoined,
-		IsLinkUnlocked:                   isLinkUnlocked,
+		ID:                                      event.ID,
+		OrganizerID:                             event.OrganizerID,
+		Title:                                   event.Title,
+		Description:                             event.Description,
+		EventType:                               event.EventType,
+		Category:                                event.Category,
+		Tags:                                    event.Tags,
+		Language:                                event.Language,
+		Country:                                 event.Country,
+		City:                                    event.City,
+		Address:                                 event.Address,
+		Latitude:                                event.Latitude,
+		Longitude:                               event.Longitude,
+		StartDate:                               event.StartDate,
+		EndDate:                                 event.EndDate,
+		ImageURL:                                event.ImageURL,
+		Capacity:                                event.Capacity,
+		ReservedCount:                           event.ReservedCount,
+		GenderRestriction:                       event.GenderRestriction,
+		AttendancePolicy:                        event.AttendancePolicy,
+		AgeMin:                                  event.AgeMin,
+		AgeMax:                                  event.AgeMax,
+		Pricing:                                 event.Pricing,
+		Status:                                  event.Status,
+		IsPublished:                             event.IsPublished,
+		IsOnline:                                event.IsOnline,
+		OnlineLink:                              onlineLink,
+		JoinInstructions:                        event.JoinInstructions,
+		JoinLinkVisibleBeforeMinutes:            event.JoinLinkVisibleBeforeMinutes,
+		VenueName:                               event.VenueName,
+		OnlinePlatform:                          event.OnlinePlatform,
+		RegistrationDeadline:                    event.RegistrationDeadline,
+		RegistrationMode:                        event.RegistrationMode,
+		RegistrationRequired:                    event.RegistrationRequired,
+		RegistrationType:                        event.RegistrationType,
+		ExternalPlatformName:                    event.ExternalPlatformName,
+		ExternalRegistrationURL:                 event.ExternalRegistrationURL,
+		ExternalRegistrationInstructions:        event.ExternalRegistrationInstructions,
+		RegistrationRequirements:                event.RegistrationRequirements,
+		ApplicationApprovalRequired:             event.ApplicationApprovalRequired,
+		Timezone:                                event.Timezone,
+		RejectionReason:                         event.RejectionReason,
+		ApprovedAt:                              event.ApprovedAt,
+		CreatedAt:                               event.CreatedAt,
+		UpdatedAt:                               event.UpdatedAt,
+		OrganizerName:                           event.OrganizerName,
+		IsUserJoined:                            isJoined,
+		IsLinkUnlocked:                          isLinkUnlocked,
+		ExternalRegistrationStatus:              externalRegistrationStatus,
+		ExternalRegistrationReminderDismissedAt: externalRegistrationReminderDismissedAt,
+		ExternalRegistrationLinkOpenedAt:        externalRegistrationLinkOpenedAt,
+		ExternalRegistrationSelfReportedCompletedAt: externalRegistrationSelfReportedCompletedAt,
 	}
 
 	response.Success(c, resp)

@@ -4681,6 +4681,44 @@ class AppLocalizationsEn extends AppLocalizations {
       'Khair does not verify or manage this external registration process.';
 
   @override
+  String get externalRegistrationPending => 'External registration pending';
+
+  @override
+  String get externalRegistrationLinkOpened =>
+      'External registration link opened';
+
+  @override
+  String get externalRegistrationSelfReportedCompleted =>
+      'External registration marked complete by you';
+
+  @override
+  String get iCompletedExternalRegistration =>
+      'I completed external registration';
+
+  @override
+  String get externalRegistrationStatusError =>
+      'We couldn\'t update your external registration status.';
+
+  @override
+  String get externalRegistrationNextStepTitle =>
+      'One more step to complete registration';
+
+  @override
+  String get externalRegistrationNextStepMessage =>
+      'You joined this event on Khair, but you must also complete registration on the external platform to confirm your attendance.';
+
+  @override
+  String get externalRegistrationCompleteExternal =>
+      'Complete external registration';
+
+  @override
+  String get externalRegistrationDoLater => 'Do it later';
+
+  @override
+  String get externalRegistrationLeaveKhairNote =>
+      'You will be redirected outside Khair.';
+
+  @override
   String get notificationNewMessageTitle => 'New message';
 
   @override

@@ -161,16 +161,20 @@ type Event struct {
 
 // EventRegistration represents a user's event seat reservation
 type EventRegistration struct {
-	ID                        uuid.UUID  `json:"id"`
-	UserID                    uuid.UUID  `json:"user_id"`
-	EventID                   uuid.UUID  `json:"event_id"`
-	Status                    string     `json:"status"`
-	ReservedUntil             *time.Time `json:"reserved_until,omitempty"`
-	Attended                  bool       `json:"attended"`
-	EligibilityReviewRequired bool       `json:"eligibility_review_required,omitempty"`
-	EligibilityReviewedAt     *time.Time `json:"eligibility_reviewed_at,omitempty"`
-	CreatedAt                 time.Time  `json:"created_at"`
-	UpdatedAt                 time.Time  `json:"updated_at"`
+	ID                                          uuid.UUID  `json:"id"`
+	UserID                                      uuid.UUID  `json:"user_id"`
+	EventID                                     uuid.UUID  `json:"event_id"`
+	Status                                      string     `json:"status"`
+	ReservedUntil                               *time.Time `json:"reserved_until,omitempty"`
+	Attended                                    bool       `json:"attended"`
+	EligibilityReviewRequired                   bool       `json:"eligibility_review_required,omitempty"`
+	EligibilityReviewedAt                       *time.Time `json:"eligibility_reviewed_at,omitempty"`
+	ExternalRegistrationStatus                  string     `json:"external_registration_status"`
+	ExternalRegistrationReminderDismissedAt     *time.Time `json:"external_registration_reminder_dismissed_at,omitempty"`
+	ExternalRegistrationLinkOpenedAt            *time.Time `json:"external_registration_link_opened_at,omitempty"`
+	ExternalRegistrationSelfReportedCompletedAt *time.Time `json:"external_registration_self_reported_completed_at,omitempty"`
+	CreatedAt                                   time.Time  `json:"created_at"`
+	UpdatedAt                                   time.Time  `json:"updated_at"`
 }
 
 // EventWithOrganizer represents an event with organizer details

@@ -46,6 +46,28 @@ func (h *Handler) sendStructuredJoinNotifications(userID, eventID uuid.UUID) {
 		})
 	}
 
+	// External registration is a second, user-driven step. Persist one
+	// localized reminder and mirror it to push without claiming completion.
+	if evt.RegistrationType == "external" || evt.RegistrationType == "both" {
+		externalCopy, externalID, externalCreated, externalErr := h.notifSvc.CreateLocalizedOnce(
+			userID,
+			"external_registration_required",
+			data,
+			"external_registration_required:"+eventID.String()+":"+userID.String(),
+		)
+		if externalErr != nil {
+			log.Printf("[NOTIFICATION] Failed to create external registration reminder: %v", externalErr)
+		} else if h.pushSvc != nil && externalCreated {
+			h.pushSvc.SendToUser(userID, externalCopy.Title, externalCopy.Message, map[string]string{
+				"notification_id": externalID.String(),
+				"type":            "external_registration_required",
+				"entity_type":     "event",
+				"entity_id":       eventID.String(),
+				"event_id":        eventID.String(),
+			})
+		}
+	}
+
 	organizerUserID := h.getOrganizerUserID(evt.OrganizerID)
 	if organizerUserID == uuid.Nil {
 		return

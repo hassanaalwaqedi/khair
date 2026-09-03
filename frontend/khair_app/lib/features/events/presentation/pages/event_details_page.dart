@@ -46,6 +46,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   Organizer? _organizer;
   List<Event> _relatedEvents = const [];
   String? _registrationStatus;
+  String _externalRegistrationStatus = 'not_required';
+  bool _externalRegistrationPromptShown = false;
+  bool _externalRegistrationStatusLoading = false;
   String? _supplementalEventId;
   bool _isSaved = false;
   bool _saveLoading = false;
@@ -129,6 +132,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         _registrationStatus = result['registered'] == true
             ? (result['status'] as String? ?? 'confirmed')
             : null;
+        _externalRegistrationStatus =
+            result['external_registration_status'] as String? ?? 'not_required';
       });
 
       if (_registrationStatus == 'confirmed') {
@@ -1328,6 +1333,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       });
       _fetchMeetingAccess();
       _showSnack('You’re going! Your place is reserved.');
+      if (_hasExternalRegistration(event) &&
+          !_externalRegistrationPromptShown) {
+        _externalRegistrationPromptShown = true;
+        await _showExternalRegistrationPrompt(event);
+      }
+      if (!mounted) return;
       context.read<EventsBloc>().add(LoadEventDetails(event.id));
     } catch (error) {
       if (mounted) await _showJoinError(error, event);
@@ -1344,6 +1355,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   Widget _buildExternalRegistrationCard(Event event, _PageColors colors) {
     final uri = Uri.tryParse(event.externalRegistrationUrl ?? '');
     final domain = uri?.host ?? '';
+    final status = _externalRegistrationStatus == 'not_required'
+        ? event.externalRegistrationStatus
+        : _externalRegistrationStatus;
+    final pending = status == 'pending_external_registration';
+    final opened = status == 'external_link_opened';
+    final selfReported = status == 'self_reported_completed';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -1361,6 +1378,32 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                   style: TextStyle(
                       color: colors.primaryText, fontWeight: FontWeight.w800)))
         ]),
+        if (pending || opened || selfReported) ...[
+          SizedBox(height: 12),
+          Row(children: [
+            Icon(
+              pending
+                  ? Icons.pending_actions_rounded
+                  : selfReported
+                      ? Icons.task_alt_rounded
+                      : Icons.open_in_new_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                pending
+                    ? context.l10n.externalRegistrationPending
+                    : selfReported
+                        ? context.l10n.externalRegistrationSelfReportedCompleted
+                        : context.l10n.externalRegistrationLinkOpened,
+                style: TextStyle(
+                    color: colors.primaryText, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ]),
+        ],
         if (event.registrationType == 'both') ...[
           SizedBox(height: 10),
           Text(
@@ -1383,6 +1426,19 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             onPressed: () => _confirmExternalRegistration(event),
             icon: Icon(Icons.open_in_new_rounded),
             label: Text(context.l10n.completeRegistration)),
+        if (opened || selfReported) ...[
+          SizedBox(height: 6),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: _externalRegistrationStatusLoading
+                  ? null
+                  : () => _updateExternalRegistrationStatus(
+                      event, 'self_reported_completed'),
+              child: Text(context.l10n.iCompletedExternalRegistration),
+            ),
+          ),
+        ],
         SizedBox(height: 9),
         Text(domain.isEmpty ? 'External registration link' : domain,
             style: TextStyle(color: colors.secondaryText, fontSize: 12)),
@@ -1419,10 +1475,125 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       await getIt<ApiClient>()
           .post('/events/${event.id}/external-registration-click');
     } catch (_) {/* tracking must not block registration */}
+    await _updateExternalRegistrationStatus(event, 'external_link_opened');
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
       _showSnack('We couldn’t open the external registration link.');
     }
+  }
+
+  Future<void> _updateExternalRegistrationStatus(
+      Event event, String status) async {
+    if (_externalRegistrationStatusLoading) return;
+    setState(() => _externalRegistrationStatusLoading = true);
+    try {
+      final progress = await getIt<JoinDataSource>()
+          .updateExternalRegistrationStatus(eventId: event.id, status: status);
+      if (!mounted) return;
+      setState(() {
+        _externalRegistrationStatus =
+            progress['external_registration_status'] as String? ?? status;
+      });
+    } catch (_) {
+      if (mounted) _showSnack(context.l10n.externalRegistrationStatusError);
+    } finally {
+      if (mounted) setState(() => _externalRegistrationStatusLoading = false);
+    }
+  }
+
+  Future<void> _showExternalRegistrationPrompt(Event event) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final colors =
+            _PageColors(Theme.of(sheetContext).brightness == Brightness.dark);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: .88, end: 1),
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutBack,
+              builder: (_, scale, child) => Transform.scale(
+                scale: scale,
+                alignment: Alignment.bottomCenter,
+                child: child,
+              ),
+              child: Material(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(28),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: .12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.open_in_new_rounded,
+                              color: AppColors.primary, size: 27),
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      Text(context.l10n.externalRegistrationNextStepTitle,
+                          style: TextStyle(
+                              color: colors.primaryText,
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800)),
+                      SizedBox(height: 10),
+                      Text(context.l10n.externalRegistrationNextStepMessage,
+                          style: TextStyle(
+                              color: colors.secondaryText,
+                              height: 1.45,
+                              fontSize: 14)),
+                      SizedBox(height: 10),
+                      Text(
+                          '${event.externalPlatformName ?? ''}\n${context.l10n.externalRegistrationLeaveKhairNote}',
+                          style: TextStyle(
+                              color: colors.secondaryText, fontSize: 13)),
+                      SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              Navigator.pop(sheetContext, 'complete'),
+                          icon: Icon(Icons.open_in_new_rounded),
+                          label: Text(context
+                              .l10n.externalRegistrationCompleteExternal),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(sheetContext, 'later'),
+                          child: Text(context.l10n.externalRegistrationDoLater),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted) return;
+    if (choice == 'later') {
+      await _updateExternalRegistrationStatus(
+          event, 'pending_external_registration');
+      return;
+    }
+    if (choice == 'complete') await _confirmExternalRegistration(event);
   }
 
   Future<void> _showLeaveDialog() async {

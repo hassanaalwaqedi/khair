@@ -1560,6 +1560,16 @@
   "leaveKhairRegistration": "ستغادر خير لإكمال التسجيل على منصة خارجية.",
   "continueToRegistration": "متابعة التسجيل",
   "khairDoesNotManageExternalRegistration": "لا تتحقق خير من عملية التسجيل الخارجية ولا تديرها.",
+  "externalRegistrationPending": "التسجيل الخارجي غير مكتمل",
+  "externalRegistrationLinkOpened": "تم فتح رابط التسجيل الخارجي",
+  "externalRegistrationSelfReportedCompleted": "أبلغتَ عن إكمال التسجيل الخارجي",
+  "iCompletedExternalRegistration": "أكملت التسجيل الخارجي",
+  "externalRegistrationStatusError": "تعذر تحديث حالة التسجيل الخارجي.",
+  "externalRegistrationNextStepTitle": "خطوة أخيرة لإكمال التسجيل",
+  "externalRegistrationNextStepMessage": "تم تسجيل انضمامك إلى الفعالية على Khair، لكن يجب إكمال التسجيل أيضًا على المنصة الخارجية لتأكيد حضورك.",
+  "externalRegistrationCompleteExternal": "إكمال التسجيل الخارجي",
+  "externalRegistrationDoLater": "لاحقًا",
+  "externalRegistrationLeaveKhairNote": "سيتم فتح رابط التسجيل خارج Khair.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

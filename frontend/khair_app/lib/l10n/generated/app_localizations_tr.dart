@@ -4703,6 +4703,41 @@ class AppLocalizationsTr extends AppLocalizations {
       'Khair harici kayıt sürecini doğrulamaz veya yönetmez.';
 
   @override
+  String get externalRegistrationPending => 'Harici kayıt bekliyor';
+
+  @override
+  String get externalRegistrationLinkOpened => 'Harici kayıt bağlantısı açıldı';
+
+  @override
+  String get externalRegistrationSelfReportedCompleted =>
+      'Harici kayıt sizin tarafınızdan tamamlandı olarak işaretlendi';
+
+  @override
+  String get iCompletedExternalRegistration => 'Harici kaydı tamamladım';
+
+  @override
+  String get externalRegistrationStatusError =>
+      'Harici kayıt durumu güncellenemedi.';
+
+  @override
+  String get externalRegistrationNextStepTitle =>
+      'Kaydı tamamlamak için son bir adım';
+
+  @override
+  String get externalRegistrationNextStepMessage =>
+      'Bu etkinliğe Khair üzerinden katıldınız; katılımınızı kesinleştirmek için harici platformdaki kaydı da tamamlamanız gerekiyor.';
+
+  @override
+  String get externalRegistrationCompleteExternal => 'Harici kaydı tamamla';
+
+  @override
+  String get externalRegistrationDoLater => 'Daha sonra';
+
+  @override
+  String get externalRegistrationLeaveKhairNote =>
+      'Khair dışına yönlendirileceksiniz.';
+
+  @override
   String get notificationNewMessageTitle => 'Yeni mesaj';
 
   @override

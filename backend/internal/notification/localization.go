@@ -49,6 +49,16 @@ func Render(notificationType string, data map[string]string, language string) Lo
 		default:
 			return LocalizedNotification{Title: "You're registered \U0001f389", Message: fmt.Sprintf("You've successfully joined\n%s", eventTitle)}
 		}
+	case "external_registration_required":
+		eventTitle := data["event_title"]
+		switch language {
+		case "ar":
+			return LocalizedNotification{Title: "خطوة أخيرة لإكمال التسجيل", Message: fmt.Sprintf("انضممت إلى %s على Khair، لكن يجب إكمال التسجيل على المنصة الخارجية لتأكيد حضورك.", eventTitle)}
+		case "tr":
+			return LocalizedNotification{Title: "Kaydı tamamlamak için son bir adım", Message: fmt.Sprintf("%s etkinliğine Khair üzerinden katıldınız; katılımınızı kesinleştirmek için harici platformdaki kaydı da tamamlamanız gerekiyor.", eventTitle)}
+		default:
+			return LocalizedNotification{Title: "One more step to complete registration", Message: fmt.Sprintf("You joined %s on Khair, but you must also complete registration on the external platform to confirm your attendance.", eventTitle)}
+		}
 
 	case "event_participant_joined", "new_participant":
 		eventTitle := data["event_title"]

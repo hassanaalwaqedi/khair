@@ -4617,6 +4617,40 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا تتحقق خير من عملية التسجيل الخارجية ولا تديرها.';
 
   @override
+  String get externalRegistrationPending => 'التسجيل الخارجي غير مكتمل';
+
+  @override
+  String get externalRegistrationLinkOpened => 'تم فتح رابط التسجيل الخارجي';
+
+  @override
+  String get externalRegistrationSelfReportedCompleted =>
+      'أبلغتَ عن إكمال التسجيل الخارجي';
+
+  @override
+  String get iCompletedExternalRegistration => 'أكملت التسجيل الخارجي';
+
+  @override
+  String get externalRegistrationStatusError =>
+      'تعذر تحديث حالة التسجيل الخارجي.';
+
+  @override
+  String get externalRegistrationNextStepTitle => 'خطوة أخيرة لإكمال التسجيل';
+
+  @override
+  String get externalRegistrationNextStepMessage =>
+      'تم تسجيل انضمامك إلى الفعالية على Khair، لكن يجب إكمال التسجيل أيضًا على المنصة الخارجية لتأكيد حضورك.';
+
+  @override
+  String get externalRegistrationCompleteExternal => 'إكمال التسجيل الخارجي';
+
+  @override
+  String get externalRegistrationDoLater => 'لاحقًا';
+
+  @override
+  String get externalRegistrationLeaveKhairNote =>
+      'سيتم فتح رابط التسجيل خارج Khair.';
+
+  @override
   String get notificationNewMessageTitle => 'رسالة جديدة';
 
   @override
