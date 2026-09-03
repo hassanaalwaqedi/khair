@@ -4719,6 +4719,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'You will be redirected outside Khair.';
 
   @override
+  String get messageOrganizer => 'Message organizer';
+
+  @override
+  String get externalRegistrationBothNotice =>
+      'You may need to complete both Khair registration and the external step.';
+
+  @override
+  String get markExternalRegistrationPending => 'Mark as pending';
+
+  @override
+  String get externalRegistrationUnavailable =>
+      'This external registration link is unavailable.';
+
+  @override
+  String get externalRegistrationLeaveKhairTitle => 'Leave Khair?';
+
+  @override
+  String get externalRegistrationOpenError =>
+      'We couldn\'t open the external registration link.';
+
+  @override
   String get notificationNewMessageTitle => 'New message';
 
   @override

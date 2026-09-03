@@ -28,8 +28,9 @@ class _MyEventsPageState extends State<MyEventsPage> {
         body: FutureBuilder<List<dynamic>>(
           future: _reservations,
           builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done)
+            if (snapshot.connectionState != ConnectionState.done) {
               return Center(child: CircularProgressIndicator());
+            }
             if (snapshot.hasError) {
               return Center(
                   child: FilledButton.icon(
@@ -62,15 +63,34 @@ class _MyEventsPageState extends State<MyEventsPage> {
                   final title = item['event_title']?.toString() ??
                       item['title']?.toString() ??
                       context.l10n.eventFallback;
+                  final externalStatus =
+                      item['external_registration_status']?.toString();
+                  final externalPending =
+                      externalStatus == 'pending_external_registration';
                   return Card(
                       child: ListTile(
                     leading: CircleAvatar(child: Icon(Icons.event)),
                     title: Text(title),
-                    subtitle:
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(item['status']?.toString() ?? context.l10n.joined),
+                        if (externalPending) ...[
+                          const SizedBox(height: 5),
+                          Chip(
+                            avatar:
+                                const Icon(Icons.open_in_new_rounded, size: 15),
+                            label:
+                                Text(context.l10n.externalRegistrationPending),
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ],
+                    ),
                     trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                       IconButton(
-                        tooltip: 'Message organizer',
+                        tooltip: context.l10n.messageOrganizer,
                         icon: const Icon(Icons.chat_bubble_outline_rounded),
                         onPressed: eventId.isEmpty
                             ? null

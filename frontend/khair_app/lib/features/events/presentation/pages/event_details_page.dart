@@ -601,7 +601,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             width: double.infinity,
             child: _outlineAction(
               icon: Icons.chat_bubble_outline_rounded,
-              label: 'Message organizer',
+              label: context.l10n.messageOrganizer,
               colors: colors,
               onPressed: () => context.push('/events/${event.id}/messages'),
             ),
@@ -1406,8 +1406,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         ],
         if (event.registrationType == 'both') ...[
           SizedBox(height: 10),
-          Text(
-              'You may need to complete both Khair registration and the external step.',
+          Text(context.l10n.externalRegistrationBothNotice,
               style: TextStyle(color: colors.secondaryText))
         ],
         if (event.externalPlatformName?.isNotEmpty == true) ...[
@@ -1438,6 +1437,16 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               child: Text(context.l10n.iCompletedExternalRegistration),
             ),
           ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: _externalRegistrationStatusLoading
+                  ? null
+                  : () => _updateExternalRegistrationStatus(
+                      event, 'pending_external_registration'),
+              child: Text(context.l10n.markExternalRegistrationPending),
+            ),
+          ),
         ],
         SizedBox(height: 9),
         Text(domain.isEmpty ? 'External registration link' : domain,
@@ -1452,19 +1461,19 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   Future<void> _confirmExternalRegistration(Event event) async {
     final uri = Uri.tryParse(event.externalRegistrationUrl ?? '');
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
-      _showSnack('This external registration link is unavailable.');
+      _showSnack(context.l10n.externalRegistrationUnavailable);
       return;
     }
     final proceed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-              title: Text('Leave Khair?'),
+              title: Text(context.l10n.externalRegistrationLeaveKhairTitle),
               content:
                   Text('${context.l10n.leaveKhairRegistration}\n\n${uri.host}'),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text('Cancel')),
+                    child: Text(context.l10n.cancel)),
                 FilledButton(
                     onPressed: () => Navigator.pop(dialogContext, true),
                     child: Text(context.l10n.continueToRegistration))

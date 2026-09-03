@@ -4738,6 +4738,27 @@ class AppLocalizationsTr extends AppLocalizations {
       'Khair dışına yönlendirileceksiniz.';
 
   @override
+  String get messageOrganizer => 'Organizatöre mesaj gönder';
+
+  @override
+  String get externalRegistrationBothNotice =>
+      'Hem Khair kaydını hem de harici platformdaki adımı tamamlamanız gerekebilir.';
+
+  @override
+  String get markExternalRegistrationPending => 'Beklemede olarak işaretle';
+
+  @override
+  String get externalRegistrationUnavailable =>
+      'Harici kayıt bağlantısı kullanılamıyor.';
+
+  @override
+  String get externalRegistrationLeaveKhairTitle => 'Khair\'den ayrıl?';
+
+  @override
+  String get externalRegistrationOpenError =>
+      'Harici kayıt bağlantısı açılamadı.';
+
+  @override
   String get notificationNewMessageTitle => 'Yeni mesaj';
 
   @override

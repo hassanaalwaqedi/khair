@@ -1570,6 +1570,12 @@
   "externalRegistrationCompleteExternal": "إكمال التسجيل الخارجي",
   "externalRegistrationDoLater": "لاحقًا",
   "externalRegistrationLeaveKhairNote": "سيتم فتح رابط التسجيل خارج Khair.",
+  "messageOrganizer": "مراسلة المنظم",
+  "externalRegistrationBothNotice": "قد تحتاج إلى إكمال التسجيل على Khair وعلى المنصة الخارجية.",
+  "markExternalRegistrationPending": "وضع علامة كغير مكتمل",
+  "externalRegistrationUnavailable": "رابط التسجيل الخارجي غير متاح.",
+  "externalRegistrationLeaveKhairTitle": "مغادرة Khair؟",
+  "externalRegistrationOpenError": "تعذر فتح رابط التسجيل الخارجي.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

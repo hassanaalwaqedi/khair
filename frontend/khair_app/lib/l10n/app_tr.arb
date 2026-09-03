@@ -1653,6 +1653,12 @@
   "externalRegistrationCompleteExternal": "Harici kaydı tamamla",
   "externalRegistrationDoLater": "Daha sonra",
   "externalRegistrationLeaveKhairNote": "Khair dışına yönlendirileceksiniz.",
+  "messageOrganizer": "Organizatöre mesaj gönder",
+  "externalRegistrationBothNotice": "Hem Khair kaydını hem de harici platformdaki adımı tamamlamanız gerekebilir.",
+  "markExternalRegistrationPending": "Beklemede olarak işaretle",
+  "externalRegistrationUnavailable": "Harici kayıt bağlantısı kullanılamıyor.",
+  "externalRegistrationLeaveKhairTitle": "Khair'den ayrıl?",
+  "externalRegistrationOpenError": "Harici kayıt bağlantısı açılamadı.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

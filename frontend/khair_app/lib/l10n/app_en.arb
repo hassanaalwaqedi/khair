@@ -1786,6 +1786,12 @@
   "externalRegistrationCompleteExternal": "Complete external registration",
   "externalRegistrationDoLater": "Do it later",
   "externalRegistrationLeaveKhairNote": "You will be redirected outside Khair.",
+  "messageOrganizer": "Message organizer",
+  "externalRegistrationBothNotice": "You may need to complete both Khair registration and the external step.",
+  "markExternalRegistrationPending": "Mark as pending",
+  "externalRegistrationUnavailable": "This external registration link is unavailable.",
+  "externalRegistrationLeaveKhairTitle": "Leave Khair?",
+  "externalRegistrationOpenError": "We couldn't open the external registration link.",
   "@registrationCloses": {
     "placeholders": {
       "date": {}

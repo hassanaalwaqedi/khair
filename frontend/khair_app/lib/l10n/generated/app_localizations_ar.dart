@@ -4651,6 +4651,26 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيتم فتح رابط التسجيل خارج Khair.';
 
   @override
+  String get messageOrganizer => 'مراسلة المنظم';
+
+  @override
+  String get externalRegistrationBothNotice =>
+      'قد تحتاج إلى إكمال التسجيل على Khair وعلى المنصة الخارجية.';
+
+  @override
+  String get markExternalRegistrationPending => 'وضع علامة كغير مكتمل';
+
+  @override
+  String get externalRegistrationUnavailable =>
+      'رابط التسجيل الخارجي غير متاح.';
+
+  @override
+  String get externalRegistrationLeaveKhairTitle => 'مغادرة Khair؟';
+
+  @override
+  String get externalRegistrationOpenError => 'تعذر فتح رابط التسجيل الخارجي.';
+
+  @override
   String get notificationNewMessageTitle => 'رسالة جديدة';
 
   @override

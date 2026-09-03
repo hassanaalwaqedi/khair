@@ -8832,6 +8832,42 @@ abstract class AppLocalizations {
   /// **'You will be redirected outside Khair.'**
   String get externalRegistrationLeaveKhairNote;
 
+  /// No description provided for @messageOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Message organizer'**
+  String get messageOrganizer;
+
+  /// No description provided for @externalRegistrationBothNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You may need to complete both Khair registration and the external step.'**
+  String get externalRegistrationBothNotice;
+
+  /// No description provided for @markExternalRegistrationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as pending'**
+  String get markExternalRegistrationPending;
+
+  /// No description provided for @externalRegistrationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This external registration link is unavailable.'**
+  String get externalRegistrationUnavailable;
+
+  /// No description provided for @externalRegistrationLeaveKhairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Khair?'**
+  String get externalRegistrationLeaveKhairTitle;
+
+  /// No description provided for @externalRegistrationOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open the external registration link.'**
+  String get externalRegistrationOpenError;
+
   /// No description provided for @notificationNewMessageTitle.
   ///
   /// In en, this message translates to:
